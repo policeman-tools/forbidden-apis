@@ -84,7 +84,7 @@ public abstract class Checker {
   }
   
   /** Reads a class (binary name) from the given {@link ClassLoader}. */
-  public ClassSignatureLookup getClassFromClassLoader(final String clazz) throws ClassNotFoundException {
+  private ClassSignatureLookup getClassFromClassLoader(final String clazz) throws ClassNotFoundException {
     ClassSignatureLookup c = classpathClassCache.get(clazz);
     if (c == null) {
       try {
@@ -168,7 +168,7 @@ public abstract class Checker {
   }
 
   /** Reads a list of bundled API signatures from classpath. */
-  public void parseBundledSignatures(String name) throws IOException,ParseException {
+  public final void parseBundledSignatures(String name) throws IOException,ParseException {
     if (!name.matches("[A-Za-z0-9\\-\\.]+")) {
       throw new ParseException("Invalid bundled signature reference: " + name);
     }
@@ -180,12 +180,12 @@ public abstract class Checker {
   }
   
   /** Reads a list of API signatures. Closes the Reader when done (on Exception, too)! */
-  public void parseSignaturesFile(InputStream in) throws IOException,ParseException {
+  public final void parseSignaturesFile(InputStream in) throws IOException,ParseException {
     parseSignaturesFile(in, false);
   }
   
   /** Reads a list of API signatures. Closes the Reader when done (on Exception, too)! */
-  public  void parseSignaturesString(String signatures) throws IOException,ParseException {
+  public  final void parseSignaturesString(String signatures) throws IOException,ParseException {
     parseSignaturesFile(new StringReader(signatures), false);
   }
   
@@ -220,7 +220,7 @@ public abstract class Checker {
   }
   
   /** Parses and adds a class from the given stream to the list of classes to check. Closes the stream when parsed (on Exception, too)! */
-  public void addClassToCheck(final InputStream in) throws IOException {
+  public final void addClassToCheck(final InputStream in) throws IOException {
     final ClassReader reader;
     try {
       reader = new ClassReader(in);
@@ -230,12 +230,12 @@ public abstract class Checker {
     classesToCheck.put(reader.getClassName(), new ClassSignatureLookup(reader));
   }
   
-  public boolean hasNoSignatures() {
+  public final boolean hasNoSignatures() {
     return forbiddenMethods.isEmpty() && forbiddenClasses.isEmpty();
   }
   
   /** Parses a class and checks for valid method invocations */
-  public int checkClass(final ClassReader reader) {
+  private int checkClass(final ClassReader reader) {
     final int[] violations = new int[1];
     reader.accept(new ClassVisitor(Opcodes.ASM4) {
       final String className = Type.getObjectType(reader.getClassName()).getClassName();
@@ -359,7 +359,7 @@ public abstract class Checker {
     return violations[0];
   }
   
-  public void run() throws ForbiddenApiException {
+  public final void run() throws ForbiddenApiException {
     int errors = 0;
     for (final ClassSignatureLookup c : classesToCheck.values()) {
       errors += checkClass(c.reader);
