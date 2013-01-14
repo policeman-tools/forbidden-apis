@@ -105,10 +105,18 @@ public abstract class Checker {
   }
  
   /** Adds the method signature to the list of disallowed methods. The Signature is checked against the given ClassLoader. */
-  private void addSignature(final String signature) throws ParseException {
-    final String clazz, field;
+  private void addSignature(final String line, final String defaultMessage) throws ParseException {
+    final String clazz, field, signature, message;
     final Method method;
-    int p = signature.indexOf('#');
+    int p = line.indexOf('@');
+    if (p >= 0) {
+      signature = line.substring(0, p).trim();
+      message = line.substring(p + 1).trim();
+    } else {
+      signature = line;
+      message = defaultMessage;
+    }
+    p = signature.indexOf('#');
     if (p >= 0) {
       clazz = signature.substring(0, p);
       final String s = signature.substring(p + 1);
@@ -133,6 +141,9 @@ public abstract class Checker {
       method = null;
       field = null;
     }
+    // create printout message:
+    final String printout = (message != null && message.length() > 0) ?
+      (signature + " [" + message + "]") : signature;
     // check class & method/field signature, if it is really existent (in classpath), but we don't really load the class into JVM:
     final ClassSignatureLookup c;
     try {
@@ -147,7 +158,7 @@ public abstract class Checker {
       for (final Method m : c.methods) {
         if (m.getName().equals(method.getName()) && Arrays.equals(m.getArgumentTypes(), method.getArgumentTypes())) {
           found = true;
-          forbiddenMethods.put(c.reader.getClassName() + '\000' + m, signature);
+          forbiddenMethods.put(c.reader.getClassName() + '\000' + m, printout);
           // don't break when found, as there may be more covariant overrides!
         }
       }
@@ -159,11 +170,11 @@ public abstract class Checker {
       if (!c.fields.contains(field)) {
         throw new ParseException("No field found with following name: " + signature);
       }
-      forbiddenFields.put(c.reader.getClassName() + '\000' + field, signature);
+      forbiddenFields.put(c.reader.getClassName() + '\000' + field, printout);
     } else {
       assert field == null && method == null;
       // only add the signature as class name
-      forbiddenClasses.put(c.reader.getClassName(), signature);
+      forbiddenClasses.put(c.reader.getClassName(), printout);
     }
   }
 
@@ -184,8 +195,8 @@ public abstract class Checker {
     parseSignaturesFile(in, false);
   }
   
-  /** Reads a list of API signatures. Closes the Reader when done (on Exception, too)! */
-  public  final void parseSignaturesString(String signatures) throws IOException,ParseException {
+  /** Reads a list of API signatures from a String. */
+  public final void parseSignaturesString(String signatures) throws IOException,ParseException {
     parseSignaturesFile(new StringReader(signatures), false);
   }
   
@@ -194,11 +205,12 @@ public abstract class Checker {
   }
 
   private static final String BUNDLED_PREFIX = "@includeBundled ";
+  private static final String DEFAULT_MESSAGE_PREFIX = "@defaultMessage ";
 
   private void parseSignaturesFile(Reader reader, boolean allowBundled) throws IOException,ParseException {
     final BufferedReader r = new BufferedReader(reader);
     try {
-      String line;
+      String line, defaultMessage = null;
       while ((line = r.readLine()) != null) {
         line = line.trim();
         if (line.length() == 0 || line.startsWith("#"))
@@ -207,11 +219,14 @@ public abstract class Checker {
           if (allowBundled && line.startsWith(BUNDLED_PREFIX)) {
             final String name = line.substring(BUNDLED_PREFIX.length()).trim();
             parseBundledSignatures(name);
+          } else if (line.startsWith(DEFAULT_MESSAGE_PREFIX)) {
+            defaultMessage = line.substring(DEFAULT_MESSAGE_PREFIX.length()).trim();
+            if (defaultMessage.length() == 0) defaultMessage = null;
           } else {
             throw new ParseException("Invalid line in signature file: " + line);
           }
         } else {
-          addSignature(line);
+          addSignature(line, defaultMessage);
         }
       }
     } finally {
