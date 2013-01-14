@@ -359,7 +359,7 @@ public abstract class Checker {
     return violations[0];
   }
   
-  public void validate() throws ForbiddenApiException {
+  public void run() throws ForbiddenApiException {
     int errors = 0;
     for (final ClassSignatureLookup c : classesToCheck.values()) {
       errors += checkClass(c.reader);
