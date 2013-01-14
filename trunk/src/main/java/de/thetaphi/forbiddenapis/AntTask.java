@@ -42,7 +42,7 @@ import java.util.Locale;
  * and the system classloader. It uses the local classpath in preference to the system classpath
  * (which violates the spec).
  */
-public class AntTask extends Task {
+public final class AntTask extends Task {
 
   private final Resources classFiles = new Resources();
   private final Resources apiSignatures = new Resources();
@@ -149,7 +149,7 @@ public class AntTask extends Task {
           checker.addClassToCheck(r.getInputStream());
         }
       } catch (IOException ioe) {
-        throw new BuildException("Failed to load one of the given class files.", ioe);
+        throw new BuildException("Failed to load one of the given class files:" + ioe);
       }
 
       try {
