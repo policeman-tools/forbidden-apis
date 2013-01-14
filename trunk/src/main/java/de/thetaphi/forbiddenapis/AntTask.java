@@ -93,40 +93,38 @@ public class AntTask extends Task {
       }
       
       try {
-        try {
-          for (BundledSignaturesType bs : bundledSignatures) {
-            final String name = bs.getName();
-            if (name == null) {
-              throw new BuildException("<bundledSignatures/> must have the mandatory attribute 'name' referring to a bundled signatures file.");
-            }
-            log("Reading bundled API signatures: " + name, Project.MSG_INFO);
-            checker.parseBundledSignatures(name);
+        for (BundledSignaturesType bs : bundledSignatures) {
+          final String name = bs.getName();
+          if (name == null) {
+            throw new BuildException("<bundledSignatures/> must have the mandatory attribute 'name' referring to a bundled signatures file.");
           }
-          
-          @SuppressWarnings("unchecked")
-          Iterator<Resource> iter = (Iterator<Resource>) apiSignatures.iterator();
-          if (!iter.hasNext()) {
-            throw new BuildException("You need to supply at least one API signature definition through signaturesFile=, <signaturesFileSet/>, <bundledSignatures/> or inner text.");
-          }
-          while (iter.hasNext()) {
-            final Resource r = iter.next();
-            if (!r.isExists()) { 
-              throw new BuildException("Signatures file does not exist: " + r);
-            }
-            if (r instanceof StringResource) {
-              final String s = ((StringResource) r).getValue();
-              if (s != null && s.trim().length() > 0) {
-                log("Reading inline API signatures...", Project.MSG_INFO);
-                checker.parseSignaturesString(s);
-              }
-            } else {
-              log("Reading API signatures: " + r, Project.MSG_INFO);
-              checker.parseSignaturesFile(r.getInputStream());
-            }
-          }
-        } catch (IOException ioe) {
-          throw new BuildException("IO problem while reading files with API signatures: " + ioe);
+          log("Reading bundled API signatures: " + name, Project.MSG_INFO);
+          checker.parseBundledSignatures(name);
         }
+        
+        @SuppressWarnings("unchecked")
+        Iterator<Resource> iter = (Iterator<Resource>) apiSignatures.iterator();
+        if (!iter.hasNext()) {
+          throw new BuildException("You need to supply at least one API signature definition through signaturesFile=, <signaturesFileSet/>, <bundledSignatures/> or inner text.");
+        }
+        while (iter.hasNext()) {
+          final Resource r = iter.next();
+          if (!r.isExists()) { 
+            throw new BuildException("Signatures file does not exist: " + r);
+          }
+          if (r instanceof StringResource) {
+            final String s = ((StringResource) r).getValue();
+            if (s != null && s.trim().length() > 0) {
+              log("Reading inline API signatures...", Project.MSG_INFO);
+              checker.parseSignaturesString(s);
+            }
+          } else {
+            log("Reading API signatures: " + r, Project.MSG_INFO);
+            checker.parseSignaturesFile(r.getInputStream());
+          }
+        }
+      } catch (IOException ioe) {
+        throw new BuildException("IO problem while reading files with API signatures: " + ioe);
       } catch (ParseException pe) {
         throw new BuildException("Parsing signatures failed: " + pe.getMessage());
       }
