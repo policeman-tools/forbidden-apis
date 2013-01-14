@@ -205,6 +205,7 @@
     <mkdir dir="${signatures.dir}"/>
     <echo message="Building deprecated signatures for JDK ${ant.java.version}:"/>
     <java fork="false" classpathref="path.tools-run" classname="de.thetaphi.forbiddenapis.DeprecatedGen">
+      <arg value="${ant.java.version}"/>
       <arg file="${java.home}/lib/rt.jar"/>
       <arg file="${signatures.dir}/jdk-deprecated-${ant.java.version}.txt"/>
     </java>

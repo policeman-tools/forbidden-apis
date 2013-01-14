@@ -14,5 +14,6 @@
 
 @includeBundled jdk-unsafe-1.5
 
+@defaultMessage Uses default locale
 java.text.DateFormatSymbols#getInstance()
 java.text.DecimalFormatSymbols#getInstance()
