@@ -82,8 +82,8 @@ public class AntTask extends Task {
       
       if (!checker.isSupportedJDK) {
         final String msg = String.format(Locale.ENGLISH, 
-          "Your Java version (%s) is not supported by forbiddenapis. Please run the checks with a supported JDK!",
-          System.getProperty("java.version"));
+          "Your Java version (%s) is not supported by <%s/>. Please run the checks with a supported JDK!",
+          System.getProperty("java.version"), getTaskName());
         if (failOnUnsupportedJava) {
           throw new BuildException(msg);
         } else {
@@ -156,7 +156,7 @@ public class AntTask extends Task {
 
       try {
         log("Scanning for API signatures and dependencies...", Project.MSG_INFO);
-        checker.validate();
+        checker.run();
       } catch (ForbiddenApiException fae) {
         throw new BuildException(fae.getMessage());
       }
