@@ -1,0 +1,15 @@
+<project xmlns:au="antlib:org.apache.ant.antunit">
+
+  <fileset id="main.classes" dir="${antunit.main.classes}" includes="**/*.class"/>
+  <taskdef name="forbiddenapis-jar" classname="de.thetaphi.forbiddenapis.AntTask" classpath="${jar-file}"/>
+
+  <target name="testFinalJAR">
+    <forbiddenapis-jar>
+      <fileset refid="main.classes"/>
+      <bundledsignatures name="jdk-unsafe-${jdk.version}"/>
+      <bundledsignatures name="jdk-deprecated-${jdk.version}"/>
+    </forbiddenapis-jar>
+    <au:assertLogContains level="info" text="class file(s) for forbidden API invocations"/> 
+  </target>
+  
+</project>
