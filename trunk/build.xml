@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 -->
-<project name="Jar Jar Links" default="jar" xmlns:artifact="antlib:org.apache.maven.artifact.ant" xmlns:ivy="antlib:org.apache.ivy.ant" xmlns:rsel="antlib:org.apache.tools.ant.types.resources.selectors">
+<project name="Policeman's Forbidden API Checker" default="jar" xmlns:artifact="antlib:org.apache.maven.artifact.ant" xmlns:ivy="antlib:org.apache.ivy.ant" xmlns:rsel="antlib:org.apache.tools.ant.types.resources.selectors">
   <fail message="Minimum supported ANT version is 1.8.0. Yours: ${ant.version}">
     <condition>
       <not><antversion atleast="1.8.0" /></not>
@@ -28,6 +28,7 @@
   <property name="compile.deprecation" value="true"/>
   
   <property name="ivy.logging" value="download-only"/>
+  <property name="maven.version" value="2.2.1"/>
   
   <property name="signatures.dir" location="src/main/resources/de/thetaphi/forbiddenapis/signatures"/>
 
@@ -46,7 +47,7 @@
   <property name="maven-staging-repository-id" value="sonatype-nexus-staging" />
   <property name="maven-staging-repository-url" value="https://oss.sonatype.org/service/local/staging/deploy/maven2/" />
 
-  <target name="init">
+  <target name="-init">
     <ivy:cachepath pathid="path.build" conf="build" log="${ivy.logging}"/>
     <ivy:cachepath pathid="path.junit" conf="test" log="${ivy.logging}"/>
     <path id="path.run">
@@ -67,6 +68,13 @@
     </path>
   </target>
 
+  <target name="-install-tasks" unless="resolved.tasks">
+    <ivy:cachepath pathid="path.tasks" conf="buildtools" log="${ivy.logging}"/>
+    <taskdef name="jarjar" classname="com.tonicsystems.jarjar.JarJarTask" classpathref="path.tasks"/>
+    <taskdef resource="org/apache/maven/artifact/ant/antlib.xml" uri="antlib:org.apache.maven.artifact.ant" classpathref="path.tasks"/>
+    <property name="resolved.tasks" value="true"/>
+  </target>
+  
   <macrodef name="compile">
     <attribute name="module"/>
     <attribute name="classpathref"/>
@@ -84,7 +92,7 @@
     </sequential>
   </macrodef>
 
-  <target name="compile" depends="init" description="Compile">
+  <target name="compile" depends="-init" description="Compile">
     <compile module="main" classpathref="path.build"/>
   </target>
 
@@ -92,7 +100,7 @@
     <compile module="test" classpathref="path.test-build"/>
   </target>
 
-  <target name="compile-tools" depends="init" description="Compile tools">
+  <target name="compile-tools" depends="-init" description="Compile tools">
     <compile module="tools" classpathref="path.build"/>
   </target>
 
@@ -100,18 +108,34 @@
     <delete dir="build"/>
     <delete dir="dist"/>
   </target>
-
-  <target name="-resolve-jarjar" unless="resolved.jarjar">
-    <ivy:cachepath pathid="path.jarjar" conf="jarjar" log="${ivy.logging}"/>
-    <taskdef name="jarjar" classname="com.tonicsystems.jarjar.JarJarTask" classpathref="path.jarjar"/>
-    <property name="resolved.jarjar" value="true"/>
+  
+  <target name="-maven-setup">
+    <mkdir dir="build/maven"/>
+    <copy todir="build/maven">
+      <fileset dir="src/main/maven"/>
+      <filterset>
+        <filter token="NAME" value="${ant.project.name}"/>
+        <filter token="VERSION" value="${version}"/>
+        <filter token="GROUPID" value="${groupId}"/>
+        <filter token="ARTIFACTID" value="${artifactId}"/>
+      </filterset>
+    </copy>
   </target>
   
-  <target name="jar" depends="compile,-resolve-jarjar" description="Create the binary JAR">
+  <target name="maven-descriptor" depends="-maven-setup,-install-tasks" description="Creates the Maven Plugin Descriptor">
+    <artifact:mvn pom="build/maven/pom.xml" mavenVersion="${maven.version}" failonerror="true" fork="false">
+      <arg value="org.apache.maven.plugins:maven-plugin-plugin:2.2:descriptor"/>
+      <sysproperty key="injected.src.dir" file="src/main/java"/>
+      <sysproperty key="injected.target.dir" file="build/main"/>
+    </artifact:mvn>
+  </target>
+
+  <target name="jar" depends="compile,-install-tasks,maven-descriptor" description="Create the binary JAR">
     <ivy:cachefileset setid="fileset.bundle" conf="bundle" log="${ivy.logging}"/>
     <mkdir dir="dist"/>
     <jarjar destfile="${jar-file}">
-      <fileset dir="build/main"/>
+      <zipfileset dir="build/main"/>
+      <zipfileset dir="build/maven" includes="pom.xml,pom.properties" prefix="META-INF/maven/${groupId}/${artifactId}"/>
       <restrict>
         <name name="**/*.class" handledirsep="true"/>
         <archives>
@@ -119,6 +143,7 @@
         </archives>
       </restrict>
       <keep pattern="de.thetaphi.forbiddenapis.AntTask"/>
+      <keep pattern="de.thetaphi.forbiddenapis.Mojo"/>
       <rule pattern="org.objectweb.asm.**" result="de.thetaphi.forbiddenapis.asm.@1"/>
       <manifest>
         <attribute name="Implementation-Version" value="${version}"/>
