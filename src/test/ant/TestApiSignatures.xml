@@ -61,7 +61,7 @@
         java.util.Locale#ENGLISH @ We are speaking chinese here!
       </forbiddenapis>
     </au:expectfailure>
-    <au:assertLogContains loglevel="error" text="We are speaking chinese here!"/> 
+    <au:assertLogContains level="error" text="We are speaking chinese here!"/> 
   </target>
   
 </project>
