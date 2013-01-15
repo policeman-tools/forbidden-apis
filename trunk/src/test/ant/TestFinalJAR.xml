@@ -9,7 +9,7 @@
       <bundledsignatures name="jdk-unsafe-${jdk.version}"/>
       <bundledsignatures name="jdk-deprecated-${jdk.version}"/>
     </forbiddenapis-jar>
-    <au:assertLogContains level="info" text="class file(s) for forbidden API invocations"/> 
+    <au:assertLogContains level="info" text=" 0 error(s)."/> 
   </target>
   
 </project>
