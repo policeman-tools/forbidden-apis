@@ -12,7 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 -->
-<project name="Policeman's Forbidden API Checker" default="jar" xmlns:artifact="antlib:org.apache.maven.artifact.ant" xmlns:ivy="antlib:org.apache.ivy.ant" xmlns:rsel="antlib:org.apache.tools.ant.types.resources.selectors">
+<project name="Policeman's Forbidden API Checker" default="jar"
+  xmlns:artifact="antlib:org.apache.maven.artifact.ant"
+  xmlns:ivy="antlib:org.apache.ivy.ant"
+  xmlns:au="antlib:org.apache.ant.antunit"
+>
   <fail message="Minimum supported ANT version is 1.8.0. Yours: ${ant.version}">
     <condition>
       <not><antversion atleast="1.8.0" /></not>
@@ -68,11 +72,11 @@
     </path>
   </target>
 
-  <target name="-install-tasks" unless="resolved.tasks">
+  <target name="-install-tasks" unless="installed.tasks">
     <ivy:cachepath pathid="path.tasks" conf="buildtools" log="${ivy.logging}"/>
     <taskdef name="jarjar" classname="com.tonicsystems.jarjar.JarJarTask" classpathref="path.tasks"/>
-    <taskdef resource="org/apache/maven/artifact/ant/antlib.xml" uri="antlib:org.apache.maven.artifact.ant" classpathref="path.tasks"/>
-    <property name="resolved.tasks" value="true"/>
+    <taskdef uri="antlib:org.apache.maven.artifact.ant" classpathref="path.tasks"/>
+    <property name="installed.tasks" value="true"/>
   </target>
 
   <macrodef name="compile">
@@ -186,20 +190,28 @@
   </target>
   -->
 
-  <target name="test" depends="-junit,-check-myself" description="Run tests"/>
+  <target name="test" depends="-antunit,-check-myself" description="Run tests"/>
 
+  <!--
   <target name="-junit" depends="compile-test">
+    <mkdir dir="build/test-results"/>
     <junit haltonfailure="on">
       <formatter type="plain" usefile="false"/>
+      <formatter type="xml" usefile="true"/>
       <classpath refid="path.test-run"/>
-      <batchtest>
+      <batchtest todir="build/test-results">
         <fileset dir="src/test/java" includes="**/*Test.java"/>
       </batchtest>
     </junit>
   </target>
-
-  <target name="-check-myself" depends="compile-test,compile-tools">
+  -->
+  
+  <target name="-install-forbiddenapi-task" unless="installed.forbiddenapi-task">
     <taskdef name="forbiddenapis" classname="de.thetaphi.forbiddenapis.AntTask" classpathref="path.run"/>
+    <property name="installed.forbiddenapi-task" value="true"/>
+  </target>
+  
+  <target name="-check-myself" depends="compile,compile-test,compile-tools,-install-forbiddenapi-task">
     <forbiddenapis>
       <fileset dir="build/main" includes="**/*.class"/>
       <fileset dir="build/test" includes="**/*.class"/>
@@ -207,6 +219,26 @@
       <bundledsignatures name="jdk-unsafe-${jdk.version}"/>
       <bundledsignatures name="jdk-deprecated-${jdk.version}"/>
     </forbiddenapis>
+  </target>
+
+  <target name="-install-antunit" unless="installed.antunit">
+    <taskdef uri="antlib:org.apache.ant.antunit" classpathref="path.test-run"/>
+    <property name="installed.antunit" value="true"/>
+  </target>
+
+  <target name="-antunit" depends="jar,-install-forbiddenapi-task,-install-antunit">
+    <mkdir dir="build/test-results"/>
+    <property name="antunit.main.classes" location="build/main"/>
+    <au:antunit>
+      <fileset dir="src/test/ant" includes="Test*.xml"/>
+      <au:plainlistener/>
+      <au:xmllistener toDir="build/test-results" logLevel="info"/>
+      <propertyset>
+        <propertyref prefix="antunit."/>
+        <propertyref name="jar-file"/>
+        <propertyref name="jdk.version"/>
+      </propertyset>
+    </au:antunit>
   </target>
 
   <target name="generate-deprecated" depends="compile-tools" description="Generates deprecated API signature lists for current JDK">

@@ -149,7 +149,7 @@ public abstract class Checker {
     try {
       c = getClassFromClassLoader(clazz);
     } catch (ClassNotFoundException cnfe) {
-      throw new ParseException("Class not found on classpath: " + cnfe.getMessage());
+      throw new ParseException(cnfe.getMessage());
     }
     if (method != null) {
       assert field == null;
@@ -246,7 +246,7 @@ public abstract class Checker {
   }
   
   public final boolean hasNoSignatures() {
-    return forbiddenMethods.isEmpty() && forbiddenClasses.isEmpty();
+    return forbiddenMethods.isEmpty() && forbiddenClasses.isEmpty() && forbiddenFields.isEmpty();
   }
   
   /** Parses a class and checks for valid method invocations */

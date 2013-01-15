@@ -1,0 +1,67 @@
+<project xmlns:au="antlib:org.apache.ant.antunit">
+
+  <fileset id="main.classes" dir="${antunit.main.classes}" includes="**/*.class"/>
+
+  <target name="testAntFreeClassLoader">
+    <au:expectfailure expectedMessage="Loading of class org.apache.tools.ant.Project failed: Not found">
+      <forbiddenapis>
+        java.lang.String
+        # ANT should not be available in classpath!
+        org.apache.tools.ant.Project
+      </forbiddenapis>
+    </au:expectfailure>
+    <au:expectfailure expectedMessage="Loading of class org.apache.tools.ant.Project failed: Not found">
+      <forbiddenapis classpath="${antunit.testclasses}">
+        java.lang.String
+        # ANT should not be available in classpath, especially if we pass a custom one!
+        org.apache.tools.ant.Project
+      </forbiddenapis>
+    </au:expectfailure>
+  </target>
+  
+  <target name="testForbiddenClassWithMessage">
+    <au:expectfailure expectedMessage="Check for forbidden API calls failed, see log">
+      <forbiddenapis>
+        <fileset refid="main.classes"/>
+        java.awt.Color @ Color is disallowed, thats not bad, because ANT has no colors...
+        java.lang.String @ You are crazy that you disallow strings
+      </forbiddenapis>
+    </au:expectfailure>
+    <au:assertLogContains level="warning" text="You are crazy that you disallow strings"/> 
+  </target>
+  
+  <target name="testForbiddenClassWithDefaultMessage">
+    <au:expectfailure expectedMessage="Check for forbidden API calls failed, see log">
+      <forbiddenapis>
+        <fileset refid="main.classes"/>
+        @defaultMessage Let's disable some of AWT
+        java.awt.BorderLayout
+        @defaultMessage but it is even more crazy to have the same log message everywhere
+        java.awt.Color
+        java.lang.String
+      </forbiddenapis>
+    </au:expectfailure>
+    <au:assertLogContains level="warning" text="but it is even more crazy to have the same log message everywhere"/> 
+  </target>
+  
+  <target name="testForbiddenMethodWithMessage">
+    <au:expectfailure expectedMessage="Check for forbidden API calls failed, see log">
+      <forbiddenapis>
+        <fileset refid="main.classes"/>
+        java.lang.String#substring(int,int) @ You are crazy that you disallow substrings
+      </forbiddenapis>
+    </au:expectfailure>
+    <au:assertLogContains level="warning" text="You are crazy that you disallow substrings"/> 
+  </target>
+  
+  <target name="testForbiddenFieldWithMessage">
+    <au:expectfailure expectedMessage="Check for forbidden API calls failed, see log">
+      <forbiddenapis>
+        <fileset refid="main.classes"/>
+        java.util.Locale#ENGLISH @ We are speaking chinese here!
+      </forbiddenapis>
+    </au:expectfailure>
+    <au:assertLogContains level="warning" text="We are speaking chinese here!"/> 
+  </target>
+  
+</project>
