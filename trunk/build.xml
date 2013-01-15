@@ -23,6 +23,15 @@
     </condition>
   </fail>
 
+  <condition property="tests.supported">
+    <or>
+      <equals arg1="${ant.java.version}" arg2="1.5"/>
+      <equals arg1="${ant.java.version}" arg2="1.6"/>
+      <equals arg1="${ant.java.version}" arg2="1.7"/>
+      <!-- JDK 8 is currently not supported because ASM cannot load modified class file format -->
+    </or>
+  </condition>
+
   <property file="${user.home}/build.properties" />
   <property file="build.properties" />
 
@@ -226,7 +235,7 @@
     <property name="installed.antunit" value="true"/>
   </target>
 
-  <target name="-antunit" depends="jar,-install-forbiddenapi-task,-install-antunit">
+  <target name="-antunit" depends="jar,-install-forbiddenapi-task,-install-antunit" if="tests.supported">
     <mkdir dir="build/test-results"/>
     <property name="antunit.main.classes" location="build/main"/>
     <au:antunit>
