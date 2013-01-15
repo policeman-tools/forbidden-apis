@@ -27,7 +27,7 @@
         java.lang.String @ You are crazy that you disallow strings
       </forbiddenapis>
     </au:expectfailure>
-    <au:assertLogContains level="warning" text="You are crazy that you disallow strings"/> 
+    <au:assertLogContains level="error" text="You are crazy that you disallow strings"/> 
   </target>
   
   <target name="testForbiddenClassWithDefaultMessage">
@@ -41,7 +41,7 @@
         java.lang.String
       </forbiddenapis>
     </au:expectfailure>
-    <au:assertLogContains level="warning" text="but it is even more crazy to have the same log message everywhere"/> 
+    <au:assertLogContains level="error" text="but it is even more crazy to have the same log message everywhere"/> 
   </target>
   
   <target name="testForbiddenMethodWithMessage">
@@ -51,7 +51,7 @@
         java.lang.String#substring(int,int) @ You are crazy that you disallow substrings
       </forbiddenapis>
     </au:expectfailure>
-    <au:assertLogContains level="warning" text="You are crazy that you disallow substrings"/> 
+    <au:assertLogContains level="error" text="You are crazy that you disallow substrings"/> 
   </target>
   
   <target name="testForbiddenFieldWithMessage">
@@ -61,7 +61,7 @@
         java.util.Locale#ENGLISH @ We are speaking chinese here!
       </forbiddenapis>
     </au:expectfailure>
-    <au:assertLogContains level="warning" text="We are speaking chinese here!"/> 
+    <au:assertLogContains loglevel="error" text="We are speaking chinese here!"/> 
   </target>
   
 </project>
