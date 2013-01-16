@@ -12,7 +12,6 @@
     <license>
       <name>The Apache Software License, Version 2.0</name>
       <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-      <distribution>repo</distribution>
     </license>
   </licenses>
   
@@ -23,8 +22,19 @@
   <build>
     <sourceDirectory>${injected.src.dir}</sourceDirectory>
     <outputDirectory>${injected.target.dir}</outputDirectory>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-plugin-plugin</artifactId>
+        <version>${injected.maven-plugin-plugin.version}</version>
+        <configuration>
+          <extractors><extractor>java-annotations</extractor></extractors>
+        </configuration>
+      </plugin>
+    </plugins>
   </build>
   
+  <!-- TODO: do we really need this? -->
   <dependencies>
     <dependency>
       <groupId>org.apache.maven</groupId>
