@@ -199,7 +199,7 @@
   </target>
   -->
 
-  <target name="test" depends="-antunit,-antunit.unsupported,-check-myself" description="Run tests"/>
+  <target name="test" depends="-antunit,-check-myself" description="Run tests"/>
 
   <!--
   <target name="-junit" depends="compile-test">
@@ -275,5 +275,5 @@
     </java>
   </target>
 
-  <target name="jenkins" depends="clean,dist,test" description="Runs Jenkins Nightly"/>
+  <target name="jenkins" depends="clean,dist,test,-antunit.unsupported" description="Runs Jenkins Nightly"/>
 </project>
