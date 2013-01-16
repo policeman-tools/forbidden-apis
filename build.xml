@@ -215,7 +215,7 @@
   </target>
   -->
   
-  <target name="-install-forbiddenapi-task" unless="installed.forbiddenapi-task">
+  <target name="-install-forbiddenapi-task" depends="compile" unless="installed.forbiddenapi-task">
     <taskdef name="forbiddenapis" classname="de.thetaphi.forbiddenapis.AntTask" classpathref="path.run"/>
     <property name="installed.forbiddenapi-task" value="true"/>
   </target>
@@ -275,4 +275,5 @@
     </java>
   </target>
 
+  <target name="jenkins" depends="dist,test" description="Runs Jenkins Nightly"/>
 </project>
