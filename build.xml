@@ -88,6 +88,12 @@
     <property name="installed.tasks" value="true"/>
   </target>
 
+  <target name="-uptodate"> 
+    <uptodate property="maven-descriptor.uptodate" targetfile="build/main/META-INF/maven/plugin.xml">
+      <srcfiles dir="src/main/java"/>
+    </uptodate>
+  </target>
+
   <macrodef name="compile">
     <attribute name="module"/>
     <attribute name="classpathref"/>
@@ -134,8 +140,8 @@
       </filterset>
     </copy>
   </target>
-
-  <target name="maven-descriptor" depends="-maven-setup,-install-tasks" description="Creates the Maven Plugin Descriptor">
+  
+  <target name="maven-descriptor" depends="-maven-setup,-install-tasks,-uptodate" unless="maven-descriptor.uptodate" description="Creates the Maven Plugin Descriptor">
     <!-- with fork=false this somehow takes endless to download the internet, so let's fork - and slow down -->
     <artifact:mvn pom="build/maven/pom.xml" mavenVersion="${maven.version}" failonerror="true" fork="true">
       <arg value="org.apache.maven.plugins:maven-plugin-plugin:2.9:descriptor"/>
