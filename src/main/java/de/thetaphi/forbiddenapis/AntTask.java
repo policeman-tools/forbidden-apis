@@ -39,8 +39,7 @@ import java.util.Locale;
  * Task to check if a set of class files contains calls to forbidden APIs
  * from a given classpath and list of API signatures (either inline or as pointer to files).
  * In contrast to other ANT tasks, this tool does only visit the given classpath
- * and the system classloader. It uses the local classpath in preference to the system classpath
- * (which violates the spec).
+ * and the system classloader, not ANT's class loader.
  */
 public final class AntTask extends Task {
 
@@ -59,9 +58,7 @@ public final class AntTask extends Task {
       if (classpath != null) {
         classpath.setProject(getProject());
         loader = antLoader = getProject().createClassLoader(ClassLoader.getSystemClassLoader(), classpath);
-        // force that loading from this class loader is done first, then parent is asked.
-        // This violates spec, but prevents classes in any system classpath to be used if a local one is available:
-        antLoader.setParentFirst(false);
+        antLoader.setParentFirst(true); // use default classloader delegation
       } else {
         loader = ClassLoader.getSystemClassLoader();
       }
@@ -134,7 +131,6 @@ public final class AntTask extends Task {
       }
 
       log("Loading classes to check...", Project.MSG_INFO);
-      
       try {
         @SuppressWarnings("unchecked")
         Iterator<Resource> iter = (Iterator<Resource>) classFiles.iterator();
