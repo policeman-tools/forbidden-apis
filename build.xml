@@ -275,5 +275,5 @@
     </java>
   </target>
 
-  <target name="jenkins" depends="dist,test" description="Runs Jenkins Nightly"/>
+  <target name="jenkins" depends="clean,dist,test" description="Runs Jenkins Nightly"/>
 </project>
