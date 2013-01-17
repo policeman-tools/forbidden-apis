@@ -79,16 +79,12 @@ public class MavenMojo extends AbstractMojo {
   private MavenProject project;
 
   private List<File> findClassFiles(File dir) throws MojoExecutionException, MojoFailureException {
-    List<File> classFiles = new ArrayList<File>();
+    final List<File> classFiles = new ArrayList<File>();
     findClassFiles(dir, classFiles);
     return classFiles;
   }
 
   private void findClassFiles(File dir, List<File> classFiles) throws MojoExecutionException, MojoFailureException {
-    if (!dir.exists()) {
-      throw new MojoExecutionException("Did not find project output directory: " + dir);
-    }
-    
     if (dir.isDirectory()) {
       final File[] files = dir.listFiles();
       if (files != null) {
@@ -101,7 +97,7 @@ public class MavenMojo extends AbstractMojo {
         }
       }
     } else {
-      throw new MojoExecutionException("Not a dir?: " + dir.getAbsolutePath());
+      throw new MojoExecutionException("Not a dir: " + dir);
     }
   }
 
@@ -179,9 +175,15 @@ public class MavenMojo extends AbstractMojo {
       }
 
       log.info("Loading classes to check...");
-      final List<File> files = findClassFiles(new File(project.getBuild().getOutputDirectory()).getAbsoluteFile());
+      final File classesDir = new File(project.getBuild().getOutputDirectory());
+      if (!classesDir.exists()) {
+        log.warn("No project output directory, forbiddenapis checks skipped.");
+        return;
+      }
+      final List<File> files = findClassFiles(classesDir);
       if (files.isEmpty()) {
-        throw new MojoExecutionException("There is no <fileset/> given or the fileset does not contain any class files to check.");
+        log.warn("No classes found in project output directory, forbiddenapis checks skipped.");
+        return;
       }
       try {
         for (File f : files) {
