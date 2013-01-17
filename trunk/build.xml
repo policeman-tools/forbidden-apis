@@ -143,7 +143,7 @@
   </target>
   
   <target name="maven-descriptor" depends="compile,-maven-setup,-install-tasks,-uptodate" unless="maven-descriptor.uptodate" description="Creates the Maven Plugin Descriptor">
-    <!-- with fork=false this somehow takes endless to download the internet, so let's fork - and slow down -->
+    <!-- with fork=false this somehow takes endless to download the internet, so let's fork - and slow down in an other way (startup) -->
     <artifact:mvn pom="build/maven/pom.xml" mavenVersion="${maven.version}" failonerror="true" fork="true">
       <arg value="org.apache.maven.plugins:maven-plugin-plugin:${maven-plugin-plugin.version}:descriptor"/>
       <sysproperty key="injected.src.dir" file="src/main/java"/>
@@ -160,7 +160,6 @@
     <mkdir dir="dist"/>
     <jarjar destfile="${jar-file}">
       <zipfileset dir="build/main"/>
-      <zipfileset dir="build/maven" includes="pom.xml,pom.properties" prefix="META-INF/maven/${groupId}/${artifactId}"/>
       <restrict>
         <name name="**/*.class" handledirsep="true"/>
         <archives>
@@ -191,29 +190,6 @@
       <attach file="${sources-jar-file}" classifier="sources"/>
     </artifact:install>
   </target>
-
-  <!--
-  <target name="stage" depends="dist" description="deploy release version to Maven staging repository">
-    <artifact:mvn>
-      <arg value="org.apache.maven.plugins:maven-gpg-plugin:1.3:sign-and-deploy-file" />
-      <arg value="-Durl=${maven-staging-repository-url}" />
-      <arg value="-DrepositoryId=${maven-staging-repository-id}" />
-      <arg value="-DpomFile=pom.xml" />
-      <arg value="-Dfile=${maven-jar}" />
-      <arg value="-Pgpg" />
-    </artifact:mvn>
-
-    <artifact:mvn>
-      <arg value="org.apache.maven.plugins:maven-gpg-plugin:1.3:sign-and-deploy-file" />
-      <arg value="-Durl=${maven-staging-repository-url}" />
-      <arg value="-DrepositoryId=${maven-staging-repository-id}" />
-      <arg value="-DpomFile=pom.xml" />
-      <arg value="-Dfile=${maven-sources-jar}" />
-      <arg value="-Dclassifier=sources" />
-      <arg value="-Pgpg" />
-    </artifact:mvn>
-  </target>
-  -->
 
   <target name="test" depends="-antunit,-check-myself" description="Run tests"/>
 
