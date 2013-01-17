@@ -69,8 +69,8 @@ public class MavenMojo extends AbstractMojo {
   private String[] bundledSignatures;
 
   /**
-   * Specifies built in signatures files (e.g., deprecated APIs for specific Java versions,
-   * unsafe method calls using default locale, default charset,...)
+   * If true, the build fails if the Java version used to build is not supported (e.g., Java 8).
+   * Otherwise a warning is printed and the MOJO does nothing (which is the default).
    */
   @Parameter(required = false, defaultValue = "false")
   private boolean failOnUnsupportedJava;
