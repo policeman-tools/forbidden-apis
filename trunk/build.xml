@@ -132,13 +132,14 @@
   <target name="-maven-setup">
     <mkdir dir="build/maven"/>
     <copy todir="build/maven" encoding="UTF-8" outputencoding="UTF-8">
-      <fileset dir="src/main/maven"/>
+      <fileset dir="src/main/maven" includes="*.template"/>
       <filterset>
         <filter token="NAME" value="${ant.project.name}"/>
         <filter token="VERSION" value="${version}"/>
         <filter token="GROUPID" value="${groupId}"/>
         <filter token="ARTIFACTID" value="${artifactId}"/>
       </filterset>
+      <globmapper from="*.template" to="*"/>
     </copy>
   </target>
   
