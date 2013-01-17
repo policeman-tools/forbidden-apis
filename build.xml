@@ -192,6 +192,13 @@
     </artifact:install>
   </target>
 
+  <target name="stage.snapshots" depends="dist" description="Create the distribution">
+    <artifact:deploy file="${jar-file}">
+      <pom refid="maven.pom"/>
+      <attach file="${sources-jar-file}" classifier="sources"/>
+    </artifact:deploy>
+  </target>
+
   <target name="test" depends="-antunit,-check-myself" description="Run tests"/>
 
   <!--
@@ -268,5 +275,5 @@
     </java>
   </target>
 
-  <target name="jenkins" depends="clean,dist,test,-antunit.unsupported" description="Runs Jenkins Nightly"/>
+  <target name="jenkins" depends="clean,dist,test,-antunit.unsupported,stage.snapshots" description="Runs Jenkins Nightly"/>
 </project>
