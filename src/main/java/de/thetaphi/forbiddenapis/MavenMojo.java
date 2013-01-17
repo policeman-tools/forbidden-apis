@@ -26,7 +26,7 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
-import org.codehaus.plexus.util.FileUtils;
+import org.codehaus.plexus.util.DirectoryScanner;
 
 import java.io.Closeable;
 import java.io.File;
@@ -78,19 +78,20 @@ public class MavenMojo extends AbstractMojo {
   private boolean failOnUnsupportedJava;
 
   /**
-   * Contains a pattern of all class files to be parsed from the output directory.
+   * List of patterns matching all class files to be parsed from the output directory.
    * Can be changed to e.g. exclude several files (using excludes).
+   * The default is a single include with the pattern '**&#x002F;*.class'
    * @see #excludes
    */
-  @Parameter(required = false, defaultValue = "**/*.class")
-  private String includes;
+  @Parameter(required = false)
+  private String[] includes;
 
   /**
-   * Pattern of class files to be excluded from checking by this mojo.
+   * List of patterns matching class files to be excluded from checking by this mojo.
    * @see #includes
    */
   @Parameter(required = false)
-  private String excludes;
+  private String[] excludes;
 
   @Component
   private MavenProject project;
@@ -98,6 +99,9 @@ public class MavenMojo extends AbstractMojo {
   @Override
   public void execute() throws MojoExecutionException, MojoFailureException {
     final Log log = getLog();
+    
+    // set default param:
+    if (includes == null) includes = new String[] {"**/*.class"};
     
     final URL[] urls;
     try {
@@ -175,23 +179,25 @@ public class MavenMojo extends AbstractMojo {
         log.warn("No project output directory, forbiddenapis check skipped.");
         return;
       }
-      final List<File> files;
-      try {
-        @SuppressWarnings("unchecked") final List<File> f =
-          (List<File>) FileUtils.getFiles(classesDir, includes, excludes);
-        files = f;
-      } catch (IOException ioe) {
-        throw new MojoExecutionException("Failed to expand fileset: " + ioe);
-      }
-      if (files.isEmpty()) {
+      
+      final DirectoryScanner ds = new DirectoryScanner();
+      ds.setIncludes(includes);
+      ds.setExcludes(excludes);
+      ds.setBasedir(classesDir);
+      ds.setCaseSensitive(true);
+      ds.scan();
+      final String[] files = ds.getIncludedFiles();
+      
+      if (files.length == 0) {
         log.warn(String.format(Locale.ENGLISH,
           "No classes found in project output directory (includes=%s, excludes=%s), forbiddenapis check skipped.",
-          includes, excludes));
+          Arrays.toString(includes), Arrays.toString(excludes)));
         return;
       }
+      
       try {
-        for (File f : files) {
-          checker.addClassToCheck(new FileInputStream(f));
+        for (String f : files) {
+          checker.addClassToCheck(new FileInputStream(new File(classesDir, f)));
         }
       } catch (IOException ioe) {
         throw new MojoExecutionException("Failed to load one of the given class files: " + ioe);
