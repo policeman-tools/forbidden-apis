@@ -36,6 +36,7 @@ import java.net.URLClassLoader;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -114,6 +115,7 @@ public class MavenMojo extends AbstractMojo {
         urls[i++] = new File(cpElement).toURI().toURL();
       }
       assert i == urls.length;
+      if (log.isDebugEnabled()) log.debug("Compile Classpath: " + Arrays.toString(urls));
     } catch (DependencyResolutionRequiredException e) {
       throw new MojoExecutionException("Failed to build classpath:" + e);
     } catch (MalformedURLException e) {
@@ -177,12 +179,12 @@ public class MavenMojo extends AbstractMojo {
       log.info("Loading classes to check...");
       final File classesDir = new File(project.getBuild().getOutputDirectory());
       if (!classesDir.exists()) {
-        log.warn("No project output directory, forbiddenapis checks skipped.");
+        log.warn("No project output directory, forbiddenapis check skipped.");
         return;
       }
       final List<File> files = findClassFiles(classesDir);
       if (files.isEmpty()) {
-        log.warn("No classes found in project output directory, forbiddenapis checks skipped.");
+        log.warn("No classes found in project output directory, forbiddenapis check skipped.");
         return;
       }
       try {
