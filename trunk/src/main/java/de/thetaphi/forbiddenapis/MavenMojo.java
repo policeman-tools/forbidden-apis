@@ -26,6 +26,7 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
+import org.codehaus.plexus.util.FileUtils;
 
 import java.io.Closeable;
 import java.io.File;
@@ -76,31 +77,23 @@ public class MavenMojo extends AbstractMojo {
   @Parameter(required = false, defaultValue = "false")
   private boolean failOnUnsupportedJava;
 
+  /**
+   * Contains a pattern of all class files to be parsed from the output directory.
+   * Can be changed to e.g. exclude several files (using excludes).
+   * @see #excludes
+   */
+  @Parameter(required = false, defaultValue = "**/*.class")
+  private String includes;
+
+  /**
+   * Pattern of class files to be excluded from checking by this mojo.
+   * @see #includes
+   */
+  @Parameter(required = false)
+  private String excludes;
+
   @Component
   private MavenProject project;
-
-  private List<File> findClassFiles(File dir) throws MojoExecutionException, MojoFailureException {
-    final List<File> classFiles = new ArrayList<File>();
-    findClassFiles(dir, classFiles);
-    return classFiles;
-  }
-
-  private void findClassFiles(File dir, List<File> classFiles) throws MojoExecutionException, MojoFailureException {
-    if (dir.isDirectory()) {
-      final File[] files = dir.listFiles();
-      if (files != null) {
-        for (File file : files) {
-          if (file.isDirectory()) {
-            findClassFiles(file, classFiles);
-          } else if (file.getName().endsWith(".class")) {
-            classFiles.add(file);
-          }
-        }
-      }
-    } else {
-      throw new MojoExecutionException("Not a dir: " + dir);
-    }
-  }
 
   @Override
   public void execute() throws MojoExecutionException, MojoFailureException {
@@ -117,9 +110,9 @@ public class MavenMojo extends AbstractMojo {
       assert i == urls.length;
       if (log.isDebugEnabled()) log.debug("Compile Classpath: " + Arrays.toString(urls));
     } catch (DependencyResolutionRequiredException e) {
-      throw new MojoExecutionException("Failed to build classpath:" + e);
+      throw new MojoExecutionException("Failed to build classpath: " + e);
     } catch (MalformedURLException e) {
-      throw new MojoExecutionException("Failed to build classpath:" + e);
+      throw new MojoExecutionException("Failed to build classpath: " + e);
     }
 
     URLClassLoader urlLoader = null;
@@ -182,9 +175,18 @@ public class MavenMojo extends AbstractMojo {
         log.warn("No project output directory, forbiddenapis check skipped.");
         return;
       }
-      final List<File> files = findClassFiles(classesDir);
+      final List<File> files;
+      try {
+        @SuppressWarnings("unchecked") final List<File> f =
+          (List<File>) FileUtils.getFiles(classesDir, includes, excludes);
+        files = f;
+      } catch (IOException ioe) {
+        throw new MojoExecutionException("Failed to expand fileset: " + ioe);
+      }
       if (files.isEmpty()) {
-        log.warn("No classes found in project output directory, forbiddenapis check skipped.");
+        log.warn(String.format(Locale.ENGLISH,
+          "No classes found in project output directory (includes=%s, excludes=%s), forbiddenapis check skipped.",
+          includes, excludes));
         return;
       }
       try {
@@ -192,7 +194,7 @@ public class MavenMojo extends AbstractMojo {
           checker.addClassToCheck(new FileInputStream(f));
         }
       } catch (IOException ioe) {
-        throw new MojoExecutionException("Failed to load one of the given class files:" + ioe);
+        throw new MojoExecutionException("Failed to load one of the given class files: " + ioe);
       }
 
       try {
