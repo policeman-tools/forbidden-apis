@@ -76,18 +76,28 @@ public class MavenMojo extends AbstractMojo {
    */
   @Parameter(required = false, defaultValue = "false")
   private boolean failOnUnsupportedJava;
+  
+  /**
+   * Directory with the class files to check.
+   * @see #includes
+   * @see #excludes
+   */
+  @Parameter(required = false, defaultValue = "${project.build.outputDirectory}")
+  private File classesDirectory;
 
   /**
-   * List of patterns matching all class files to be parsed from the output directory.
+   * List of patterns matching all class files to be parsed from the classesDirectory.
    * Can be changed to e.g. exclude several files (using excludes).
-   * The default is a single include with the pattern '**&#x002F;*.class'
+   * The default is a single include with pattern '**&#47;*.class'
+   * @see #classesDirectory
    * @see #excludes
    */
   @Parameter(required = false)
   private String[] includes;
 
   /**
-   * List of patterns matching class files to be excluded from checking by this mojo.
+   * List of patterns matching class files to be excluded from checking.
+   * @see #classesDirectory
    * @see #includes
    */
   @Parameter(required = false)
@@ -174,16 +184,15 @@ public class MavenMojo extends AbstractMojo {
       }
 
       log.info("Loading classes to check...");
-      final File classesDir = new File(project.getBuild().getOutputDirectory());
-      if (!classesDir.exists()) {
-        log.warn("No project output directory, forbiddenapis check skipped.");
+      if (!classesDirectory.exists()) {
+        log.warn("No project output directory, forbiddenapis check skipped: " + classesDirectory);
         return;
       }
       
       final DirectoryScanner ds = new DirectoryScanner();
       ds.setIncludes(includes);
       ds.setExcludes(excludes);
-      ds.setBasedir(classesDir);
+      ds.setBasedir(classesDirectory);
       ds.setCaseSensitive(true);
       ds.scan();
       final String[] files = ds.getIncludedFiles();
@@ -197,7 +206,7 @@ public class MavenMojo extends AbstractMojo {
       
       try {
         for (String f : files) {
-          checker.addClassToCheck(new FileInputStream(new File(classesDir, f)));
+          checker.addClassToCheck(new FileInputStream(new File(classesDirectory, f)));
         }
       } catch (IOException ioe) {
         throw new MojoExecutionException("Failed to load one of the given class files: " + ioe);
