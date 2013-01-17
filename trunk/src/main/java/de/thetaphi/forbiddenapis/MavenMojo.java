@@ -51,21 +51,21 @@ public class MavenMojo extends AbstractMojo {
    * Lists all files, which contain signatures and comments for forbidden API calls.
    * The signatures are resolved against the compile classpath.
    */
-  @Parameter(required = false, defaultValue = "")
+  @Parameter(required = false)
   private File[] signaturesFiles;
 
   /**
    * Gives a multiline list of signatures, inline in the pom.xml. Use an XML CDATA section to do that!
    * The signatures are resolved against the compile classpath.
    */
-  @Parameter(required = false, defaultValue = "")
+  @Parameter(required = false)
   private String signatures;
 
   /**
    * Specifies built in signatures files (e.g., deprecated APIs for specific Java versions,
    * unsafe method calls using default locale, default charset,...)
    */
-  @Parameter(required = false, defaultValue = "")
+  @Parameter(required = false)
   private String[] bundledSignatures;
 
   /**
@@ -160,11 +160,11 @@ public class MavenMojo extends AbstractMojo {
           log.info("Reading inline API signatures...");
           checker.parseSignaturesString(sig);
         }
-        for (final String bs : bundledSignatures) {
+        if (bundledSignatures != null) for (final String bs : bundledSignatures) {
           log.info("Reading bundled API signatures: " + bs);
           checker.parseBundledSignatures(bs);
         }
-        for (final File f : signaturesFiles) {
+        if (signaturesFiles != null) for (final File f : signaturesFiles) {
           log.info("Reading API signatures: " + f);
           checker.parseSignaturesFile(new FileInputStream(f));
         }
