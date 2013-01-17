@@ -185,7 +185,12 @@
     </zip>
   </target>
 
-  <target name="dist" depends="jar,jar-src" description="Create the distribution"/>
+  <target name="dist" depends="-install-tasks,jar,jar-src" description="Create the distribution">
+    <artifact:install file="${jar-file}">
+      <pom id="maven.pom" file="build/maven/pom.xml"/>
+      <attach file="${sources-jar-file}" classifier="sources"/>
+    </artifact:install>
+  </target>
 
   <!--
   <target name="stage" depends="dist" description="deploy release version to Maven staging repository">
