@@ -30,15 +30,18 @@
       <dependency org="org.apache.ant" name="ant" rev="1.7.0" conf="build"/>
       <dependency org="org.apache.maven" name="maven-plugin-api" rev="2.0" conf="build"/>
       <dependency org="org.apache.maven" name="maven-artifact" rev="2.0" conf="build"/>
-      <dependency org="org.apache.maven" name="maven-model" rev="2.0" conf="build"/>
       <dependency org="org.apache.maven" name="maven-project" rev="2.0" conf="build"/>
-      <dependency org="org.codehaus.plexus" name="plexus-utils" rev="1.1" conf="build"/>
       <dependency org="org.apache.maven.plugin-tools" name="maven-plugin-annotations" rev="3.2" conf="build"/>
       <!-- 
        We use the asm-debug-all library, as the asm-all has no generics.
        It's not really debug, just not "stripped":
       -->
       <dependency org="org.ow2.asm" name="asm-debug-all" rev="4.1" conf="build,bundle"/>
+      <!--
+      We also bundle plexus-util, as we cannot rely on maven providing it.
+      See: http://jira.codehaus.org/browse/MNG-2892 and related issues.
+      -->
+      <dependency org="org.codehaus.plexus" name="plexus-utils" rev="3.0.9" conf="build,bundle"/>
       <!-- TODO: original JARJAR is somehow not in maven? -->
       <dependency org="com.googlecode.jarjar" name="jarjar" rev="1.4" conf="buildtools">
         <artifact name="jarjar" type="jar" url="http://jarjar.googlecode.com/files/jarjar-1.4.jar"/>
