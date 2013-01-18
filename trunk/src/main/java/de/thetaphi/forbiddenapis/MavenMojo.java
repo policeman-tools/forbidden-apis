@@ -106,7 +106,7 @@ public class MavenMojo extends AbstractMojo {
   @Component
   private MavenProject project;
 
-  @Override
+  // Not in Java 5: @Override
   public void execute() throws MojoExecutionException, MojoFailureException {
     final Log log = getLog();
     
