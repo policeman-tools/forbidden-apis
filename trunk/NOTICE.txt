@@ -1,4 +1,10 @@
-This tool uses:
+This tool bundles in its JAR file (jarjar'ed to new package name):
 
 ASM - Lightweight Java Bytecode Manipulation Framework
 Copyright © 1999-2012, OW2 Consortium
+http://asm.ow2.org/
+
+plexus-utils - A collection of various utility classes
+to ease working with strings, files, command lines, XML and more.
+Copyright ©, The Codehaus Foundation
+http://plexus.codehaus.org/plexus-utils/
