@@ -250,21 +250,6 @@
     </au:antunit>
   </target>
   
-  <target name="-antunit.unsupported" unless="tests.supported">
-    <mkdir dir="build/test-results"/>
-    <echo file="build/test-results/TEST-fake.xml" encoding="UTF-8"><![CDATA[<?xml version="1.0" encoding="UTF-8"?>
-<testsuite buildFile="dummy.xml" name="No tests run, just placeholder for Jenkins">
-  <testcase name="dummy">
-    <time>0.0</time>
-  </testcase>
-  <tests>1</tests>
-  <failures>0</failures>
-  <errors>0</errors>
-  <time>0.0</time>
-</testsuite>
-]]></echo>
-  </target>
-
   <target name="generate-deprecated" depends="compile-tools" description="Generates deprecated API signature lists for current JDK">
     <mkdir dir="${signatures.dir}"/>
     <echo message="Building deprecated signatures for JDK ${ant.java.version}:"/>
@@ -275,5 +260,5 @@
     </java>
   </target>
 
-  <target name="jenkins" depends="clean,dist,test,-antunit.unsupported,stage.snapshots" description="Runs Jenkins Nightly"/>
+  <target name="jenkins" depends="clean,dist,test,stage.snapshots" description="Runs Jenkins Nightly"/>
 </project>
