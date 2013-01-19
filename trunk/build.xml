@@ -149,7 +149,7 @@
       <arg value="org.apache.maven.plugins:maven-plugin-plugin:${maven-plugin-plugin.version}:descriptor"/>
       <sysproperty key="injected.src.dir" file="src/main/java"/>
       <sysproperty key="injected.target.dir" file="build/main"/>
-      <syspropertyset id="properties-starting-with-foo">
+      <syspropertyset>
         <propertyref regex=".*\.version"/>
         <mapper type="glob" from="*" to="injected.*"/>
       </syspropertyset>
@@ -185,12 +185,14 @@
     </zip>
   </target>
 
-  <target name="dist" depends="-install-tasks,jar,jar-src" description="Create the distribution">
+  <target name="install-maven-artifacts" depends="-install-tasks,jar,jar-src" description="Installs the Maven artifacts in ~/.m2">
     <artifact:install file="${jar-file}">
       <pom id="maven.pom" file="build/maven/pom.xml"/>
       <attach file="${sources-jar-file}" classifier="sources"/>
     </artifact:install>
   </target>
+
+  <target name="dist" depends="install-maven-artifacts" description="Create the distribution"/>
 
   <target name="stage.snapshots" depends="dist" description="Create the distribution">
     <artifact:deploy file="${jar-file}">
@@ -199,7 +201,7 @@
     </artifact:deploy>
   </target>
 
-  <target name="test" depends="-antunit,-check-myself" description="Run tests"/>
+  <target name="test" depends="-check-myself,-antunit" description="Run tests"/>
 
   <!--
   <target name="-junit" depends="compile-test">
@@ -235,9 +237,10 @@
     <property name="installed.antunit" value="true"/>
   </target>
 
-  <target name="-antunit" depends="jar,-install-forbiddenapi-task,-install-antunit" if="tests.supported">
+  <target name="-antunit" depends="install-maven-artifacts,-install-forbiddenapi-task,-install-antunit" if="tests.supported">
     <mkdir dir="build/test-results"/>
     <property name="antunit.main.classes" location="build/main"/>
+    <property name="antunit.maven3.version" value="3.0.4"/>
     <au:antunit>
       <fileset dir="src/test/ant" includes="Test*.xml"/>
       <au:plainlistener/>
@@ -245,7 +248,9 @@
       <propertyset>
         <propertyref prefix="antunit."/>
         <propertyref name="jar-file"/>
-        <propertyref name="jdk.version"/>
+        <propertyref regex=".*version"/>
+        <propertyref name="groupId"/>
+        <propertyref name="artifactId"/>
       </propertyset>
     </au:antunit>
   </target>
