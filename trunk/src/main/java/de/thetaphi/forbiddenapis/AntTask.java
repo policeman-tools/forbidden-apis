@@ -49,6 +49,7 @@ public final class AntTask extends Task {
   private Path classpath = null;
   
   private boolean failOnUnsupportedJava = false;
+  private boolean internalRuntimeForbidden = false;
     
   @Override
   public void execute() throws BuildException {
@@ -65,7 +66,7 @@ public final class AntTask extends Task {
       classFiles.setProject(getProject());
       apiSignatures.setProject(getProject());
       
-      final Checker checker = new Checker(loader) {
+      final Checker checker = new Checker(loader, internalRuntimeForbidden) {
         @Override
         protected void logError(String msg) {
           log(msg, Project.MSG_ERR);
@@ -79,8 +80,8 @@ public final class AntTask extends Task {
       
       if (!checker.isSupportedJDK) {
         final String msg = String.format(Locale.ENGLISH, 
-          "Your Java version (%s) is not supported by <%s/>. Please run the checks with a supported JDK!",
-          System.getProperty("java.version"), getTaskName());
+          "Your Java runtime (%s %s) is not supported by <%s/>. Please run the checks with a supported JDK!",
+          System.getProperty("java.runtime.name"), System.getProperty("java.runtime.version"), getTaskName());
         if (failOnUnsupportedJava) {
           throw new BuildException(msg);
         } else {
@@ -221,6 +222,10 @@ public final class AntTask extends Task {
   
   public void setFailOnUnsupportedJava(boolean failOnUnsupportedJava) {
     this.failOnUnsupportedJava = failOnUnsupportedJava;
+  }
+
+  public void setInternalRuntimeForbidden(boolean internalRuntimeForbidden) {
+    this.internalRuntimeForbidden = internalRuntimeForbidden;
   }
 
 }
