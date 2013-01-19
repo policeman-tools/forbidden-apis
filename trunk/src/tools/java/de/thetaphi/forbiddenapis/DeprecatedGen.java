@@ -35,8 +35,6 @@ import java.util.zip.ZipInputStream;
 
 public class DeprecatedGen implements Opcodes {
   
-  final static int ACC_PUBLICDEPRECATED = ACC_PUBLIC | ACC_DEPRECATED;
-  
   final static String NL = System.getProperty("line.separator", "\n");
   final SortedSet<String> deprecated = new TreeSet<String>();
   final String javaVersion, header;
@@ -59,6 +57,10 @@ public class DeprecatedGen implements Opcodes {
       .toString();
   }
   
+  protected boolean isDeprecated(int access) {
+   return ((access & (ACC_PUBLIC | ACC_PROTECTED)) != 0 && (access & ACC_DEPRECATED) != 0);
+  }
+  
   protected boolean isInternalClass(String className) {
     return className.startsWith("sun.") || className.startsWith("com.sun.");
   }
@@ -76,7 +78,7 @@ public class DeprecatedGen implements Opcodes {
     
       @Override
       public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
-        if ((access & ACC_PUBLICDEPRECATED) == ACC_PUBLICDEPRECATED) {
+        if (isDeprecated(access)) {
           deprecated.add(className);
           classDeprecated = true;
         }
@@ -84,7 +86,7 @@ public class DeprecatedGen implements Opcodes {
 
       @Override
       public MethodVisitor visitMethod(final int access, final String name, final String desc, final String signature, final String[] exceptions) {
-        if (!classDeprecated && (access & ACC_PUBLICDEPRECATED) == ACC_PUBLICDEPRECATED) {
+        if (!classDeprecated && isDeprecated(access)) {
           final Type[] args = Type.getType(desc).getArgumentTypes();
           final StringBuilder sb = new StringBuilder(className).append('#').append(name).append('(');
           boolean comma = false;
@@ -101,7 +103,7 @@ public class DeprecatedGen implements Opcodes {
         
       @Override
       public FieldVisitor visitField(final int access, final String name, final String desc, final String signature, final Object value) {
-        if (!classDeprecated && (access & ACC_PUBLICDEPRECATED) == ACC_PUBLICDEPRECATED) {
+        if (!classDeprecated && isDeprecated(access)) {
           deprecated.add(className + '#' + name);
         }
         return null;
