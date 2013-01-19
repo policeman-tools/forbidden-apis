@@ -31,6 +31,10 @@ import java.io.BufferedReader;
 import java.io.Reader;
 import java.io.File;
 import java.io.StringReader;
+import java.net.JarURLConnection;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Formatter;
@@ -53,34 +57,64 @@ public abstract class Checker {
   public final boolean isSupportedJDK;
   
   private final long start;
+  
+  final String javaRuntimeLibPath, javaRuntimeExtensionsPath;
   final ClassLoader loader;
-    
+  final boolean internalRuntimeForbidden;
+  
+  // key is the internal name (slashed):
   final Map<String,ClassSignatureLookup> classesToCheck = new HashMap<String,ClassSignatureLookup>();
+  // key is the binary name (dotted):
   final Map<String,ClassSignatureLookup> classpathClassCache = new HashMap<String,ClassSignatureLookup>();
   
+  // key is the internal name (slashed), followed by \000 and the field name:
   final Map<String,String> forbiddenFields = new HashMap<String,String>();
+  // key is the internal name (slashed), followed by \000 and the method signature:
   final Map<String,String> forbiddenMethods = new HashMap<String,String>();
+  // key is the internal name (slashed):
   final Map<String,String> forbiddenClasses = new HashMap<String,String>();
   
   protected abstract void logError(String msg);
   protected abstract void logInfo(String msg);
   
-  public Checker(ClassLoader loader) {
+  public Checker(ClassLoader loader, boolean internalRuntimeForbidden) {
     this.loader = loader;
+    this.internalRuntimeForbidden = internalRuntimeForbidden;
     this.start = System.currentTimeMillis();
-  
-    // check if we can load runtime classes (e.g. java.lang.String).
-    // If this fails, we have a newer Java version than ASM supports:
-    boolean b;
+    
+    boolean isSupportedJDK = false;
+    File javaRuntimeLibPath = null;
     try {
-      getClassFromClassLoader(String.class.getName());
-      b = true;
-    } catch (IllegalArgumentException iae) {
-      b = false;
-    } catch (ClassNotFoundException cnfe) {
-      throw new Error("FATAL PROBLEM: Cannot find java.lang.String on classpath.");
+      javaRuntimeLibPath = new File(System.getProperty("java.home"), "lib").getCanonicalFile();
+      if (javaRuntimeLibPath.exists()) {
+        isSupportedJDK = true;
+      }
+    } catch (IOException ioe) {
+      isSupportedJDK = false;
     }
-    this.isSupportedJDK = b;
+    
+    // we have to initialize lib paths here, otherwise getClassFromClassLoader() fails!
+    if (isSupportedJDK) {
+      this.javaRuntimeLibPath = javaRuntimeLibPath.getPath() + File.separator;
+      this.javaRuntimeExtensionsPath = new File(javaRuntimeLibPath, "ext").getPath() + File.separator;
+    } else {
+      this.javaRuntimeLibPath = this.javaRuntimeExtensionsPath = null;
+    }
+
+    if (isSupportedJDK) {
+      // check if we can load runtime classes (e.g. java.lang.String).
+      // If this fails, we have a newer Java version than ASM supports:
+      try {
+        isSupportedJDK = getClassFromClassLoader(String.class.getName()).isRuntimeClass;
+      } catch (IllegalArgumentException iae) {
+        isSupportedJDK = false;
+      } catch (ClassNotFoundException cnfe) {
+        isSupportedJDK = false;
+      }
+    }
+    
+    // finally set the latest value to final field:
+    this.isSupportedJDK = isSupportedJDK;
   }
   
   /** Reads a class (binary name) from the given {@link ClassLoader}. */
@@ -88,12 +122,27 @@ public abstract class Checker {
     ClassSignatureLookup c = classpathClassCache.get(clazz);
     if (c == null) {
       try {
-        final InputStream in = loader.getResourceAsStream(clazz.replace('.', '/') + ".class");
-        if (in == null) {
+        final URL url = loader.getResource(clazz.replace('.', '/') + ".class");
+        if (url == null) {
           throw new ClassNotFoundException("Loading of class " + clazz + " failed: Not found");
         }
+        final URLConnection conn = url.openConnection();
+        boolean isRuntimeClass = false;
+        if (javaRuntimeLibPath != null && conn instanceof JarURLConnection) {
+          final URL jarUrl = ((JarURLConnection) conn).getJarFileURL();
+          if ("file".equalsIgnoreCase(jarUrl.getProtocol())) try {
+            final String path = new File(jarUrl.toURI()).getCanonicalPath();
+            if (path.startsWith(javaRuntimeLibPath) && !path.startsWith(javaRuntimeExtensionsPath)) {
+              // logInfo(clazz + " is a runtime class.");
+              isRuntimeClass = true;
+            }
+          } catch (URISyntaxException use) {
+            // ignore (should not happen, but if it's happening, it's definitely not a runtime class)
+          }
+        }
+        final InputStream in = conn.getInputStream();
         try {
-          classpathClassCache.put(clazz, c = new ClassSignatureLookup(new ClassReader(in)));
+          classpathClassCache.put(clazz, c = new ClassSignatureLookup(new ClassReader(in), isRuntimeClass));
         } finally {
           in.close();
         }
@@ -242,7 +291,7 @@ public abstract class Checker {
     } finally {
       in.close();
     }
-    classesToCheck.put(reader.getClassName(), new ClassSignatureLookup(reader));
+    classesToCheck.put(reader.getClassName(), new ClassSignatureLookup(reader, false));
   }
   
   public final boolean hasNoSignatures() {
@@ -269,7 +318,7 @@ public abstract class Checker {
           private ClassSignatureLookup lookupRelatedClass(String internalName) {
             ClassSignatureLookup c = classesToCheck.get(internalName);
             if (c == null) try {
-              c = getClassFromClassLoader(internalName);
+              c = getClassFromClassLoader(Type.getObjectType(internalName).getClassName());
             } catch (ClassNotFoundException cnfe) {
               // we ignore lookup errors and simply ignore this related class
               c = null;
@@ -277,11 +326,23 @@ public abstract class Checker {
             return c;
           }
           
-          private boolean checkClassUse(String owner) {
-            final String printout = forbiddenClasses.get(owner);
+          private boolean checkClassUse(String internalName) {
+            final String printout = forbiddenClasses.get(internalName);
             if (printout != null) {
               logError("Forbidden class use: " + printout);
               return true;
+            }
+            if (internalRuntimeForbidden) {
+              final ClassSignatureLookup c = lookupRelatedClass(internalName);
+              if (c != null && c.isRuntimeClass) {
+                if (internalName.startsWith("sun/") || internalName.startsWith("com/sun/")) {
+                  logError(String.format(Locale.ENGLISH,
+                    "Forbidden class use: %s [non-public internal runtime class]",
+                    Type.getObjectType(internalName).getClassName()
+                  ));
+                  return true;
+                }
+              }
             }
             return false;
           }
@@ -382,7 +443,7 @@ public abstract class Checker {
     
     final String message = String.format(Locale.ENGLISH, 
         "Scanned %d (and %d related) class file(s) for forbidden API invocations (in %.2fs), %d error(s).",
-        classesToCheck.size(), classpathClassCache.size(), (System.currentTimeMillis() - start) / 1000.0, errors);
+        classesToCheck.size(), classesToCheck.isEmpty() ? 0 : classpathClassCache.size(), (System.currentTimeMillis() - start) / 1000.0, errors);
     if (errors > 0) {
       logError(message);
       throw new ForbiddenApiException("Check for forbidden API calls failed, see log.");
