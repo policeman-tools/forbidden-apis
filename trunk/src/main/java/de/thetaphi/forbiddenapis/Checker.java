@@ -295,7 +295,7 @@ public abstract class Checker {
   }
   
   public final boolean hasNoSignatures() {
-    return forbiddenMethods.isEmpty() && forbiddenClasses.isEmpty() && forbiddenFields.isEmpty();
+    return forbiddenMethods.isEmpty() && forbiddenClasses.isEmpty() && forbiddenFields.isEmpty() && (!internalRuntimeForbidden);
   }
   
   /** Parses a class and checks for valid method invocations */
