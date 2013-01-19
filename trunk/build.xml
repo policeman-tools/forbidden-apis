@@ -63,7 +63,7 @@
 
   <target name="-init">
     <ivy:cachepath pathid="path.build" conf="build" log="${ivy.logging}"/>
-    <ivy:cachepath pathid="path.junit" conf="test" log="${ivy.logging}"/>
+    <ivy:cachepath pathid="path.test" conf="test" log="${ivy.logging}"/>
     <path id="path.run">
       <path refid="path.build"/>
       <pathelement path="build/main"/>
@@ -71,14 +71,6 @@
     <path id="path.tools-run">
       <path refid="path.build"/>
       <pathelement path="build/tools"/>
-    </path>
-    <path id="path.test-build">
-      <path refid="path.run"/>
-      <path refid="path.junit"/>
-    </path>
-    <path id="path.test-run">
-      <path refid="path.test-build"/>
-      <pathelement path="build/test"/>
     </path>
   </target>
 
@@ -114,10 +106,6 @@
 
   <target name="compile" depends="-init" description="Compile">
     <compile module="main" classpathref="path.build"/>
-  </target>
-
-  <target name="compile-test" depends="compile" description="Compile tests">
-    <compile module="test" classpathref="path.test-build"/>
   </target>
 
   <target name="compile-tools" depends="-init" description="Compile tools">
@@ -203,29 +191,14 @@
 
   <target name="test" depends="-check-myself,-antunit" description="Run tests"/>
 
-  <!--
-  <target name="-junit" depends="compile-test">
-    <mkdir dir="build/test-results"/>
-    <junit haltonfailure="on">
-      <formatter type="plain" usefile="false"/>
-      <formatter type="xml" usefile="true"/>
-      <classpath refid="path.test-run"/>
-      <batchtest todir="build/test-results">
-        <fileset dir="src/test/java" includes="**/*Test.java"/>
-      </batchtest>
-    </junit>
-  </target>
-  -->
-  
   <target name="-install-forbiddenapi-task" depends="compile" unless="installed.forbiddenapi-task">
     <taskdef name="forbiddenapis" classname="de.thetaphi.forbiddenapis.AntTask" classpathref="path.run"/>
     <property name="installed.forbiddenapi-task" value="true"/>
   </target>
   
-  <target name="-check-myself" depends="compile,compile-test,compile-tools,-install-forbiddenapi-task">
+  <target name="-check-myself" depends="compile,compile-tools,-install-forbiddenapi-task">
     <forbiddenapis internalRuntimeForbidden="true" failOnUnsupportedJava="false">
       <fileset dir="build/main" includes="**/*.class"/>
-      <fileset dir="build/test" includes="**/*.class"/>
       <fileset dir="build/tools" includes="**/*.class"/>
       <bundledsignatures name="jdk-unsafe-${jdk.version}"/>
       <bundledsignatures name="jdk-deprecated-${jdk.version}"/>
@@ -233,7 +206,7 @@
   </target>
 
   <target name="-install-antunit" unless="installed.antunit">
-    <taskdef uri="antlib:org.apache.ant.antunit" classpathref="path.test-run"/>
+    <taskdef uri="antlib:org.apache.ant.antunit" classpathref="path.test"/>
     <property name="installed.antunit" value="true"/>
   </target>
 
