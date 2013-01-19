@@ -13,6 +13,7 @@
         <artifactId>${artifactId}</artifactId>
         <version>${version}</version>
         <configuration>
+          <internalRuntimeForbidden>true</internalRuntimeForbidden>
           <bundledSignatures>
             <bundledSignature>jdk-unsafe-${jdk.version}</bundledSignature>
             <bundledSignature>jdk-deprecated-${jdk.version}</bundledSignature>
