@@ -71,6 +71,12 @@ public class MavenMojo extends AbstractMojo {
   private String[] bundledSignatures;
 
   /**
+   * Forbids calls to classes from the internal java runtime (like sun.misc.Unsafe)
+   */
+  @Parameter(required = false, defaultValue = "false")
+  private boolean internalRuntimeForbidden;
+
+  /**
    * If true, the build fails if the Java version used to build is not supported (e.g., Java 8).
    * Otherwise a warning is printed and the MOJO does nothing (which is the default).
    */
@@ -135,7 +141,7 @@ public class MavenMojo extends AbstractMojo {
       ClassLoader.getSystemClassLoader();
     
     try {
-      final Checker checker = new Checker(loader) {
+      final Checker checker = new Checker(loader, internalRuntimeForbidden) {
         @Override
         protected void logError(String msg) {
           log.error(msg);
@@ -149,8 +155,8 @@ public class MavenMojo extends AbstractMojo {
       
       if (!checker.isSupportedJDK) {
         final String msg = String.format(Locale.ENGLISH, 
-          "Your Java version (%s) is not supported by the forbiddenapis MOJO. Please run the checks with a supported JDK!",
-          System.getProperty("java.version"));
+          "Your Java runtime (%s %s) is not supported by the forbiddenapis MOJO. Please run the checks with a supported JDK!",
+          System.getProperty("java.runtime.name"), System.getProperty("java.runtime.version"));
         if (failOnUnsupportedJava) {
           throw new MojoExecutionException(msg);
         } else {

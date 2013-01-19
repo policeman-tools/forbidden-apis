@@ -223,7 +223,7 @@
   </target>
   
   <target name="-check-myself" depends="compile,compile-test,compile-tools,-install-forbiddenapi-task">
-    <forbiddenapis>
+    <forbiddenapis internalRuntimeForbidden="true" failOnUnsupportedJava="false">
       <fileset dir="build/main" includes="**/*.class"/>
       <fileset dir="build/test" includes="**/*.class"/>
       <fileset dir="build/tools" includes="**/*.class"/>
