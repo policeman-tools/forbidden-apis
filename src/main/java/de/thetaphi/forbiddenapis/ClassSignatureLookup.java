@@ -29,11 +29,13 @@ import java.util.Set;
  * methods of a class. It make the signatures available as Sets. */
 final class ClassSignatureLookup {
   public final ClassReader reader;
+  public final boolean isRuntimeClass;
   public final Set<Method> methods;
   public final Set<String> fields;
   
-  public ClassSignatureLookup(final ClassReader reader) {
+  public ClassSignatureLookup(final ClassReader reader, boolean isRuntimeClass) {
     this.reader = reader;
+    this.isRuntimeClass = isRuntimeClass;
     final Set<Method> methods = new HashSet<Method>();
     final Set<String> fields = new HashSet<String>();
     reader.accept(new ClassVisitor(Opcodes.ASM4) {
