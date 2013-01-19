@@ -1,0 +1,34 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>de.thetaphi</groupId>
+  <artifactId>forbiddenapi-test</artifactId>
+  <version>0.0</version>
+  <name>Dummy Project for Tests</name>
+  
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>${groupId}</groupId>
+        <artifactId>${artifactId}</artifactId>
+        <version>${version}</version>
+        <configuration>
+          <bundledSignatures>
+            <bundledSignature>jdk-unsafe-${jdk.version}</bundledSignature>
+            <bundledSignature>jdk-deprecated-${jdk.version}</bundledSignature>
+          </bundledSignatures>
+          <signatures>${antunit.signatures}</signatures>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>forbiddenapis</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+    <!-- the forbiddenapi checker uses the outputDirectory by default to locate the classes to check: -->
+    <outputDirectory>${antunit.main.classes}</outputDirectory>
+  </build>
+</project>
