@@ -26,4 +26,25 @@
     <au:assertLogContains level="info" text=" 0 error(s)."/> 
   </target>
   
+  <target name="testFinalJARWithFinalJAR">
+    <!--
+    This is a crazy test: It uses the ANT task in the JAR file to test
+    the contents of the JAR file itsself. This showed a bug in newer
+    plexus-utils versions (uses String#toLowerCase()). We now bundle
+    only plexus-utils v1.1, which is much slimmer and does not reference
+    broken StringUtils. ASM is completely forbidden-api bug-free!
+    -->
+    <forbiddenapis-jar internalRuntimeForbidden="true">
+      <restrict>
+        <name name="**/*.class" handledirsep="true"/>
+        <archives>
+          <zips><fileset file="${jar-file}"/></zips>
+        </archives>
+      </restrict>
+      <bundledsignatures name="jdk-unsafe-${jdk.version}"/>
+      <bundledsignatures name="jdk-deprecated-${jdk.version}"/>
+    </forbiddenapis-jar>
+    <au:assertLogContains level="info" text=" 0 error(s)."/> 
+  </target>
+  
 </project>

@@ -196,10 +196,11 @@ public class MavenMojo extends AbstractMojo {
       }
       
       final DirectoryScanner ds = new DirectoryScanner();
-      ds.setIncludes(includes);
-      ds.setExcludes(excludes);
       ds.setBasedir(classesDirectory);
       ds.setCaseSensitive(true);
+      ds.setIncludes(includes);
+      ds.setExcludes(excludes);
+      ds.addDefaultExcludes();
       ds.scan();
       final String[] files = ds.getIncludedFiles();
       
