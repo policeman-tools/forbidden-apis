@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 -->
-<project name="Policeman's Forbidden API Checker" default="jar"
+<project name="Policeman's Forbidden API Checker" default="dist"
   xmlns:artifact="antlib:org.apache.maven.artifact.ant"
   xmlns:ivy="antlib:org.apache.ivy.ant"
   xmlns:au="antlib:org.apache.ant.antunit"
@@ -22,15 +22,6 @@
       <not><antversion atleast="1.8.0" /></not>
     </condition>
   </fail>
-
-  <condition property="tests.supported">
-    <or>
-      <equals arg1="${ant.java.version}" arg2="1.5"/>
-      <equals arg1="${ant.java.version}" arg2="1.6"/>
-      <equals arg1="${ant.java.version}" arg2="1.7"/>
-      <!-- JDK 8 is currently not supported because ASM cannot load modified class file format -->
-    </or>
-  </condition>
 
   <property file="${user.home}/build.properties" />
   <property file="build.properties" />
@@ -60,6 +51,19 @@
   <property name="maven-snapshots-repository-url" value="https://oss.sonatype.org/content/repositories/snapshots/" />
   <property name="maven-staging-repository-id" value="sonatype-nexus-staging" />
   <property name="maven-staging-repository-url" value="https://oss.sonatype.org/service/local/staging/deploy/maven2/" />
+
+  <condition property="tests.supported">
+    <or>
+      <equals arg1="${ant.java.version}" arg2="1.5"/>
+      <equals arg1="${ant.java.version}" arg2="1.6"/>
+      <equals arg1="${ant.java.version}" arg2="1.7"/>
+      <!-- JDK 8 is currently not supported because ASM cannot load modified class file format -->
+    </or>
+  </condition>
+
+  <condition property="isSnapshot">
+    <contains string="${version}" substring="-SNAPSHOT"/>
+  </condition>
 
   <target name="-init">
     <ivy:cachepath pathid="path.build" conf="build" log="${ivy.logging}"/>
@@ -182,11 +186,17 @@
 
   <target name="dist" depends="install-maven-artifacts" description="Create the distribution"/>
 
-  <target name="stage.snapshots" depends="dist" description="Create the distribution">
+  <target name="stage" depends="-stage.snapshots,-stage.release" description="Create the distribution"/>
+  
+  <target name="-stage.snapshots" depends="dist" if="isSnapshot">
     <artifact:deploy file="${jar-file}">
       <pom refid="maven.pom"/>
       <attach file="${sources-jar-file}" classifier="sources"/>
     </artifact:deploy>
+  </target>
+
+  <target name="-stage.release" depends="dist" unless="isSnapshot">
+    <fail message="Not yet implemented"/>
   </target>
 
   <target name="test" depends="-check-myself,-antunit" description="Run tests"/>
@@ -242,5 +252,5 @@
     </java>
   </target>
 
-  <target name="jenkins" depends="clean,dist,test,stage.snapshots" description="Runs Jenkins Nightly"/>
+  <target name="jenkins" depends="clean,dist,test,-stage.snapshots" description="Runs Jenkins Nightly"/>
 </project>
