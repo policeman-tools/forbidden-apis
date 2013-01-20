@@ -198,8 +198,8 @@
   
   <target name="-check-myself" depends="compile,compile-tools,-install-forbiddenapi-task">
     <forbiddenapis internalRuntimeForbidden="true" failOnUnsupportedJava="false">
-      <fileset dir="build/main" includes="**/*.class"/>
-      <fileset dir="build/tools" includes="**/*.class"/>
+      <fileset dir="build/main"/>
+      <fileset dir="build/tools"/>
       <bundledsignatures name="jdk-unsafe-${jdk.version}"/>
       <bundledsignatures name="jdk-deprecated-${jdk.version}"/>
     </forbiddenapis>
