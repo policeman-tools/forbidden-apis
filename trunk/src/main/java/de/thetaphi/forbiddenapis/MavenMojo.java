@@ -148,6 +148,11 @@ public class MavenMojo extends AbstractMojo {
         }
         
         @Override
+        protected void logWarn(String msg) {
+          log.warn(msg);
+        }
+        
+        @Override
         protected void logInfo(String msg) {
           log.info(msg);
         }
