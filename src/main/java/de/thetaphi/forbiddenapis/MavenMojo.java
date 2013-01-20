@@ -77,8 +77,8 @@ public class MavenMojo extends AbstractMojo {
   private boolean internalRuntimeForbidden;
 
   /**
-   * If true, the build fails if the Java version used to build is not supported (e.g., Java 8).
-   * Otherwise a warning is printed and the MOJO does nothing (which is the default).
+   * Fail the build, if the bundled ASM library cannot read the class file format
+   * of the runtime library or the runtime library cannot be discovered.
    */
   @Parameter(required = false, defaultValue = "false")
   private boolean failOnUnsupportedJava;
