@@ -213,6 +213,7 @@
   <target name="-antunit" depends="install-maven-artifacts,-install-forbiddenapi-task,-install-antunit" if="tests.supported">
     <mkdir dir="build/test-results"/>
     <property name="antunit.main.classes" location="build/main"/>
+    <property name="antunit.tools.classes" location="build/tools"/>
     <property name="antunit.maven3.version" value="3.0.4"/>
     <au:antunit>
       <fileset dir="src/test/ant" includes="Test*.xml"/>
@@ -225,6 +226,9 @@
         <propertyref name="groupId"/>
         <propertyref name="artifactId"/>
       </propertyset>
+      <referenceset>
+        <reference regex="path\..*"/>
+      </referenceset>
     </au:antunit>
   </target>
   
