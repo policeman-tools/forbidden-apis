@@ -14,7 +14,9 @@
 -->
 <project xmlns:au="antlib:org.apache.ant.antunit">
 
-  <target name="testInternalRuntimeForbidden">
+  <available classname="com.sun.net.httpserver.Headers" property="hasSunHttpServer"/>
+
+  <target name="testInternalRuntimeForbidden" if="hasSunHttpServer">
     <!--
     public class Demo1 {
       static {
