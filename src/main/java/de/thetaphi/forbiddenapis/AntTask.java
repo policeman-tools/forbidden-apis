@@ -50,6 +50,7 @@ public final class AntTask extends Task {
   
   private boolean failOnUnsupportedJava = false;
   private boolean internalRuntimeForbidden = false;
+  private boolean restrictClassFilename = true;
     
   @Override
   public void execute() throws BuildException {
@@ -140,6 +141,10 @@ public final class AntTask extends Task {
         }
         while (iter.hasNext()) {
           final Resource r = iter.next();
+          final String name = r.getName();
+          if (restrictClassFilename && name != null && !name.endsWith(".class")) {
+            continue;
+          }
           if (!r.isExists()) { 
             throw new BuildException("Class file does not exist: " + r);
           }
@@ -163,6 +168,16 @@ public final class AntTask extends Task {
   /** Set of class files to check */
   public void add(ResourceCollection rc) {
     classFiles.add(rc);
+  }
+  
+  /** Sets a directory as base for class files. The implicit pattern '**&#47;*.class' is used to only scan class files. */
+  public void setDir(File dir) {
+    final FileSet fs = new FileSet();
+    fs.setProject(getProject());
+    fs.setDir(dir);
+    // needed if somebody sets restrictClassFilename=false:
+    fs.setIncludes("**/*.class");
+    classFiles.add(fs);
   }
   
   /** A file with API signatures signaturesFile= attribute */
@@ -220,12 +235,27 @@ public final class AntTask extends Task {
     return this.classpath.createPath();
   }
   
+  /**
+   * Fail the build, if the bundled ASM library cannot read the class file format
+   * of the runtime library or the runtime library cannot be discovered.
+   */
   public void setFailOnUnsupportedJava(boolean failOnUnsupportedJava) {
     this.failOnUnsupportedJava = failOnUnsupportedJava;
   }
 
+  /**
+   * Forbids calls to classes from the internal java runtime (like sun.misc.Unsafe)
+   */
   public void setInternalRuntimeForbidden(boolean internalRuntimeForbidden) {
     this.internalRuntimeForbidden = internalRuntimeForbidden;
+  }
+
+  /** Automatically restrict resource names included to files with a name ending in '.class'.
+   * This makes filesets easier, as the includes="**&#47;*.class" is not needed.
+   * Defaults to {@code true}.
+   */
+  public void setRestrictClassFilename(boolean restrictClassFilename) {
+    this.restrictClassFilename = restrictClassFilename;
   }
 
 }
