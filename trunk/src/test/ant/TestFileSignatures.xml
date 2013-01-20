@@ -14,7 +14,7 @@
 -->
 <project xmlns:au="antlib:org.apache.ant.antunit">
 
-  <fileset id="main.classes" dir="${antunit.main.classes}" includes="**/*.class"/>
+  <fileset id="main.classes" dir="${antunit.main.classes}"/>
   
   <target name="testAttribute">
     <au:expectfailure expectedMessage="Check for forbidden API calls failed, see log">
