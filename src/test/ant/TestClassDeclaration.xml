@@ -15,24 +15,25 @@
 <project xmlns:au="antlib:org.apache.ant.antunit">
 
   <fileset id="main.classes" dir="${antunit.main.classes}"/>
-  
-  <target name="testAttribute">
-    <au:expectfailure expectedMessage="Check for forbidden API calls failed, see log">
-      <forbiddenapis signaturesfile="signatures1.txt" classpathref="path.build">
-        <fileset refid="main.classes"/>
-      </forbiddenapis>
-    </au:expectfailure>
-    <au:assertLogContains level="error" text="java.lang.String#substring(int,int) [You are crazy that you disallow substrings]"/> 
-  </target>
-  
-  <target name="testFileSet">
+
+  <target name="testForbiddenExtends">
     <au:expectfailure expectedMessage="Check for forbidden API calls failed, see log">
       <forbiddenapis classpathref="path.build">
         <fileset refid="main.classes"/>
-        <signaturesFileset file="signatures1.txt"/>
+        java.lang.Object @ Every class is not allowed!
       </forbiddenapis>
     </au:expectfailure>
-    <au:assertLogContains level="error" text="java.lang.String#substring(int,int) [You are crazy that you disallow substrings]"/> 
+    <au:assertLogContains level="error" text="java.lang.Object [Every class is not allowed!]"/> 
+    <au:assertLogContains level="error" text="(class declaration)"/> 
+  </target>
+  
+  <target name="testForbiddenInterfaces">
+    <au:expectfailure expectedMessage="Check for forbidden API calls failed, see log">
+      <forbiddenapis dir="${antunit.tools.classes}" classpathref="path.build">
+        org.objectweb.asm.Opcodes @ demo interface
+      </forbiddenapis>
+    </au:expectfailure>
+    <au:assertLogContains level="error" text="org.objectweb.asm.Opcodes [demo interface]"/> 
   </target>
   
 </project>

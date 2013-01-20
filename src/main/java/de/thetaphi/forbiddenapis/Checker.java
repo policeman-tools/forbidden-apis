@@ -75,6 +75,7 @@ public abstract class Checker {
   final Map<String,String> forbiddenClasses = new HashMap<String,String>();
   
   protected abstract void logError(String msg);
+  protected abstract void logWarn(String msg);
   protected abstract void logInfo(String msg);
   
   public Checker(ClassLoader loader, boolean internalRuntimeForbidden) {
@@ -105,7 +106,7 @@ public abstract class Checker {
       // check if we can load runtime classes (e.g. java.lang.String).
       // If this fails, we have a newer Java version than ASM supports:
       try {
-        isSupportedJDK = getClassFromClassLoader(String.class.getName()).isRuntimeClass;
+        isSupportedJDK = getClassFromClassLoader(String.class.getName(), true).isRuntimeClass;
       } catch (IllegalArgumentException iae) {
         isSupportedJDK = false;
       } catch (ClassNotFoundException cnfe) {
@@ -118,13 +119,23 @@ public abstract class Checker {
   }
   
   /** Reads a class (binary name) from the given {@link ClassLoader}. */
-  private ClassSignatureLookup getClassFromClassLoader(final String clazz) throws ClassNotFoundException {
-    ClassSignatureLookup c = classpathClassCache.get(clazz);
-    if (c == null) {
+  private ClassSignatureLookup getClassFromClassLoader(final String clazz, boolean throwCNFE) throws ClassNotFoundException {
+    final ClassSignatureLookup c;
+    if (classpathClassCache.containsKey(clazz)) {
+      c = classpathClassCache.get(clazz);
+      if (throwCNFE && c == null) {
+        throw new ClassNotFoundException("Loading of class " + clazz + " failed: Not found");
+      }
+    } else {
       try {
         final URL url = loader.getResource(clazz.replace('.', '/') + ".class");
         if (url == null) {
-          throw new ClassNotFoundException("Loading of class " + clazz + " failed: Not found");
+          classpathClassCache.put(clazz, null);
+          if (throwCNFE) {
+            throw new ClassNotFoundException("Loading of class " + clazz + " failed: Not found");
+          } else {
+            return null;
+          }
         }
         final URLConnection conn = url.openConnection();
         boolean isRuntimeClass = false;
@@ -147,7 +158,12 @@ public abstract class Checker {
           in.close();
         }
       } catch (IOException ioe) {
-        throw new ClassNotFoundException("Loading of class " + clazz + " failed.", ioe);
+        classpathClassCache.put(clazz, null);
+        if (throwCNFE) {
+          throw new ClassNotFoundException("Loading of class " + clazz + " failed.", ioe);
+        } else {
+          return null;
+        }
       }
     }
     return c;
@@ -196,7 +212,7 @@ public abstract class Checker {
     // check class & method/field signature, if it is really existent (in classpath), but we don't really load the class into JVM:
     final ClassSignatureLookup c;
     try {
-      c = getClassFromClassLoader(clazz);
+      c = getClassFromClassLoader(clazz, true);
     } catch (ClassNotFoundException cnfe) {
       throw new ParseException(cnfe.getMessage());
     }
@@ -305,6 +321,76 @@ public abstract class Checker {
       final String className = Type.getObjectType(reader.getClassName()).getClassName();
       String source = null;
       
+      ClassSignatureLookup lookupRelatedClass(String internalName) {
+        ClassSignatureLookup c = classesToCheck.get(internalName);
+        if (c == null) try {
+          // use binary name, so we need to convert:
+          c = getClassFromClassLoader(Type.getObjectType(internalName).getClassName(), false);
+        } catch (ClassNotFoundException cnfe) {
+          // we should never get here, but we ignore lookup errors and simply ignore this related class
+          c = null;
+        }
+        return c;
+      }
+      
+      boolean checkClassUse(String internalName) {
+        final String printout = forbiddenClasses.get(internalName);
+        if (printout != null) {
+          logError("Forbidden class/interface use: " + printout);
+          return true;
+        }
+        if (internalRuntimeForbidden && (internalName.startsWith("sun/") || internalName.startsWith("com/sun/"))) {
+          final String referencedClassName = Type.getObjectType(internalName).getClassName();
+          final ClassSignatureLookup c = lookupRelatedClass(internalName);
+          if (c == null) {
+            logWarn(String.format(Locale.ENGLISH,
+              "The class '%s' cannot be loaded by class loader. Cannot verify if it is a runtime class, assuming it is.",
+              referencedClassName
+            ));
+          }
+          if (c == null || c.isRuntimeClass) {
+            logError(String.format(Locale.ENGLISH,
+              "Forbidden class/interface use: %s [non-public internal runtime class]",
+              referencedClassName
+            ));
+            return true;
+          }
+        }
+        return false;
+      }
+
+      private boolean checkClassDefinition(String superName, String[] interfaces) {
+        if (superName != null) {
+          if (checkClassUse(superName)) {
+            return true;
+          }
+          final ClassSignatureLookup c = lookupRelatedClass(superName);
+          if (c != null && checkClassDefinition(c.reader.getSuperName(), c.reader.getInterfaces())) {
+            return true;
+          }
+        }
+        if (interfaces != null) {
+          for (String intf : interfaces) {
+            if (checkClassUse(intf)) {
+              return true;
+            }
+            final ClassSignatureLookup c = lookupRelatedClass(intf);
+            if (c != null && checkClassDefinition(c.reader.getSuperName(), c.reader.getInterfaces())) {
+              return true;
+            }
+          }
+        }
+        return false;
+      }
+      
+      @Override
+      public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
+        if (checkClassDefinition(superName, interfaces)) {
+          violations[0]++;
+          logError("  in " + className + " (class declaration)");
+        }
+      }
+
       @Override
       public void visitSource(String source, String debug) {
         this.source = source;
@@ -314,38 +400,6 @@ public abstract class Checker {
       public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
         return new MethodVisitor(Opcodes.ASM4) {
           private int lineNo = -1;
-          
-          private ClassSignatureLookup lookupRelatedClass(String internalName) {
-            ClassSignatureLookup c = classesToCheck.get(internalName);
-            if (c == null) try {
-              c = getClassFromClassLoader(Type.getObjectType(internalName).getClassName());
-            } catch (ClassNotFoundException cnfe) {
-              // we ignore lookup errors and simply ignore this related class
-              c = null;
-            }
-            return c;
-          }
-          
-          private boolean checkClassUse(String internalName) {
-            final String printout = forbiddenClasses.get(internalName);
-            if (printout != null) {
-              logError("Forbidden class use: " + printout);
-              return true;
-            }
-            if (internalRuntimeForbidden) {
-              final ClassSignatureLookup c = lookupRelatedClass(internalName);
-              if (c != null && c.isRuntimeClass) {
-                if (internalName.startsWith("sun/") || internalName.startsWith("com/sun/")) {
-                  logError(String.format(Locale.ENGLISH,
-                    "Forbidden class use: %s [non-public internal runtime class]",
-                    Type.getObjectType(internalName).getClassName()
-                  ));
-                  return true;
-                }
-              }
-            }
-            return false;
-          }
           
           private boolean checkMethodAccess(String owner, Method method) {
             if (checkClassUse(owner)) {

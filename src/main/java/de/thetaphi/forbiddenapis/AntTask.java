@@ -74,6 +74,12 @@ public final class AntTask extends Task {
         }
         
         @Override
+        protected void logWarn(String msg) {
+          // ANT has no real log levels printed, so prefix with "WARNING":
+          log("WARNING: " + msg, Project.MSG_WARN);
+        }
+        
+        @Override
         protected void logInfo(String msg) {
           log(msg, Project.MSG_INFO);
         }
