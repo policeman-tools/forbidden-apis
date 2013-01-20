@@ -17,7 +17,7 @@
   <taskdef name="forbiddenapis-jar" classname="de.thetaphi.forbiddenapis.AntTask" classpath="${jar-file}"/>
 
   <target name="testMySelfWithFinalJAR1">
-    <forbiddenapis-jar internalRuntimeForbidden="true">
+    <forbiddenapis-jar internalRuntimeForbidden="true" classpathref="path.build">
       <fileset dir="${antunit.main.classes}"/>
       <bundledsignatures name="jdk-unsafe-${jdk.version}"/>
       <bundledsignatures name="jdk-deprecated-${jdk.version}"/>
@@ -26,7 +26,7 @@
   </target>
   
   <target name="testMySelfWithFinalJAR2">
-    <forbiddenapis-jar dir="${antunit.main.classes}" internalRuntimeForbidden="true">
+    <forbiddenapis-jar dir="${antunit.main.classes}" internalRuntimeForbidden="true" classpathref="path.build">
       <bundledsignatures name="jdk-unsafe-${jdk.version}"/>
       <bundledsignatures name="jdk-deprecated-${jdk.version}"/>
     </forbiddenapis-jar>
@@ -41,7 +41,7 @@
     only plexus-utils v1.1, which is much slimmer and does not reference
     broken StringUtils. ASM is completely forbidden-api bug-free!
     -->
-    <forbiddenapis-jar internalRuntimeForbidden="true">
+    <forbiddenapis-jar internalRuntimeForbidden="true" classpathref="path.build">
       <zipfileset src="${jar-file}"/>
       <bundledsignatures name="jdk-unsafe-${jdk.version}"/>
       <bundledsignatures name="jdk-deprecated-${jdk.version}"/>

@@ -14,9 +14,7 @@
 -->
 <project xmlns:au="antlib:org.apache.ant.antunit">
 
-  <available classname="sun.misc.BASE64Encoder" property="hasSunHttpServer"/>
-
-  <target name="testInternalRuntimeForbidden" if="hasSunHttpServer">
+  <target name="testInternalRuntimeForbidden">
     <!--
     public class Demo1 {
       static {
@@ -29,7 +27,7 @@
         <fileset file="Demo1.class"/>
       </forbiddenapis>
     </au:expectfailure>
-    <au:assertLogContains level="error" text="non-public internal runtime class"/> 
+    <au:assertLogContains level="error" text="sun.misc.BASE64Encoder [non-public internal runtime class]"/> 
     <au:assertLogContains level="error" text=" 2 error(s)"/> 
   </target>
   
