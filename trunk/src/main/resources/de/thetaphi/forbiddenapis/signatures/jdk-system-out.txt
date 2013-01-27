@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-java.lang.System#out @ prints to System.out, should only be used for debugging, not in production code
-java.lang.System#err @ prints to System.err, should only be used for debugging, not in production code
+java.lang.System#out @ prints to System.out; should only be used for debugging, not in production code
+java.lang.System#err @ prints to System.err; should only be used for debugging, not in production code
 java.lang.Thread#dumpStack() @ dumpStack should only be used for debugging, not in production code
-java.lang.Throwable#printStackTrace() @ Eclipse auto-generated stubs, exceptions should be correctly bubbled up handled accordingly
+java.lang.Throwable#printStackTrace() @ Eclipse auto-generated stubs; exceptions should be correctly bubbled up and handled accordingly
