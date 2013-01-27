@@ -219,6 +219,7 @@
 
   <target name="-install-antunit" unless="installed.antunit">
     <taskdef uri="antlib:org.apache.ant.antunit" classpathref="path.test"/>
+    <taskdef uri="antlib:net.sf.antcontrib" classpathref="path.test"/>
     <property name="installed.antunit" value="true"/>
   </target>
 
@@ -237,6 +238,7 @@
         <propertyref regex=".*version"/>
         <propertyref name="groupId"/>
         <propertyref name="artifactId"/>
+        <propertyref name="ivy.logging"/>
       </propertyset>
       <referenceset>
         <reference regex="path\..*"/>
