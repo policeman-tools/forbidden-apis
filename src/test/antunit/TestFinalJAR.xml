@@ -35,6 +35,15 @@
     <au:assertLogContains level="info" text=" 0 error(s)."/> 
   </target>
   
+  <target name="testMySelfWithAntLib">
+    <taskdef uri="antlib:de.thetaphi.forbiddenapis" classpath="${jar-file}"/>
+    <fa:forbiddenapis xmlns:fa="antlib:de.thetaphi.forbiddenapis" dir="${antunit.main.classes}" internalRuntimeForbidden="true" classpathref="path.build">
+      <bundledsignatures name="jdk-unsafe-${jdk.version}"/>
+      <bundledsignatures name="jdk-deprecated-${jdk.version}"/>
+    </fa:forbiddenapis>
+    <au:assertLogContains level="info" text=" 0 error(s)."/> 
+  </target>
+  
   <target name="testFinalJARWithFinalJAR">
     <!--
     This is a crazy test: It uses the ANT task in the JAR file to test
