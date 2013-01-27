@@ -21,7 +21,7 @@
   <target name="testCommonsIO">
     <ac:foreach param="signatures-file" target="-check-signatures-file" inheritall="true" inheritrefs="true">
       <path>
-        <fileset dir="${antunit.main.classes}/de/thetaphi/forbiddenapis/signatures" includes="commons-io-unsafe-*"/>
+        <fileset dir="${antunit.main.classes}/de/thetaphi/forbiddenapis/signatures" includes="commons-io-*"/>
       </path>
     </ac:foreach>
   </target>
