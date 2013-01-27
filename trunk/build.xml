@@ -228,7 +228,7 @@
     <property name="antunit.tools.classes" location="build/tools"/>
     <property name="antunit.maven3.version" value="3.0.4"/>
     <au:antunit>
-      <fileset dir="src/test/ant" includes="Test*.xml"/>
+      <fileset dir="src/test/antunit" includes="Test*.xml"/>
       <au:plainlistener/>
       <au:xmllistener toDir="build/test-results" logLevel="info"/>
       <propertyset>
