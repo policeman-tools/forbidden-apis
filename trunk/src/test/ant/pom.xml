@@ -6,6 +6,10 @@
   <version>0.0</version>
   <name>Dummy Project for Tests</name>
   
+  <properties>
+      <maven.compiler.target>${jdk.version}</maven.compiler.target>
+  </properties>
+
   <build>
     <plugins>
       <plugin>
@@ -15,8 +19,8 @@
         <configuration>
           <internalRuntimeForbidden>true</internalRuntimeForbidden>
           <bundledSignatures>
-            <bundledSignature>jdk-unsafe-${jdk.version}</bundledSignature>
-            <bundledSignature>jdk-deprecated-${jdk.version}</bundledSignature>
+            <bundledSignature>jdk-unsafe</bundledSignature>
+            <bundledSignature>jdk-deprecated</bundledSignature>
           </bundledSignatures>
           <signatures>${antunit.signatures}</signatures>
         </configuration>
