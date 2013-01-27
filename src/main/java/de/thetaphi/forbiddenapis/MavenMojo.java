@@ -92,6 +92,14 @@ public class MavenMojo extends AbstractMojo {
    */
   @Parameter(required = false, defaultValue = "${project.build.outputDirectory}")
   private File classesDirectory;
+  
+  /**
+   * The default compiler target version used to expand references to bundled JDK signatures.
+   * E.g., if you use "jdk-deprecated", it will expand to this version.
+   * This setting should be identical to the target version used in the compiler plugin.
+   */
+  @Parameter(required = false, defaultValue = "${maven.compiler.target}")
+  private String targetVersion;
 
   /**
    * List of patterns matching all class files to be parsed from the classesDirectory.
@@ -178,7 +186,11 @@ public class MavenMojo extends AbstractMojo {
           log.info("Reading inline API signatures...");
           checker.parseSignaturesString(sig);
         }
-        if (bundledSignatures != null) for (final String bs : bundledSignatures) {
+        if (bundledSignatures != null) for (String bs : bundledSignatures) {
+          // automatically expand the compiler version in here (for jdk-* signatures without version)
+          if (targetVersion != null && bs.startsWith("jdk-") && !bs.matches(".*?\\-\\d\\.\\d")) {
+            bs = bs + "-" + targetVersion;
+          }
           log.info("Reading bundled API signatures: " + bs);
           checker.parseBundledSignatures(bs);
         }
