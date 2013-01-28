@@ -20,7 +20,7 @@
   
   <target name="testAttribute">
     <au:expectfailure expectedMessage="Check for forbidden API calls failed, see log">
-      <forbiddenapis signaturesfile="signatures1.txt" classpathref="path.build">
+      <forbiddenapis signaturesfile="signatures1.txt" classpathref="path.run">
         <fileset refid="main.classes"/>
       </forbiddenapis>
     </au:expectfailure>
@@ -29,7 +29,7 @@
   
   <target name="testFileSet">
     <au:expectfailure expectedMessage="Check for forbidden API calls failed, see log">
-      <forbiddenapis classpathref="path.build">
+      <forbiddenapis classpathref="path.run">
         <fileset refid="main.classes"/>
         <signaturesFileset file="signatures1.txt"/>
       </forbiddenapis>
