@@ -327,10 +327,14 @@ public abstract class Checker {
       String source = null;
       
       ClassSignatureLookup lookupRelatedClass(String internalName) {
+        final Type type = Type.getObjectType(internalName);
+        if (type.getSort() != Type.OBJECT) {
+          return null;
+        }
         ClassSignatureLookup c = classesToCheck.get(internalName);
         if (c == null) try {
           // use binary name, so we need to convert:
-          c = getClassFromClassLoader(Type.getObjectType(internalName).getClassName(), failOnMissingClasses);
+          c = getClassFromClassLoader(type.getClassName(), failOnMissingClasses);
         } catch (ClassNotFoundException cnfe) {
           if (failOnMissingClasses) {
             // rethrow
