@@ -25,7 +25,7 @@
     }
     -->
     <au:expectfailure expectedMessage="Check for forbidden API calls failed, see log">
-      <forbiddenapis internalRuntimeForbidden="true">
+      <forbiddenapis internalRuntimeForbidden="true" failOnMissingClasses="false">
         <fileset file="Demo1.class"/>
       </forbiddenapis>
     </au:expectfailure>
