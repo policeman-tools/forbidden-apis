@@ -135,6 +135,7 @@
       </filterset>
       <globmapper from="*.template" to="*"/>
     </copy>
+    <artifact:pom id="maven.deploy.pom" file="build/maven/pom-deploy.xml"/>
   </target>
   
   <target name="maven-descriptor" depends="compile,-maven-setup,-install-tasks,-uptodate" unless="maven-descriptor.uptodate" description="Creates the Maven Plugin Descriptor">
@@ -181,7 +182,7 @@
 
   <target name="install-maven-artifacts" depends="-install-tasks,jar,jar-src" description="Installs the Maven artifacts in ~/.m2">
     <artifact:install file="${jar-file}">
-      <pom id="maven.pom" file="build/maven/pom-deploy.xml"/>
+      <pom refid="maven.deploy.pom"/>
       <attach file="${sources-jar-file}" classifier="sources"/>
     </artifact:install>
   </target>
@@ -192,7 +193,7 @@
   
   <target name="-stage.snapshots" depends="dist" if="isSnapshot">
     <artifact:deploy file="${jar-file}">
-      <pom refid="maven.pom"/>
+      <pom refid="maven.deploy.pom"/>
       <attach file="${sources-jar-file}" classifier="sources"/>
     </artifact:deploy>
   </target>
