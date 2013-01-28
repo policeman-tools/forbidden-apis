@@ -86,6 +86,14 @@ public class MavenMojo extends AbstractMojo {
   private boolean failOnUnsupportedJava;
   
   /**
+   * Fail the build, if a referenced class is missing. This requires
+   * that you pass the whole classpath including all dependencies to this Mojo
+   * (Maven does this by default).
+   */
+  @Parameter(required = false, defaultValue = "true")
+  private boolean failOnMissingClasses;
+  
+  /**
    * Directory with the class files to check.
    * @see #includes
    * @see #excludes
@@ -151,7 +159,7 @@ public class MavenMojo extends AbstractMojo {
       ClassLoader.getSystemClassLoader();
     
     try {
-      final Checker checker = new Checker(loader, internalRuntimeForbidden) {
+      final Checker checker = new Checker(loader, internalRuntimeForbidden, failOnMissingClasses) {
         @Override
         protected void logError(String msg) {
           log.error(msg);

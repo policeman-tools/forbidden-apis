@@ -55,6 +55,7 @@ public final class AntTask extends Task {
   private boolean failOnUnsupportedJava = false;
   private boolean internalRuntimeForbidden = false;
   private boolean restrictClassFilename = true;
+  private boolean failOnMissingClasses = true;
     
   @Override
   public void execute() throws BuildException {
@@ -71,7 +72,7 @@ public final class AntTask extends Task {
       classFiles.setProject(getProject());
       apiSignatures.setProject(getProject());
       
-      final Checker checker = new Checker(loader, internalRuntimeForbidden) {
+      final Checker checker = new Checker(loader, internalRuntimeForbidden, failOnMissingClasses) {
         @Override
         protected void logError(String msg) {
           log(msg, Project.MSG_ERR);
@@ -248,13 +249,26 @@ public final class AntTask extends Task {
   /**
    * Fail the build, if the bundled ASM library cannot read the class file format
    * of the runtime library or the runtime library cannot be discovered.
+   * Defaults to {@code false}. 
    */
   public void setFailOnUnsupportedJava(boolean failOnUnsupportedJava) {
     this.failOnUnsupportedJava = failOnUnsupportedJava;
   }
 
   /**
+   * Fail the build, if a referenced class is missing. This requires
+   * that you pass the whole classpath including all dependencies.
+   * If you don't have all classes in the filesets, the application classes
+   * must be reachable through this classpath, too.
+   * Defaults to {@code true}. 
+   */
+  public void setFailOnMissingClasses(boolean failOnMissingClasses) {
+    this.failOnMissingClasses = failOnMissingClasses;
+  }
+
+  /**
    * Forbids calls to classes from the internal java runtime (like sun.misc.Unsafe)
+   * Defaults to {@code false}. 
    */
   public void setInternalRuntimeForbidden(boolean internalRuntimeForbidden) {
     this.internalRuntimeForbidden = internalRuntimeForbidden;
