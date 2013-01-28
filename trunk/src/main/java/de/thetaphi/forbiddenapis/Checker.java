@@ -335,14 +335,14 @@ public abstract class Checker {
         if (c == null) try {
           // use binary name, so we need to convert:
           c = getClassFromClassLoader(type.getClassName(), failOnMissingClasses);
-        } catch (ClassNotFoundException cnfe) {
-          if (failOnMissingClasses) {
-            // rethrow
-            throw new WrapperRuntimeException(cnfe);
-          } else {
-            // we ignore lookup errors and simply ignore this related class
-            c = null;
+          if (c == null) {
+            logWarn(String.format(Locale.ENGLISH,
+              "The referenced class '%s' cannot be loaded. Please fix the classpath!",
+              type.getClassName()
+            ));
           }
+        } catch (ClassNotFoundException cnfe) {
+          throw new WrapperRuntimeException(cnfe);
         }
         return c;
       }
@@ -356,12 +356,6 @@ public abstract class Checker {
         if (internalRuntimeForbidden && (internalName.startsWith("sun/") || internalName.startsWith("com/sun/"))) {
           final String referencedClassName = Type.getObjectType(internalName).getClassName();
           final ClassSignatureLookup c = lookupRelatedClass(internalName);
-          if (c == null) {
-            logWarn(String.format(Locale.ENGLISH,
-              "The class '%s' cannot be loaded by class loader. Cannot verify if it is a runtime class, assuming it is.",
-              referencedClassName
-            ));
-          }
           if (c == null || c.isRuntimeClass) {
             logError(String.format(Locale.ENGLISH,
               "Forbidden class/interface use: %s [non-public internal runtime class]",
