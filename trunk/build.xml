@@ -139,7 +139,7 @@
   
   <target name="maven-descriptor" depends="compile,-maven-setup,-install-tasks,-uptodate" unless="maven-descriptor.uptodate" description="Creates the Maven Plugin Descriptor">
     <!-- with fork=false this somehow takes endless to download the internet, so let's fork - and slow down in an other way (startup) -->
-    <artifact:mvn pom="build/maven/pom.xml" mavenVersion="${maven.version}" failonerror="true" fork="true">
+    <artifact:mvn pom="build/maven/pom-build.xml" mavenVersion="${maven.version}" failonerror="true" fork="true">
       <arg value="org.apache.maven.plugins:maven-plugin-plugin:${maven-plugin-plugin.version}:descriptor"/>
       <sysproperty key="injected.src.dir" file="src/main/java"/>
       <sysproperty key="injected.target.dir" file="build/main"/>
@@ -181,7 +181,7 @@
 
   <target name="install-maven-artifacts" depends="-install-tasks,jar,jar-src" description="Installs the Maven artifacts in ~/.m2">
     <artifact:install file="${jar-file}">
-      <pom id="maven.pom" file="build/maven/pom.xml"/>
+      <pom id="maven.pom" file="build/maven/pom-deploy.xml"/>
       <attach file="${sources-jar-file}" classifier="sources"/>
     </artifact:install>
   </target>
