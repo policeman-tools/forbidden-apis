@@ -64,7 +64,7 @@ public abstract class Checker {
   
   final String javaRuntimeLibPath, javaRuntimeExtensionsPath;
   final ClassLoader loader;
-  final boolean internalRuntimeForbidden;
+  final boolean internalRuntimeForbidden, failOnMissingClasses;
   
   // key is the internal name (slashed):
   final Map<String,ClassSignatureLookup> classesToCheck = new HashMap<String,ClassSignatureLookup>();
@@ -82,9 +82,10 @@ public abstract class Checker {
   protected abstract void logWarn(String msg);
   protected abstract void logInfo(String msg);
   
-  public Checker(ClassLoader loader, boolean internalRuntimeForbidden) {
+  public Checker(ClassLoader loader, boolean internalRuntimeForbidden, boolean failOnMissingClasses) {
     this.loader = loader;
     this.internalRuntimeForbidden = internalRuntimeForbidden;
+    this.failOnMissingClasses = failOnMissingClasses;
     this.start = System.currentTimeMillis();
     
     boolean isSupportedJDK = false;
@@ -329,10 +330,15 @@ public abstract class Checker {
         ClassSignatureLookup c = classesToCheck.get(internalName);
         if (c == null) try {
           // use binary name, so we need to convert:
-          c = getClassFromClassLoader(Type.getObjectType(internalName).getClassName(), false);
+          c = getClassFromClassLoader(Type.getObjectType(internalName).getClassName(), failOnMissingClasses);
         } catch (ClassNotFoundException cnfe) {
-          // we should never get here, but we ignore lookup errors and simply ignore this related class
-          c = null;
+          if (failOnMissingClasses) {
+            // rethrow
+            throw new WrapperRuntimeException(cnfe);
+          } else {
+            // we ignore lookup errors and simply ignore this related class
+            c = null;
+          }
         }
         return c;
       }
@@ -495,8 +501,13 @@ public abstract class Checker {
   
   public final void run() throws ForbiddenApiException {
     int errors = 0;
-    for (final ClassSignatureLookup c : classesToCheck.values()) {
-      errors += checkClass(c.reader);
+    try {
+      for (final ClassSignatureLookup c : classesToCheck.values()) {
+        errors += checkClass(c.reader);
+      }
+    } catch (WrapperRuntimeException wre) {
+      Throwable cause = wre.getCause();
+      throw new ForbiddenApiException("Check for forbidden API calls failed: " + cause.toString());
     }
     
     final String message = String.format(Locale.ENGLISH, 

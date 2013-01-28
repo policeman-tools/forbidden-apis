@@ -20,7 +20,7 @@
 
   <target name="testForbiddenClassWithMessage">
     <au:expectfailure expectedMessage="Check for forbidden API calls failed, see log">
-      <forbiddenapis classpathref="path.build">
+      <forbiddenapis classpathref="path.run">
         <fileset refid="main.classes"/>
         java.awt.Color @ Color is disallowed, thats not bad, because ANT has no colors...
         java.lang.String @ You are crazy that you disallow strings
@@ -31,7 +31,7 @@
   
   <target name="testForbiddenClassWithDefaultMessage">
     <au:expectfailure expectedMessage="Check for forbidden API calls failed, see log">
-      <forbiddenapis classpathref="path.build">
+      <forbiddenapis classpathref="path.run">
         <fileset refid="main.classes"/>
         @defaultMessage Let's disable some of AWT
         java.awt.BorderLayout
@@ -45,7 +45,7 @@
   
   <target name="testForbiddenMethodWithMessage">
     <au:expectfailure expectedMessage="Check for forbidden API calls failed, see log">
-      <forbiddenapis classpathref="path.build">
+      <forbiddenapis classpathref="path.run">
         <fileset refid="main.classes"/>
         java.lang.String#substring(int,int) @ You are crazy that you disallow substrings
       </forbiddenapis>
@@ -55,7 +55,7 @@
   
   <target name="testForbiddenFieldWithMessage">
     <au:expectfailure expectedMessage="Check for forbidden API calls failed, see log">
-      <forbiddenapis classpathref="path.build">
+      <forbiddenapis classpathref="path.run">
         <fileset refid="main.classes"/>
         java.util.Locale#ENGLISH @ We are speaking chinese here!
       </forbiddenapis>

@@ -22,6 +22,8 @@
             <bundledSignature>jdk-unsafe</bundledSignature>
             <bundledSignature>jdk-deprecated</bundledSignature>
           </bundledSignatures>
+          <!-- TODO: Fix classpath by adding dependencies and reenable this: -->
+          <failOnMissingClasses>false</failOnMissingClasses>
           <signatures>${antunit.signatures}</signatures>
         </configuration>
         <executions>

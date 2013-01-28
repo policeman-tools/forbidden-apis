@@ -210,6 +210,10 @@
   
   <target name="-check-myself" depends="compile,compile-tools,-install-forbiddenapi-task">
     <forbiddenapis internalRuntimeForbidden="true" failOnUnsupportedJava="false">
+      <classpath>
+        <path refid="path.run"/>
+        <path refid="path.tools-run"/>
+      </classpath>
       <fileset dir="build/main"/>
       <fileset dir="build/tools"/>
       <bundledsignatures name="jdk-unsafe-${jdk.version}"/>
