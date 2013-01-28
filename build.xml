@@ -229,15 +229,10 @@
   
   <target name="-antunit-fake-pom">
     <mkdir dir="build/test"/>
-    <pathconvert property="path.build.xslstr" pathsep="|">
-      <path refid="path.build"/>
-    </pathconvert>
-    <!--
-      The XSL input file is ignored completely, but XSL expects one to be given,
-      so we pass ourself (${ant.file}) here. The list of dependencies is separated by
-      '|' and inserted into the fake POM file by XSL.
-    --> 
-    <xslt in="${ant.file}" out="build/test/fake-pom.xml" style="src/test/antunit/pom-generator.xsl" force="true">
+    <pathconvert property="path.build.xslstr" pathsep="|" refid="path.build"/>
+    <xslt in="src/test/antunit/dummy.xml" out="build/test/fake-pom.xml"
+      style="src/test/antunit/pom-generator.xsl" force="true"
+    >
       <outputproperty name="indent" value="yes"/>
       <param name="jarfiles" expression="${path.build.xslstr}"/>
     </xslt>
