@@ -23,9 +23,8 @@
   
   <!--
     NOTE: This template matches the root element of any given input XML document!
-    The XSL input file is ignored completely, but XSL expects one to be given,
-    so build.xml passes itself here. The list of system dependencies is given via
-    string parameter, that must be splitted at '|'.
+    The XSL input file is ignored completely. The list of system dependencies is
+    given via string parameter, that must be splitted at '|'.
   --> 
   <xsl:template match="/">
     <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
