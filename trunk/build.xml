@@ -226,8 +226,25 @@
     <taskdef uri="antlib:net.sf.antcontrib" classpathref="path.test"/>
     <property name="installed.antunit" value="true"/>
   </target>
+  
+  <target name="-antunit-fake-pom">
+    <mkdir dir="build/test"/>
+    <pathconvert property="path.build.xslstr" pathsep="|">
+      <path refid="path.build"/>
+    </pathconvert>
+    <!--
+      The XSL input file is ignored completely, but XSL expects one to be given,
+      so we pass ourself (${ant.file}) here. The list of dependencies is separated by
+      '|' and inserted into the fake POM file by XSL.
+    --> 
+    <xslt in="${ant.file}" out="build/test/fake-pom.xml" style="src/test/antunit/pom-generator.xsl" force="true">
+      <outputproperty name="indent" value="yes"/>
+      <param name="jarfiles" expression="${path.build.xslstr}"/>
+    </xslt>
+    <property name="antunit.fake-pom" location="build/test/fake-pom.xml"/>
+  </target>
 
-  <target name="-antunit" depends="install-maven-artifacts,-install-forbiddenapi-task,-install-antunit" if="tests.supported">
+  <target name="-antunit" depends="install-maven-artifacts,-install-forbiddenapi-task,-install-antunit,-antunit-fake-pom" if="tests.supported">
     <mkdir dir="build/test-results"/>
     <property name="antunit.main.classes" location="build/main"/>
     <property name="antunit.tools.classes" location="build/tools"/>
