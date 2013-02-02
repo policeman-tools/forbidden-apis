@@ -74,15 +74,10 @@
   <condition property="ivy.available">
     <typefound uri="antlib:org.apache.ivy.ant" name="configure" />
   </condition>
-  <available file="${ivy.jar.file}" property="ivy.downloaded" />
 
-  <target name="-download.ivy" unless="ivy.downloaded">
-    <mkdir dir="${ivy.jar.dir}"/>
-    <get src="http://repo1.maven.org/maven2/org/apache/ivy/ivy/${ivy.install.version}/ivy-${ivy.install.version}.jar" dest="${ivy.jar.file}"/>
-  </target>
-  
   <target name="-install.ivy" unless="ivy.available">
-    <antcall target="-download.ivy"/>
+    <mkdir dir="${ivy.jar.dir}"/>
+    <get src="http://repo1.maven.org/maven2/org/apache/ivy/ivy/${ivy.install.version}/ivy-${ivy.install.version}.jar" dest="${ivy.jar.file}" skipexisting="true"/>
     <taskdef uri="antlib:org.apache.ivy.ant" classpath="${ivy.jar.file}"/>
   </target>
   
