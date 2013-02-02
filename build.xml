@@ -68,7 +68,7 @@
   </condition>
 
   <property name="ivy.install.version" value="2.3.0" />
-  <property name="ivy.jar.dir" location="${basedir}/.ivy" />
+  <property name="ivy.jar.dir" location=".ivy" />
   <property name="ivy.jar.file" location="${ivy.jar.dir}/ivy-${ivy.install.version}.jar" />
 
   <condition property="ivy.available">
