@@ -67,7 +67,26 @@
     <contains string="${version}" substring="-SNAPSHOT"/>
   </condition>
 
-  <target name="-init">
+  <property name="ivy.install.version" value="2.3.0" />
+  <property name="ivy.jar.dir" location="${basedir}/.ivy" />
+  <property name="ivy.jar.file" location="${ivy.jar.dir}/ivy-${ivy.install.version}.jar" />
+
+  <condition property="ivy.available">
+    <typefound uri="antlib:org.apache.ivy.ant" name="configure" />
+  </condition>
+  <available file="${ivy.jar.file}" property="ivy.downloaded" />
+
+  <target name="-download.ivy" unless="ivy.downloaded">
+    <mkdir dir="${ivy.jar.dir}"/>
+    <get src="http://repo1.maven.org/maven2/org/apache/ivy/ivy/${ivy.install.version}/ivy-${ivy.install.version}.jar" dest="${ivy.jar.file}"/>
+  </target>
+  
+  <target name="-install.ivy" unless="ivy.available">
+    <antcall target="-download.ivy"/>
+    <taskdef uri="antlib:org.apache.ivy.ant" classpath="${ivy.jar.file}"/>
+  </target>
+  
+  <target name="-init" depends="-install.ivy">
     <ivy:cachepath pathid="path.build" conf="build" log="${ivy.logging}"/>
     <ivy:cachepath pathid="path.test" conf="test" log="${ivy.logging}"/>
     <path id="path.run">
@@ -80,7 +99,7 @@
     </path>
   </target>
 
-  <target name="-install-tasks" unless="installed.tasks">
+  <target name="-install-tasks" depends="-init" unless="installed.tasks">
     <ivy:cachepath pathid="path.tasks" conf="buildtools" log="${ivy.logging}"/>
     <taskdef name="jarjar" classname="com.tonicsystems.jarjar.JarJarTask" classpathref="path.tasks"/>
     <taskdef uri="antlib:org.apache.maven.artifact.ant" classpathref="path.tasks"/>
