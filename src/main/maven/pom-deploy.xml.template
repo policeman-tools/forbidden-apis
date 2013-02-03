@@ -41,9 +41,8 @@
 
   <developers>
     <developer>
-      <id>uwe.h.schindler@gmail.com</id>
+      <id>uwe.h.schindler</id>
       <name>Uwe Schindler</name>
-      <email>uwe@thetaphi.de</email>
       <url>http://www.thetaphi.de/</url>
       <roles>
         <role>architect</role>
@@ -52,9 +51,8 @@
       <timezone>+1</timezone>
     </developer>
     <developer>
-      <id>rcmuir@gmail.com</id>
+      <id>rcmuir</id>
       <name>Robert Muir</name>
-      <email>rcmuir@gmail.com</email>
       <roles>
         <role>developer</role>
         <role>default locale/charset/timezone ghostbuster</role>
