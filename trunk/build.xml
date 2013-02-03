@@ -45,6 +45,7 @@
   <property name="version" value="1.0-SNAPSHOT"/>
 
   <!-- define artifacts' name, which follows the convention of Maven -->
+  <property name="pom-file" location="dist/${artifactId}-${version}.pom" />
   <property name="jar-file" location="dist/${artifactId}-${version}.jar" />
   <property name="sources-jar-file" location="dist/${artifactId}-${version}-sources.jar" />
 
@@ -53,6 +54,10 @@
   <property name="maven-snapshots-repository-url" value="https://oss.sonatype.org/content/repositories/snapshots/" />
   <property name="maven-staging-repository-id" value="sonatype-nexus-staging" />
   <property name="maven-staging-repository-url" value="https://oss.sonatype.org/service/local/staging/deploy/maven2/" />
+
+  <!-- GPG settings -->
+  <property name="gpg.exe" value="gpg" />
+  <property name="gpg.key" value="CODE SIGNING KEY" />
 
   <condition property="tests.supported">
     <or>
@@ -157,7 +162,8 @@
       </filterset>
       <globmapper from="*.template" to="*"/>
     </copy>
-    <artifact:pom id="maven.deploy.pom" file="build/maven/pom-deploy.xml"/>
+    <property name="maven.deploy.pom" location="build/maven/pom-deploy.xml"/>
+    <artifact:pom id="maven.deploy.pom" file="${maven.deploy.pom}"/>
   </target>
   
   <target name="maven-descriptor" depends="compile,-maven-setup,-install-tasks,-uptodate" unless="maven-descriptor.uptodate" description="Creates the Maven Plugin Descriptor">
@@ -209,7 +215,9 @@
     </artifact:install>
   </target>
 
-  <target name="dist" depends="install-maven-artifacts" description="Create the distribution"/>
+  <target name="dist" depends="install-maven-artifacts" description="Create the distribution">
+    <copy file="${maven.deploy.pom}" tofile="${pom-file}"/>
+  </target>
 
   <target name="stage" depends="-stage.snapshots,-stage.release" description="Create the distribution"/>
   
@@ -219,9 +227,43 @@
       <attach file="${sources-jar-file}" classifier="sources"/>
     </artifact:deploy>
   </target>
+  
+  <target name="sign-artifacts" depends="dist">
+    <delete failonerror="false" dir="dist" includes="**/*.asc"/>
 
-  <target name="-stage.release" depends="dist" unless="isSnapshot">
-    <fail message="Not yet implemented"/>
+    <input message="Enter GPG keystore password: >" addproperty="gpg.passphrase">
+      <handler classname="org.apache.tools.ant.input.SecureInputHandler" />
+    </input>
+
+    <apply executable="${gpg.exe}" inputstring="${gpg.passphrase}"
+           dest="dist" type="file" maxparallel="1" verbose="yes">
+      <arg value="--passphrase-fd"/>
+      <arg value="0"/>
+      <arg value="--batch"/>
+      <arg value="--armor"/>
+      <arg value="--default-key"/>
+      <arg value="${gpg.key}"/>
+      <arg value="--output"/>
+      <targetfile/>
+      <arg value="--detach-sig"/>
+      <srcfile/>
+      <fileset dir="dist">
+        <include name="**/*.jar"/>
+        <include name="**/*.pom"/>
+      </fileset>
+      <globmapper from="*" to="*.asc"/>
+    </apply>
+  </target>
+
+  <target name="-stage.release" depends="sign-artifacts" unless="isSnapshot">
+    <artifact:deploy file="${jar-file}">
+      <pom refid="maven.deploy.pom"/>
+      <attach file="${sources-jar-file}" classifier="sources"/>
+      <!-- signatures: -->
+      <attach file="${pom-file}.asc" type="pom.asc"/>
+      <attach file="${jar-file}.asc" type="jar.asc"/>
+      <attach file="${sources-jar-file}.asc" classifier="sources" type="jar.asc"/>
+    </artifact:deploy>
   </target>
 
   <target name="test" depends="-check-myself,-antunit" description="Run tests"/>
