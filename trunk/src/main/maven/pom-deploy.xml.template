@@ -7,6 +7,7 @@
   <name>@NAME@</name>
   <description>Apache Ant and Maven Mojo for checking calls to &quot;forbidden&quot; APIs in the bytecode of your Java project.</description>
   <url>http://code.google.com/p/forbidden-apis/</url>
+  <inceptionYear>2013</inceptionYear>
   <packaging>maven-plugin</packaging>
   
   <parent>
@@ -27,4 +28,27 @@
     <developerConnection>scm:svn:https://forbidden-apis.googlecode.com/svn/trunk/</developerConnection>
     <url>http://forbidden-apis.googlecode.com/svn/trunk/</url>
   </scm>
+  
+  <issueManagement>
+    <system>Google Code Issue Tracker</system>
+    <url>http://code.google.com/p/forbidden-apis/issues/list</url>
+  </issueManagement>
+  
+  <ciManagement>
+    <system>Jenkins</system>
+    <url>http://jenkins.thetaphi.de/job/Forbidden-APIs/</url>
+  </ciManagement>
+
+  <developers>
+    <developer>
+      <id>uwe.h.schindler@gmail.com</id>
+      <name>Uwe Schindler</name>
+      <email>uwe@thetaphi.de</email>
+      <url>http://www.thetaphi.de/</url>
+      <roles>
+        <role>developer</role>
+      </roles>
+      <timezone>+1</timezone>
+    </developer>
+  </developers>
 </project>
