@@ -46,9 +46,20 @@
       <email>uwe@thetaphi.de</email>
       <url>http://www.thetaphi.de/</url>
       <roles>
+        <role>architect</role>
         <role>developer</role>
       </roles>
       <timezone>+1</timezone>
+    </developer>
+    <developer>
+      <id>rcmuir@gmail.com</id>
+      <name>Robert Muir</name>
+      <email>rcmuir@gmail.com</email>
+      <roles>
+        <role>developer</role>
+        <role>default locale/charset/timezone ghostbuster</role>
+      </roles>
+      <timezone>-5</timezone>
     </developer>
   </developers>
 </project>
