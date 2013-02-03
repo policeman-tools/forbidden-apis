@@ -5,6 +5,7 @@
   <artifactId>@ARTIFACTID@</artifactId>
   <version>@VERSION@</version>
   <name>@NAME@</name>
+  <description>Apache Ant and Maven Mojo for checking calls to &quot;forbidden&quot; APIs in the bytecode of your Java project.</description>
   <url>http://code.google.com/p/forbidden-apis/</url>
   <packaging>maven-plugin</packaging>
   
