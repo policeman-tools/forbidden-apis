@@ -82,6 +82,14 @@
   </target>
   
   <target name="-init" depends="-install.ivy">
+    <ivy:resolve log="${ivy.logging}"/>
+    <condition property="ivy.version-message"
+      value="The correct Apache Ivy version ${ivy.version} is installed."
+      else="You have installed a different Apache Ivy version (${ivy.version}) in your ANT classpath than the expected one (${ivy.install.version}). The build may fail!"
+    >
+      <equals arg1="${ivy.version}" arg2="${ivy.install.version}"/>
+    </condition>
+    <echo taskname="check-ivy" message="${ivy.version-message}"/>
     <ivy:cachepath pathid="path.build" conf="build" log="${ivy.logging}"/>
     <ivy:cachepath pathid="path.test" conf="test" log="${ivy.logging}"/>
     <path id="path.run">
