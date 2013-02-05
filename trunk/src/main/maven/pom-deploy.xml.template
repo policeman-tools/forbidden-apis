@@ -26,7 +26,7 @@
   <scm>
     <connection>scm:svn:http://forbidden-apis.googlecode.com/svn/trunk/</connection>
     <developerConnection>scm:svn:https://forbidden-apis.googlecode.com/svn/trunk/</developerConnection>
-    <url>http://forbidden-apis.googlecode.com/svn/trunk/</url>
+    <url>http://code.google.com/p/forbidden-apis/source/browse/</url>
   </scm>
   
   <issueManagement>
