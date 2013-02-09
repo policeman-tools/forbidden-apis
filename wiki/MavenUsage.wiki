@@ -51,3 +51,5 @@ To use the forbidden API checker in Maven, use the following template to include
   <!-- more build settings here... -->
 </build>
 }}}
+
+The possible `<bundledsignatures>` can be found on a [BundledSignatures separate page]. You can also give your own signatures in separate files from your project directory.
