@@ -29,8 +29,8 @@
       <syspropertyset refid="injected-properties"/>
     </artifact:mvn>
     <au:assertLogContains text=" 0 error(s)."/> 
-    <au:assertLogContains text="Reading bundled API signatures: jdk-deprecated-${jdk.version}"/> 
-    <au:assertLogContains text="Reading bundled API signatures: jdk-unsafe-${jdk.version}"/> 
+    <au:assertLogContains text="Reading bundled API signatures: jdk-deprecated"/> 
+    <au:assertLogContains text="Reading bundled API signatures: jdk-unsafe"/> 
   </target>
   
   <target name="testInlineSignaturesMaven2">
@@ -50,8 +50,8 @@
       <syspropertyset refid="injected-properties"/>
     </artifact:mvn>
     <au:assertLogContains text=" 0 error(s)."/> 
-    <au:assertLogContains text="Reading bundled API signatures: jdk-deprecated-${jdk.version}"/> 
-    <au:assertLogContains text="Reading bundled API signatures: jdk-unsafe-${jdk.version}"/> 
+    <au:assertLogContains text="Reading bundled API signatures: jdk-deprecated"/> 
+    <au:assertLogContains text="Reading bundled API signatures: jdk-unsafe"/> 
   </target>
 
 </project>

@@ -50,6 +50,7 @@
               <bundledSignatures>
                 <bundledSignature>jdk-unsafe</bundledSignature>
                 <bundledSignature>jdk-deprecated</bundledSignature>
+                <bundledSignature>jdk-system-out</bundledSignature>
               </bundledSignatures>
               <signatures>${antunit.signatures}</signatures>
             </configuration>

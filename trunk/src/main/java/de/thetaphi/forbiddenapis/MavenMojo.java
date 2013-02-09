@@ -195,12 +195,8 @@ public class MavenMojo extends AbstractMojo {
           checker.parseSignaturesString(sig);
         }
         if (bundledSignatures != null) for (String bs : bundledSignatures) {
-          // automatically expand the compiler version in here (for jdk-* signatures without version)
-          if (targetVersion != null && bs.startsWith("jdk-") && !bs.matches(".*?\\-\\d\\.\\d")) {
-            bs = bs + "-" + targetVersion;
-          }
           log.info("Reading bundled API signatures: " + bs);
-          checker.parseBundledSignatures(bs);
+          checker.parseBundledSignatures(bs, targetVersion);
         }
         if (signaturesFiles != null) for (final File f : signaturesFiles) {
           log.info("Reading API signatures: " + f);
