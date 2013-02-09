@@ -21,10 +21,13 @@ To use the forbidden API checker in Maven, use the following template to include
       <configuration>
         <internalRuntimeForbidden>true</internalRuntimeForbidden>
         <bundledSignatures>
+          <!--
+            This will automatically choose the right
+            signatures based on 'maven.compiler.target':
+          -->
           <bundledSignature>jdk-unsafe</bundledSignature>
           <bundledSignature>jdk-deprecated</bundledSignature>
         </bundledSignatures>
-        <signatures>${antunit.signatures}</signatures>
       </configuration>
       <executions>
         <execution>
