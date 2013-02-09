@@ -18,7 +18,7 @@ The Ant task can be downloaded as an Ant Task from this web page (the JAR file p
   </path>
 
   <target name="compile">
-    <javac classpathref="build.classpath" srcdir="${build.dir}"
+    <javac classpathref="build.classpath" srcdir="..." destdir="${build.dir}"
       source="${jdk.version}" target="${jdk.version}"/>
   </target>
 
@@ -66,7 +66,7 @@ If your project is using [http://ant.apache.org/ivy/ Apache Ivy] (recommended), 
   </target>
 
   <target name="compile" depends="-init">
-    <javac classpathref="build.classpath" srcdir="${build.dir}"
+    <javac classpathref="build.classpath" srcdir="..." destdir="${build.dir}"
       source="${jdk.version}" target="${jdk.version}"/>
   </target>
 
