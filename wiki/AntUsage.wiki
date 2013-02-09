@@ -14,7 +14,7 @@ The Ant task can be downloaded as an Ant Task from this web page (the JAR file p
     <!--
      define your build classpath here, so all referenced JAR files can be found.
      This classpath should be used by javac and the forbidden API checker.
-    ->
+    -->
   </path>
 
   <!--- your other tasks -->
