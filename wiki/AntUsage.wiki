@@ -75,7 +75,8 @@ If your project is using [http://ant.apache.org/ivy/ Apache Ivy] (recommended), 
 
   <target name="forbidden-checks" depends="compile">
     <fa:forbiddenapis internalRuntimeForbidden="true" classpathref="build.classpath" dir="${build.dir}">
-      <!-- ... -->
+      <bundledsignatures name="jdk-unsafe-${jdk.version}"/>
+      <bundledsignatures name="jdk-deprecated-${jdk.version}"/>
     </fa:forbiddenapis>
   </target>
 
