@@ -26,6 +26,7 @@ The Ant task can be downloaded as an Ant Task from this web page (the JAR file p
     <forbiddenapis internalRuntimeForbidden="true" classpathref="build.classpath" dir="${build.dir}">
       <bundledsignatures name="jdk-unsafe-${jdk.version}"/>
       <bundledsignatures name="jdk-deprecated-${jdk.version}"/>
+      <signaturesFileset file="path/to/signatures.txt"/>
     </forbiddenapis>
   </target>
 
