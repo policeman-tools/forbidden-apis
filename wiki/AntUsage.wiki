@@ -1,13 +1,35 @@
-#summary One-sentence summary of this page.
+= Ant usage instructions =
 
-= Introduction =
+The Ant task can be downloaded as an Ant Task from this web page (the JAR file provides both the Maven Mojo and the Ant Task). Place the JAR file in the lib folder of your Ant project and include the taskdef like the following:
 
-Add your content here.
+{{{
+<project>
 
+  <taskdef name="forbiddenapis" classname="de.thetaphi.forbiddenapis.AntTask" classpath="path/to/forbiddenapis.jar"/>
 
-= Details =
+  <property name="build.dir" location="..."/>
+  <property name="jdk.version" value="1.6"/>
 
-Add your content here.  Format your content with:
-  * Text in *bold* or _italic_
-  * Headings, paragraphs, and lists
-  * Automatic links to other wiki pages
+  <path id="build.classpath">
+    <!--
+     define your build classpath here, so all referenced JAR files can be found.
+     This classpath should be used by javac and the forbidden API checker.
+    ->
+  </path>
+
+  <!--- your other tasks -->
+
+  <target name="compile">
+    <javac classpathref="build.classpath" srcdir="${build.dir}"
+      source="${jdk.version}" target="${jdk.version}"/>
+  </target>
+
+  <target name="forbidden-checks" depends="compile">
+    <forbiddenapis internalRuntimeForbidden="true" classpathref="build.classpath" dir="${build.dir}">
+      <bundledsignatures name="jdk-unsafe-${jdk.version}"/>
+      <bundledsignatures name="jdk-deprecated-${jdk.version}"/>
+    </forbiddenapis>
+  </target>
+
+</project>
+}}}
