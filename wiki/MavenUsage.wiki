@@ -29,6 +29,9 @@ To use the forbidden API checker in Maven, use the following template to include
           <bundledSignature>jdk-unsafe</bundledSignature>
           <bundledSignature>jdk-deprecated</bundledSignature>
         </bundledSignatures>
+        <signaturesFiles>
+          <signaturesFile>./rel/path/to/signatures.txt</signaturesFile>
+        </signaturesFiles>
       </configuration>
       <executions>
         <execution>
