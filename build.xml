@@ -286,6 +286,7 @@
       <bundledsignatures name="jdk-unsafe-${jdk.version}"/>
       <bundledsignatures name="jdk-deprecated-${jdk.version}"/>
     </forbiddenapis>
+    <forbiddenapis internalRuntimeForbidden="true" failOnUnsupportedJava="false" bundledSignatures="jdk-system-out" dir="build/main" classpathref="path.run"/>
   </target>
 
   <target name="-install-antunit" unless="installed.antunit">
