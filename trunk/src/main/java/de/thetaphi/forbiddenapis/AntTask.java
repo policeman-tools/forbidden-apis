@@ -109,14 +109,11 @@ public final class AntTask extends Task {
             throw new BuildException("<bundledSignatures/> must have the mandatory attribute 'name' referring to a bundled signatures file.");
           }
           log("Reading bundled API signatures: " + name, Project.MSG_INFO);
-          checker.parseBundledSignatures(name);
+          checker.parseBundledSignatures(name, null);
         }
         
         @SuppressWarnings("unchecked")
         Iterator<Resource> iter = (Iterator<Resource>) apiSignatures.iterator();
-        if (!iter.hasNext()) {
-          throw new BuildException("You need to supply at least one API signature definition through signaturesFile=, <signaturesFileSet/>, <bundledSignatures/> or inner text.");
-        }
         while (iter.hasNext()) {
           final Resource r = iter.next();
           if (!r.isExists()) { 

@@ -249,11 +249,15 @@ public abstract class Checker {
   }
 
   /** Reads a list of bundled API signatures from classpath. */
-  public final void parseBundledSignatures(String name) throws IOException,ParseException {
+  public final void parseBundledSignatures(String name, String jdkTargetVersion) throws IOException,ParseException {
     if (!name.matches("[A-Za-z0-9\\-\\.]+")) {
       throw new ParseException("Invalid bundled signature reference: " + name);
     }
-    final InputStream in = this.getClass().getResourceAsStream("signatures/" + name + ".txt");
+    InputStream in = this.getClass().getResourceAsStream("signatures/" + name + ".txt");
+    // automatically expand the compiler version in here (for jdk-* signatures without version):
+    if (in == null && jdkTargetVersion != null && name.startsWith("jdk-") && !name.matches(".*?\\-\\d\\.\\d")) {
+      in = this.getClass().getResourceAsStream("signatures/" + name + "-" + jdkTargetVersion + ".txt");
+    }
     if (in == null) {
       throw new FileNotFoundException("Bundled signatures resource not found: " + name);
     }
@@ -288,7 +292,7 @@ public abstract class Checker {
         if (line.startsWith("@")) {
           if (allowBundled && line.startsWith(BUNDLED_PREFIX)) {
             final String name = line.substring(BUNDLED_PREFIX.length()).trim();
-            parseBundledSignatures(name);
+            parseBundledSignatures(name, null);
           } else if (line.startsWith(DEFAULT_MESSAGE_PREFIX)) {
             defaultMessage = line.substring(DEFAULT_MESSAGE_PREFIX.length()).trim();
             if (defaultMessage.length() == 0) defaultMessage = null;
