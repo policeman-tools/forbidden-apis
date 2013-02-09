@@ -7,8 +7,8 @@ The Ant task can be downloaded as an Ant Task from this web page (the JAR file p
 
   <taskdef name="forbiddenapis" classname="de.thetaphi.forbiddenapis.AntTask" classpath="path/to/forbiddenapis.jar"/>
 
-  <property name="build.dir" location="..."/>
   <property name="src.dir" location="..."/>
+  <property name="build.dir" location="..."/>
   <property name="jdk.version" value="1.6"/>
 
   <path id="build.classpath">
@@ -19,6 +19,7 @@ The Ant task can be downloaded as an Ant Task from this web page (the JAR file p
   </path>
 
   <target name="compile">
+    <mkdir dir="${build.dir}"/>
     <javac classpathref="build.classpath"
       srcdir="${src.dir}" destdir="${build.dir}"
       source="${jdk.version}" target="${jdk.version}"/>
@@ -51,8 +52,8 @@ If your project is using [http://ant.apache.org/ivy/ Apache Ivy] (recommended), 
 {{{
 <project xmlns:ivy="antlib:org.apache.ivy.ant" xmlns:fa="antlib:de.thetaphi.forbiddenapis">
 
-  <property name="build.dir" location="..."/>
   <property name="src.dir" location="..."/>
+  <property name="build.dir" location="..."/>
   <property name="jdk.version" value="1.6"/>
 
   <path id="build.classpath">
@@ -69,6 +70,7 @@ If your project is using [http://ant.apache.org/ivy/ Apache Ivy] (recommended), 
   </target>
 
   <target name="compile" depends="-init">
+    <mkdir dir="${build.dir}"/>
     <javac classpathref="build.classpath"
       srcdir="${src.dir}" destdir="${build.dir}"
       source="${jdk.version}" target="${jdk.version}"/>
