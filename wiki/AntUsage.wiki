@@ -17,8 +17,6 @@ The Ant task can be downloaded as an Ant Task from this web page (the JAR file p
     -->
   </path>
 
-  <!--- your other tasks -->
-
   <target name="compile">
     <javac classpathref="build.classpath" srcdir="${build.dir}"
       source="${jdk.version}" target="${jdk.version}"/>
@@ -66,8 +64,6 @@ If your project is using [http://ant.apache.org/ivy/ Apache Ivy] (recommended), 
     <taskdef uri="antlib:de.thetaphi.forbiddenapis" classpathref="forbiddenapis.classpath"/>
   </target>
 
-  <!--- your other tasks -->
-
   <target name="compile" depends="-init">
     <javac classpathref="build.classpath" srcdir="${build.dir}"
       source="${jdk.version}" target="${jdk.version}"/>
@@ -77,6 +73,7 @@ If your project is using [http://ant.apache.org/ivy/ Apache Ivy] (recommended), 
     <fa:forbiddenapis internalRuntimeForbidden="true" classpathref="build.classpath" dir="${build.dir}">
       <bundledsignatures name="jdk-unsafe-${jdk.version}"/>
       <bundledsignatures name="jdk-deprecated-${jdk.version}"/>
+      <signaturesFileset file="path/to/signatures.txt"/>
     </fa:forbiddenapis>
   </target>
 
