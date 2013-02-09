@@ -36,7 +36,7 @@ The Ant task can be downloaded as an Ant Task from this web page (the JAR file p
 </project>
 }}}
 
-Alternatively, if you have the forbiddenapis.jar in your ~/.ant/lib folder, you can omit the taskdef and use it via an ANTLIB mechanism:
+Alternatively, if you have the forbiddenapis.jar in your `~/.ant/lib` folder, you can omit the taskdef and use it via an ANTLIB mechanism:
 
 {{{
 <project xmlns:fa="antlib:de.thetaphi.forbiddenapis">
