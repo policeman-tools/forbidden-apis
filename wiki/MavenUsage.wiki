@@ -19,6 +19,7 @@ To use the forbidden API checker in Maven, use the following template to include
       <artifactId>forbiddenapis</artifactId>
       <version>1.0</version>
       <configuration>
+        <!-- disallow undocumented classes like sun.misc.Unsafe: -->
         <internalRuntimeForbidden>true</internalRuntimeForbidden>
         <bundledSignatures>
           <!--
