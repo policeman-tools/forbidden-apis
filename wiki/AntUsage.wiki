@@ -45,7 +45,7 @@ Alternatively, if you have the forbiddenapis.jar in your ~/.ant/lib folder, you 
 </project>
 }}}
 
-If your project is using [http://ant.apache.org/ivy/ Apache IVY] (recommended), you can define a cachepath for ivy and download it automatically:
+If your project is using [http://ant.apache.org/ivy/ Apache Ivy] (recommended), you can define a cachepath for Ivy and download it automatically from Maven Central:
 
 {{{
 <project xmlns:ivy="antlib:org.apache.ivy.ant" xmlns:fa="antlib:de.thetaphi.forbiddenapis">
@@ -77,8 +77,10 @@ If your project is using [http://ant.apache.org/ivy/ Apache IVY] (recommended), 
     <fa:forbiddenapis internalRuntimeForbidden="true" classpathref="build.classpath" dir="${build.dir}">
       <bundledsignatures name="jdk-unsafe-${jdk.version}"/>
       <bundledsignatures name="jdk-deprecated-${jdk.version}"/>
-    </forbiddenapis>
+    </fa:forbiddenapis>
   </target>
 
 </project>
 }}}
+
+If you don't like the additional XML-Namespaces, you can of course also define the task like in the first example, with Ivy's cachepath as reference.
