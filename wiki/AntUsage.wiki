@@ -46,3 +46,39 @@ Alternatively, if you have the forbiddenapis.jar in your ~/.ant/lib folder, you 
 }}}
 
 If your project is using [http://ant.apache.org/ivy/ Apache IVY] (recommended), you can define a cachepath for ivy and download it automatically:
+
+{{{
+<project xmlns:ivy="antlib:org.apache.ivy.ant" xmlns:fa="antlib:de.thetaphi.forbiddenapis">
+
+  <property name="build.dir" location="..."/>
+  <property name="jdk.version" value="1.6"/>
+
+  <path id="build.classpath">
+    <!--
+     define your build classpath here, so all referenced JAR files can be found.
+     This classpath should be used by javac and the forbidden API checker.
+    -->
+  </path>
+
+  <target name="-init">
+    <ivy:cachepath organisation="de.thetaphi" module="forbiddenapis" revision="1.0"
+      inline="true" pathid="forbiddenapis.classpath"/>
+    <taskdef uri="antlib:de.thetaphi.forbiddenapis" classpathref="forbiddenapis.classpath"/>
+  </target>
+
+  <!--- your other tasks -->
+
+  <target name="compile" depends="-init">
+    <javac classpathref="build.classpath" srcdir="${build.dir}"
+      source="${jdk.version}" target="${jdk.version}"/>
+  </target>
+
+  <target name="forbidden-checks" depends="compile">
+    <fa:forbiddenapis internalRuntimeForbidden="true" classpathref="build.classpath" dir="${build.dir}">
+      <bundledsignatures name="jdk-unsafe-${jdk.version}"/>
+      <bundledsignatures name="jdk-deprecated-${jdk.version}"/>
+    </forbiddenapis>
+  </target>
+
+</project>
+}}}
