@@ -1,13 +1,40 @@
-#summary One-sentence summary of this page.
+= Maven usage instructions =
 
-= Introduction =
+To use the forbidden API checker in Maven, use the following template to include the plugin:
 
-Add your content here.
+{{{
+<properties>
+  <!-- 
+   It is recommended to set the compiler version globally,
+   as the compiler plugin and the forbidden API checker both
+   use this version
+  -->
+  <maven.compiler.target>1.6</maven.compiler.target>
+</properties>
 
-
-= Details =
-
-Add your content here.  Format your content with:
-  * Text in *bold* or _italic_
-  * Headings, paragraphs, and lists
-  * Automatic links to other wiki pages
+<build>
+  <plugins>
+    <plugin>
+      <groupId>de.thetaphi</groupId>
+      <artifactId>forbiddenapis</artifactId>
+      <version>1.0</version>
+      <configuration>
+        <internalRuntimeForbidden>true</internalRuntimeForbidden>
+        <bundledSignatures>
+          <bundledSignature>jdk-unsafe</bundledSignature>
+          <bundledSignature>jdk-deprecated</bundledSignature>
+        </bundledSignatures>
+        <signatures>${antunit.signatures}</signatures>
+      </configuration>
+      <executions>
+        <execution>
+          <goals>
+            <goal>forbiddenapis</goal>
+          </goals>
+        </execution>
+      </executions>
+    </plugin>
+  </plugins>
+  <!-- more build settings here... -->
+</build>
+}}}
