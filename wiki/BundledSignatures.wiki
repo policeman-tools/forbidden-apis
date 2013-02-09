@@ -1,0 +1,8 @@
+= Bundled Signatures Files =
+
+The JAR file contaisn the follwoing signatures and can be used in Maven or Ant using `<bundledSignatures>`. All signatures are versioned against the specified JDK version:
+
+ * `jdk-unsafe-*`: for Java "*" = 1.5, 1.6, 1.7
+ * `jdk-deprecated-*`: for Java "*" = 1.5, 1.6, 1.7
+ * `jdk-system-out`: any java version, no version
+ * `commons-io-unsafe-*`: for commons-io versions "*" = 1.0, 1.1, 1.2, 1.3, 1.4, 2.0, 2.1, 2.2, 2.3, 2.4.txt
