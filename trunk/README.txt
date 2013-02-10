@@ -13,6 +13,7 @@ documentation refer to the folowing web pages:
 
 * http://code.google.com/p/forbidden-apis/wiki/AntUsage (Apache Ant)
 * http://code.google.com/p/forbidden-apis/wiki/MavenUsage (Apache Maven)
+* http://code.google.com/p/forbidden-apis/wiki/CliUsage (Command Line)
 
 This project uses Apache Ant (and Apache Ivy) to build. The minimum
 Ant version is 1.8.0 and it is recommended to not have Apache Ivy in
