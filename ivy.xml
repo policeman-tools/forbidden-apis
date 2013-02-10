@@ -40,6 +40,7 @@
     We use version 1.1, because it's smallest and has DirectoryScanner and no forbidden apis! :-)
     -->
     <dependency org="org.codehaus.plexus" name="plexus-utils" rev="1.1" conf="build,bundle"/>
+    <dependency org="commons-cli" name="commons-cli" rev="1.2" conf="build,bundle"/>
     <!-- TODO: original JARJAR is somehow not in maven? -->
     <dependency org="com.googlecode.jarjar" name="jarjar" rev="1.4" conf="buildtools">
       <artifact name="jarjar" type="jar" url="http://jarjar.googlecode.com/files/jarjar-1.4.jar"/>

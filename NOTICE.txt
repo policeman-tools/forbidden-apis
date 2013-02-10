@@ -24,4 +24,11 @@ This product bundles software (jarjar'ed to new package name) developed by:
   Copyright ©, The Codehaus Foundation & Apache Software Foundation
   http://plexus.codehaus.org/plexus-utils/
 
+* Commons-CLI - The Apache Commons CLI library provides an API for
+  parsing command line options passed to programs. It's also able to
+  print help messages detailing the options available for a command
+  line tool.
+  Copyright © Apache Software Foundation
+  http://commons.apache.org/cli/
+
 (see the "bundled-licenses/" folder for full license information)

@@ -52,10 +52,14 @@
     only plexus-utils v1.1, which is much slimmer and does not reference
     broken StringUtils. ASM is completely forbidden-api bug-free!
     -->
-    <forbiddenapis-jar internalRuntimeForbidden="true" classpathref="path.build">
-      <zipfileset src="${jar-file}"/>
+    <forbiddenapis-jar internalRuntimeForbidden="true">
+      <zipfileset src="${jar-file}" excludes="de/thetaphi/forbiddenapis/commons/cli/**"/>
       <bundledsignatures name="jdk-unsafe-${jdk.version}"/>
       <bundledsignatures name="jdk-deprecated-${jdk.version}"/>
+      <classpath>
+        <pathelement path="${jar-file}"/>
+        <path refid="path.build"/>
+      </classpath>
     </forbiddenapis-jar>
     <au:assertLogContains level="info" text=" 0 error(s)."/> 
   </target>
