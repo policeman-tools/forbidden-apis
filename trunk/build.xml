@@ -191,13 +191,16 @@
         </archives>
       </restrict>
       <keep pattern="de.thetaphi.forbiddenapis.AntTask"/>
+      <keep pattern="de.thetaphi.forbiddenapis.CliMain"/>
       <keep pattern="de.thetaphi.forbiddenapis.MavenMojo"/>
       <rule pattern="org.objectweb.asm.**" result="de.thetaphi.forbiddenapis.asm.@1"/>
+      <rule pattern="org.apache.commons.**" result="de.thetaphi.forbiddenapis.commons.@1"/>
       <rule pattern="org.codehaus.plexus.**" result="de.thetaphi.forbiddenapis.plexus.@1"/>
       <manifest>
         <attribute name="Implementation-Vendor" value="${groupId}"/>
         <attribute name="Implementation-Title" value="${artifactId}"/>
         <attribute name="Implementation-Version" value="${version}"/>
+        <attribute name="Main-Class" value="de.thetaphi.forbiddenapis.CliMain"/>
       </manifest>
       <metainf dir="." includes="LICENSE.txt,NOTICE.txt,bundled-licenses/**"/>
     </jarjar>
@@ -286,7 +289,9 @@
       <bundledsignatures name="jdk-unsafe-${jdk.version}"/>
       <bundledsignatures name="jdk-deprecated-${jdk.version}"/>
     </forbiddenapis>
-    <forbiddenapis internalRuntimeForbidden="true" failOnUnsupportedJava="false" bundledSignatures="jdk-system-out" dir="build/main" classpathref="path.run"/>
+    <forbiddenapis internalRuntimeForbidden="true" failOnUnsupportedJava="false" bundledSignatures="jdk-system-out" classpathref="path.run">
+      <fileset dir="build/main" excludes="de/thetaphi/forbiddenapis/CliMain.class"/>
+    </forbiddenapis>
   </target>
 
   <target name="-install-antunit" unless="installed.antunit">
