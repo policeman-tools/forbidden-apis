@@ -147,7 +147,10 @@ public final class CliMain {
       formatter.printHelp(cmdline + " [options]",
         "Scans a set of class files for forbidden API usage.",
         options,
-        "Exit codes: 0 = SUCCESS, 1 = forbidden API detected, 2 = invalid command line, 3 = unsupported JDK version, 4 = other error (I/O,...)"
+        String.format(Locale.ENGLISH,
+          "Exit codes: %d = SUCCESS, %d = forbidden API detected, %d = invalid command line, %d = unsupported JDK version, %d = other error (I/O,...)",
+          EXIT_SUCCESS, EXIT_VIOLATION, EXIT_ERR_CMDLINE, EXIT_UNSUPPORTED_JDK, EXIT_ERR_OTHER
+        )
       );
       throw new ExitException(EXIT_ERR_CMDLINE);
     }
