@@ -78,7 +78,8 @@ public final class CliMain {
     options.addOption(classpathOpt = OptionBuilder
         .withDescription("class search path of directories and zip/jar files")
         .withLongOpt("classpath")
-        .hasArg()
+        .hasArgs()
+        .withValueSeparator(File.pathSeparatorChar)
         .withArgName("path")
         .create('c'));
     options.addOption(includesOpt = OptionBuilder
@@ -176,23 +177,22 @@ public final class CliMain {
     final File classesDirectory = new File(cmd.getOptionValue(dirOpt.getLongOpt())).getAbsoluteFile();
     
     // parse classpath given as argument; add -d to classpath, too
+    final String[] classpath = cmd.getOptionValues(classpathOpt.getLongOpt());
     final URL[] urls;
     try {
-      final String classpath = cmd.getOptionValue(classpathOpt.getLongOpt());
       if (classpath == null) {
         urls = new URL[] { classesDirectory.toURI().toURL() };
       } else {
-        String[] cp = classpath.split("\\Q" + File.pathSeparator + "\\E");
-        urls = new URL[cp.length + 1];
-        urls[0] = classesDirectory.toURI().toURL();
-        int i = 1;
-        for (final String cpElement : cp) {
+        urls = new URL[classpath.length + 1];
+        int i = 0;
+        for (final String cpElement : classpath) {
           urls[i++] = new File(cpElement).toURI().toURL();
         }
+        urls[i++] = classesDirectory.toURI().toURL();
         assert i == urls.length;
       }
     } catch (MalformedURLException mfue) {
-      throw new AssertionError("A malformed URL while building classpath should never happen.");
+      throw new ExitException(EXIT_ERR_OTHER, "The given classpath is invalid: " + mfue);
     }
     // System.err.println("Classpath: " + Arrays.toString(urls));
 
@@ -251,11 +251,11 @@ public final class CliMain {
         throw new ExitException(EXIT_ERR_OTHER, "Directory with class files does not exist: " + classesDirectory);
       }
       
-      String[] includes = cmd.getOptionValues(includesOpt.getLongOpt()),
-        excludes = cmd.getOptionValues(excludesOpt.getLongOpt());
+      String[] includes = cmd.getOptionValues(includesOpt.getLongOpt());
       if (includes == null || includes.length == 0) {
         includes = new String[] { "**/*.class" };
       }
+      final String[] excludes = cmd.getOptionValues(excludesOpt.getLongOpt());
       final DirectoryScanner ds = new DirectoryScanner();
       ds.setBasedir(classesDirectory);
       ds.setCaseSensitive(true);
