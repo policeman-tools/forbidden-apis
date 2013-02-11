@@ -1,3 +1,3 @@
-= Command line usage instructions =
+= Command Line Usage Instructions =
 
 Add your content here.
