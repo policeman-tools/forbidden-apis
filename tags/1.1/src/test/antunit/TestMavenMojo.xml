@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ * (C) Copyright 2013 Uwe Schindler (Generics Policeman) and others.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+-->
+<project xmlns:au="antlib:org.apache.ant.antunit" xmlns:artifact="antlib:org.apache.maven.artifact.ant">
+
+  <propertyset id="injected-properties">
+    <propertyref prefix="antunit."/>
+    <propertyref regex=".*version"/>
+    <propertyref name="groupId"/>
+    <propertyref name="artifactId"/>
+  </propertyset>
+
+  <target name="testMyselfMaven2">
+    <artifact:mvn pom="${antunit.fake-pom}" mavenVersion="${maven.version}" failonerror="true" fork="true">
+      <arg value="${groupId}:${artifactId}:${version}:forbiddenapis"/>
+      <syspropertyset refid="injected-properties"/>
+    </artifact:mvn>
+    <au:assertLogContains text=" 0 error(s)."/> 
+    <au:assertLogContains text="Reading bundled API signatures: jdk-deprecated"/> 
+    <au:assertLogContains text="Reading bundled API signatures: jdk-unsafe"/> 
+  </target>
+  
+  <target name="testInlineSignaturesMaven2">
+    <au:expectfailure>
+      <artifact:mvn pom="${antunit.fake-pom}" mavenVersion="${maven.version}" failonerror="true" fork="true">
+        <arg value="${groupId}:${artifactId}:${version}:forbiddenapis"/>
+        <syspropertyset refid="injected-properties"/>
+        <sysproperty key="antunit.signatures" value="java.lang.String @ You are crazy that you disallow strings"/>
+      </artifact:mvn>
+    </au:expectfailure>
+    <au:assertLogContains text="You are crazy that you disallow strings"/> 
+  </target>
+  
+  <target name="testMyselfMaven3">
+    <artifact:mvn pom="${antunit.fake-pom}" mavenVersion="${antunit.maven3.version}" failonerror="true" fork="true">
+      <arg value="${groupId}:${artifactId}:${version}:forbiddenapis"/>
+      <syspropertyset refid="injected-properties"/>
+    </artifact:mvn>
+    <au:assertLogContains text=" 0 error(s)."/> 
+    <au:assertLogContains text="Reading bundled API signatures: jdk-deprecated"/> 
+    <au:assertLogContains text="Reading bundled API signatures: jdk-unsafe"/> 
+  </target>
+
+</project>
