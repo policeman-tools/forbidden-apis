@@ -1,4 +1,4 @@
-= Maven usage instructions =
+= Maven Usage Instructions =
 
 To use the forbidden API checker in Maven, use the following template to include the plugin:
 
