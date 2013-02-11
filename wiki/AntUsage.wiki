@@ -1,4 +1,4 @@
-= Ant usage instructions =
+= Ant Usage Instructions =
 
 The Ant task can be downloaded as an Ant Task from this web page (the JAR file provides both the Maven Mojo and the Ant Task). Place the JAR file in the lib folder of your Ant project and include the taskdef like the following:
 
