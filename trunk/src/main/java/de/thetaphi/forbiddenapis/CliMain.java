@@ -54,7 +54,7 @@ public final class CliMain {
   public static final int EXIT_UNSUPPORTED_JDK = 3;
   public static final int EXIT_ERR_OTHER = 4;
 
-  @SuppressWarnings("static-access")
+  @SuppressWarnings({"static-access","static"})
   public CliMain(String... args) throws ExitException {
     final OptionGroup required = new OptionGroup();
     required.setRequired(true);
