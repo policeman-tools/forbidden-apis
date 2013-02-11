@@ -150,6 +150,18 @@
     <delete dir="dist"/>
   </target>
 
+  <target name="remove-local-artifacts" description="Removes the project's artifacts from the local Ivy and Maven repository">
+    <delete includeemptydirs="true">
+      <fileset dir="${user.home}/.m2/repository" erroronmissingdir="false">
+        <include name="de/thetaphi/forbiddenapis/**"/>
+        <include name="de/thetaphi/example/**"/>
+      </fileset>
+      <fileset dir="${user.home}/.ivy2/cache" erroronmissingdir="false">
+        <include name="${groupId}/${artifactId}/**"/>
+      </fileset>
+    </delete>
+  </target>
+
   <target name="-maven-setup">
     <mkdir dir="build/maven"/>
     <copy todir="build/maven" encoding="UTF-8" outputencoding="UTF-8">
