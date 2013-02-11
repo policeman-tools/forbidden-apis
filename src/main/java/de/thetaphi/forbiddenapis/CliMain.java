@@ -129,9 +129,9 @@ public final class CliMain {
       }
     } catch (org.apache.commons.cli.ParseException pe) {
       final HelpFormatter formatter = new HelpFormatter();
-      String cmdline = "java " + CliMain.class.getName();
+      String cmdline = "java " + getClass().getName();
       try {
-        final URLConnection conn = CliMain.class.getResource(CliMain.class.getSimpleName() + ".class").openConnection();
+        final URLConnection conn = getClass().getResource(getClass().getSimpleName() + ".class").openConnection();
         if (conn instanceof JarURLConnection) {
           final URL jarUrl = ((JarURLConnection) conn).getJarFileURL();
           if ("file".equalsIgnoreCase(jarUrl.getProtocol())) {
