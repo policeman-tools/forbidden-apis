@@ -5,7 +5,7 @@
   <artifactId>@ARTIFACTID@</artifactId>
   <version>@VERSION@</version>
   <name>@NAME@</name>
-  <description>Allows to parse Java byte code to find invocations of method/class/field signatures and fail build (Apache Ant or Apache Maven)</description>
+  <description>Allows to parse Java byte code to find invocations of method/class/field signatures and fail build (Apache Ant, Apache Maven, or CLI)</description>
   <url>http://code.google.com/p/forbidden-apis/</url>
   <inceptionYear>2013</inceptionYear>
   <packaging>maven-plugin</packaging>

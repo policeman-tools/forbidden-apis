@@ -8,7 +8,7 @@ Parts of this work are licensed to the Apache Software Foundation (ASF)
 under one or more contributor license agreements.
 
 This product was forked from the Apache Lucene Project and improved and
-extended by adding Apache Maven support.
+extended by adding Apache Maven and CLI support.
 
 Apache Ant and Apache Maven are trademarks of The Apache Software Foundation.
 
