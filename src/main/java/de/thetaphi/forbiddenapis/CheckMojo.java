@@ -24,12 +24,14 @@ import org.apache.maven.plugins.annotations.ResolutionScope;
 import java.io.File;
 import java.util.List;
 
+// TODO: Make this class final once deprecated MavenMojo is gone!
+
 /**
  * Mojo to check if no project generated class files (compile scope) contain calls to forbidden APIs
  * from the project classpath and a list of API signatures (either inline or as pointer to files or bundled signatures).
  */
 @Mojo(name = "check", threadSafe = true, requiresProject = true, requiresDependencyResolution = ResolutionScope.COMPILE, defaultPhase = LifecyclePhase.PROCESS_CLASSES)
-public final class CheckMojo extends AbstractCheckMojo {
+public class CheckMojo extends AbstractCheckMojo {
 
   /**
    * Injected compile classpath.
