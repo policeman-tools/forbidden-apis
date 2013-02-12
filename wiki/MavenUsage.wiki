@@ -53,3 +53,5 @@ To use the forbidden API checker in Maven, use the following template to include
 }}}
 
 The possible `<bundledSignatures>` can be found on a [BundledSignatures separate page]. You can also give your own signatures in separate files from your project directory.
+
+Currently, the Mojo only supports validating the main classes, a later version will add support for test classes, too.
