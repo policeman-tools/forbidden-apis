@@ -192,7 +192,7 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
       
       log.info("Loading classes to check...");
       if (!classesDirectory.exists()) {
-        log.warn("No project output directory, forbiddenapis check skipped: " + classesDirectory);
+        log.warn("Classes directory does not exist, forbiddenapis check skipped: " + classesDirectory);
         return;
       }
       
@@ -207,8 +207,8 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
       
       if (files.length == 0) {
         log.warn(String.format(Locale.ENGLISH,
-          "No classes found in project output directory (includes=%s, excludes=%s), forbiddenapis check skipped.",
-          Arrays.toString(includes), Arrays.toString(excludes)));
+          "No classes found in '%s' (includes=%s, excludes=%s), forbiddenapis check skipped.",
+          classesDirectory.toString(), Arrays.toString(includes), Arrays.toString(excludes)));
         return;
       }
       
