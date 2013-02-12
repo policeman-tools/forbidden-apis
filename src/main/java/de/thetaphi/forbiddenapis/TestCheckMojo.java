@@ -26,22 +26,22 @@ import java.io.File;
 import java.util.List;
 
 /**
- * Mojo to check if no project generated class files (test scope) contains calls to forbidden APIs
+ * Mojo to check if no project generated class files (test scope) contain calls to forbidden APIs
  * from the project classpath and a list of API signatures (either inline or as pointer to files or bundled signatures).
  */
-@Mojo(name = "testCheck", threadSafe = true, requiresDependencyResolution = ResolutionScope.TEST, defaultPhase = LifecyclePhase.PROCESS_TEST_CLASSES)
-public class TestCheckMojo extends AbstractCheckMojo {
+@Mojo(name = "testCheck", threadSafe = true, requiresProject = true, requiresDependencyResolution = ResolutionScope.TEST, defaultPhase = LifecyclePhase.PROCESS_TEST_CLASSES)
+public final class TestCheckMojo extends AbstractCheckMojo {
 
   /**
-   * Project classpath.
+   * Injected test classpath.
    */
-  @Parameter( defaultValue = "${project.testClasspathElements}", readonly = true, required = true )
+  @Parameter(defaultValue = "${project.testClasspathElements}", readonly = true, required = true)
   private List<String> classpathElements;
 
   /**
    * Directory with the class files to check.
    */
-  @Parameter(required = false, defaultValue = "${project.build.testOutputDirectory}")
+  @Parameter(defaultValue = "${project.build.testOutputDirectory}", required = true)
   private File classesDirectory;
 
   protected List<String> getClassPathElements() {
