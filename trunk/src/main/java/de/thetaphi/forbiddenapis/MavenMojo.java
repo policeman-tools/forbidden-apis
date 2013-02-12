@@ -20,6 +20,9 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.ResolutionScope;
+import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugin.logging.Log;
 
 import java.io.File;
 import java.util.List;
@@ -27,9 +30,11 @@ import java.util.List;
 /**
  * Mojo to check if no project generated class files (compile scope) contain calls to forbidden APIs
  * from the project classpath and a list of API signatures (either inline or as pointer to files or bundled signatures).
+ * @deprecated This goal/mojo is outdated since forbiddenapis v1.2. Use the new goal "check" (and for tests "testCheck").
  */
-@Mojo(name = "check", threadSafe = true, requiresProject = true, requiresDependencyResolution = ResolutionScope.COMPILE, defaultPhase = LifecyclePhase.PROCESS_CLASSES)
-public final class CheckMojo extends AbstractCheckMojo {
+@Deprecated
+@Mojo(name = "forbiddenapis", threadSafe = true, requiresProject = true, requiresDependencyResolution = ResolutionScope.COMPILE, defaultPhase = LifecyclePhase.PROCESS_CLASSES)
+public final class MavenMojo extends AbstractCheckMojo {
 
   /**
    * Injected compile classpath.
@@ -49,6 +54,12 @@ public final class CheckMojo extends AbstractCheckMojo {
   
   protected File getClassesDirectory() {
     return this.classesDirectory;
+  }
+  
+  @Override
+  public void execute() throws MojoExecutionException, MojoFailureException {
+    getLog().warn("This goal/mojo is outdated since forbiddenapis v1.2. Use the new goal 'check' (and for tests 'testCheck').");
+    super.execute();
   }
   
 }

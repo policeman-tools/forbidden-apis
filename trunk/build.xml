@@ -206,6 +206,7 @@
       <keep pattern="de.thetaphi.forbiddenapis.CliMain"/>
       <keep pattern="de.thetaphi.forbiddenapis.CheckMojo"/>
       <keep pattern="de.thetaphi.forbiddenapis.TestCheckMojo"/>
+      <!-- deprecated: --><keep pattern="de.thetaphi.forbiddenapis.MavenMojo"/>
       <rule pattern="org.objectweb.asm.**" result="de.thetaphi.forbiddenapis.asm.@1"/>
       <rule pattern="org.apache.commons.**" result="de.thetaphi.forbiddenapis.commons.@1"/>
       <rule pattern="org.codehaus.plexus.**" result="de.thetaphi.forbiddenapis.plexus.@1"/>
