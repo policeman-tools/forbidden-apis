@@ -34,27 +34,7 @@ import java.util.List;
  */
 @Deprecated
 @Mojo(name = "forbiddenapis", threadSafe = true, requiresProject = true, requiresDependencyResolution = ResolutionScope.COMPILE, defaultPhase = LifecyclePhase.PROCESS_CLASSES)
-public final class MavenMojo extends AbstractCheckMojo {
-
-  /**
-   * Injected compile classpath.
-   */
-  @Parameter(defaultValue = "${project.compileClasspathElements}", readonly = true, required = true)
-  private List<String> classpathElements;
-
-  /**
-   * Directory with the class files to check.
-   */
-  @Parameter(defaultValue = "${project.build.outputDirectory}", required = true)
-  private File classesDirectory;
-  
-  protected List<String> getClassPathElements() {
-    return this.classpathElements;
-  }
-  
-  protected File getClassesDirectory() {
-    return this.classesDirectory;
-  }
+public final class MavenMojo extends CheckMojo {
   
   @Override
   public void execute() throws MojoExecutionException, MojoFailureException {
