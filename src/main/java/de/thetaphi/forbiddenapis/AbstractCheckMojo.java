@@ -102,7 +102,10 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
   @Parameter(required = false)
   private String[] excludes;
 
+  /** provided by the concrete Mojos for compile and test classes processing */
   protected abstract List<String> getClassPathElements();
+  
+  /** provided by the concrete Mojos for compile and test classes processing */
   protected abstract File getClassesDirectory();
 
   // Not in Java 5: @Override
