@@ -25,7 +25,7 @@
 
   <target name="testMyselfMaven2">
     <artifact:mvn pom="${antunit.fake-pom}" mavenVersion="${maven.version}" failonerror="true" fork="true">
-      <arg value="${groupId}:${artifactId}:${version}:forbiddenapis"/>
+      <arg value="${groupId}:${artifactId}:${version}:check"/>
       <syspropertyset refid="injected-properties"/>
     </artifact:mvn>
     <au:assertLogContains text=" 0 error(s)."/> 
@@ -36,7 +36,7 @@
   <target name="testInlineSignaturesMaven2">
     <au:expectfailure>
       <artifact:mvn pom="${antunit.fake-pom}" mavenVersion="${maven.version}" failonerror="true" fork="true">
-        <arg value="${groupId}:${artifactId}:${version}:forbiddenapis"/>
+        <arg value="${groupId}:${artifactId}:${version}:check"/>
         <syspropertyset refid="injected-properties"/>
         <sysproperty key="antunit.signatures" value="java.lang.String @ You are crazy that you disallow strings"/>
       </artifact:mvn>
@@ -46,7 +46,7 @@
   
   <target name="testMyselfMaven3">
     <artifact:mvn pom="${antunit.fake-pom}" mavenVersion="${antunit.maven3.version}" failonerror="true" fork="true">
-      <arg value="${groupId}:${artifactId}:${version}:forbiddenapis"/>
+      <arg value="${groupId}:${artifactId}:${version}:check"/>
       <syspropertyset refid="injected-properties"/>
     </artifact:mvn>
     <au:assertLogContains text=" 0 error(s)."/> 

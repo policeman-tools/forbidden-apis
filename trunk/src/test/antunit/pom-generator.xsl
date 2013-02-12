@@ -60,7 +60,7 @@
             <executions>
               <execution>
                 <goals>
-                  <goal>forbiddenapis</goal>
+                  <goal>check</goal>
                 </goals>
               </execution>
             </executions>

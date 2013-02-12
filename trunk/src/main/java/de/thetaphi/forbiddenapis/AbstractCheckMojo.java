@@ -16,18 +16,11 @@ package de.thetaphi.forbiddenapis;
  * limitations under the License.
  */
 
-import org.apache.maven.artifact.DependencyResolutionRequiredException;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugin.logging.Log;
-import org.apache.maven.plugins.annotations.Mojo;
-import org.apache.maven.plugins.annotations.Component;
-import org.apache.maven.plugins.annotations.Execute;
 import org.apache.maven.plugins.annotations.Parameter;
-import org.apache.maven.plugins.annotations.LifecyclePhase;
-import org.apache.maven.plugins.annotations.ResolutionScope;
-import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.util.DirectoryScanner;
 
 import java.io.Closeable;
@@ -41,12 +34,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
-/**
- * Mojo to check if no project generated class files (compile scope) contains calls to forbidden APIs
- * from the project classpath and a list of API signatures (either inline or as pointer to files or bundled signatures).
- */
-@Mojo(name = "forbiddenapis", requiresProject = true, threadSafe = true, requiresDependencyResolution = ResolutionScope.COMPILE, defaultPhase = LifecyclePhase.PROCESS_CLASSES)
-public class MavenMojo extends AbstractMojo {
+public abstract class AbstractCheckMojo extends AbstractMojo {
 
   /**
    * Lists all files, which contain signatures and comments for forbidden API calls.
@@ -91,14 +79,6 @@ public class MavenMojo extends AbstractMojo {
   private boolean failOnMissingClasses;
   
   /**
-   * Directory with the class files to check.
-   * @see #includes
-   * @see #excludes
-   */
-  @Parameter(required = false, defaultValue = "${project.build.outputDirectory}")
-  private File classesDirectory;
-  
-  /**
    * The default compiler target version used to expand references to bundled JDK signatures.
    * E.g., if you use "jdk-deprecated", it will expand to this version.
    * This setting should be identical to the target version used in the compiler plugin.
@@ -110,7 +90,6 @@ public class MavenMojo extends AbstractMojo {
    * List of patterns matching all class files to be parsed from the classesDirectory.
    * Can be changed to e.g. exclude several files (using excludes).
    * The default is a single include with pattern '**&#47;*.class'
-   * @see #classesDirectory
    * @see #excludes
    */
   @Parameter(required = false)
@@ -118,14 +97,13 @@ public class MavenMojo extends AbstractMojo {
 
   /**
    * List of patterns matching class files to be excluded from checking.
-   * @see #classesDirectory
    * @see #includes
    */
   @Parameter(required = false)
   private String[] excludes;
 
-  @Component
-  private MavenProject project;
+  protected abstract List<String> getClassPathElements();
+  protected abstract File getClassesDirectory();
 
   // Not in Java 5: @Override
   public void execute() throws MojoExecutionException, MojoFailureException {
@@ -136,7 +114,7 @@ public class MavenMojo extends AbstractMojo {
     
     final URL[] urls;
     try {
-      @SuppressWarnings("unchecked") final List<String> cp = (List<String>) project.getCompileClasspathElements();
+      final List<String> cp = getClassPathElements();
       urls = new URL[cp.size()];
       int i = 0;
       for (final String cpElement : cp) {
@@ -144,8 +122,6 @@ public class MavenMojo extends AbstractMojo {
       }
       assert i == urls.length;
       if (log.isDebugEnabled()) log.debug("Compile Classpath: " + Arrays.toString(urls));
-    } catch (DependencyResolutionRequiredException e) {
-      throw new MojoExecutionException("Failed to build classpath: " + e);
     } catch (MalformedURLException e) {
       throw new MojoExecutionException("Failed to build classpath: " + e);
     }
@@ -209,6 +185,8 @@ public class MavenMojo extends AbstractMojo {
         throw new MojoExecutionException("No API signatures found; use parameters 'signatures', 'bundledSignatures', and/or 'signaturesFiles' to define those!");
       }
 
+      final File classesDirectory = getClassesDirectory();
+      
       log.info("Loading classes to check...");
       if (!classesDirectory.exists()) {
         log.warn("No project output directory, forbiddenapis check skipped: " + classesDirectory);
