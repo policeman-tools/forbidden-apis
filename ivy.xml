@@ -26,8 +26,6 @@
     <!-- we compile against the minimum ANT / Maven versions: -->
     <dependency org="org.apache.ant" name="ant" rev="1.7.0" conf="build"/>
     <dependency org="org.apache.maven" name="maven-plugin-api" rev="2.0" conf="build"/>
-    <dependency org="org.apache.maven" name="maven-artifact" rev="2.0" conf="build"/>
-    <dependency org="org.apache.maven" name="maven-project" rev="2.0" conf="build"/>
     <dependency org="org.apache.maven.plugin-tools" name="maven-plugin-annotations" rev="3.2" conf="build"/>
     <!-- 
      We use the asm-debug-all library, as the asm-all has no generics.
