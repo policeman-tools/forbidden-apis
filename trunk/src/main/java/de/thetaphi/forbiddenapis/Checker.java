@@ -87,10 +87,16 @@ public abstract class Checker {
     boolean isSupportedJDK = false;
     File javaRuntimeLibPath = null;
     try {
-      javaRuntimeLibPath = new File(System.getProperty("java.home"), "lib").getCanonicalFile();
-      if (javaRuntimeLibPath.exists()) {
-        isSupportedJDK = true;
+      final URLConnection conn = Object.class.getResource(Object.class.getSimpleName() + ".class").openConnection();
+      if (conn instanceof JarURLConnection) {
+        final URL jarUrl = ((JarURLConnection) conn).getJarFileURL();
+        if ("file".equalsIgnoreCase(jarUrl.getProtocol())) {
+          javaRuntimeLibPath = new File(jarUrl.toURI()).getCanonicalFile().getParentFile();
+          isSupportedJDK = true;
+        }
       }
+    } catch (URISyntaxException use) {
+      isSupportedJDK = false;
     } catch (IOException ioe) {
       isSupportedJDK = false;
     }
@@ -104,10 +110,10 @@ public abstract class Checker {
     }
 
     if (isSupportedJDK) {
-      // check if we can load runtime classes (e.g. java.lang.String).
+      // check if we can load runtime classes (e.g. java.lang.Object).
       // If this fails, we have a newer Java version than ASM supports:
       try {
-        isSupportedJDK = getClassFromClassLoader(String.class.getName(), true).isRuntimeClass;
+        isSupportedJDK = getClassFromClassLoader(Object.class.getName(), true).isRuntimeClass;
       } catch (IllegalArgumentException iae) {
         isSupportedJDK = false;
       } catch (ClassNotFoundException cnfe) {
