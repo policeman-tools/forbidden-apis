@@ -26,22 +26,22 @@ import java.io.File;
 import java.util.List;
 
 /**
- * Mojo to check if no project generated class files (compile scope) contains calls to forbidden APIs
+ * Mojo to check if no project generated class files (compile scope) contain calls to forbidden APIs
  * from the project classpath and a list of API signatures (either inline or as pointer to files or bundled signatures).
  */
-@Mojo(name = "check", threadSafe = true, requiresDependencyResolution = ResolutionScope.COMPILE, defaultPhase = LifecyclePhase.PROCESS_CLASSES)
-public class CheckMojo extends AbstractCheckMojo {
+@Mojo(name = "check", threadSafe = true, requiresProject = true, requiresDependencyResolution = ResolutionScope.COMPILE, defaultPhase = LifecyclePhase.PROCESS_CLASSES)
+public final class CheckMojo extends AbstractCheckMojo {
 
   /**
-   * Project classpath.
+   * Injected compile classpath.
    */
-  @Parameter( defaultValue = "${project.compileClasspathElements}", readonly = true, required = true )
+  @Parameter(defaultValue = "${project.compileClasspathElements}", readonly = true, required = true)
   private List<String> classpathElements;
 
   /**
    * Directory with the class files to check.
    */
-  @Parameter(required = false, defaultValue = "${project.build.outputDirectory}")
+  @Parameter(defaultValue = "${project.build.outputDirectory}", required = true)
   private File classesDirectory;
   
   protected List<String> getClassPathElements() {
