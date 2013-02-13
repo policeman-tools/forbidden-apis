@@ -87,7 +87,9 @@ public abstract class Checker {
     boolean isSupportedJDK = false;
     File javaRuntimeLibPath = null;
     try {
-      final URLConnection conn = Object.class.getResource(Object.class.getSimpleName() + ".class").openConnection();
+      // use some java.util.Map interface as this class is not "optimized" by IBM J9 and will always
+      // be in default rt.jar/classes.jar:
+      final URLConnection conn = Map.class.getResource(Map.class.getSimpleName() + ".class").openConnection();
       if (conn instanceof JarURLConnection) {
         final URL jarUrl = ((JarURLConnection) conn).getJarFileURL();
         if ("file".equalsIgnoreCase(jarUrl.getProtocol())) {
