@@ -366,9 +366,17 @@
   </target>
   
   <target name="generate-deprecated" depends="compile-tools" description="Generates deprecated API signature lists for current JDK">
-    <fail message="Unsupported (maybe too new) Java version detected: ${java.version}">
+    <fail message="Regenerating the deprecated signatures files need Oracle/Sun JDK, your Java version is unsupported: ${java.version} / JVM (${java.vm.name})">
       <condition>
-        <not><matches string="${java.version}" pattern="^\Q${build.java.runtime}\E" casesensitive="true"/></not>
+        <not>
+          <and>
+            <matches string="${java.version}" pattern="^\Q${build.java.runtime}\E" casesensitive="true"/>
+            <or>
+              <contains string="${java.vendor}" substring="Oracle" casesensitive="false"/>
+              <contains string="${java.vendor}" substring="Sun Microsystems" casesensitive="false"/>
+            </or>
+          </and>
+        </not>
       </condition>
     </fail>
     <mkdir dir="${signatures.dir}"/>
