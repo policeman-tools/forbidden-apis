@@ -25,6 +25,26 @@
     </condition>
   </fail>
 
+  <!-- 
+    the propery "ant.java.version" is not always correct, depending on used ANT version.
+    E.g. Java 8 is only detected in ANT 1.8.3+.
+    Add newer Java version checks at beginning,
+    because ANT will nevert override existing properties!
+   -->
+  <condition property="build.java.runtime" value="1.8">
+    <hasmethod classname="java.util.Collections" method="emptySortedSet"/>
+  </condition>
+  <condition property="build.java.runtime" value="1.7">
+    <hasmethod classname="java.lang.Throwable" method="getSuppressed"/>
+  </condition>
+  <condition property="build.java.runtime" value="1.6">
+    <hasmethod classname="java.lang.String" method="isEmpty"/>
+  </condition>
+  <condition property="build.java.runtime" value="1.5">
+    <available classname="java.lang.StringBuilder"/>
+  </condition>
+  <fail message="Minimum supported Java version is 1.5." unless="build.java.runtime"/>
+
   <property file="${user.home}/build.properties" />
   <property file="build.properties" />
 
@@ -61,9 +81,9 @@
 
   <condition property="tests.supported">
     <or>
-      <equals arg1="${ant.java.version}" arg2="1.5"/>
-      <equals arg1="${ant.java.version}" arg2="1.6"/>
-      <equals arg1="${ant.java.version}" arg2="1.7"/>
+      <equals arg1="${build.java.runtime}" arg2="1.5"/>
+      <equals arg1="${build.java.runtime}" arg2="1.6"/>
+      <equals arg1="${build.java.runtime}" arg2="1.7"/>
       <!-- JDK 8 is currently not supported because ASM cannot load modified class file format -->
     </or>
   </condition>
@@ -346,12 +366,17 @@
   </target>
   
   <target name="generate-deprecated" depends="compile-tools" description="Generates deprecated API signature lists for current JDK">
+    <fail message="Unsupported (maybe too new) Java version detected: ${java.version}">
+      <condition>
+        <not><matches string="${java.version}" pattern="^\Q${build.java.runtime}\E" casesensitive="true"/></not>
+      </condition>
+    </fail>
     <mkdir dir="${signatures.dir}"/>
-    <echo message="Building deprecated signatures for JDK ${ant.java.version}:"/>
+    <echo message="Building deprecated signatures for JDK ${build.java.runtime}:"/>
     <java fork="false" classpathref="path.tools-run" classname="de.thetaphi.forbiddenapis.DeprecatedGen">
-      <arg value="${ant.java.version}"/>
+      <arg value="${build.java.runtime}"/>
       <arg file="${java.home}/lib/rt.jar"/>
-      <arg file="${signatures.dir}/jdk-deprecated-${ant.java.version}.txt"/>
+      <arg file="${signatures.dir}/jdk-deprecated-${build.java.runtime}.txt"/>
     </java>
   </target>
 
