@@ -40,10 +40,15 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Formatter;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
+import java.util.StringTokenizer;
+import java.lang.management.ManagementFactory;
 
 /**
  * Task to check if a set of class files contains calls to forbidden APIs
@@ -58,7 +63,8 @@ public abstract class Checker {
   
   private final long start;
   
-  final String javaRuntimeLibPath, javaRuntimeExtensionsPath;
+  final Set<File> bootClassPathJars;
+  final Set<String> bootClassPathDirs;
   final ClassLoader loader;
   final boolean internalRuntimeForbidden, failOnMissingClasses;
   
@@ -85,32 +91,33 @@ public abstract class Checker {
     this.start = System.currentTimeMillis();
     
     boolean isSupportedJDK = false;
-    File javaRuntimeLibPath = null;
+    final Set<File> bootClassPathJars = new LinkedHashSet<File>();
+    final Set<String> bootClassPathDirs = new LinkedHashSet<String>();
     try {
-      // use some java.util.Map interface as this class is not "optimized" by IBM J9 and will always
-      // be in default rt.jar/classes.jar:
-      final URLConnection conn = Map.class.getResource(Map.class.getSimpleName() + ".class").openConnection();
-      if (conn instanceof JarURLConnection) {
-        final URL jarUrl = ((JarURLConnection) conn).getJarFileURL();
-        if ("file".equalsIgnoreCase(jarUrl.getProtocol())) {
-          javaRuntimeLibPath = new File(jarUrl.toURI()).getCanonicalFile().getParentFile();
-          isSupportedJDK = true;
+      final String cp = ManagementFactory.getRuntimeMXBean().getBootClassPath();
+      final StringTokenizer st = new StringTokenizer(cp, File.pathSeparator);
+      while (st.hasMoreTokens()) {
+        final File f = new File(st.nextToken());
+        if (f.isFile()) {
+          bootClassPathJars.add(f.getCanonicalFile());
+        } else if (f.isDirectory()) {
+          String fp = f.getCanonicalPath();
+          if (!fp.endsWith(File.separator)) {
+            fp += File.separator;
+          }
+          bootClassPathDirs.add(fp);
         }
       }
-    } catch (URISyntaxException use) {
-      isSupportedJDK = false;
+      isSupportedJDK = !(bootClassPathJars.isEmpty() && bootClassPathDirs.isEmpty());
+      // logInfo("JARs in boot-classpath: " + bootClassPathJars + "; dirs in boot-classpath: " + bootClassPathDirs);
     } catch (IOException ioe) {
       isSupportedJDK = false;
+      bootClassPathJars.clear();
+      bootClassPathDirs.clear();
     }
+    this.bootClassPathJars = Collections.unmodifiableSet(bootClassPathJars);
+    this.bootClassPathDirs = Collections.unmodifiableSet(bootClassPathDirs);
     
-    // we have to initialize lib paths here, otherwise getClassFromClassLoader() fails!
-    if (isSupportedJDK) {
-      this.javaRuntimeLibPath = javaRuntimeLibPath.getPath() + File.separator;
-      this.javaRuntimeExtensionsPath = new File(javaRuntimeLibPath, "ext").getPath() + File.separator;
-    } else {
-      this.javaRuntimeLibPath = this.javaRuntimeExtensionsPath = null;
-    }
-
     if (isSupportedJDK) {
       // check if we can load runtime classes (e.g. java.lang.Object).
       // If this fails, we have a newer Java version than ASM supports:
@@ -146,18 +153,29 @@ public abstract class Checker {
             return null;
           }
         }
-        final URLConnection conn = url.openConnection();
         boolean isRuntimeClass = false;
-        if (javaRuntimeLibPath != null && conn instanceof JarURLConnection) {
-          final URL jarUrl = ((JarURLConnection) conn).getJarFileURL();
-          if ("file".equalsIgnoreCase(jarUrl.getProtocol())) try {
-            final String path = new File(jarUrl.toURI()).getCanonicalPath();
-            if (path.startsWith(javaRuntimeLibPath) && !path.startsWith(javaRuntimeExtensionsPath)) {
-              // logInfo(clazz + " is a runtime class.");
-              isRuntimeClass = true;
+        final URLConnection conn = url.openConnection();
+        if ("file".equalsIgnoreCase(url.getProtocol())) {
+          try {
+            final String path = new File(url.toURI()).getCanonicalPath();
+            for (final String bcpDir : bootClassPathDirs) {
+              if (path.startsWith(bcpDir)) {
+                isRuntimeClass = true;
+                break;
+              }
             }
           } catch (URISyntaxException use) {
             // ignore (should not happen, but if it's happening, it's definitely not a runtime class)
+          }
+        } else {
+          if (conn instanceof JarURLConnection) {
+            final URL jarUrl = ((JarURLConnection) conn).getJarFileURL();
+            if ("file".equalsIgnoreCase(jarUrl.getProtocol())) try {
+              final File jarFile = new File(jarUrl.toURI()).getCanonicalFile();
+              isRuntimeClass = bootClassPathJars.contains(jarFile);
+            } catch (URISyntaxException use) {
+              // ignore (should not happen, but if it's happening, it's definitely not a runtime class)
+            }
           }
         }
         final InputStream in = conn.getInputStream();
