@@ -49,6 +49,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.lang.management.ManagementFactory;
+import java.lang.management.RuntimeMXBean;
 
 /**
  * Task to check if a set of class files contains calls to forbidden APIs
@@ -94,18 +95,21 @@ public abstract class Checker {
     final Set<File> bootClassPathJars = new LinkedHashSet<File>();
     final Set<String> bootClassPathDirs = new LinkedHashSet<String>();
     try {
-      final String cp = ManagementFactory.getRuntimeMXBean().getBootClassPath();
-      final StringTokenizer st = new StringTokenizer(cp, File.pathSeparator);
-      while (st.hasMoreTokens()) {
-        final File f = new File(st.nextToken());
-        if (f.isFile()) {
-          bootClassPathJars.add(f.getCanonicalFile());
-        } else if (f.isDirectory()) {
-          String fp = f.getCanonicalPath();
-          if (!fp.endsWith(File.separator)) {
-            fp += File.separator;
+      final RuntimeMXBean rb = ManagementFactory.getRuntimeMXBean();
+      if (rb.isBootClassPathSupported()) {
+        final String cp = rb.getBootClassPath();
+        final StringTokenizer st = new StringTokenizer(cp, File.pathSeparator);
+        while (st.hasMoreTokens()) {
+          final File f = new File(st.nextToken());
+          if (f.isFile()) {
+            bootClassPathJars.add(f.getCanonicalFile());
+          } else if (f.isDirectory()) {
+            String fp = f.getCanonicalPath();
+            if (!fp.endsWith(File.separator)) {
+              fp += File.separator;
+            }
+            bootClassPathDirs.add(fp);
           }
-          bootClassPathDirs.add(fp);
         }
       }
       isSupportedJDK = !(bootClassPathJars.isEmpty() && bootClassPathDirs.isEmpty());
