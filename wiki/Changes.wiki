@@ -1,0 +1,14 @@
+This page lists all changes since the first released version.
+
+= Version 1.1 (released 2013-02-11) =
+
+*New features:*
+  * added a Command Line Interface (CLI, issue #3)
+
+*Bug fixes:*
+  * fixed issue #1 (the bundled signature jdk-system-out was not working in Maven)
+  * fixed issue #2 (the Abt task was incorrectly failing to execute on empty task tag `<forbiddenapis internalRuntimeForbidden="true" dir="..."/>`, although the checks for internal api calls are enabled.
+
+= Version 1.0 (released 2013-02-04) =
+
+initial release, including support for Apache Ant, Apache Maven
