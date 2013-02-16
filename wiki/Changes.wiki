@@ -1,14 +1,22 @@
 This page lists all changes since the first released version.
 
+= Version 1.2 (released 2013-02-16) =
+
+*New features:*
+  * Validating test classes is now supported by the Maven Mojo. The goals were renamed to "check" and "testCheck" (issue #4).
+
+*Bug fixes:*
+  * fixed issue #5: Apple-provided JDK 1.6 on MacOSX was detected as "unsupported". The algorithm to get the bootclasspath was improved to support those JDK versions.
+
 = Version 1.1 (released 2013-02-11) =
 
 *New features:*
-  * added a Command Line Interface (CLI, issue #3)
+  * added a Command Line Interface (CLI, issue #3).
 
 *Bug fixes:*
-  * fixed issue #1 (the bundled signature `jdk-system-out` was not working in Maven)
+  * fixed issue #1 (the bundled signature `jdk-system-out` was not working in Maven).
   * fixed issue #2 (the Ant task was incorrectly failing to execute on empty task tag `<forbiddenapis internalRuntimeForbidden="true" dir="..."/>`, although the checks for internal api calls are enabled.
 
 = Version 1.0 (released 2013-02-04) =
 
-initial release, including support for Apache Ant, Apache Maven
+Initial release, including support for Apache Ant, Apache Maven.
