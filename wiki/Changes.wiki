@@ -6,7 +6,7 @@ This page lists all changes since the first released version.
   * Validating test classes is now supported by the Maven Mojo. The goals were renamed to "check" and "testCheck" (issue #4).
 
 *Bug fixes:*
-  * fixed issue #5 (Apple-provided JDK 1.6 on MacOSX was detected as "unsupported". The algorithm to get the bootclasspath was improved to support those JDK versions).
+  * fixed issue #5 (Apple-provided JDK 1.6 on MacOSX was detected as "unsupported"). The algorithm to get the bootclasspath was improved to support those JDK versions.
 
 = Version 1.1 (released 2013-02-11) =
 
