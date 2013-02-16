@@ -1,0 +1,63 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>@GROUPID@</groupId>
+  <artifactId>@ARTIFACTID@</artifactId>
+  <version>@VERSION@</version>
+  <name>@NAME@</name>
+  <description>Allows to parse Java byte code to find invocations of method/class/field signatures and fail build (Apache Ant, Apache Maven, or CLI)</description>
+  <url>http://code.google.com/p/forbidden-apis/</url>
+  <inceptionYear>2013</inceptionYear>
+  <packaging>maven-plugin</packaging>
+  
+  <parent>
+    <groupId>org.sonatype.oss</groupId>
+    <artifactId>oss-parent</artifactId>
+    <version>7</version>
+  </parent>
+
+  <licenses>
+    <license>
+      <name>The Apache Software License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+    </license>
+  </licenses>
+  
+  <scm>
+    <connection>scm:svn:http://forbidden-apis.googlecode.com/svn/branches/1.2/</connection>
+    <developerConnection>scm:svn:https://forbidden-apis.googlecode.com/svn/branches/1.2/</developerConnection>
+    <url>http://code.google.com/p/forbidden-apis/source/browse/</url>
+  </scm>
+  
+  <issueManagement>
+    <system>Google Code Issue Tracker</system>
+    <url>http://code.google.com/p/forbidden-apis/issues/list</url>
+  </issueManagement>
+  
+  <ciManagement>
+    <system>Jenkins</system>
+    <url>http://jenkins.thetaphi.de/job/Forbidden-APIs/</url>
+  </ciManagement>
+
+  <developers>
+    <developer>
+      <id>uwe.h.schindler</id>
+      <name>Uwe Schindler</name>
+      <url>http://www.thetaphi.de/</url>
+      <roles>
+        <role>architect</role>
+        <role>developer</role>
+      </roles>
+      <timezone>+1</timezone>
+    </developer>
+    <developer>
+      <id>rcmuir</id>
+      <name>Robert Muir</name>
+      <roles>
+        <role>developer</role>
+        <role>default locale/charset/timezone ghostbuster</role>
+      </roles>
+      <timezone>-5</timezone>
+    </developer>
+  </developers>
+</project>
