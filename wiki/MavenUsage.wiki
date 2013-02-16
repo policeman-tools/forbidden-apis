@@ -42,7 +42,8 @@ To use the forbidden API checker in Maven, use the following template to include
       <executions>
         <execution>
           <goals>
-            <goal>forbiddenapis</goal>
+            <goal>check</goal>
+            <goal>testCheck</goal>
           </goals>
         </execution>
       </executions>
@@ -54,4 +55,4 @@ To use the forbidden API checker in Maven, use the following template to include
 
 The possible `<bundledSignatures>` can be found on a [BundledSignatures separate page]. You can also give your own signatures in separate files from your project directory.
 
-Currently, the Mojo only supports validating the main classes, a later version will add support for test classes, too.
+Since version 1.2 the goal was renamed to "check" and "testCheck" (to check the test classes) was added.
