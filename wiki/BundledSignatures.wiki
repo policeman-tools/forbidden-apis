@@ -1,6 +1,6 @@
 = Bundled Signatures Files =
 
-The JAR file contaisn the follwoing signatures and can be used in Maven or Ant using `<bundledSignatures>`. All signatures are versioned against the specified JDK version:
+The JAR file contains the following signatures and can be used in Maven or Ant using `<bundledSignatures>`. All signatures are versioned against the specified JDK version:
 
  * *`jdk-unsafe-*`:* Signatures of "unsafe" methods that use default charset, default locale, or default timezone. For server applications it is very stupid to call those methods, as the results will definitely not what the user wants (for Java `*` = 1.5, 1.6, 1.7; Maven automatically adds the compile Java version)
  * *`jdk-deprecated-*`:* This disallows all deprecated methods from the JDK (for Java `*` = 1.5, 1.6, 1.7; Maven automatically adds the compile Java version)
