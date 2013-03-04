@@ -366,10 +366,16 @@
   </target>
   
   <target name="generate-deprecated" depends="compile-tools" description="Generates deprecated API signature lists for current JDK">
-    <fail message="Regenerating the deprecated signatures files need Oracle/Sun JDK, your Java version is unsupported: ${java.version} / JVM: ${java.vm.name}">
+    <fail message="Regenerating the deprecated signatures is currently not supported on Mac OSX!">
+      <condition>
+        <os family="mac"/>
+      </condition>
+    </fail>
+    <fail message="Regenerating the deprecated signatures files need Oracle/Sun JDK, your Java version is unsupported: ${java.version} / JVM: ${java.vm.name} / Vendor: ${java.vendor}">
       <condition>
         <not>
           <and>
+            <available file="${java.home}/lib/rt.jar"/>
             <matches string="${java.version}" pattern="^\Q${build.java.runtime}\E" casesensitive="true"/>
             <or>
               <contains string="${java.vendor}" substring="Oracle" casesensitive="false"/>
@@ -377,11 +383,6 @@
             </or>
           </and>
         </not>
-      </condition>
-    </fail>
-    <fail message="Regenerating the deprecated signatures is currently not supported on Mac OSX!">
-      <condition>
-        <os family="mac"/>
       </condition>
     </fail>
     <mkdir dir="${signatures.dir}"/>
