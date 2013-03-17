@@ -37,10 +37,7 @@
     -->
     <dependency org="org.codehaus.plexus" name="plexus-utils" rev="1.1" conf="build,bundle"/>
     <dependency org="commons-cli" name="commons-cli" rev="1.2" conf="build,bundle"/>
-    <!-- TODO: original JARJAR is somehow not in maven? -->
-    <dependency org="com.googlecode.jarjar" name="jarjar" rev="1.4" conf="buildtools">
-      <artifact name="jarjar" type="jar" url="http://jarjar.googlecode.com/files/jarjar-1.4.jar"/>
-    </dependency>
+    <dependency org="com.googlecode.jarjar" name="jarjar" rev="1.3" conf="buildtools"/>
     <dependency org="org.apache.maven" name="maven-ant-tasks" rev="2.1.3" conf="buildtools"/>
     <dependency org="org.apache.ant" name="ant-antunit" rev="1.2" conf="test"/>
     <dependency org="ant-contrib" name="ant-contrib" rev="1.0b3" conf="test"/>
