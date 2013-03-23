@@ -377,21 +377,27 @@ public abstract class Checker {
         return c;
       }
       
+      private boolean isInternalClass(String className) {
+        return className.startsWith("sun.") || className.startsWith("com.sun.") || className.startsWith("com.oracle.") || className.startsWith("jdk.");
+      }
+      
       boolean checkClassUse(String internalName) {
         final String printout = forbiddenClasses.get(internalName);
         if (printout != null) {
           logError("Forbidden class/interface use: " + printout);
           return true;
         }
-        if (internalRuntimeForbidden && (internalName.startsWith("sun/") || internalName.startsWith("com/sun/"))) {
+        if (internalRuntimeForbidden) {
           final String referencedClassName = Type.getObjectType(internalName).getClassName();
-          final ClassSignatureLookup c = lookupRelatedClass(internalName);
-          if (c == null || c.isRuntimeClass) {
-            logError(String.format(Locale.ENGLISH,
-              "Forbidden class/interface use: %s [non-public internal runtime class]",
-              referencedClassName
-            ));
-            return true;
+          if (isInternalClass(referencedClassName)) {
+            final ClassSignatureLookup c = lookupRelatedClass(internalName);
+            if (c == null || c.isRuntimeClass) {
+              logError(String.format(Locale.ENGLISH,
+                "Forbidden class/interface use: %s [non-public internal runtime class]",
+                referencedClassName
+              ));
+              return true;
+            }
           }
         }
         return false;
