@@ -64,7 +64,7 @@ public class DeprecatedGen implements Opcodes {
   }
   
   protected boolean isInternalClass(String className) {
-    return className.startsWith("sun.") || className.startsWith("com.sun.");
+    return className.startsWith("sun.") || className.startsWith("com.sun.") || className.startsWith("com.oracle.") || className.startsWith("jdk.");
   }
 
   void checkClass(final ClassReader reader) {
