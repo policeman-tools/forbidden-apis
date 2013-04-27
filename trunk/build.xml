@@ -54,6 +54,7 @@
   
   <property name="compile.debug" value="true"/>
   <property name="compile.deprecation" value="true"/>
+  <property name="build.encoding" value="UTF-8"/>
 
   <property name="ivy.logging" value="download-only"/>
 
@@ -149,7 +150,7 @@
         <fileset dir="src/@{module}/resources" erroronmissingdir="false" />
       </copy>
       <javac includeantruntime="false" srcdir="src/@{module}/java" destdir="build/@{module}"
-        source="${jdk.version}" target="${jdk.version}"
+        source="${jdk.version}" target="${jdk.version}" encoding="${build.encoding}"
         debug="${compile.debug}" deprecation="${compile.deprecation}">
          <classpath refid="@{classpathref}"/>
          <compilerarg value="-Xlint"/>
@@ -184,7 +185,7 @@
 
   <target name="-maven-setup">
     <mkdir dir="build/maven"/>
-    <copy todir="build/maven" encoding="UTF-8" outputencoding="UTF-8">
+    <copy todir="build/maven" encoding="${build.encoding}" outputencoding="${build.encoding}">
       <fileset dir="src/main/maven" includes="*.template"/>
       <filterset>
         <filter token="NAME" value="${ant.project.name}"/>
@@ -238,7 +239,7 @@
 
   <target name="jar-src" description="Create source distribution">
     <mkdir dir="dist"/>
-    <zip destfile="${sources-jar-file}" encoding="utf-8">
+    <zip destfile="${sources-jar-file}" encoding="${build.encoding}">
       <zipfileset dir="." includes="*.xml,*.txt,src/**,bundled-licenses/**" prefix="${artifactId}-${version}"/>
     </zip>
   </target>
@@ -394,5 +395,43 @@
     </java>
   </target>
 
+  <target name="-generate-test-classes-init">
+    <condition property="-gen.sunmisc">
+      <available classname="sun.misc.BASE64Encoder"/>
+    </condition>
+    <condition property="-gen.jdk8">
+      <equals arg1="${build.java.runtime}" arg2="1.8"/>
+    </condition>
+    <fail message="Regenerating the classes used by tests is not supported because your JDK implementation or version is unsupported: ${java.version} / Vendor: ${java.vendor}">
+      <condition>
+        <not>
+          <or>
+            <isset property="-gen.sunmisc"/>
+            <isset property="-gen.jdk8"/>
+          </or>
+        </not>
+      </condition>
+    </fail>
+  </target>
+  
+  <target name="-generate-test-classes-sunmisc" if="-gen.sunmisc">
+    <echo message="Generating test classes using sun.misc internal APIs (needs Oracle Java):"/>
+    <delete file="src/test/antunit/Demo1.class"/>
+    <javac includeantruntime="false" srcdir="src/test/antunit" destdir="src/test/antunit" includes="Demo1.java"
+      nowarn="true" source="1.5" target="1.5" debug="true" deprecation="false" encoding="${build.encoding}">
+      <!-- This disables the symbol file used to detect internal APIs while compiling: -->
+      <compilerarg value="-XDignore.symbol.file=true"/>
+    </javac>
+  </target>
+  
+  <target name="-generate-test-classes-jdk8" if="-gen.jdk8">
+    <echo message="Generating test classes for Java 8:"/>
+    <delete file="src/test/antunit/Demo2.class"/>
+    <javac includeantruntime="false" srcdir="src/test/antunit" destdir="src/test/antunit" includes="Demo2.java"
+      nowarn="true" source="1.8" target="1.8" debug="true" deprecation="false" encoding="${build.encoding}"/>
+  </target>
+  
+  <target name="generate-test-classes" depends="-generate-test-classes-init,-generate-test-classes-sunmisc,-generate-test-classes-jdk8" description="Regenerates .class files used by tests if the current JDK version supports it"/>
+  
   <target name="jenkins" depends="clean,dist,test,-stage.snapshots" description="Runs Jenkins Nightly"/>
 </project>
