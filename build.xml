@@ -84,7 +84,7 @@
       <equals arg1="${build.java.runtime}" arg2="1.5"/>
       <equals arg1="${build.java.runtime}" arg2="1.6"/>
       <equals arg1="${build.java.runtime}" arg2="1.7"/>
-      <!-- JDK 8 is currently not supported because ASM cannot load modified class file format -->
+      <equals arg1="${build.java.runtime}" arg2="1.8"/>
     </or>
   </condition>
 
@@ -378,6 +378,11 @@
             </or>
           </and>
         </not>
+      </condition>
+    </fail>
+    <fail message="Generating the deprecated signatures files is currently not supported with Java 8 or later.">
+      <condition>
+        <equals arg1="${build.java.runtime}" arg2="1.8"/>
       </condition>
     </fail>
     <mkdir dir="${signatures.dir}"/>
