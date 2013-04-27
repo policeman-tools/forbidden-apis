@@ -20,6 +20,6 @@ import sun.misc.BASE64Encoder;
 
 class Demo1 {
   static {
-    new sun.misc.BASE64Encoder().encode(new byte[0]);
+    new BASE64Encoder().encode(new byte[0]);
   }
 }
