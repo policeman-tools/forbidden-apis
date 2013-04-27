@@ -27,6 +27,7 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.Method;
 
+import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -63,6 +64,7 @@ public abstract class Checker {
   public final boolean isSupportedJDK;
   
   private final long start;
+  private boolean patchWarning = true;
   
   final Set<File> bootClassPathJars;
   final Set<String> bootClassPathDirs;
@@ -138,6 +140,24 @@ public abstract class Checker {
     this.isSupportedJDK = isSupportedJDK;
   }
   
+  private ClassReader readAndPatchClass(InputStream in) throws IOException {
+    final ByteArrayOutputStream bout = new ByteArrayOutputStream();
+    byte[] b = new byte[1024];
+    int count;
+    while ((count = in.read(b)) != -1) bout.write(b, 0, count);
+    b = bout.toByteArray();
+    // to support Java 8, patch the version signature to look like Java 7.
+    // The file format is the same, just new code attributes => ASM can read it
+    if (b[6] == 0 && b[7] == 52) {
+      if (patchWarning) {
+        logWarn("Reading class file in Java 8 format. This may cause problems!");
+        patchWarning = false;
+      }
+      b[7] = 51;
+    }
+    return new ClassReader(b);
+  }
+  
   /** Reads a class (binary name) from the given {@link ClassLoader}. */
   private ClassSignatureLookup getClassFromClassLoader(final String clazz, boolean throwCNFE) throws ClassNotFoundException {
     final ClassSignatureLookup c;
@@ -184,7 +204,7 @@ public abstract class Checker {
         }
         final InputStream in = conn.getInputStream();
         try {
-          classpathClassCache.put(clazz, c = new ClassSignatureLookup(new ClassReader(in), isRuntimeClass));
+          classpathClassCache.put(clazz, c = new ClassSignatureLookup(readAndPatchClass(in), isRuntimeClass));
         } finally {
           in.close();
         }
@@ -338,7 +358,7 @@ public abstract class Checker {
   public final void addClassToCheck(final InputStream in) throws IOException {
     final ClassReader reader;
     try {
-      reader = new ClassReader(in);
+      reader = readAndPatchClass(in);
     } finally {
       in.close();
     }
@@ -378,7 +398,7 @@ public abstract class Checker {
       }
       
       private boolean isInternalClass(String className) {
-        return className.startsWith("sun.") || className.startsWith("com.sun.") || className.startsWith("com.oracle.") || className.startsWith("jdk.");
+        return className.startsWith("sun.") || className.startsWith("com.sun.") || className.startsWith("com.oracle.") || className.startsWith("jdk.")  || className.startsWith("sunw.");
       }
       
       boolean checkClassUse(String internalName) {
