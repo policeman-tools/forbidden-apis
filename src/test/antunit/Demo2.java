@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!--
+/*
  * (C) Copyright 2013 Uwe Schindler (Generics Policeman) and others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,17 +12,17 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
--->
-<project xmlns:au="antlib:org.apache.ant.antunit">
+ */
 
-  <target name="testInternalRuntimeForbidden">
-    <au:expectfailure expectedMessage="Check for forbidden API calls failed, see log">
-      <forbiddenapis internalRuntimeForbidden="true" failOnMissingClasses="false">
-        <fileset file="Demo1.class"/>
-      </forbiddenapis>
-    </au:expectfailure>
-    <au:assertLogContains level="error" text="sun.misc.BASE64Encoder [non-public internal runtime class]"/> 
-    <au:assertLogContains level="error" text=" 2 error(s)"/> 
-  </target>
-  
-</project>
+import java.io.Closeable;
+import java.util.ArrayList;
+import java.util.Collections;
+
+/* Needs JDK 8 to compile! */
+
+public interface Demo2 extends Closeable {
+  public default void close2() {
+    new StringBuilder().append("hallo");
+    Collections.sort(new ArrayList<Integer>(), (Integer a, Integer b) -> a.compareTo(b));
+  }
+}
