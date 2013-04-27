@@ -422,6 +422,3 @@ org.xml.sax.HandlerBase
 org.xml.sax.Parser
 org.xml.sax.helpers.AttributeListImpl
 org.xml.sax.helpers.ParserFactory
-sunw.io.Serializable
-sunw.util.EventListener
-sunw.util.EventObject
