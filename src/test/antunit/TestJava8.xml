@@ -17,14 +17,6 @@
 <project xmlns:au="antlib:org.apache.ant.antunit">
 
   <target name="testDefaultMethodAndClosures">
-    <!-- (needs Java 8 to compile)
-    public interface Demo2 extends java.io.Closeable {
-      default public void close2() {
-        new StringBuilder().append("hallo");
-        java.util.Collections.sort(new java.util.ArrayList<Integer>(), (Integer a, Integer b) -> a.compareTo(b));
-      }
-    }
-    -->
     <au:expectfailure expectedMessage="Check for forbidden API calls failed, see log">
       <forbiddenapis>
         <fileset file="Demo2.class"/>
