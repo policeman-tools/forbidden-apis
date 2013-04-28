@@ -15,14 +15,16 @@
  */
 
 import java.io.Closeable;
-import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Arrays;
 
-/* Needs JDK 8 to compile! */
+/* Needs JDK 8 to compile!
+ * The binary class file is packaged together with the source distribution,
+ * because it cannot be regenerated on every Java installation!
+ */
 
-public interface Demo2 extends Closeable {
-  public default void close2() {
-    new StringBuilder().append("hallo");
-    Collections.sort(new ArrayList<Integer>(), (Integer a, Integer b) -> a.compareTo(b));
+interface Demo2 extends Closeable {
+  default void close2() {
+    new StringBuilder().append("police");
+    Arrays.sort(new Integer[0], (Integer a, Integer b) -> a.compareTo(b));
   }
 }
