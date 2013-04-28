@@ -21,6 +21,10 @@ To use the forbidden API checker in Maven, use the following template to include
       <configuration>
         <!-- disallow undocumented classes like sun.misc.Unsafe: -->
         <internalRuntimeForbidden>true</internalRuntimeForbidden>
+        <!--
+          if the used Java version is too new,
+          don't fail, just do nothing:
+        -->
         <failOnUnsupportedJava>false</failOnUnsupportedJava>
         <bundledSignatures>
           <!--
