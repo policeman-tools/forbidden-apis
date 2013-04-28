@@ -4,6 +4,8 @@ This page lists all changes since the first released version.
 
 *New features:*
   * Preliminary support for Java 8 (issue #7): The tool can now read Java 8 class files and detects usage of forbidden APIs in default interface methods and closures.
+
+*Optimizations:*
   * Reduced binary JAR size by using non-debug ASM version.
 
 = Version 1.2 (released 2013-02-16) =
