@@ -22,13 +22,13 @@
         <fileset file="Demo2.class"/>
         java.lang.StringBuilder @ Police alarm!
         java.lang.Integer#compareTo(java.lang.Integer) @ Closure alarm!
-        java.util.Collections#sort(java.util.List,java.util.Comparator) @ Call using closure alarm!
+        java.util.Arrays#sort(java.lang.Object[],java.util.Comparator) @ Call using closure alarm!
       </forbiddenapis>
     </au:expectfailure>
     <au:assertLogContains level="warning" text="Reading class file in Java 8 format. This may cause problems!"/> 
     <au:assertLogContains level="error" text="java.lang.StringBuilder [Police alarm!]"/> 
     <au:assertLogContains level="error" text="java.lang.Integer#compareTo(java.lang.Integer) [Closure alarm!]"/> 
-    <au:assertLogContains level="error" text="java.util.Collections#sort(java.util.List,java.util.Comparator) [Call using closure alarm!]"/> 
+    <au:assertLogContains level="error" text="java.util.Arrays#sort(java.lang.Object[],java.util.Comparator) [Call using closure alarm!]"/> 
     <au:assertLogContains level="error" text=" 4 error(s)"/> 
   </target>
   

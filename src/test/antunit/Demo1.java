@@ -16,7 +16,10 @@
 
 import sun.misc.BASE64Encoder;
 
-/* Needs Sun/Oracle JDK to compile! */
+/* Needs Sun/Oracle JDK to compile!
+ * The binary class file is packaged together with the source distribution,
+ * because it cannot be regenerated on every Java installation!
+ */
 
 class Demo1 {
   static {
