@@ -267,7 +267,7 @@
   <target name="sign-artifacts" depends="dist">
     <delete failonerror="false" dir="dist" includes="**/*.asc"/>
 
-    <input message="Enter GPG keystore password: >" addproperty="gpg.passphrase">
+    <input message="Enter GPG keystore password: &gt;" addproperty="gpg.passphrase">
       <handler classname="org.apache.tools.ant.input.SecureInputHandler" />
     </input>
 
