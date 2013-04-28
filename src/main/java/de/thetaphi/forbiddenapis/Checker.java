@@ -27,12 +27,13 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.Method;
 
-import java.io.ByteArrayOutputStream;
+import java.io.BufferedReader;
+import java.io.EOFException;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.BufferedReader;
+import java.io.PushbackInputStream;
 import java.io.Reader;
 import java.io.File;
 import java.io.StringReader;
@@ -141,13 +142,14 @@ public abstract class Checker {
   }
   
   private ClassReader readAndPatchClass(InputStream in) throws IOException {
-    final ByteArrayOutputStream bout = new ByteArrayOutputStream();
-    byte[] b = new byte[1024];
-    int count;
-    while ((count = in.read(b)) != -1) bout.write(b, 0, count);
-    b = bout.toByteArray();
-    // to support Java 8, patch the version signature to look like Java 7.
-    // The file format is the same, just new code attributes => ASM can read it
+    final byte[] b = new byte[8];
+    final PushbackInputStream pbin = new PushbackInputStream(in, b.length);
+    for (int upto = 0; upto < b.length;) {
+      final int read = pbin.read(b, upto, b.length - upto);
+      if (read == -1)
+        throw new EOFException("Not enough bytes available to read header of class file.");
+      upto += read;
+    }
     if (b[6] == 0 && b[7] == 52) {
       if (patchWarning) {
         logWarn("Reading class file in Java 8 format. This may cause problems!");
@@ -155,7 +157,8 @@ public abstract class Checker {
       }
       b[7] = 51;
     }
-    return new ClassReader(b);
+    pbin.unread(b);
+    return new ClassReader(pbin);
   }
   
   /** Reads a class (binary name) from the given {@link ClassLoader}. */
