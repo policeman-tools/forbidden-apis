@@ -3,7 +3,7 @@ This page lists all changes since the first released version.
 = Version 1.3 (released 2013-04-28) =
 
 *New features:*
-  * Preliminary support for Java 8 (issue #7): The tool can now read Java 8 class files and detects usage of forbidden APIs in default interface methods and closures. It does not yet ship with signature files for Java 8, as the API is not yet official.
+  * Preliminary support for Java 8 (issue #7, tested with preview build 86 of the Oracle Java 8 JDK): The tool can now read Java 8 class files and detects usage of forbidden APIs in default interface methods and closures. It does not yet ship with signature files for Java 8, as the API is not yet official.
 
 *Optimizations:*
   * Reduced binary JAR size by using non-debug ASM version.
