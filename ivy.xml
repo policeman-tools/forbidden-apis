@@ -16,7 +16,7 @@
 -->
 <ivy-module version="2.0">
   <info organisation="de.thetaphi" module="forbiddenapis"/>
-  <configurations defaultconfmapping="build->*;bundle->*;test->*;buildtools->*">
+  <configurations defaultconfmapping="build-&gt;*;bundle-&gt;*;test-&gt;*;buildtools-&gt;*">
      <conf name="build" transitive="false" visibility="private" />
      <conf name="bundle" transitive="false" visibility="private" />
      <conf name="test" transitive="false" visibility="private" />
