@@ -78,7 +78,7 @@
 
   <!-- GPG settings -->
   <property name="gpg.exe" value="gpg" />
-  <property name="gpg.key" value="CODE SIGNING KEY" />
+  <property name="gpg.key" value="DF82B4BF" />
 
   <condition property="tests.supported">
     <or>
