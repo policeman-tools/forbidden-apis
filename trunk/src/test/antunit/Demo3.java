@@ -14,21 +14,15 @@
  * limitations under the License.
  */
 
-import java.io.Closeable;
-import java.util.Arrays;
-
-/* Needs JDK 8 to compile!
- * The binary class file is packaged together with the source distribution,
- * because it cannot be regenerated on every Java installation!
+/* The binary class file is packaged together with the source distribution.
  */
 
-interface Demo2 extends Closeable {
-  default void close2() {
-    new StringBuilder().append("police");
-    Arrays.sort(new Integer[0], (Integer a, Integer b) -> a.compareTo(b));
-  }
-  
-  static void test() {
-    Arrays.sort(new Float[0], Float::compare);
+class Demo3 {
+  static Integer[][] test() {
+    Integer.class.getName();
+    System.out.println(Integer[].class);
+    Integer[] arr = new Integer[1];
+    arr[0] = new Integer(0);
+    return new Integer[1][1];
   }
 }

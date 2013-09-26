@@ -23,6 +23,7 @@ import org.objectweb.asm.Label;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Handle;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.Method;
@@ -483,6 +484,7 @@ public abstract class Checker {
               if (superName != null && checkMethodAccess(superName, method)) {
                 return true;
               }
+              // JVM spec says: interfaces after superclasses
               final String[] interfaces = c.reader.getInterfaces();
               if (interfaces != null) {
                 for (String intf : interfaces) {
@@ -506,10 +508,6 @@ public abstract class Checker {
             }
             final ClassSignatureLookup c = lookupRelatedClass(owner);
             if (c != null && !c.fields.contains(field)) {
-              final String superName = c.reader.getSuperName();
-              if (superName != null && checkFieldAccess(superName, field)) {
-                return true;
-              }
               final String[] interfaces = c.reader.getInterfaces();
               if (interfaces != null) {
                 for (String intf : interfaces) {
@@ -518,6 +516,57 @@ public abstract class Checker {
                   }
                 }
               }
+              // JVM spec says: superclasses after interfaces
+              final String superName = c.reader.getSuperName();
+              if (superName != null && checkFieldAccess(superName, field)) {
+                return true;
+              }
+            }
+            return false;
+          }
+
+          private boolean checkType(Type type) {
+            while (type != null) {
+              switch (type.getSort()) {
+                case Type.OBJECT:
+                  // don't check superclasses (TODO: investigate):
+                  return checkClassUse(type.getInternalName());
+                case Type.ARRAY:
+                  type = type.getElementType();
+                  break;
+                default:
+                  return false;
+              }
+            }
+            return false;
+          }
+
+          private boolean checkHandle(Handle handle) {
+            switch (handle.getTag()) {
+              case Opcodes.H_GETFIELD:
+              case Opcodes.H_PUTFIELD:
+              case Opcodes.H_GETSTATIC:
+              case Opcodes.H_PUTSTATIC:
+                return checkFieldAccess(handle.getOwner(), handle.getName());
+              case Opcodes.H_INVOKEVIRTUAL:
+              case Opcodes.H_INVOKESTATIC:
+              case Opcodes.H_INVOKESPECIAL:
+              case Opcodes.H_NEWINVOKESPECIAL:
+              case Opcodes.H_INVOKEINTERFACE:
+                return checkMethodAccess(handle.getOwner(), new Method(handle.getName(), handle.getDesc()));
+            }
+            return false;
+          }
+          
+          private boolean checkConstant(Object cst) {
+            if (cst instanceof Type) {
+              if (checkType((Type) cst)) {
+                return true;
+              }
+            } else if (cst instanceof Handle) {
+              if (checkHandle((Handle) cst)) {
+                return true;
+              }
             }
             return false;
           }
@@ -525,20 +574,60 @@ public abstract class Checker {
           @Override
           public void visitMethodInsn(int opcode, String owner, String name, String desc) {
             if (checkMethodAccess(owner, new Method(name, desc))) {
-              violations[0]++;
-              reportSourceAndLine();
+              reportViolation();
             }
           }
           
           @Override
           public void visitFieldInsn(int opcode, String owner, String name, String desc) {
             if (checkFieldAccess(owner, name)) {
-             violations[0]++;
-             reportSourceAndLine();
+             reportViolation();
+            }
+          }
+          
+          @Override
+          public void visitTypeInsn(int opcode, String type) {
+            if (opcode == Opcodes.ANEWARRAY) {
+              if (checkType(Type.getObjectType(type))) {
+                reportViolation();
+              }
+            }
+          }
+          
+          @Override
+          public void visitMultiANewArrayInsn(String desc, int dims) {
+            if (checkType(Type.getType(desc))) {
+              reportViolation();
+            }
+          }
+          
+          @Override
+          public void visitLdcInsn(Object cst) {
+            if (checkConstant(cst)) {
+              reportViolation();
+            }
+          }
+          
+          @Override
+          public void visitInvokeDynamicInsn(String name, String desc, Handle bsm, Object... bsmArgs) {
+            // Java 8 Lambda of type "Class::method"
+            if ("java/lang/invoke/LambdaMetafactory".equals(bsm.getOwner())) {
+              if (bsmArgs.length >= 3 && bsmArgs[1] instanceof Handle) {
+                final Handle handle = (Handle) bsmArgs[1];
+                if (checkHandle(handle)) {
+                  reportViolation();
+                }
+              } else {
+                logWarn(String.format(Locale.ENGLISH,
+                  "Class '%s' contains invalid invokedynamic using Java 8 LambdaMetafactory, cannot parse.",
+                  className
+                ));
+              }
             }
           }
 
-          private void reportSourceAndLine() {
+          private void reportViolation() {
+            violations[0]++;
             final StringBuilder sb = new StringBuilder("  in ").append(className);
             if (source != null && lineNo >= 0) {
               new Formatter(sb, Locale.ENGLISH).format(" (%s:%d)", source, lineNo).flush();
