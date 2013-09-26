@@ -402,16 +402,6 @@
     <condition property="-gen.jdk8">
       <equals arg1="${build.java.runtime}" arg2="1.8"/>
     </condition>
-    <fail message="Regenerating the classes used by tests is not supported because your JDK implementation or version is unsupported: ${java.version} / Vendor: ${java.vendor}">
-      <condition>
-        <not>
-          <or>
-            <isset property="-gen.sunmisc"/>
-            <isset property="-gen.jdk8"/>
-          </or>
-        </not>
-      </condition>
-    </fail>
   </target>
   
   <target name="-generate-test-classes-sunmisc" if="-gen.sunmisc">
@@ -431,7 +421,14 @@
       nowarn="true" source="1.8" target="1.8" debug="true" deprecation="false" encoding="${build.encoding}"/>
   </target>
   
-  <target name="generate-test-classes" depends="-generate-test-classes-init,-generate-test-classes-sunmisc,-generate-test-classes-jdk8" description="Regenerates .class files used by tests if the current JDK version supports it"/>
+  <target name="-generate-test-classes-any">
+    <echo message="Generating other test classes:"/>
+    <delete file="src/test/antunit/Demo3.class"/>
+    <javac includeantruntime="false" srcdir="src/test/antunit" destdir="src/test/antunit" includes="Demo3.java"
+      nowarn="true" source="1.5" target="1.5" debug="true" deprecation="false" encoding="${build.encoding}"/>
+  </target>
+  
+  <target name="generate-test-classes" depends="-generate-test-classes-init,-generate-test-classes-sunmisc,-generate-test-classes-jdk8,-generate-test-classes-any" description="Regenerates .class files used by tests if the current JDK version supports it"/>
   
   <target name="jenkins" depends="clean,dist,test,-stage.snapshots" description="Runs Jenkins Nightly"/>
 </project>

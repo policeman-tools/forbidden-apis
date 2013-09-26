@@ -23,6 +23,7 @@
         java.io.Closeable @ Police alarm!
         java.lang.StringBuilder @ Police alarm!
         java.lang.Integer#compareTo(java.lang.Integer) @ Closure alarm!
+        java.lang.Float#compare(float,float) @ Static closure alarm!
         java.util.Arrays#sort(java.lang.Object[],java.util.Comparator) @ Call using closure alarm!
       </forbiddenapis>
     </au:expectfailure>
@@ -30,8 +31,9 @@
     <au:assertLogContains level="error" text="java.io.Closeable [Police alarm!]"/> 
     <au:assertLogContains level="error" text="java.lang.StringBuilder [Police alarm!]"/> 
     <au:assertLogContains level="error" text="java.lang.Integer#compareTo(java.lang.Integer) [Closure alarm!]"/> 
+    <au:assertLogContains level="error" text="java.lang.Float#compare(float,float) [Static closure alarm!]"/> 
     <au:assertLogContains level="error" text="java.util.Arrays#sort(java.lang.Object[],java.util.Comparator) [Call using closure alarm!]"/> 
-    <au:assertLogContains level="error" text=" 5 error(s)"/> 
+    <au:assertLogContains level="error" text=" 7 error(s)"/> 
   </target>
   
 </project>
