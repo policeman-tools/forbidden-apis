@@ -406,29 +406,29 @@
   
   <target name="-generate-test-classes-sunmisc" if="-gen.sunmisc">
     <echo message="Generating test classes using sun.misc internal APIs (needs Oracle Java):"/>
-    <delete file="src/test/antunit/Demo1.class"/>
-    <javac includeantruntime="false" srcdir="src/test/antunit" destdir="src/test/antunit" includes="Demo1.java"
+    <delete dir="src/test/antunit" includes="Oracle*.class"/>
+    <javac includeantruntime="false" srcdir="src/test/antunit" destdir="src/test/antunit" includes="Oracle*.java"
       nowarn="true" source="1.5" target="1.5" debug="true" deprecation="false" encoding="${build.encoding}">
       <!-- This disables the symbol file used to detect internal APIs while compiling: -->
       <compilerarg value="-XDignore.symbol.file=true"/>
     </javac>
   </target>
   
-  <target name="-generate-test-classes-jdk8" if="-gen.jdk8">
-    <echo message="Generating test classes for Java 8:"/>
-    <delete file="src/test/antunit/Demo2.class"/>
-    <javac includeantruntime="false" srcdir="src/test/antunit" destdir="src/test/antunit" includes="Demo2.java"
-      nowarn="true" source="1.8" target="1.8" debug="true" deprecation="false" encoding="${build.encoding}"/>
-  </target>
-  
-  <target name="-generate-test-classes-any">
-    <echo message="Generating other test classes:"/>
-    <delete file="src/test/antunit/Demo3.class"/>
-    <javac includeantruntime="false" srcdir="src/test/antunit" destdir="src/test/antunit" includes="Demo3.java"
+  <target name="-generate-test-classes-jdk5">
+    <echo message="Generating test classes for Java 5:"/>
+    <delete dir="src/test/antunit" includes="Java5*.class"/>
+    <javac includeantruntime="false" srcdir="src/test/antunit" destdir="src/test/antunit" includes="Java5*.java"
       nowarn="true" source="1.5" target="1.5" debug="true" deprecation="false" encoding="${build.encoding}"/>
   </target>
   
-  <target name="generate-test-classes" depends="-generate-test-classes-init,-generate-test-classes-sunmisc,-generate-test-classes-jdk8,-generate-test-classes-any" description="Regenerates .class files used by tests if the current JDK version supports it"/>
+  <target name="-generate-test-classes-jdk8" if="-gen.jdk8">
+    <echo message="Generating test classes for Java 8:"/>
+    <delete dir="src/test/antunit" includes="Java8*.class"/>
+    <javac includeantruntime="false" srcdir="src/test/antunit" destdir="src/test/antunit" includes="Java8*.java"
+      nowarn="true" source="1.8" target="1.8" debug="true" deprecation="false" encoding="${build.encoding}"/>
+  </target>
+  
+  <target name="generate-test-classes" depends="-generate-test-classes-init,-generate-test-classes-sunmisc,-generate-test-classes-jdk5,-generate-test-classes-jdk8" description="Regenerates .class files used by tests if the current JDK version supports it"/>
   
   <target name="jenkins" depends="clean,dist,test,-stage.snapshots" description="Runs Jenkins Nightly"/>
 </project>

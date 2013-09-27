@@ -23,7 +23,7 @@ import java.util.ArrayList;
  * because it cannot be regenerated on every Java installation!
  */
 
-interface Demo2 extends Closeable {
+interface Java8Closures extends Closeable {
   default void close2() {
     new StringBuilder().append("police");
     Arrays.sort(new Integer[0], (Integer a, Integer b) -> a.compareTo(b));
