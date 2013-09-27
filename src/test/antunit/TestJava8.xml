@@ -25,6 +25,7 @@
         java.lang.Integer#compareTo(java.lang.Integer) @ Closure alarm!
         java.lang.Float#compare(float,float) @ Static closure alarm!
         java.util.Arrays#sort(java.lang.Object[],java.util.Comparator) @ Call using closure alarm!
+        java.util.ArrayList#&lt;init&gt;() @ Closure implemented by constructor!
       </forbiddenapis>
     </au:expectfailure>
     <au:assertLogContains level="warning" text="Reading class file in Java 8 format. This may cause problems!"/> 
@@ -33,7 +34,8 @@
     <au:assertLogContains level="error" text="java.lang.Integer#compareTo(java.lang.Integer) [Closure alarm!]"/> 
     <au:assertLogContains level="error" text="java.lang.Float#compare(float,float) [Static closure alarm!]"/> 
     <au:assertLogContains level="error" text="java.util.Arrays#sort(java.lang.Object[],java.util.Comparator) [Call using closure alarm!]"/> 
-    <au:assertLogContains level="error" text=" 9 error(s)"/> 
+    <au:assertLogContains level="error" text="java.util.ArrayList#&lt;init&gt;() [Closure implemented by constructor!]"/> 
+    <au:assertLogContains level="error" text=" 10 error(s)"/> 
   </target>
   
 </project>
