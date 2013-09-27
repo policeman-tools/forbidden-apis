@@ -610,18 +610,12 @@ public abstract class Checker {
           
           @Override
           public void visitInvokeDynamicInsn(String name, String desc, Handle bsm, Object... bsmArgs) {
-            // Java 8 Lambda of type "Class::method"
-            if ("java/lang/invoke/LambdaMetafactory".equals(bsm.getOwner())) {
-              if (bsmArgs.length >= 3 && bsmArgs[1] instanceof Handle) {
-                final Handle handle = (Handle) bsmArgs[1];
-                if (checkHandle(handle)) {
+            if (!checkHandle(bsm)) {
+              for (final Object cst : bsmArgs) {
+                if (checkConstant(cst)) {
                   reportViolation();
+                  return;
                 }
-              } else {
-                logWarn(String.format(Locale.ENGLISH,
-                  "Class '%s' contains invalid invokedynamic using Java 8 LambdaMetafactory, cannot parse.",
-                  className
-                ));
               }
             }
           }
