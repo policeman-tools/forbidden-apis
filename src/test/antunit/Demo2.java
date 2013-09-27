@@ -30,5 +30,6 @@ interface Demo2 extends Closeable {
   
   static void test() {
     Arrays.sort(new Float[0], Float::compare);
+    Arrays.sort(new Integer[0], Integer::compareTo);
   }
 }
