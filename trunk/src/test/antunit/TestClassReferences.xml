@@ -19,7 +19,7 @@
   <target name="testClassReferences">
     <au:expectfailure expectedMessage="Check for forbidden API calls failed, see log">
       <forbiddenapis>
-        <fileset file="Demo3.class"/>
+        <fileset file="Java5ClassReferences.class"/>
         java.lang.Integer @ Forbidden class reference!
       </forbiddenapis>
     </au:expectfailure>

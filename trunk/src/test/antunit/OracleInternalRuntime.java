@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-/* The binary class file is packaged together with the source distribution.
+import sun.misc.BASE64Encoder;
+
+/* Needs Sun/Oracle JDK to compile!
+ * The binary class file is packaged together with the source distribution,
+ * because it cannot be regenerated on every Java installation!
  */
 
-class Demo3 {
-  static Integer[][] test() {
-    Integer.class.getName();
-    System.out.println(Integer[].class);
-    Integer[] arr = new Integer[1];
-    arr[0] = new Integer(0);
-    return new Integer[1][1];
+class OracleInternalRuntime {
+  static {
+    new BASE64Encoder().encode(new byte[0]);
   }
 }
