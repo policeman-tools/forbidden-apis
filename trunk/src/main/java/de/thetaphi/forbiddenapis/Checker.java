@@ -610,12 +610,12 @@ public abstract class Checker {
           
           @Override
           public void visitInvokeDynamicInsn(String name, String desc, Handle bsm, Object... bsmArgs) {
-            if (!checkHandle(bsm)) {
-              for (final Object cst : bsmArgs) {
-                if (checkConstant(cst)) {
-                  reportViolation();
-                  return;
-                }
+            if (checkHandle(bsm)) {
+              reportViolation();
+            }
+            for (final Object cst : bsmArgs) {
+              if (checkConstant(cst)) {
+                reportViolation();
               }
             }
           }
