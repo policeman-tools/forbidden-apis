@@ -118,8 +118,6 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
   public void execute() throws MojoExecutionException, MojoFailureException {
     final Log log = getLog();
     
-    log.info(packaging);
-    
     // In multi-module projects, one may want to configure the plugin in the parent/root POM.
     // However, it should not be executed for this type of POMs.
     if ("pom".equals(packaging)) {
