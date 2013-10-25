@@ -44,6 +44,28 @@
     <au:assertLogContains text="You are crazy that you disallow strings"/> 
   </target>
   
+  <target name="testFailOnUnresolveableSignaturesMaven2">
+    <au:expectfailure>
+      <artifact:mvn pom="${antunit.fake-pom}" mavenVersion="${maven.version}" failonerror="true" fork="true">
+        <arg value="${groupId}:${artifactId}:${version}:check"/>
+        <syspropertyset refid="injected-properties"/>
+        <sysproperty key="antunit.signatures" value="foo.bar.ForbiddenApis#testMethod()"/>
+        <sysproperty key="antunit.failOnUnresolvableSignatures" value="true"/>
+      </artifact:mvn>
+    </au:expectfailure>
+    <au:assertLogContains text="Parsing signatures failed: Loading of class foo.bar.ForbiddenApis failed: Not found"/> 
+  </target>
+  
+  <target name="testPassOnUnresolveableSignaturesMaven2">
+    <artifact:mvn pom="${antunit.fake-pom}" mavenVersion="${maven.version}" failonerror="true" fork="true">
+      <arg value="${groupId}:${artifactId}:${version}:check"/>
+      <syspropertyset refid="injected-properties"/>
+      <sysproperty key="antunit.signatures" value="foo.bar.ForbiddenApis#testMethod()"/>
+      <sysproperty key="antunit.failOnUnresolvableSignatures" value="false"/>
+    </artifact:mvn>
+    <au:assertLogContains text="The class 'foo.bar.ForbiddenApis' referenced in a signature cannot be loaded, ignoring signature: foo.bar.ForbiddenApis#testMethod()"/> 
+  </target>
+  
   <target name="testMyselfMaven3">
     <artifact:mvn pom="${antunit.fake-pom}" mavenVersion="${antunit.maven3.version}" failonerror="true" fork="true">
       <arg value="${groupId}:${artifactId}:${version}:check"/>

@@ -201,7 +201,7 @@ public final class CliMain {
 
     final URLClassLoader loader = URLClassLoader.newInstance(urls, ClassLoader.getSystemClassLoader());
     try {
-      final Checker checker = new Checker(loader, cmd.hasOption(internalruntimeforbiddenOpt.getLongOpt()), !cmd.hasOption(nofailonmissingclassesOpt.getLongOpt())) {
+      final Checker checker = new Checker(loader, cmd.hasOption(internalruntimeforbiddenOpt.getLongOpt()), !cmd.hasOption(nofailonmissingclassesOpt.getLongOpt()), true) {
         @Override
         protected void logError(String msg) {
           CliMain.this.logError(msg);
