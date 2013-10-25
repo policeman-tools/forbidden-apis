@@ -114,6 +114,11 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
   /** provided by the concrete Mojos for compile and test classes processing */
   protected abstract File getClassesDirectory();
 
+  /** gets overridden for test, because it uses testTargetVersion as optional name to override */
+  protected String getTargetVersion() {
+    return targetVersion;
+  }
+
   // Not in Java 5: @Override
   public void execute() throws MojoExecutionException, MojoFailureException {
     final Log log = getLog();
@@ -206,7 +211,7 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
         }
         if (bundledSignatures != null) for (String bs : bundledSignatures) {
           log.info("Reading bundled API signatures: " + bs);
-          checker.parseBundledSignatures(bs, targetVersion);
+          checker.parseBundledSignatures(bs, getTargetVersion());
         }
         if (signaturesFiles != null) for (final File f : signaturesFiles) {
           log.info("Reading API signatures: " + f);
