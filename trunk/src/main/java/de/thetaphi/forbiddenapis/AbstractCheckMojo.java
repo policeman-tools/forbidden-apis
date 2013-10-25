@@ -71,12 +71,20 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
   private boolean failOnUnsupportedJava;
   
   /**
-   * Fail the build, if a referenced class is missing. This requires
+   * Fail the build, if a class referenced in the scanned code is missing. This requires
    * that you pass the whole classpath including all dependencies to this Mojo
    * (Maven does this by default).
    */
   @Parameter(required = false, defaultValue = "true")
   private boolean failOnMissingClasses;
+  
+  /**
+   * Fail the build if a class referenced in a signature is missing. If this parameter is set to
+   * to false, then such signatures are silently ignored. This is useful in multi-module Maven
+   * projects where only some modules have the dependency to which the signature file(s) apply.
+   */
+  @Parameter(required = false, defaultValue = "true")
+  private boolean failOnUnresolvableSignatures;
   
   /**
    * The default compiler target version used to expand references to bundled JDK signatures.
@@ -153,7 +161,7 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
       ClassLoader.getSystemClassLoader();
     
     try {
-      final Checker checker = new Checker(loader, internalRuntimeForbidden, failOnMissingClasses) {
+      final Checker checker = new Checker(loader, internalRuntimeForbidden, failOnMissingClasses, failOnUnresolvableSignatures) {
         @Override
         protected void logError(String msg) {
           log.error(msg);
@@ -224,7 +232,12 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
       }
 
       if (checker.hasNoSignatures()) {
-        throw new MojoExecutionException("No API signatures found; use parameters 'signatures', 'bundledSignatures', and/or 'signaturesFiles' to define those!");
+        if (failOnUnresolvableSignatures) {
+          throw new MojoExecutionException("No API signatures found; use parameters 'signatures', 'bundledSignatures', and/or 'signaturesFiles' to define those!");
+        } else {
+          log.info("Skipping execution because no API signatures are available.");
+          return;
+        }
       }
 
       log.info("Loading classes to check...");

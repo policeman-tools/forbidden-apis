@@ -71,7 +71,7 @@ public abstract class Checker {
   final Set<File> bootClassPathJars;
   final Set<String> bootClassPathDirs;
   final ClassLoader loader;
-  final boolean internalRuntimeForbidden, failOnMissingClasses;
+  final boolean internalRuntimeForbidden, failOnMissingClasses, failOnUnresolvableSignatures;
   
   // key is the internal name (slashed):
   final Map<String,ClassSignatureLookup> classesToCheck = new HashMap<String,ClassSignatureLookup>();
@@ -89,10 +89,11 @@ public abstract class Checker {
   protected abstract void logWarn(String msg);
   protected abstract void logInfo(String msg);
   
-  public Checker(ClassLoader loader, boolean internalRuntimeForbidden, boolean failOnMissingClasses) {
+  public Checker(ClassLoader loader, boolean internalRuntimeForbidden, boolean failOnMissingClasses, boolean failOnUnresolvableSignatures) {
     this.loader = loader;
     this.internalRuntimeForbidden = internalRuntimeForbidden;
     this.failOnMissingClasses = failOnMissingClasses;
+    this.failOnUnresolvableSignatures = failOnUnresolvableSignatures;
     this.start = System.currentTimeMillis();
     
     boolean isSupportedJDK = false;
@@ -267,7 +268,14 @@ public abstract class Checker {
     // check class & method/field signature, if it is really existent (in classpath), but we don't really load the class into JVM:
     final ClassSignatureLookup c;
     try {
-      c = getClassFromClassLoader(clazz, true);
+      c = getClassFromClassLoader(clazz, failOnUnresolvableSignatures);
+      if (c == null) {
+        logWarn(String.format(Locale.ENGLISH,
+          "The class '%s' referenced in a signature cannot be loaded, ignoring signature: %s",
+          clazz, signature
+        ));
+        return;
+      }
     } catch (ClassNotFoundException cnfe) {
       throw new ParseException(cnfe.getMessage());
     }
