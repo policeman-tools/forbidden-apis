@@ -71,7 +71,7 @@ public final class AntTask extends Task {
       classFiles.setProject(getProject());
       apiSignatures.setProject(getProject());
       
-      final Checker checker = new Checker(loader, internalRuntimeForbidden, failOnMissingClasses) {
+      final Checker checker = new Checker(loader, internalRuntimeForbidden, failOnMissingClasses, true) {
         @Override
         protected void logError(String msg) {
           log(msg, Project.MSG_ERR);
