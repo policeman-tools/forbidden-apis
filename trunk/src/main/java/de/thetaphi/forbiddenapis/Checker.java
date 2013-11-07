@@ -143,26 +143,6 @@ public abstract class Checker {
     this.isSupportedJDK = isSupportedJDK;
   }
   
-  private ClassReader readAndPatchClass(InputStream in) throws IOException {
-    final byte[] b = new byte[8];
-    final PushbackInputStream pbin = new PushbackInputStream(in, b.length);
-    for (int upto = 0; upto < b.length;) {
-      final int read = pbin.read(b, upto, b.length - upto);
-      if (read == -1)
-        throw new EOFException("Not enough bytes available to read header of class file.");
-      upto += read;
-    }
-    if (b[6] == 0 && b[7] == 52) {
-      if (patchWarning) {
-        logWarn("Reading class file in Java 8 format. This may cause problems!");
-        patchWarning = false;
-      }
-      b[7] = 51;
-    }
-    pbin.unread(b);
-    return new ClassReader(pbin);
-  }
-  
   /** Reads a class (binary name) from the given {@link ClassLoader}. */
   private ClassSignatureLookup getClassFromClassLoader(final String clazz, boolean throwCNFE) throws ClassNotFoundException {
     final ClassSignatureLookup c;
@@ -209,7 +189,7 @@ public abstract class Checker {
         }
         final InputStream in = conn.getInputStream();
         try {
-          classpathClassCache.put(clazz, c = new ClassSignatureLookup(readAndPatchClass(in), isRuntimeClass));
+          classpathClassCache.put(clazz, c = new ClassSignatureLookup(new ClassReader(in), isRuntimeClass));
         } finally {
           in.close();
         }
@@ -370,7 +350,7 @@ public abstract class Checker {
   public final void addClassToCheck(final InputStream in) throws IOException {
     final ClassReader reader;
     try {
-      reader = readAndPatchClass(in);
+      reader = new ClassReader(in);
     } finally {
       in.close();
     }
