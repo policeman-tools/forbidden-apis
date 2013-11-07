@@ -381,11 +381,6 @@
         </not>
       </condition>
     </fail>
-    <fail message="Generating the deprecated signatures files is currently not supported with Java 8 or later.">
-      <condition>
-        <equals arg1="${build.java.runtime}" arg2="1.8"/>
-      </condition>
-    </fail>
     <mkdir dir="${signatures.dir}"/>
     <echo message="Building deprecated signatures for JDK ${build.java.runtime}:"/>
     <java fork="false" classpathref="path.tools-run" classname="de.thetaphi.forbiddenapis.DeprecatedGen">
