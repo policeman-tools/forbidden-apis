@@ -66,7 +66,6 @@ public abstract class Checker {
   public final boolean isSupportedJDK;
   
   private final long start;
-  private boolean patchWarning = true;
   
   final Set<File> bootClassPathJars;
   final Set<String> bootClassPathDirs;
