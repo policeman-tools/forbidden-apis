@@ -188,7 +188,7 @@ public abstract class Checker {
         }
         final InputStream in = conn.getInputStream();
         try {
-          classpathClassCache.put(clazz, c = new ClassSignatureLookup(new ClassReader(in), isRuntimeClass));
+          classpathClassCache.put(clazz, c = new ClassSignatureLookup(new ClassReader(in), isRuntimeClass, false));
         } finally {
           in.close();
         }
@@ -265,7 +265,7 @@ public abstract class Checker {
       for (final Method m : c.methods) {
         if (m.getName().equals(method.getName()) && Arrays.equals(m.getArgumentTypes(), method.getArgumentTypes())) {
           found = true;
-          forbiddenMethods.put(c.reader.getClassName() + '\000' + m, printout);
+          forbiddenMethods.put(c.className + '\000' + m, printout);
           // don't break when found, as there may be more covariant overrides!
         }
       }
@@ -277,11 +277,11 @@ public abstract class Checker {
       if (!c.fields.contains(field)) {
         throw new ParseException("No field found with following name: " + signature);
       }
-      forbiddenFields.put(c.reader.getClassName() + '\000' + field, printout);
+      forbiddenFields.put(c.className + '\000' + field, printout);
     } else {
       assert field == null && method == null;
       // only add the signature as class name
-      forbiddenClasses.put(c.reader.getClassName(), printout);
+      forbiddenClasses.put(c.className, printout);
     }
   }
 
@@ -353,7 +353,7 @@ public abstract class Checker {
     } finally {
       in.close();
     }
-    classesToCheck.put(reader.getClassName(), new ClassSignatureLookup(reader, false));
+    classesToCheck.put(reader.getClassName(), new ClassSignatureLookup(reader, false, true));
   }
   
   public final boolean hasNoSignatures() {
@@ -420,7 +420,7 @@ public abstract class Checker {
             return true;
           }
           final ClassSignatureLookup c = lookupRelatedClass(superName);
-          if (c != null && checkClassDefinition(c.reader.getSuperName(), c.reader.getInterfaces())) {
+          if (c != null && checkClassDefinition(c.superName, c.interfaces)) {
             return true;
           }
         }
@@ -430,7 +430,7 @@ public abstract class Checker {
               return true;
             }
             final ClassSignatureLookup c = lookupRelatedClass(intf);
-            if (c != null && checkClassDefinition(c.reader.getSuperName(), c.reader.getInterfaces())) {
+            if (c != null && checkClassDefinition(c.superName, c.interfaces)) {
               return true;
             }
           }
@@ -467,14 +467,12 @@ public abstract class Checker {
             }
             final ClassSignatureLookup c = lookupRelatedClass(owner);
             if (c != null && !c.methods.contains(method)) {
-              final String superName = c.reader.getSuperName();
-              if (superName != null && checkMethodAccess(superName, method)) {
+              if (c.superName != null && checkMethodAccess(c.superName, method)) {
                 return true;
               }
               // JVM spec says: interfaces after superclasses
-              final String[] interfaces = c.reader.getInterfaces();
-              if (interfaces != null) {
-                for (String intf : interfaces) {
+              if (c.interfaces != null) {
+                for (String intf : c.interfaces) {
                   if (intf != null && checkMethodAccess(intf, method)) {
                     return true;
                   }
@@ -495,17 +493,15 @@ public abstract class Checker {
             }
             final ClassSignatureLookup c = lookupRelatedClass(owner);
             if (c != null && !c.fields.contains(field)) {
-              final String[] interfaces = c.reader.getInterfaces();
-              if (interfaces != null) {
-                for (String intf : interfaces) {
+              if (c.interfaces != null) {
+                for (String intf : c.interfaces) {
                   if (intf != null && checkFieldAccess(intf, field)) {
                     return true;
                   }
                 }
               }
               // JVM spec says: superclasses after interfaces
-              final String superName = c.reader.getSuperName();
-              if (superName != null && checkFieldAccess(superName, field)) {
+              if (c.superName != null && checkFieldAccess(c.superName, field)) {
                 return true;
               }
             }
@@ -630,7 +626,7 @@ public abstract class Checker {
     int errors = 0;
     try {
       for (final ClassSignatureLookup c : classesToCheck.values()) {
-        errors += checkClass(c.reader);
+        errors += checkClass(c.getReader());
       }
     } catch (WrapperRuntimeException wre) {
       Throwable cause = wre.getCause();
