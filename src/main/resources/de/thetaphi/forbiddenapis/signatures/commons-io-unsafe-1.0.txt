@@ -15,7 +15,7 @@
 # limitations under the License.
 
 @defaultMessage Uses default charset
-org.apache.commons.io.CopyUtils#copy(byte[],java.io.Writer)
+org.apache.commons.io.CopyUtils#copy(byte[],java.io.OutputStream)
 org.apache.commons.io.CopyUtils#copy(java.io.InputStream,java.io.Writer)
 org.apache.commons.io.CopyUtils#copy(java.io.Reader,java.io.OutputStream)
 org.apache.commons.io.CopyUtils#copy(java.lang.String,java.io.OutputStream)

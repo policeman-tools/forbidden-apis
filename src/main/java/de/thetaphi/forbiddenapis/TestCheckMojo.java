@@ -42,30 +42,13 @@ public final class TestCheckMojo extends AbstractCheckMojo {
    */
   @Parameter(defaultValue = "${project.build.testOutputDirectory}", required = true)
   private File classesDirectory;
-  
-  /**
-   * The default compiler target version used to expand references to bundled JDK signatures.
-   * This setting falls back to "targetVersion" if undefined. This can be used to override
-   * the target version solely used for tests.
-   * E.g., if you use "jdk-deprecated", it will expand to this version.
-   * This setting should be identical to the target version used in the compiler plugin.
-   */
-  @Parameter(required = false, defaultValue = "${maven.compiler.testTarget}")
-  private String testTargetVersion;
 
-  @Override
   protected List<String> getClassPathElements() {
     return this.classpathElements;
   }
   
-  @Override
   protected File getClassesDirectory() {
     return this.classesDirectory;
-  }
-  
-  @Override
-  protected String getTargetVersion() {
-    return (testTargetVersion != null) ? testTargetVersion : super.getTargetVersion();
   }
   
 }

@@ -201,7 +201,7 @@ public final class CliMain {
 
     final URLClassLoader loader = URLClassLoader.newInstance(urls, ClassLoader.getSystemClassLoader());
     try {
-      final Checker checker = new Checker(loader, cmd.hasOption(internalruntimeforbiddenOpt.getLongOpt()), !cmd.hasOption(nofailonmissingclassesOpt.getLongOpt()), true) {
+      final Checker checker = new Checker(loader, cmd.hasOption(internalruntimeforbiddenOpt.getLongOpt()), !cmd.hasOption(nofailonmissingclassesOpt.getLongOpt())) {
         @Override
         protected void logError(String msg) {
           CliMain.this.logError(msg);
@@ -222,29 +222,6 @@ public final class CliMain {
         throw new ExitException(EXIT_UNSUPPORTED_JDK, String.format(Locale.ENGLISH, 
           "Your Java runtime (%s %s) is not supported by forbiddenapis. Please run the checks with a supported JDK!",
           System.getProperty("java.runtime.name"), System.getProperty("java.runtime.version")));
-      }
-      
-      logInfo("Scanning for classes to check...");
-      if (!classesDirectory.exists()) {
-        throw new ExitException(EXIT_ERR_OTHER, "Directory with class files does not exist: " + classesDirectory);
-      }
-      String[] includes = cmd.getOptionValues(includesOpt.getLongOpt());
-      if (includes == null || includes.length == 0) {
-        includes = new String[] { "**/*.class" };
-      }
-      final String[] excludes = cmd.getOptionValues(excludesOpt.getLongOpt());
-      final DirectoryScanner ds = new DirectoryScanner();
-      ds.setBasedir(classesDirectory);
-      ds.setCaseSensitive(true);
-      ds.setIncludes(includes);
-      ds.setExcludes(excludes);
-      ds.addDefaultExcludes();
-      ds.scan();
-      final String[] files = ds.getIncludedFiles();
-      if (files.length == 0) {
-        throw new ExitException(EXIT_ERR_OTHER, String.format(Locale.ENGLISH,
-          "No classes found in directory %s (includes=%s, excludes=%s).",
-          classesDirectory, Arrays.toString(includes), Arrays.toString(excludes)));
       }
       
       try {
@@ -273,6 +250,30 @@ public final class CliMain {
       }
 
       logInfo("Loading classes to check...");
+      if (!classesDirectory.exists()) {
+        throw new ExitException(EXIT_ERR_OTHER, "Directory with class files does not exist: " + classesDirectory);
+      }
+      
+      String[] includes = cmd.getOptionValues(includesOpt.getLongOpt());
+      if (includes == null || includes.length == 0) {
+        includes = new String[] { "**/*.class" };
+      }
+      final String[] excludes = cmd.getOptionValues(excludesOpt.getLongOpt());
+      final DirectoryScanner ds = new DirectoryScanner();
+      ds.setBasedir(classesDirectory);
+      ds.setCaseSensitive(true);
+      ds.setIncludes(includes);
+      ds.setExcludes(excludes);
+      ds.addDefaultExcludes();
+      ds.scan();
+      final String[] files = ds.getIncludedFiles();
+      
+      if (files.length == 0) {
+        throw new ExitException(EXIT_ERR_OTHER, String.format(Locale.ENGLISH,
+          "No classes found in directory %s (includes=%s, excludes=%s).",
+          classesDirectory, Arrays.toString(includes), Arrays.toString(excludes)));
+      }
+      
       try {
         for (String f : files) {
           checker.addClassToCheck(new FileInputStream(new File(classesDirectory, f)));
@@ -281,8 +282,8 @@ public final class CliMain {
         throw new ExitException(EXIT_ERR_OTHER, "Failed to load one of the given class files: " + ioe);
       }
 
-      logInfo("Scanning for API signatures and dependencies...");
       try {
+        logInfo("Scanning for API signatures and dependencies...");
         checker.run();
       } catch (ForbiddenApiException fae) {
         throw new ExitException(EXIT_VIOLATION, fae.getMessage());

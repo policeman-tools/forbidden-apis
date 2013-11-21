@@ -75,7 +75,7 @@ public class DeprecatedGen implements Opcodes {
     if ((reader.getAccess() & ACC_PUBLIC) == 0 || isInternalClass(className)) {
       return;
     }
-    reader.accept(new ClassVisitor(ASM5) {
+    reader.accept(new ClassVisitor(ASM4) {
       boolean classDeprecated = false;
     
       @Override

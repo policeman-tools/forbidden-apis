@@ -71,20 +71,12 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
   private boolean failOnUnsupportedJava;
   
   /**
-   * Fail the build, if a class referenced in the scanned code is missing. This requires
+   * Fail the build, if a referenced class is missing. This requires
    * that you pass the whole classpath including all dependencies to this Mojo
    * (Maven does this by default).
    */
   @Parameter(required = false, defaultValue = "true")
   private boolean failOnMissingClasses;
-  
-  /**
-   * Fail the build if a class referenced in a signature is missing. If this parameter is set to
-   * to false, then such signatures are silently ignored. This is useful in multi-module Maven
-   * projects where only some modules have the dependency to which the signature file(s) apply.
-   */
-  @Parameter(required = false, defaultValue = "true")
-  private boolean failOnUnresolvableSignatures;
   
   /**
    * The default compiler target version used to expand references to bundled JDK signatures.
@@ -110,34 +102,16 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
   @Parameter(required = false)
   private String[] excludes;
 
-  /**
-   * The project packaging (pom, jar, etc.).
-   */
-  @Parameter(defaultValue = "${project.packaging}", readonly = true, required = true)
-  private String packaging;
-
   /** provided by the concrete Mojos for compile and test classes processing */
   protected abstract List<String> getClassPathElements();
   
   /** provided by the concrete Mojos for compile and test classes processing */
   protected abstract File getClassesDirectory();
 
-  /** gets overridden for test, because it uses testTargetVersion as optional name to override */
-  protected String getTargetVersion() {
-    return targetVersion;
-  }
-
   // Not in Java 5: @Override
   public void execute() throws MojoExecutionException, MojoFailureException {
     final Log log = getLog();
     
-    // In multi-module projects, one may want to configure the plugin in the parent/root POM.
-    // However, it should not be executed for this type of POMs.
-    if ("pom".equals(packaging)) {
-      log.info("Skipping execution for packaging \"" + packaging + "\"");
-      return;
-    }
-
     // set default param:
     if (includes == null) includes = new String[] {"**/*.class"};
     
@@ -161,7 +135,7 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
       ClassLoader.getSystemClassLoader();
     
     try {
-      final Checker checker = new Checker(loader, internalRuntimeForbidden, failOnMissingClasses, failOnUnresolvableSignatures) {
+      final Checker checker = new Checker(loader, internalRuntimeForbidden, failOnMissingClasses) {
         @Override
         protected void logError(String msg) {
           log.error(msg);
@@ -190,27 +164,6 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
         }
       }
       
-      log.info("Scanning for classes to check...");
-      final File classesDirectory = getClassesDirectory();
-      if (!classesDirectory.exists()) {
-        log.warn("Classes directory does not exist, forbiddenapis check skipped: " + classesDirectory);
-        return;
-      }
-      final DirectoryScanner ds = new DirectoryScanner();
-      ds.setBasedir(classesDirectory);
-      ds.setCaseSensitive(true);
-      ds.setIncludes(includes);
-      ds.setExcludes(excludes);
-      ds.addDefaultExcludes();
-      ds.scan();
-      final String[] files = ds.getIncludedFiles();
-      if (files.length == 0) {
-        log.warn(String.format(Locale.ENGLISH,
-          "No classes found in '%s' (includes=%s, excludes=%s), forbiddenapis check skipped.",
-          classesDirectory.toString(), Arrays.toString(includes), Arrays.toString(excludes)));
-        return;
-      }
-      
       try {
         final String sig = (signatures != null) ? signatures.trim() : null;
         if (sig != null && sig.length() != 0) {
@@ -219,7 +172,7 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
         }
         if (bundledSignatures != null) for (String bs : bundledSignatures) {
           log.info("Reading bundled API signatures: " + bs);
-          checker.parseBundledSignatures(bs, getTargetVersion());
+          checker.parseBundledSignatures(bs, targetVersion);
         }
         if (signaturesFiles != null) for (final File f : signaturesFiles) {
           log.info("Reading API signatures: " + f);
@@ -232,15 +185,33 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
       }
 
       if (checker.hasNoSignatures()) {
-        if (failOnUnresolvableSignatures) {
-          throw new MojoExecutionException("No API signatures found; use parameters 'signatures', 'bundledSignatures', and/or 'signaturesFiles' to define those!");
-        } else {
-          log.info("Skipping execution because no API signatures are available.");
-          return;
-        }
+        throw new MojoExecutionException("No API signatures found; use parameters 'signatures', 'bundledSignatures', and/or 'signaturesFiles' to define those!");
       }
 
+      final File classesDirectory = getClassesDirectory();
+      
       log.info("Loading classes to check...");
+      if (!classesDirectory.exists()) {
+        log.warn("Classes directory does not exist, forbiddenapis check skipped: " + classesDirectory);
+        return;
+      }
+      
+      final DirectoryScanner ds = new DirectoryScanner();
+      ds.setBasedir(classesDirectory);
+      ds.setCaseSensitive(true);
+      ds.setIncludes(includes);
+      ds.setExcludes(excludes);
+      ds.addDefaultExcludes();
+      ds.scan();
+      final String[] files = ds.getIncludedFiles();
+      
+      if (files.length == 0) {
+        log.warn(String.format(Locale.ENGLISH,
+          "No classes found in '%s' (includes=%s, excludes=%s), forbiddenapis check skipped.",
+          classesDirectory.toString(), Arrays.toString(includes), Arrays.toString(excludes)));
+        return;
+      }
+      
       try {
         for (String f : files) {
           checker.addClassToCheck(new FileInputStream(new File(classesDirectory, f)));
@@ -249,8 +220,8 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
         throw new MojoExecutionException("Failed to load one of the given class files: " + ioe);
       }
 
-      log.info("Scanning for API signatures and dependencies...");
       try {
+        log.info("Scanning for API signatures and dependencies...");
         checker.run();
       } catch (ForbiddenApiException fae) {
         throw new MojoFailureException(fae.getMessage());

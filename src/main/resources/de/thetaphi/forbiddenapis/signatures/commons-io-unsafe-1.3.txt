@@ -15,11 +15,3 @@
 # limitations under the License.
 
 @includeBundled commons-io-unsafe-1.2
-
-@defaultMessage Uses default charset
-org.apache.commons.io.FileUtils#lineIterator(java.io.File)
-org.apache.commons.io.FileUtils#readFileToString(java.io.File)
-org.apache.commons.io.FileUtils#readLines(java.io.File)
-org.apache.commons.io.FileUtils#writeLines(java.io.File,java.util.Collection)
-org.apache.commons.io.FileUtils#writeLines(java.io.File,java.util.Collection,java.lang.String)
-org.apache.commons.io.FileUtils#writeStringToFile(java.io.File,java.lang.String)

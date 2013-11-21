@@ -71,7 +71,7 @@ public final class AntTask extends Task {
       classFiles.setProject(getProject());
       apiSignatures.setProject(getProject());
       
-      final Checker checker = new Checker(loader, internalRuntimeForbidden, failOnMissingClasses, true) {
+      final Checker checker = new Checker(loader, internalRuntimeForbidden, failOnMissingClasses) {
         @Override
         protected void logError(String msg) {
           log(msg, Project.MSG_ERR);
@@ -161,8 +161,8 @@ public final class AntTask extends Task {
         throw new BuildException("Failed to load one of the given class files:" + ioe);
       }
 
-      log("Scanning for API signatures and dependencies...", Project.MSG_INFO);
       try {
+        log("Scanning for API signatures and dependencies...", Project.MSG_INFO);
         checker.run();
       } catch (ForbiddenApiException fae) {
         throw new BuildException(fae.getMessage());

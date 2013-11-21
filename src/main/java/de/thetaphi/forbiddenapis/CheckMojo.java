@@ -45,12 +45,10 @@ public class CheckMojo extends AbstractCheckMojo {
   @Parameter(defaultValue = "${project.build.outputDirectory}", required = true)
   private File classesDirectory;
   
-  @Override
   protected List<String> getClassPathElements() {
     return this.classpathElements;
   }
   
-  @Override
   protected File getClassesDirectory() {
     return this.classesDirectory;
   }

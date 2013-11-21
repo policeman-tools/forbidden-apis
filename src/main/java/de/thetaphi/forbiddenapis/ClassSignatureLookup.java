@@ -23,7 +23,6 @@ import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.Method;
 
 import java.util.Collections;
@@ -33,23 +32,17 @@ import java.util.Set;
 /** Utility class that is used to get an overview of all fields and implemented
  * methods of a class. It make the signatures available as Sets. */
 final class ClassSignatureLookup {
-  private ClassReader reader;
-  
+  public final ClassReader reader;
   public final boolean isRuntimeClass;
   public final Set<Method> methods;
   public final Set<String> fields;
-	public final String className, superName;
-	public final String[] interfaces;
   
-  public ClassSignatureLookup(final ClassReader classReader, boolean isRuntimeClass, boolean withReader) {
-    this.reader = withReader ? classReader : null;
+  public ClassSignatureLookup(final ClassReader reader, boolean isRuntimeClass) {
+    this.reader = reader;
     this.isRuntimeClass = isRuntimeClass;
-    this.className = classReader.getClassName();
-    this.superName = classReader.getSuperName();
-    this.interfaces = classReader.getInterfaces();
     final Set<Method> methods = new HashSet<Method>();
     final Set<String> fields = new HashSet<String>();
-    classReader.accept(new ClassVisitor(Opcodes.ASM5) {
+    reader.accept(new ClassVisitor(Opcodes.ASM4) {
       @Override
       public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
         final Method m = new Method(name, desc);
@@ -65,15 +58,5 @@ final class ClassSignatureLookup {
     }, ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES);
     this.methods = Collections.unmodifiableSet(methods);
     this.fields = Collections.unmodifiableSet(fields);
-  }
-
-  public ClassReader getReader() {
-    if (reader == null)
-      throw new IllegalStateException("'" + Type.getObjectType(className).getClassName() + "' has no ClassReader, because it was already checked or is only loaded as related class.");
-    try {
-      return reader;
-    } finally {
-      reader = null;
-    }
   }
 }

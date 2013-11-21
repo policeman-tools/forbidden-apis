@@ -23,7 +23,6 @@ import org.objectweb.asm.Label;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Handle;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.Method;
@@ -66,11 +65,12 @@ public abstract class Checker {
   public final boolean isSupportedJDK;
   
   private final long start;
+  private boolean patchWarning = true;
   
   final Set<File> bootClassPathJars;
   final Set<String> bootClassPathDirs;
   final ClassLoader loader;
-  final boolean internalRuntimeForbidden, failOnMissingClasses, failOnUnresolvableSignatures;
+  final boolean internalRuntimeForbidden, failOnMissingClasses;
   
   // key is the internal name (slashed):
   final Map<String,ClassSignatureLookup> classesToCheck = new HashMap<String,ClassSignatureLookup>();
@@ -88,11 +88,10 @@ public abstract class Checker {
   protected abstract void logWarn(String msg);
   protected abstract void logInfo(String msg);
   
-  public Checker(ClassLoader loader, boolean internalRuntimeForbidden, boolean failOnMissingClasses, boolean failOnUnresolvableSignatures) {
+  public Checker(ClassLoader loader, boolean internalRuntimeForbidden, boolean failOnMissingClasses) {
     this.loader = loader;
     this.internalRuntimeForbidden = internalRuntimeForbidden;
     this.failOnMissingClasses = failOnMissingClasses;
-    this.failOnUnresolvableSignatures = failOnUnresolvableSignatures;
     this.start = System.currentTimeMillis();
     
     boolean isSupportedJDK = false;
@@ -142,6 +141,26 @@ public abstract class Checker {
     this.isSupportedJDK = isSupportedJDK;
   }
   
+  private ClassReader readAndPatchClass(InputStream in) throws IOException {
+    final byte[] b = new byte[8];
+    final PushbackInputStream pbin = new PushbackInputStream(in, b.length);
+    for (int upto = 0; upto < b.length;) {
+      final int read = pbin.read(b, upto, b.length - upto);
+      if (read == -1)
+        throw new EOFException("Not enough bytes available to read header of class file.");
+      upto += read;
+    }
+    if (b[6] == 0 && b[7] == 52) {
+      if (patchWarning) {
+        logWarn("Reading class file in Java 8 format. This may cause problems!");
+        patchWarning = false;
+      }
+      b[7] = 51;
+    }
+    pbin.unread(b);
+    return new ClassReader(pbin);
+  }
+  
   /** Reads a class (binary name) from the given {@link ClassLoader}. */
   private ClassSignatureLookup getClassFromClassLoader(final String clazz, boolean throwCNFE) throws ClassNotFoundException {
     final ClassSignatureLookup c;
@@ -188,7 +207,7 @@ public abstract class Checker {
         }
         final InputStream in = conn.getInputStream();
         try {
-          classpathClassCache.put(clazz, c = new ClassSignatureLookup(new ClassReader(in), isRuntimeClass, false));
+          classpathClassCache.put(clazz, c = new ClassSignatureLookup(readAndPatchClass(in), isRuntimeClass));
         } finally {
           in.close();
         }
@@ -247,14 +266,7 @@ public abstract class Checker {
     // check class & method/field signature, if it is really existent (in classpath), but we don't really load the class into JVM:
     final ClassSignatureLookup c;
     try {
-      c = getClassFromClassLoader(clazz, failOnUnresolvableSignatures);
-      if (c == null) {
-        logWarn(String.format(Locale.ENGLISH,
-          "The class '%s' referenced in a signature cannot be loaded, ignoring signature: %s",
-          clazz, signature
-        ));
-        return;
-      }
+      c = getClassFromClassLoader(clazz, true);
     } catch (ClassNotFoundException cnfe) {
       throw new ParseException(cnfe.getMessage());
     }
@@ -265,7 +277,7 @@ public abstract class Checker {
       for (final Method m : c.methods) {
         if (m.getName().equals(method.getName()) && Arrays.equals(m.getArgumentTypes(), method.getArgumentTypes())) {
           found = true;
-          forbiddenMethods.put(c.className + '\000' + m, printout);
+          forbiddenMethods.put(c.reader.getClassName() + '\000' + m, printout);
           // don't break when found, as there may be more covariant overrides!
         }
       }
@@ -277,11 +289,11 @@ public abstract class Checker {
       if (!c.fields.contains(field)) {
         throw new ParseException("No field found with following name: " + signature);
       }
-      forbiddenFields.put(c.className + '\000' + field, printout);
+      forbiddenFields.put(c.reader.getClassName() + '\000' + field, printout);
     } else {
       assert field == null && method == null;
       // only add the signature as class name
-      forbiddenClasses.put(c.className, printout);
+      forbiddenClasses.put(c.reader.getClassName(), printout);
     }
   }
 
@@ -349,11 +361,11 @@ public abstract class Checker {
   public final void addClassToCheck(final InputStream in) throws IOException {
     final ClassReader reader;
     try {
-      reader = new ClassReader(in);
+      reader = readAndPatchClass(in);
     } finally {
       in.close();
     }
-    classesToCheck.put(reader.getClassName(), new ClassSignatureLookup(reader, false, true));
+    classesToCheck.put(reader.getClassName(), new ClassSignatureLookup(reader, false));
   }
   
   public final boolean hasNoSignatures() {
@@ -363,7 +375,7 @@ public abstract class Checker {
   /** Parses a class and checks for valid method invocations */
   private int checkClass(final ClassReader reader) {
     final int[] violations = new int[1];
-    reader.accept(new ClassVisitor(Opcodes.ASM5) {
+    reader.accept(new ClassVisitor(Opcodes.ASM4) {
       final String className = Type.getObjectType(reader.getClassName()).getClassName();
       String source = null;
       
@@ -420,7 +432,7 @@ public abstract class Checker {
             return true;
           }
           final ClassSignatureLookup c = lookupRelatedClass(superName);
-          if (c != null && checkClassDefinition(c.superName, c.interfaces)) {
+          if (c != null && checkClassDefinition(c.reader.getSuperName(), c.reader.getInterfaces())) {
             return true;
           }
         }
@@ -430,7 +442,7 @@ public abstract class Checker {
               return true;
             }
             final ClassSignatureLookup c = lookupRelatedClass(intf);
-            if (c != null && checkClassDefinition(c.superName, c.interfaces)) {
+            if (c != null && checkClassDefinition(c.reader.getSuperName(), c.reader.getInterfaces())) {
               return true;
             }
           }
@@ -453,7 +465,7 @@ public abstract class Checker {
       
       @Override
       public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
-        return new MethodVisitor(Opcodes.ASM5) {
+        return new MethodVisitor(Opcodes.ASM4) {
           private int lineNo = -1;
           
           private boolean checkMethodAccess(String owner, Method method) {
@@ -467,12 +479,13 @@ public abstract class Checker {
             }
             final ClassSignatureLookup c = lookupRelatedClass(owner);
             if (c != null && !c.methods.contains(method)) {
-              if (c.superName != null && checkMethodAccess(c.superName, method)) {
+              final String superName = c.reader.getSuperName();
+              if (superName != null && checkMethodAccess(superName, method)) {
                 return true;
               }
-              // JVM spec says: interfaces after superclasses
-              if (c.interfaces != null) {
-                for (String intf : c.interfaces) {
+              final String[] interfaces = c.reader.getInterfaces();
+              if (interfaces != null) {
+                for (String intf : interfaces) {
                   if (intf != null && checkMethodAccess(intf, method)) {
                     return true;
                   }
@@ -493,62 +506,17 @@ public abstract class Checker {
             }
             final ClassSignatureLookup c = lookupRelatedClass(owner);
             if (c != null && !c.fields.contains(field)) {
-              if (c.interfaces != null) {
-                for (String intf : c.interfaces) {
+              final String superName = c.reader.getSuperName();
+              if (superName != null && checkFieldAccess(superName, field)) {
+                return true;
+              }
+              final String[] interfaces = c.reader.getInterfaces();
+              if (interfaces != null) {
+                for (String intf : interfaces) {
                   if (intf != null && checkFieldAccess(intf, field)) {
                     return true;
                   }
                 }
-              }
-              // JVM spec says: superclasses after interfaces
-              if (c.superName != null && checkFieldAccess(c.superName, field)) {
-                return true;
-              }
-            }
-            return false;
-          }
-
-          private boolean checkType(Type type) {
-            while (type != null) {
-              switch (type.getSort()) {
-                case Type.OBJECT:
-                  // don't check superclasses (TODO: investigate):
-                  return checkClassUse(type.getInternalName());
-                case Type.ARRAY:
-                  type = type.getElementType();
-                  break;
-                default:
-                  return false;
-              }
-            }
-            return false;
-          }
-
-          private boolean checkHandle(Handle handle) {
-            switch (handle.getTag()) {
-              case Opcodes.H_GETFIELD:
-              case Opcodes.H_PUTFIELD:
-              case Opcodes.H_GETSTATIC:
-              case Opcodes.H_PUTSTATIC:
-                return checkFieldAccess(handle.getOwner(), handle.getName());
-              case Opcodes.H_INVOKEVIRTUAL:
-              case Opcodes.H_INVOKESTATIC:
-              case Opcodes.H_INVOKESPECIAL:
-              case Opcodes.H_NEWINVOKESPECIAL:
-              case Opcodes.H_INVOKEINTERFACE:
-                return checkMethodAccess(handle.getOwner(), new Method(handle.getName(), handle.getDesc()));
-            }
-            return false;
-          }
-          
-          private boolean checkConstant(Object cst) {
-            if (cst instanceof Type) {
-              if (checkType((Type) cst)) {
-                return true;
-              }
-            } else if (cst instanceof Handle) {
-              if (checkHandle((Handle) cst)) {
-                return true;
               }
             }
             return false;
@@ -557,54 +525,20 @@ public abstract class Checker {
           @Override
           public void visitMethodInsn(int opcode, String owner, String name, String desc) {
             if (checkMethodAccess(owner, new Method(name, desc))) {
-              reportViolation();
+              violations[0]++;
+              reportSourceAndLine();
             }
           }
           
           @Override
           public void visitFieldInsn(int opcode, String owner, String name, String desc) {
             if (checkFieldAccess(owner, name)) {
-             reportViolation();
-            }
-          }
-          
-          @Override
-          public void visitTypeInsn(int opcode, String type) {
-            if (opcode == Opcodes.ANEWARRAY) {
-              if (checkType(Type.getObjectType(type))) {
-                reportViolation();
-              }
-            }
-          }
-          
-          @Override
-          public void visitMultiANewArrayInsn(String desc, int dims) {
-            if (checkType(Type.getType(desc))) {
-              reportViolation();
-            }
-          }
-          
-          @Override
-          public void visitLdcInsn(Object cst) {
-            if (checkConstant(cst)) {
-              reportViolation();
-            }
-          }
-          
-          @Override
-          public void visitInvokeDynamicInsn(String name, String desc, Handle bsm, Object... bsmArgs) {
-            if (checkHandle(bsm)) {
-              reportViolation();
-            }
-            for (final Object cst : bsmArgs) {
-              if (checkConstant(cst)) {
-                reportViolation();
-              }
+             violations[0]++;
+             reportSourceAndLine();
             }
           }
 
-          private void reportViolation() {
-            violations[0]++;
+          private void reportSourceAndLine() {
             final StringBuilder sb = new StringBuilder("  in ").append(className);
             if (source != null && lineNo >= 0) {
               new Formatter(sb, Locale.ENGLISH).format(" (%s:%d)", source, lineNo).flush();
@@ -626,7 +560,7 @@ public abstract class Checker {
     int errors = 0;
     try {
       for (final ClassSignatureLookup c : classesToCheck.values()) {
-        errors += checkClass(c.getReader());
+        errors += checkClass(c.reader);
       }
     } catch (WrapperRuntimeException wre) {
       Throwable cause = wre.getCause();
