@@ -453,7 +453,7 @@ public abstract class Checker {
       
       @Override
       public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
-        return new MethodVisitor(Opcodes.ASM4) {
+        return new MethodVisitor(Opcodes.ASM5) {
           private int lineNo = -1;
           
           private boolean checkMethodAccess(String owner, Method method) {
