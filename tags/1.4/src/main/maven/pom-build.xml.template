@@ -1,0 +1,28 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>@GROUPID@</groupId>
+  <artifactId>@ARTIFACTID@</artifactId>
+  <version>@VERSION@</version>
+  <name>@NAME@</name>
+  <packaging>maven-plugin</packaging>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
+  
+  <build>
+    <sourceDirectory>${injected.src.dir}</sourceDirectory>
+    <outputDirectory>${injected.target.dir}</outputDirectory>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-plugin-plugin</artifactId>
+        <version>${injected.maven-plugin-plugin.version}</version>
+        <configuration>
+          <extractors><extractor>java-annotations</extractor></extractors>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+</project>
