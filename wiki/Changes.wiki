@@ -1,5 +1,21 @@
 This page lists all changes since the first released version.
 
+= Version 1.4 (released 2013-11-21) =
+
+*New features:*
+  * Upgrade to ASM 5.0 BETA	(issue #18).
+  * Add Java 8 deprecated + unsafe signatures (issue #16).
+  * Detect references to invokeDynamic using method handles to forbidden methods (issue #11).
+  * Skip execution for Maven projects with packaging "pom" (Maven only, issue #10).
+  * Add an option to ignore unresolvable signatures (Maven only, issue #14).
+  * Enhance the target parameter to also support testTarget like maven-compiler-plugin (Maven only, issue #15).
+
+*Bug fixes:*
+  * Fix missing methods in commons-io (issue #9).
+  
+*Optimizations:*
+  * Improve memory usage (issue #20).
+
 = Version 1.3 (released 2013-04-28) =
 
 *New features:*
