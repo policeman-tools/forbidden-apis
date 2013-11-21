@@ -49,7 +49,7 @@ final class ClassSignatureLookup {
     this.interfaces = classReader.getInterfaces();
     final Set<Method> methods = new HashSet<Method>();
     final Set<String> fields = new HashSet<String>();
-    classReader.accept(new ClassVisitor(Opcodes.ASM4) {
+    classReader.accept(new ClassVisitor(Opcodes.ASM5) {
       @Override
       public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
         final Method m = new Method(name, desc);

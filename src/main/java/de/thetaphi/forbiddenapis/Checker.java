@@ -363,7 +363,7 @@ public abstract class Checker {
   /** Parses a class and checks for valid method invocations */
   private int checkClass(final ClassReader reader) {
     final int[] violations = new int[1];
-    reader.accept(new ClassVisitor(Opcodes.ASM4) {
+    reader.accept(new ClassVisitor(Opcodes.ASM5) {
       final String className = Type.getObjectType(reader.getClassName()).getClassName();
       String source = null;
       
