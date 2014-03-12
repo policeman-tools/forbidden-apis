@@ -148,7 +148,7 @@ public class DeprecatedGen implements Opcodes {
 
   public static void main(String... args) throws Exception {
     if (args.length != 3) {
-      System.err.println("Invalid parameters; must be: java_version path/to/rt.jar /path/to/outputfile.txt");
+      System.err.println("Invalid parameters; must be: java_version /path/to/rt.jar /path/to/outputfile.txt");
       System.exit(1);
     }
     System.err.println("Reading '" + args[1] + "' and extracting deprecated APIs to signature file '" + args[2]+ "'...");
