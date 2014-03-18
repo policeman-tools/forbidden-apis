@@ -555,7 +555,7 @@ public abstract class Checker {
           }
 
           @Override
-          public void visitMethodInsn(int opcode, String owner, String name, String desc) {
+          public void visitMethodInsn(int opcode, String owner, String name, String desc, boolean itf) {
             if (checkMethodAccess(owner, new Method(name, desc))) {
               reportViolation();
             }
