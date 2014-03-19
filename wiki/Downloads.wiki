@@ -1,13 +1,3 @@
-#summary One-sentence summary of this page.
+=Downloads=
 
-= Introduction =
-
-Add your content here.
-
-
-= Details =
-
-Add your content here.  Format your content with:
-  * Text in *bold* or _italic_
-  * Headings, paragraphs, and lists
-  * Automatic links to other wiki pages
+The Apache Ant and Apache Maven Mojo are available for download or use with Maven/Ivy through [http://repo1.maven.org/maven2/de/thetaphi/forbiddenapis/ Maven Central] and [http://oss.sonatype.org/content/repositories/releases/de/thetaphi/forbiddenapis/ Sonatype] repositories.
