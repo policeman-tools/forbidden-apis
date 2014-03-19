@@ -1,3 +1,6 @@
 =Downloads=
 
-The Apache Ant and Apache Maven Mojo are available for download or use with Maven/Ivy through [http://repo1.maven.org/maven2/de/thetaphi/forbiddenapis/ Maven Central] and [http://oss.sonatype.org/content/repositories/releases/de/thetaphi/forbiddenapis/ Sonatype] repositories.
+Project downloads are available through:
+
+ * [http://repo1.maven.org/maven2/de/thetaphi/forbiddenapis/ Maven Central]
+ * [http://oss.sonatype.org/content/repositories/releases/de/thetaphi/forbiddenapis/ Sonatype]
