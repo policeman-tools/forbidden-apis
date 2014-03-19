@@ -1,5 +1,14 @@
 This page lists all changes since the first released version.
 
+= Version 1.4.1 (released 2014-03-19) =
+
+*New features:*
+  * Upgrade to ASM 5.0 (issue #24).
+  * Full support for Java 8: Update deprecated signatures with final version of JDK 1.8.0; recompile and verify test classes.
+
+*Bug fixes:*
+  * Add some missing unsafe signatures (issue #22).
+
 = Version 1.4 (released 2013-11-21) =
 
 *New features:*
