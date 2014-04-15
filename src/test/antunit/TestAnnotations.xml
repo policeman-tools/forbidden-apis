@@ -16,15 +16,17 @@
 -->
 <project xmlns:au="antlib:org.apache.ant.antunit">
 
-  <target name="testClassReferences">
+  <target name="testAnnotations">
     <au:expectfailure expectedMessage="Check for forbidden API calls failed, see log">
-      <forbiddenapis>
-        <fileset file="Java5ClassReferences.class"/>
-        java.lang.Integer @ Forbidden class reference!
+      <forbiddenapis failOnMissingClasses="true" classpath="${basedir}">
+        <fileset file="Java8Annotations.class"/>
+        Java8Annotations$FooBar @ Forbidden annotation
+        java.lang.Deprecated @ Deprecated annotation
       </forbiddenapis>
     </au:expectfailure>
-    <au:assertLogContains level="error" text="java.lang.Integer [Forbidden class reference!]"/> 
-    <au:assertLogContains level="error" text=" 8 error(s)"/> 
+    <au:assertLogContains level="error" text="Java8Annotations$FooBar [Forbidden annotation]"/> 
+    <au:assertLogContains level="error" text="java.lang.Deprecated [Deprecated annotation]"/> 
+    <au:assertLogContains level="error" text=" 11 error(s)"/> 
   </target>
   
 </project>
