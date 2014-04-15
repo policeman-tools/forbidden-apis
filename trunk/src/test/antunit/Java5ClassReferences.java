@@ -1,5 +1,5 @@
 /*
- * (C) Copyright 2013 Uwe Schindler (Generics Policeman) and others.
+ * (C) Copyright 2014 Uwe Schindler (Generics Policeman) and others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,4 +25,7 @@ class Java5ClassReferences {
     arr[0] = new Integer(0);
     return new Integer[1][1];
   }
+  
+  private Integer field1;
+  private final Integer[] field2 = null;
 }
