@@ -1,5 +1,15 @@
 This page lists all changes since the first released version.
 
+= Version 1.5 (released 2014-04-16) =
+
+*New features:*
+  * Make it possible to ban annotations (issue #8).
+
+*Bug fixes:*
+  * Upgrade ASM to bugfix release 5.0.1.
+  * Forbidden class use does not work in field declarations and method declarations (issue #25).
+  * Fix lookup of class references in `checkType()` / `checkDescriptor()` to also inspect superclasses and interfaces (issue #26).
+
 = Version 1.4.1 (released 2014-03-19) =
 
 *New features:*
