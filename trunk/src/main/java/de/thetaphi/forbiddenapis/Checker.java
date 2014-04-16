@@ -444,8 +444,11 @@ public abstract class Checker {
         while (type != null) {
           switch (type.getSort()) {
             case Type.OBJECT:
-              // don't check superclasses (TODO: investigate):
-              return checkClassUse(type.getInternalName());
+              if (checkClassUse(type.getInternalName())) {
+                return true;
+              }
+              final ClassSignatureLookup c = lookupRelatedClass(type.getInternalName());
+              return (c != null && checkClassDefinition(c.superName, c.interfaces));
             case Type.ARRAY:
               type = type.getElementType();
               break;
