@@ -38,13 +38,20 @@ class Java8Annotations<@Java8Annotations.FooBar X> {
     }
   }
   
+  final class InnerClassWithCtorParam {
+    public InnerClassWithCtorParam(@FooBar X param) {
+      System.out.println(Java8Annotations.this);
+      System.out.println(param);
+    }
+  }
+  
   @Deprecated
   public int testField1;
   
   @FooBar
   public int testField2;
   
-  @Retention(value=RetentionPolicy.CLASS)
-  @Target({ElementType.TYPE_USE, ElementType.TYPE_PARAMETER, ElementType.METHOD, ElementType.TYPE})
+  @Retention(value=RetentionPolicy.RUNTIME)
+  @Target({ElementType.TYPE_USE, ElementType.PARAMETER, ElementType.METHOD, ElementType.TYPE})
   static @interface FooBar {}
 }
