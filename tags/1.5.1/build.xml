@@ -1,0 +1,440 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ * (C) Copyright 2013 Uwe Schindler (Generics Policeman) and others.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+-->
+<project name="Policeman's Forbidden API Checker" default="dist"
+  xmlns:artifact="antlib:org.apache.maven.artifact.ant"
+  xmlns:ivy="antlib:org.apache.ivy.ant"
+  xmlns:au="antlib:org.apache.ant.antunit"
+>
+  <fail message="Minimum supported ANT version is 1.8.0. Yours: ${ant.version}">
+    <condition>
+      <not><antversion atleast="1.8.0" /></not>
+    </condition>
+  </fail>
+
+  <!-- 
+    the propery "ant.java.version" is not always correct, depending on used ANT version.
+    E.g. Java 8 is only detected in ANT 1.8.3+.
+    Add newer Java version checks at beginning,
+    because ANT will nevert override existing properties!
+   -->
+  <condition property="build.java.runtime" value="1.8">
+    <hasmethod classname="java.util.Collections" method="emptySortedSet"/>
+  </condition>
+  <condition property="build.java.runtime" value="1.7">
+    <hasmethod classname="java.lang.Throwable" method="getSuppressed"/>
+  </condition>
+  <condition property="build.java.runtime" value="1.6">
+    <hasmethod classname="java.lang.String" method="isEmpty"/>
+  </condition>
+  <condition property="build.java.runtime" value="1.5">
+    <available classname="java.lang.StringBuilder"/>
+  </condition>
+  <fail message="Minimum supported Java version is 1.5." unless="build.java.runtime"/>
+
+  <!-- workaround for https://issues.apache.org/bugzilla/show_bug.cgi?id=53347 -->
+  <condition property="build.compiler" value="javac1.7">
+    <and>
+      <equals arg1="${build.java.runtime}" arg2="1.8"/>
+      <or>
+        <antversion exactly="1.8.3" />
+        <antversion exactly="1.8.4" />
+      </or>
+    </and>
+  </condition>
+
+  <property file="${user.home}/build.properties" />
+  <property file="build.properties" />
+
+  <property name="jdk.version" value="1.5"/>
+  <property name="maven.version" value="2.2.1"/>
+  <property name="maven-plugin-plugin.version" value="3.2"/>
+  
+  <property name="compile.debug" value="true"/>
+  <property name="compile.deprecation" value="true"/>
+  <property name="build.encoding" value="UTF-8"/>
+
+  <property name="ivy.logging" value="download-only"/>
+
+  <property name="signatures.dir" location="src/main/resources/de/thetaphi/forbiddenapis/signatures"/>
+
+  <!-- define Maven coordinates -->
+  <property name="groupId" value="de.thetaphi" />
+  <property name="artifactId" value="forbiddenapis" />
+  <property name="version" value="1.5.1"/>
+
+  <!-- define artifacts' name, which follows the convention of Maven -->
+  <property name="pom-file" location="dist/${artifactId}-${version}.pom" />
+  <property name="jar-file" location="dist/${artifactId}-${version}.jar" />
+  <property name="sources-jar-file" location="dist/${artifactId}-${version}-sources.jar" />
+
+  <!-- defined maven snapshots and staging repository id and url -->
+  <property name="maven-snapshots-repository-id" value="sonatype-nexus-snapshots" />
+  <property name="maven-snapshots-repository-url" value="https://oss.sonatype.org/content/repositories/snapshots/" />
+  <property name="maven-staging-repository-id" value="sonatype-nexus-staging" />
+  <property name="maven-staging-repository-url" value="https://oss.sonatype.org/service/local/staging/deploy/maven2/" />
+
+  <!-- GPG settings -->
+  <property name="gpg.exe" value="gpg" />
+  <property name="gpg.key" value="E1EE085F" />
+
+  <condition property="tests.supported">
+    <or>
+      <equals arg1="${build.java.runtime}" arg2="1.5"/>
+      <equals arg1="${build.java.runtime}" arg2="1.6"/>
+      <equals arg1="${build.java.runtime}" arg2="1.7"/>
+      <equals arg1="${build.java.runtime}" arg2="1.8"/>
+    </or>
+  </condition>
+
+  <condition property="isSnapshot">
+    <contains string="${version}" substring="-SNAPSHOT"/>
+  </condition>
+
+  <property name="ivy.install.version" value="2.3.0" />
+  <property name="ivy.jar.dir" location=".ivy" />
+  <property name="ivy.jar.file" location="${ivy.jar.dir}/ivy-${ivy.install.version}.jar" />
+
+  <condition property="ivy.available">
+    <typefound uri="antlib:org.apache.ivy.ant" name="configure" />
+  </condition>
+
+  <target name="-install.ivy" unless="ivy.available">
+    <mkdir dir="${ivy.jar.dir}"/>
+    <get src="http://repo1.maven.org/maven2/org/apache/ivy/ivy/${ivy.install.version}/ivy-${ivy.install.version}.jar" dest="${ivy.jar.file}" skipexisting="true"/>
+    <taskdef uri="antlib:org.apache.ivy.ant" classpath="${ivy.jar.file}"/>
+  </target>
+  
+  <target name="-init" depends="-install.ivy">
+    <ivy:resolve log="${ivy.logging}"/>
+    <condition property="ivy.version-message"
+      value="The correct Apache Ivy version ${ivy.version} is installed."
+      else="You have installed a different Apache Ivy version (${ivy.version}) in your ANT classpath than the expected one (${ivy.install.version}). The build may fail!"
+    >
+      <equals arg1="${ivy.version}" arg2="${ivy.install.version}"/>
+    </condition>
+    <echo taskname="check-ivy" message="${ivy.version-message}"/>
+    <ivy:cachepath pathid="path.build" conf="build" log="${ivy.logging}"/>
+    <ivy:cachepath pathid="path.test" conf="test" log="${ivy.logging}"/>
+    <path id="path.run">
+      <path refid="path.build"/>
+      <pathelement path="build/main"/>
+    </path>
+    <path id="path.tools-run">
+      <path refid="path.build"/>
+      <pathelement path="build/tools"/>
+    </path>
+  </target>
+
+  <target name="-install-tasks" depends="-init" unless="installed.tasks">
+    <ivy:cachepath pathid="path.tasks" conf="buildtools" log="${ivy.logging}"/>
+    <taskdef name="jarjar" classname="com.tonicsystems.jarjar.JarJarTask" classpathref="path.tasks"/>
+    <taskdef uri="antlib:org.apache.maven.artifact.ant" classpathref="path.tasks"/>
+    <property name="installed.tasks" value="true"/>
+  </target>
+
+  <target name="-uptodate"> 
+    <uptodate property="maven-descriptor.uptodate" targetfile="build/main/META-INF/maven/plugin.xml">
+      <srcfiles dir="src/main"/>
+    </uptodate>
+  </target>
+
+  <macrodef name="compile">
+    <attribute name="module"/>
+    <attribute name="classpathref"/>
+    <sequential>
+      <mkdir dir="build/@{module}"/>
+      <copy todir="build/@{module}">
+        <fileset dir="src/@{module}/resources" erroronmissingdir="false" />
+      </copy>
+      <javac includeantruntime="false" srcdir="src/@{module}/java" destdir="build/@{module}"
+        source="${jdk.version}" target="${jdk.version}" encoding="${build.encoding}"
+        debug="${compile.debug}" deprecation="${compile.deprecation}">
+         <classpath refid="@{classpathref}"/>
+         <compilerarg value="-Xlint"/>
+      </javac>
+    </sequential>
+  </macrodef>
+
+  <target name="compile" depends="-init" description="Compile">
+    <compile module="main" classpathref="path.build"/>
+  </target>
+
+  <target name="compile-tools" depends="-init" description="Compile tools">
+    <compile module="tools" classpathref="path.build"/>
+  </target>
+
+  <target name="clean" description="Clean">
+    <delete dir="build"/>
+    <delete dir="dist"/>
+  </target>
+
+  <target name="remove-local-artifacts" description="Removes the project's artifacts from the local Ivy and Maven repository">
+    <delete includeemptydirs="true">
+      <fileset dir="${user.home}/.m2/repository" erroronmissingdir="false">
+        <include name="de/thetaphi/forbiddenapis/**"/>
+        <include name="de/thetaphi/example/**"/>
+      </fileset>
+      <fileset dir="${user.home}/.ivy2/cache" erroronmissingdir="false">
+        <include name="${groupId}/${artifactId}/**"/>
+      </fileset>
+    </delete>
+  </target>
+
+  <target name="-maven-setup">
+    <mkdir dir="build/maven"/>
+    <copy todir="build/maven" encoding="${build.encoding}" outputencoding="${build.encoding}">
+      <fileset dir="src/main/maven" includes="*.template"/>
+      <filterset>
+        <filter token="NAME" value="${ant.project.name}"/>
+        <filter token="VERSION" value="${version}"/>
+        <filter token="GROUPID" value="${groupId}"/>
+        <filter token="ARTIFACTID" value="${artifactId}"/>
+      </filterset>
+      <globmapper from="*.template" to="*"/>
+    </copy>
+    <property name="maven.deploy.pom" location="build/maven/pom-deploy.xml"/>
+    <artifact:pom id="maven.deploy.pom" file="${maven.deploy.pom}"/>
+  </target>
+  
+  <target name="maven-descriptor" depends="compile,-maven-setup,-install-tasks,-uptodate" unless="maven-descriptor.uptodate" description="Creates the Maven Plugin Descriptor">
+    <!-- with fork=false this somehow takes endless to download the internet, so let's fork - and slow down in an other way (startup) -->
+    <artifact:mvn pom="build/maven/pom-build.xml" mavenVersion="${maven.version}" failonerror="true" fork="true">
+      <arg value="org.apache.maven.plugins:maven-plugin-plugin:${maven-plugin-plugin.version}:descriptor"/>
+      <sysproperty key="injected.src.dir" file="src/main/java"/>
+      <sysproperty key="injected.target.dir" file="build/main"/>
+      <syspropertyset>
+        <propertyref regex=".*\.version"/>
+        <mapper type="glob" from="*" to="injected.*"/>
+      </syspropertyset>
+    </artifact:mvn>
+  </target>
+
+  <target name="jar" depends="compile,-install-tasks,maven-descriptor" description="Create the binary JAR">
+    <ivy:cachefileset setid="fileset.bundle" conf="bundle" log="${ivy.logging}"/>
+    <mkdir dir="dist"/>
+    <jarjar destfile="${jar-file}">
+      <zipfileset dir="build/main"/>
+      <restrict>
+        <name name="**/*.class" handledirsep="true"/>
+        <archives>
+          <zips><fileset refid="fileset.bundle"/></zips>
+        </archives>
+      </restrict>
+      <keep pattern="de.thetaphi.forbiddenapis.*"/>
+      <rule pattern="org.objectweb.asm.**" result="de.thetaphi.forbiddenapis.asm.@1"/>
+      <rule pattern="org.apache.commons.**" result="de.thetaphi.forbiddenapis.commons.@1"/>
+      <rule pattern="org.codehaus.plexus.**" result="de.thetaphi.forbiddenapis.plexus.@1"/>
+      <manifest>
+        <attribute name="Implementation-Vendor" value="${groupId}"/>
+        <attribute name="Implementation-Title" value="${artifactId}"/>
+        <attribute name="Implementation-Version" value="${version}"/>
+        <attribute name="Main-Class" value="de.thetaphi.forbiddenapis.CliMain"/>
+      </manifest>
+      <metainf dir="." includes="LICENSE.txt,NOTICE.txt,bundled-licenses/**"/>
+    </jarjar>
+  </target>
+
+  <target name="jar-src" description="Create source distribution">
+    <mkdir dir="dist"/>
+    <zip destfile="${sources-jar-file}" encoding="${build.encoding}">
+      <zipfileset dir="." includes="*.xml,*.txt,src/**,bundled-licenses/**" prefix="${artifactId}-${version}"/>
+    </zip>
+  </target>
+
+  <target name="install-maven-artifacts" depends="-install-tasks,jar,jar-src" description="Installs the Maven artifacts in ~/.m2">
+    <artifact:install file="${jar-file}">
+      <pom refid="maven.deploy.pom"/>
+      <attach file="${sources-jar-file}" classifier="sources"/>
+    </artifact:install>
+  </target>
+
+  <target name="dist" depends="install-maven-artifacts" description="Create the distribution">
+    <copy file="${maven.deploy.pom}" tofile="${pom-file}"/>
+  </target>
+
+  <target name="stage" depends="-stage.snapshots,-stage.release" description="Create the distribution"/>
+  
+  <target name="-stage.snapshots" depends="dist" if="isSnapshot">
+    <artifact:deploy file="${jar-file}">
+      <pom refid="maven.deploy.pom"/>
+      <attach file="${sources-jar-file}" classifier="sources"/>
+    </artifact:deploy>
+  </target>
+  
+  <target name="sign-artifacts" depends="dist">
+    <delete failonerror="false" dir="dist" includes="**/*.asc"/>
+
+    <input message="Enter GPG keystore password: &gt;" addproperty="gpg.passphrase">
+      <handler classname="org.apache.tools.ant.input.SecureInputHandler" />
+    </input>
+
+    <apply executable="${gpg.exe}" inputstring="${gpg.passphrase}"
+           dest="dist" type="file" maxparallel="1" verbose="yes">
+      <arg value="--passphrase-fd"/>
+      <arg value="0"/>
+      <arg value="--batch"/>
+      <arg value="--armor"/>
+      <arg value="--default-key"/>
+      <arg value="${gpg.key}"/>
+      <arg value="--output"/>
+      <targetfile/>
+      <arg value="--detach-sig"/>
+      <srcfile/>
+      <fileset dir="dist">
+        <include name="**/*.jar"/>
+        <include name="**/*.pom"/>
+      </fileset>
+      <globmapper from="*" to="*.asc"/>
+    </apply>
+  </target>
+
+  <target name="-stage.release" depends="sign-artifacts" unless="isSnapshot">
+    <artifact:deploy file="${jar-file}">
+      <pom refid="maven.deploy.pom"/>
+      <attach file="${sources-jar-file}" classifier="sources"/>
+      <!-- signatures: -->
+      <attach file="${pom-file}.asc" type="pom.asc"/>
+      <attach file="${jar-file}.asc" type="jar.asc"/>
+      <attach file="${sources-jar-file}.asc" classifier="sources" type="jar.asc"/>
+    </artifact:deploy>
+  </target>
+
+  <target name="test" depends="-check-myself,-antunit" description="Run tests"/>
+
+  <target name="-install-forbiddenapi-task" depends="compile" unless="installed.forbiddenapi-task">
+    <taskdef name="forbiddenapis" classname="de.thetaphi.forbiddenapis.AntTask" classpathref="path.run"/>
+    <property name="installed.forbiddenapi-task" value="true"/>
+  </target>
+  
+  <target name="-check-myself" depends="compile,compile-tools,-install-forbiddenapi-task">
+    <forbiddenapis internalRuntimeForbidden="true" failOnUnsupportedJava="false">
+      <classpath>
+        <path refid="path.run"/>
+        <path refid="path.tools-run"/>
+      </classpath>
+      <fileset dir="build/main"/>
+      <fileset dir="build/tools"/>
+      <bundledsignatures name="jdk-unsafe-${jdk.version}"/>
+      <bundledsignatures name="jdk-deprecated-${jdk.version}"/>
+    </forbiddenapis>
+    <forbiddenapis internalRuntimeForbidden="true" failOnUnsupportedJava="false" bundledSignatures="jdk-system-out" classpathref="path.run">
+      <fileset dir="build/main" excludes="de/thetaphi/forbiddenapis/CliMain.class"/>
+    </forbiddenapis>
+  </target>
+
+  <target name="-install-antunit" unless="installed.antunit">
+    <taskdef uri="antlib:org.apache.ant.antunit" classpathref="path.test"/>
+    <taskdef uri="antlib:net.sf.antcontrib" classpathref="path.test"/>
+    <property name="installed.antunit" value="true"/>
+  </target>
+  
+  <target name="-antunit-fake-pom">
+    <mkdir dir="build/test"/>
+    <pathconvert property="path.build.xslstr" pathsep="|" refid="path.build"/>
+    <xslt in="src/test/antunit/dummy.xml" out="build/test/fake-pom.xml"
+      style="src/test/antunit/pom-generator.xsl" force="true"
+    >
+      <outputproperty name="indent" value="yes"/>
+      <param name="jarfiles" expression="${path.build.xslstr}"/>
+    </xslt>
+    <property name="antunit.fake-pom" location="build/test/fake-pom.xml"/>
+  </target>
+
+  <target name="-antunit" depends="install-maven-artifacts,-install-forbiddenapi-task,-install-antunit,-antunit-fake-pom" if="tests.supported">
+    <mkdir dir="build/test-results"/>
+    <property name="antunit.main.classes" location="build/main"/>
+    <property name="antunit.tools.classes" location="build/tools"/>
+    <property name="antunit.maven3.version" value="3.0.4"/>
+    <au:antunit>
+      <fileset dir="src/test/antunit" includes="Test*.xml"/>
+      <au:plainlistener/>
+      <au:xmllistener toDir="build/test-results" logLevel="info"/>
+      <propertyset>
+        <propertyref prefix="antunit."/>
+        <propertyref name="jar-file"/>
+        <propertyref regex=".*version"/>
+        <propertyref name="groupId"/>
+        <propertyref name="artifactId"/>
+        <propertyref name="ivy.logging"/>
+      </propertyset>
+      <referenceset>
+        <reference regex="path\..*"/>
+      </referenceset>
+    </au:antunit>
+  </target>
+  
+  <target name="generate-deprecated" depends="compile-tools" description="Generates deprecated API signature lists for current JDK">
+    <fail message="Regenerating the deprecated signatures files need stock Oracle/Sun JDK, but your Java version or operating system is unsupported: ${java.version} / JVM: ${java.vm.name} / Vendor: ${java.vendor} / OS: ${os.name} (${os.version})">
+      <condition>
+        <not>
+          <and>
+            <available file="${java.home}/lib/rt.jar"/>
+            <matches string="${java.version}" pattern="^\Q${build.java.runtime}\E" casesensitive="true"/>
+            <or>
+              <contains string="${java.vendor}" substring="Oracle" casesensitive="false"/>
+              <contains string="${java.vendor}" substring="Sun Microsystems" casesensitive="false"/>
+            </or>
+          </and>
+        </not>
+      </condition>
+    </fail>
+    <mkdir dir="${signatures.dir}"/>
+    <echo message="Building deprecated signatures for JDK ${build.java.runtime}:"/>
+    <java fork="false" classpathref="path.tools-run" classname="de.thetaphi.forbiddenapis.DeprecatedGen">
+      <arg value="${build.java.runtime}"/>
+      <arg file="${java.home}/lib/rt.jar"/>
+      <arg file="${signatures.dir}/jdk-deprecated-${build.java.runtime}.txt"/>
+    </java>
+  </target>
+
+  <target name="-generate-test-classes-init">
+    <condition property="-gen.sunmisc">
+      <available classname="sun.misc.BASE64Encoder"/>
+    </condition>
+    <condition property="-gen.jdk8">
+      <equals arg1="${build.java.runtime}" arg2="1.8"/>
+    </condition>
+  </target>
+  
+  <target name="-generate-test-classes-sunmisc" if="-gen.sunmisc">
+    <echo message="Generating test classes using sun.misc internal APIs (needs Oracle Java):"/>
+    <delete dir="src/test/antunit" includes="Oracle*.class"/>
+    <javac includeantruntime="false" srcdir="src/test/antunit" destdir="src/test/antunit" includes="Oracle*.java"
+      nowarn="true" source="1.5" target="1.5" debug="true" deprecation="false" encoding="${build.encoding}">
+      <!-- This disables the symbol file used to detect internal APIs while compiling: -->
+      <compilerarg value="-XDignore.symbol.file=true"/>
+    </javac>
+  </target>
+  
+  <target name="-generate-test-classes-jdk5">
+    <echo message="Generating test classes for Java 5:"/>
+    <delete dir="src/test/antunit" includes="Java5*.class"/>
+    <javac includeantruntime="false" srcdir="src/test/antunit" destdir="src/test/antunit" includes="Java5*.java"
+      nowarn="true" source="1.5" target="1.5" debug="true" deprecation="false" encoding="${build.encoding}"/>
+  </target>
+  
+  <target name="-generate-test-classes-jdk8" if="-gen.jdk8">
+    <echo message="Generating test classes for Java 8:"/>
+    <delete dir="src/test/antunit" includes="Java8*.class"/>
+    <javac includeantruntime="false" srcdir="src/test/antunit" destdir="src/test/antunit" includes="Java8*.java"
+      nowarn="true" source="1.8" target="1.8" debug="true" deprecation="false" encoding="${build.encoding}"/>
+  </target>
+  
+  <target name="generate-test-classes" depends="-generate-test-classes-init,-generate-test-classes-sunmisc,-generate-test-classes-jdk5,-generate-test-classes-jdk8" description="Regenerates .class files used by tests if the current JDK version supports it"/>
+  
+  <target name="jenkins" depends="clean,dist,test,-stage.snapshots" description="Runs Jenkins Nightly"/>
+</project>
