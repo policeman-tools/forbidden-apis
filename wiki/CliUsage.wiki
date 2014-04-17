@@ -3,8 +3,8 @@
 _(since version 1.1)_ You can call the forbidden API checker from the command line:
 
 <pre>
-$ java -jar forbiddenapis-1.5.jar --help
-usage: java -jar forbiddenapis-1.5.jar (options)
+$ java -jar forbiddenapis-1.5.1.jar --help
+usage: java -jar forbiddenapis-1.5.1.jar (options)
 Scans a set of class files for forbidden API usage.
  -b,--bundledsignatures <name>   name of a bundled signatures definition
                                  (separated by commas or option can be
