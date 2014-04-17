@@ -45,6 +45,17 @@
   </condition>
   <fail message="Minimum supported Java version is 1.5." unless="build.java.runtime"/>
 
+  <!-- workaround for https://issues.apache.org/bugzilla/show_bug.cgi?id=53347 -->
+  <condition property="build.compiler" value="javac1.7">
+    <and>
+      <equals arg1="${build.java.runtime}" arg2="1.8"/>
+      <or>
+        <antversion exactly="1.8.3" />
+        <antversion exactly="1.8.4" />
+      </or>
+    </and>
+  </condition>
+
   <property file="${user.home}/build.properties" />
   <property file="build.properties" />
 
