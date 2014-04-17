@@ -3,7 +3,7 @@ This page lists all changes since the first released version.
 = Version 1.5.1 (released 2014-04-17) =
 
 *Bug fixes:*
-  * Fix regression caused by issue #8 with non-runtime visible annotations (e.g. `java.lang.Synthetic`) which are not in classpath (issue #27). This hotfix disables deteting of class-file only annotations. Annotations that need to be detected must have `RetentionPolicy.RUNTIME` to be visible to forbidden-apis.
+  * Fix regression caused by issue #8 with non-runtime visible annotations (e.g. `java.lang.Synthetic`) which are not in classpath (issue #27). This hotfix disables detection of class-file only annotations. Annotations that need to be detected must have `RetentionPolicy.RUNTIME` to be visible to forbidden-apis.
   * Improve logging when no line numbers are available.
 
 = Version 1.5 (released 2014-04-16) =
