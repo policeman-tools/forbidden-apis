@@ -469,14 +469,14 @@ public abstract class Checker {
         return checkType(Type.getType(desc));
       }
 
-      private void reportClassViolation(boolean violation) {
+      private void reportClassViolation(boolean violation, String where) {
         if (violation) {
           violations[0]++;
           final StringBuilder sb = new StringBuilder("  in ").append(className);
           if (source != null) {
-            new Formatter(sb, Locale.ENGLISH).format(" (%s, class declaration)", source).flush();
+            new Formatter(sb, Locale.ENGLISH).format(" (%s, %s)", source, where).flush();
           } else {
-            sb.append(" (class declaration)");
+            new Formatter(sb, Locale.ENGLISH).format(" (%s)", where).flush();
           }
           logError(sb.toString());
         }
@@ -484,7 +484,7 @@ public abstract class Checker {
 
       @Override
       public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
-        reportClassViolation(checkClassDefinition(superName, interfaces));
+        reportClassViolation(checkClassDefinition(superName, interfaces), "class declaration");
       }
 
       @Override
@@ -494,13 +494,13 @@ public abstract class Checker {
       
       @Override
       public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
-        reportClassViolation(checkDescriptor(desc));
+        if (visible) reportClassViolation(checkDescriptor(desc), "annotation on class declaration");
         return null;
       }
 
       @Override
       public AnnotationVisitor visitTypeAnnotation(int typeRef, TypePath typePath, String desc, boolean visible) {
-        reportClassViolation(checkDescriptor(desc));
+        if (visible) reportClassViolation(checkDescriptor(desc), "type annotation on class declaration");
         return null;
       }
       
@@ -510,30 +510,30 @@ public abstract class Checker {
           {
             // only check signature, if field is not synthetic
             if ((access & Opcodes.ACC_SYNTHETIC) == 0) {
-              reportFieldViolation(checkDescriptor(desc));
+              reportFieldViolation(checkDescriptor(desc), "field declaration");
             }
           }
           
           @Override
           public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
-            reportFieldViolation(checkDescriptor(desc));
+            if (visible) reportFieldViolation(checkDescriptor(desc), "annotation on field declaration");
             return null;
           }
 
           @Override
           public AnnotationVisitor visitTypeAnnotation(int typeRef, TypePath typePath, String desc, boolean visible) {
-            reportFieldViolation(checkDescriptor(desc));
+            if (visible) reportFieldViolation(checkDescriptor(desc), "type annotation on field declaration");
             return null;
           }
           
-          private void reportFieldViolation(boolean violation) {
+          private void reportFieldViolation(boolean violation, String where) {
             if (violation) {
               violations[0]++;
               final StringBuilder sb = new StringBuilder("  in ").append(className);
               if (source != null) {
-                new Formatter(sb, Locale.ENGLISH).format(" (%s, field declaration of '%s')", source, name).flush();
+                new Formatter(sb, Locale.ENGLISH).format(" (%s, %s of '%s')", source, where, name).flush();
               } else {
-                new Formatter(sb, Locale.ENGLISH).format(" (field declaration of '%s')", name).flush();
+                new Formatter(sb, Locale.ENGLISH).format(" (%s of '%s')", where, name).flush();
               }
               logError(sb.toString());
             }
@@ -549,7 +549,7 @@ public abstract class Checker {
           {
             // only check signature, if method is not synthetic
             if ((access & Opcodes.ACC_SYNTHETIC) == 0) {
-              reportMethodViolation(checkDescriptor(desc));
+              reportMethodViolation(checkDescriptor(desc), "method declaration");
             }
           }
           
@@ -637,72 +637,72 @@ public abstract class Checker {
 
           @Override
           public void visitMethodInsn(int opcode, String owner, String name, String desc, boolean itf) {
-            reportMethodViolation(checkMethodAccess(owner, new Method(name, desc)));
+            reportMethodViolation(checkMethodAccess(owner, new Method(name, desc)), "method body");
           }
           
           @Override
           public void visitFieldInsn(int opcode, String owner, String name, String desc) {
-            reportMethodViolation(checkFieldAccess(owner, name));
+            reportMethodViolation(checkFieldAccess(owner, name), "method body");
           }
           
           @Override
           public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
-            reportMethodViolation(checkDescriptor(desc));
+            if (visible) reportMethodViolation(checkDescriptor(desc), "annotation on method declaration");
+            return null;
+          }
+
+          @Override
+          public AnnotationVisitor visitParameterAnnotation(int parameter, String desc, boolean visible) {
+            if (visible) reportMethodViolation(checkDescriptor(desc), "parameter annotation on method declaration");
             return null;
           }
 
           @Override
           public AnnotationVisitor visitTypeAnnotation(int typeRef, TypePath typePath, String desc, boolean visible) {
-            reportMethodViolation(checkDescriptor(desc));
+            if (visible) reportMethodViolation(checkDescriptor(desc), "type annotation on method declaration");
             return null;
           }
 
           @Override
           public AnnotationVisitor visitInsnAnnotation(int typeRef, TypePath typePath, String desc, boolean visible) {
-            reportMethodViolation(checkDescriptor(desc));
+            if (visible) reportMethodViolation(checkDescriptor(desc), "annotation in method body");
             return null;
           }
 
           @Override
           public AnnotationVisitor visitLocalVariableAnnotation(int typeRef, TypePath typePath, Label[] start, Label[] end, int[] index, String desc, boolean visible) {
-            reportMethodViolation(checkDescriptor(desc));
+            if (visible) reportMethodViolation(checkDescriptor(desc), "annotation in method body");
             return null;
           }
           
           @Override
           public AnnotationVisitor visitTryCatchAnnotation(int typeRef, TypePath typePath, String desc, boolean visible) {
-            reportMethodViolation(checkDescriptor(desc));
+            if (visible) reportMethodViolation(checkDescriptor(desc), "annotation in method body");
             return null;
           }
           
           @Override
-          public AnnotationVisitor visitParameterAnnotation(int parameter, String desc, boolean visible) {
-            reportMethodViolation(checkDescriptor(desc));
-            return null;
-          }
-
-          @Override
           public void visitTypeInsn(int opcode, String type) {
             if (opcode == Opcodes.ANEWARRAY) {
-              reportMethodViolation(checkType(Type.getObjectType(type)));
+              reportMethodViolation(checkType(Type.getObjectType(type)), "method body");
             }
           }
           
           @Override
           public void visitMultiANewArrayInsn(String desc, int dims) {
-            reportMethodViolation(checkDescriptor(desc));
+            reportMethodViolation(checkDescriptor(desc), "method body");
           }
           
           @Override
           public void visitLdcInsn(Object cst) {
-            reportMethodViolation(checkConstant(cst));
+            reportMethodViolation(checkConstant(cst), "method body");
           }
           
           @Override
           public void visitInvokeDynamicInsn(String name, String desc, Handle bsm, Object... bsmArgs) {
-            reportMethodViolation(checkHandle(bsm));
+            reportMethodViolation(checkHandle(bsm), "method body");
             for (final Object cst : bsmArgs) {
-              reportMethodViolation(checkConstant(cst));
+              reportMethodViolation(checkConstant(cst), "method body");
             }
           }
           
@@ -719,7 +719,7 @@ public abstract class Checker {
             return sb.toString();
           }
 
-          private void reportMethodViolation(boolean violation) {
+          private void reportMethodViolation(boolean violation, String where) {
             if (violation) {
               violations[0]++;
               final StringBuilder sb = new StringBuilder("  in ").append(className);
@@ -727,10 +727,10 @@ public abstract class Checker {
                 if (lineNo >= 0) {
                   new Formatter(sb, Locale.ENGLISH).format(" (%s:%d)", source, lineNo).flush();
                 } else {
-                  new Formatter(sb, Locale.ENGLISH).format(" (%s, method declaration of '%s')", source, getHumanReadableMethodSignature()).flush();
+                  new Formatter(sb, Locale.ENGLISH).format(" (%s, %s of '%s')", source, where, getHumanReadableMethodSignature()).flush();
                 }
               } else {
-                new Formatter(sb, Locale.ENGLISH).format(" (method declaration of '%s')", getHumanReadableMethodSignature()).flush();
+                new Formatter(sb, Locale.ENGLISH).format(" (%s of '%s')", where, getHumanReadableMethodSignature()).flush();
               }
               logError(sb.toString());
             }

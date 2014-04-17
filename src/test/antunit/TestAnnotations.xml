@@ -19,14 +19,14 @@
   <target name="testAnnotations">
     <au:expectfailure expectedMessage="Check for forbidden API calls failed, see log">
       <forbiddenapis failOnMissingClasses="true" classpath="${basedir}">
-        <fileset file="Java8Annotations.class"/>
+        <fileset file="Java8Annotations*.class"/>
         Java8Annotations$FooBar @ Forbidden annotation
         java.lang.Deprecated @ Deprecated annotation
       </forbiddenapis>
     </au:expectfailure>
     <au:assertLogContains level="error" text="Java8Annotations$FooBar [Forbidden annotation]"/> 
     <au:assertLogContains level="error" text="java.lang.Deprecated [Deprecated annotation]"/> 
-    <au:assertLogContains level="error" text=" 11 error(s)"/> 
+    <au:assertLogContains level="error" text=" 15 error(s)"/> 
   </target>
   
 </project>
