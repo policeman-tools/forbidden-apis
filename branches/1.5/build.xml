@@ -45,10 +45,21 @@
   </condition>
   <fail message="Minimum supported Java version is 1.5." unless="build.java.runtime"/>
 
+  <!-- workaround for https://issues.apache.org/bugzilla/show_bug.cgi?id=53347 -->
+  <condition property="build.compiler" value="javac1.7">
+    <and>
+      <equals arg1="${build.java.runtime}" arg2="1.8"/>
+      <or>
+        <antversion exactly="1.8.3" />
+        <antversion exactly="1.8.4" />
+      </or>
+    </and>
+  </condition>
+
   <property file="${user.home}/build.properties" />
   <property file="build.properties" />
 
-  <property name="jdk.version" value="1.5.1-dev"/>
+  <property name="jdk.version" value="1.5"/>
   <property name="maven.version" value="2.2.1"/>
   <property name="maven-plugin-plugin.version" value="3.2"/>
   
@@ -63,7 +74,7 @@
   <!-- define Maven coordinates -->
   <property name="groupId" value="de.thetaphi" />
   <property name="artifactId" value="forbiddenapis" />
-  <property name="version" value="1.5"/>
+  <property name="version" value="1.5.1-dev"/>
 
   <!-- define artifacts' name, which follows the convention of Maven -->
   <property name="pom-file" location="dist/${artifactId}-${version}.pom" />
