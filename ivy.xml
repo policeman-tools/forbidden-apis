@@ -28,8 +28,8 @@
     <dependency org="org.apache.maven" name="maven-plugin-api" rev="2.0" conf="build"/>
     <dependency org="org.apache.maven.plugin-tools" name="maven-plugin-annotations" rev="3.2" conf="build"/>
     <!-- ASM 5.0 minimal: -->
-    <dependency org="org.ow2.asm" name="asm" rev="5.0.2" conf="build,bundle"/>
-    <dependency org="org.ow2.asm" name="asm-commons" rev="5.0.2" conf="build,bundle"/>
+    <dependency org="org.ow2.asm" name="asm" rev="5.0.3" conf="build,bundle"/>
+    <dependency org="org.ow2.asm" name="asm-commons" rev="5.0.3" conf="build,bundle"/>
     <!--
     We also bundle plexus-util, as we cannot rely on maven providing it.
     See: http://jira.codehaus.org/browse/MNG-2892 and related issues.
