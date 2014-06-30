@@ -66,6 +66,18 @@
     <au:assertLogContains text="The class 'foo.bar.ForbiddenApis' referenced in a signature cannot be loaded, ignoring signature: foo.bar.ForbiddenApis#testMethod()"/> 
   </target>
   
+  <target name="testMissingTargetVersion">
+    <au:expectfailure>
+      <artifact:mvn pom="${antunit.fake-pom}" mavenVersion="${maven.version}" failonerror="true" fork="true">
+        <arg value="${groupId}:${artifactId}:${version}:check"/>
+        <syspropertyset refid="injected-properties"/>
+        <sysproperty key="maven.compiler.target" value=""/>
+      </artifact:mvn>
+    </au:expectfailure>
+    <au:assertLogContains text="The 'targetVersion' parameter or '${maven.compiler.target}' property is missing."/> 
+    <au:assertLogContains text="Bundled signatures resource not found"/> 
+  </target>
+  
   <target name="testMyselfMaven3">
     <artifact:mvn pom="${antunit.fake-pom}" mavenVersion="${antunit.maven3.version}" failonerror="true" fork="true">
       <arg value="${groupId}:${artifactId}:${version}:check"/>
