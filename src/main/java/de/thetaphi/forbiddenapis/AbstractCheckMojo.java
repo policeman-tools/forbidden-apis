@@ -217,9 +217,18 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
           log.info("Reading inline API signatures...");
           checker.parseSignaturesString(sig);
         }
-        if (bundledSignatures != null) for (String bs : bundledSignatures) {
-          log.info("Reading bundled API signatures: " + bs);
-          checker.parseBundledSignatures(bs, getTargetVersion());
+        if (bundledSignatures != null) {
+          String targetVersion = getTargetVersion();
+          if ("".equals(targetVersion)) targetVersion = null;
+          if (targetVersion == null) {
+            log.warn("The 'targetVersion' parameter or '${maven.compiler.target}' property is missing. " +
+              "Trying to read bundled JDK signatures without compiler target. " +
+              "You have to explicitely specify the version in the resource name.");
+          }
+          for (String bs : bundledSignatures) {
+            log.info("Reading bundled API signatures: " + bs);
+            checker.parseBundledSignatures(bs, targetVersion);
+          }
         }
         if (signaturesFiles != null) for (final File f : signaturesFiles) {
           log.info("Reading API signatures: " + f);

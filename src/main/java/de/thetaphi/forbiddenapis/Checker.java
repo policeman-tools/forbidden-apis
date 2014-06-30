@@ -295,7 +295,8 @@ public abstract class Checker {
     InputStream in = this.getClass().getResourceAsStream("signatures/" + name + ".txt");
     // automatically expand the compiler version in here (for jdk-* signatures without version):
     if (in == null && jdkTargetVersion != null && name.startsWith("jdk-") && !name.matches(".*?\\-\\d\\.\\d")) {
-      in = this.getClass().getResourceAsStream("signatures/" + name + "-" + jdkTargetVersion + ".txt");
+      name = name + "-" + jdkTargetVersion;
+      in = this.getClass().getResourceAsStream("signatures/" + name + ".txt");
     }
     if (in == null) {
       throw new FileNotFoundException("Bundled signatures resource not found: " + name);
