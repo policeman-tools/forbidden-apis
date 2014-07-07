@@ -111,6 +111,12 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
   private String[] excludes;
 
   /**
+   * Skip entire check. Most useful on the command line via "-Dforbiddenapis.skip=true".
+   */
+  @Parameter(property="forbiddenapis.skip", defaultValue="false")
+  private boolean skip;
+
+  /**
    * The project packaging (pom, jar, etc.).
    */
   @Parameter(defaultValue = "${project.packaging}", readonly = true, required = true)
@@ -130,6 +136,11 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
   // Not in Java 5: @Override
   public void execute() throws MojoExecutionException, MojoFailureException {
     final Log log = getLog();
+    
+    if (skip) {
+      log.info("Skipping forbidden-apis checks.");
+      return;
+    }
     
     // In multi-module projects, one may want to configure the plugin in the parent/root POM.
     // However, it should not be executed for this type of POMs.
