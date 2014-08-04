@@ -1,5 +1,10 @@
 This page lists all changes since the first released version.
 
+= Version 1.6.1 (released 2014-08-05) =
+
+*Bug fixes:*
+  * Fix wrong plugin descriptor in Maven artifact. No code change, just new binary artifact.
+
 = Version 1.6 (released 2014-08-04) =
 
 *New features:*
