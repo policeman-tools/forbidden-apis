@@ -6,6 +6,9 @@ This page lists all changes since the first released version.
   * Option to skip the execution of the plugin (pass `mvn -Dforbiddenapis.skip=true`) (issue #29).
   * Maven plugin should log warning if target version is not set (issue #28).
 
+*Other changes:*
+  * Upgrade ASM to bugfix release 5.0.3.
+
 = Version 1.5.1 (released 2014-04-17) =
 
 *Bug fixes:*
