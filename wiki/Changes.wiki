@@ -3,7 +3,7 @@ This page lists all changes since the first released version.
 = Version 1.6 (released 2014-08-04) =
 
 *New features:*
-  * Option to skip the execution of the plugin (pass mvn -Dforbiddenapis.skip=true) (issue #29).
+  * Option to skip the execution of the plugin (pass `mvn -Dforbiddenapis.skip=true`) (issue #29).
   * Maven plugin should log warning if target version is not set (issue #28).
 
 = Version 1.5.1 (released 2014-04-17) =
