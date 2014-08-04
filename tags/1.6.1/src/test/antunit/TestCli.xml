@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ * (C) Copyright 2013 Uwe Schindler (Generics Policeman) and others.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+-->
+<project xmlns:au="antlib:org.apache.ant.antunit">
+
+  <pathconvert property="cp" refid="path.build"/>
+
+  <target name="testBundledSignatures">
+    <java jar="${jar-file}" failonerror="true" fork="true">
+      <arg value="-c"/>
+      <arg value="${cp}"/>
+      <arg value="-d"/>
+      <arg file="${antunit.main.classes}"/>
+      <arg value="-b"/>
+      <arg value="jdk-unsafe-${jdk.version},jdk-deprecated-${jdk.version}"/>
+      <arg value="--internalruntimeforbidden"/>
+    </java>
+    <au:assertLogContains text=" 0 error(s)."/> 
+    <au:assertLogContains text="Reading bundled API signatures: jdk-deprecated-${jdk.version}"/> 
+    <au:assertLogContains text="Reading bundled API signatures: jdk-unsafe-${jdk.version}"/> 
+  </target>
+
+  <target name="testExcludes">
+    <java jar="${jar-file}" failonerror="true" fork="true">
+      <arg value="-c"/>
+      <arg value="${cp}"/>
+      <arg value="-d"/>
+      <arg file="${antunit.main.classes}"/>
+      <arg value="-b"/>
+      <arg value="jdk-unsafe-${jdk.version},jdk-deprecated-${jdk.version}"/>
+      <arg value="--bundledsignatures"/>
+      <arg value="jdk-system-out"/>
+      <arg value="--excludes"/>
+      <arg value="de/thetaphi/forbiddenapis/CliMain.class"/>
+      <arg value="--internalruntimeforbidden"/>
+    </java>
+    <au:assertLogContains text=" 0 error(s)."/> 
+    <au:assertLogContains text="Reading bundled API signatures: jdk-deprecated-${jdk.version}"/> 
+    <au:assertLogContains text="Reading bundled API signatures: jdk-unsafe-${jdk.version}"/> 
+    <au:assertLogContains text="Reading bundled API signatures: jdk-system-out"/> 
+  </target>
+
+  <target name="testSignatureFile">
+    <au:expectfailure expectedMessage="Java returned: 1">
+      <java jar="${jar-file}" failonerror="true" fork="true">
+        <arg value="-c"/>
+        <arg value="${cp}"/>
+        <arg value="-d"/>
+        <arg file="${antunit.main.classes}"/>
+        <arg value="-f"/>
+        <arg file="signatures1.txt"/>
+      </java>
+    </au:expectfailure>
+    <au:assertLogContains text="java.lang.String#substring(int,int) [You are crazy that you disallow substrings]"/> 
+  </target>
+
+</project>
