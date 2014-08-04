@@ -74,7 +74,7 @@
   <!-- define Maven coordinates -->
   <property name="groupId" value="de.thetaphi" />
   <property name="artifactId" value="forbiddenapis" />
-  <property name="version" value="1.6-SNAPSHOT"/>
+  <property name="version" value="1.6.1"/>
 
   <!-- define artifacts' name, which follows the convention of Maven -->
   <property name="pom-file" location="dist/${artifactId}-${version}.pom" />
