@@ -31,7 +31,7 @@ import java.util.List;
  * from the project classpath and a list of API signatures (either inline or as pointer to files or bundled signatures).
  */
 @Mojo(name = "check", threadSafe = true, requiresProject = true, requiresDependencyResolution = ResolutionScope.COMPILE, defaultPhase = LifecyclePhase.PROCESS_CLASSES)
-public class CheckMojo extends AbstractCheckMojo {
+public final class CheckMojo extends AbstractCheckMojo {
 
   /**
    * Injected compile classpath.
