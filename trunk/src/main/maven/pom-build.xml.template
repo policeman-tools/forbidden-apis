@@ -5,6 +5,7 @@
   <artifactId>@ARTIFACTID@</artifactId>
   <version>@VERSION@</version>
   <name>@NAME@</name>
+  <description>@DESCRIPTION@</description>
   <packaging>maven-plugin</packaging>
 
   <properties>
