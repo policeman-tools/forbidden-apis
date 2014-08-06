@@ -55,3 +55,141 @@ To use the forbidden API checker in Maven, use the following template to include
 The possible `<bundledSignatures>` can be found on a [BundledSignatures separate page]. You can also give your own signatures in separate files from your project directory.
 
 Since version 1.2 the goal was renamed to "check" and "testCheck" (to check the test classes) was added.
+
+== The full documentation of the plugin is here: ==
+
+<pre>
+forbiddenapis:check
+  Mojo to check if no project generated class files (compile scope) contain
+  calls to forbidden APIs from the project classpath and a list of API
+  signatures (either inline or as pointer to files or bundled signatures).
+
+  Available parameters:
+
+    bundledSignatures
+      Specifies built in signatures files (e.g., deprecated APIs for specific
+      Java versions, unsafe method calls using default locale, default
+      charset,...)
+
+    classesDirectory (Default: ${project.build.outputDirectory})
+      Directory with the class files to check.
+      Required: Yes
+
+    excludes
+      List of patterns matching class files to be excluded from checking.
+
+    failOnMissingClasses (Default: true)
+      Fail the build, if a class referenced in the scanned code is missing. This
+      requires that you pass the whole classpath including all dependencies to
+      this Mojo (Maven does this by default).
+
+    failOnUnresolvableSignatures (Default: true)
+      Fail the build if a class referenced in a signature is missing. If this
+      parameter is set to to false, then such signatures are silently ignored.
+      This is useful in multi-module Maven projects where only some modules have
+      the dependency to which the signature file(s) apply.
+
+    failOnUnsupportedJava (Default: false)
+      Fail the build, if the bundled ASM library cannot read the class file
+      format of the runtime library or the runtime library cannot be discovered.
+
+    includes
+      List of patterns matching all class files to be parsed from the
+      classesDirectory. Can be changed to e.g. exclude several files (using
+      excludes). The default is a single include with pattern '**/*.class'
+
+    internalRuntimeForbidden (Default: false)
+      Forbids calls to classes from the internal java runtime (like
+      sun.misc.Unsafe)
+
+    signatures
+      Gives a multiline list of signatures, inline in the pom.xml. Use an XML
+      CDATA section to do that! The signatures are resolved against the compile
+      classpath.
+
+    signaturesFiles
+      Lists all files, which contain signatures and comments for forbidden API
+      calls. The signatures are resolved against the compile classpath.
+
+    skip (Default: false)
+      Skip entire check. Most useful on the command line via
+      '-Dforbiddenapis.skip=true'.
+      User property: forbiddenapis.skip
+
+    targetVersion (Default: ${maven.compiler.target})
+      The default compiler target version used to expand references to bundled
+      JDK signatures. E.g., if you use 'jdk-deprecated', it will expand to this
+      version. This setting should be identical to the target version used in
+      the compiler plugin.
+
+forbiddenapis:testCheck
+  Mojo to check if no project generated class files (test scope) contain calls
+  to forbidden APIs from the project classpath and a list of API signatures
+  (either inline or as pointer to files or bundled signatures).
+
+  Available parameters:
+
+    bundledSignatures
+      Specifies built in signatures files (e.g., deprecated APIs for specific
+      Java versions, unsafe method calls using default locale, default
+      charset,...)
+
+    classesDirectory (Default: ${project.build.testOutputDirectory})
+      Directory with the class files to check.
+      Required: Yes
+
+    excludes
+      List of patterns matching class files to be excluded from checking.
+
+    failOnMissingClasses (Default: true)
+      Fail the build, if a class referenced in the scanned code is missing. This
+      requires that you pass the whole classpath including all dependencies to
+      this Mojo (Maven does this by default).
+
+    failOnUnresolvableSignatures (Default: true)
+      Fail the build if a class referenced in a signature is missing. If this
+      parameter is set to to false, then such signatures are silently ignored.
+      This is useful in multi-module Maven projects where only some modules have
+      the dependency to which the signature file(s) apply.
+
+    failOnUnsupportedJava (Default: false)
+      Fail the build, if the bundled ASM library cannot read the class file
+      format of the runtime library or the runtime library cannot be discovered.
+
+    includes
+      List of patterns matching all class files to be parsed from the
+      classesDirectory. Can be changed to e.g. exclude several files (using
+      excludes). The default is a single include with pattern '**/*.class'
+
+    internalRuntimeForbidden (Default: false)
+      Forbids calls to classes from the internal java runtime (like
+      sun.misc.Unsafe)
+
+    signatures
+      Gives a multiline list of signatures, inline in the pom.xml. Use an XML
+      CDATA section to do that! The signatures are resolved against the compile
+      classpath.
+
+    signaturesFiles
+      Lists all files, which contain signatures and comments for forbidden API
+      calls. The signatures are resolved against the compile classpath.
+
+    skip (Default: false)
+      Skip entire check. Most useful on the command line via
+      '-Dforbiddenapis.skip=true'.
+      User property: forbiddenapis.skip
+
+    targetVersion (Default: ${maven.compiler.target})
+      The default compiler target version used to expand references to bundled
+      JDK signatures. E.g., if you use 'jdk-deprecated', it will expand to this
+      version. This setting should be identical to the target version used in
+      the compiler plugin.
+
+    testTargetVersion (Default: ${maven.compiler.testTarget})
+      The default compiler target version used to expand references to bundled
+      JDK signatures. This setting falls back to 'targetVersion' if undefined.
+      This can be used to override the target version solely used for tests.
+      E.g., if you use 'jdk-deprecated', it will expand to this version. This
+      setting should be identical to the target version used in the compiler
+      plugin.
+</pre>
