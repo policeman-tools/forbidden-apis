@@ -75,6 +75,8 @@
   <property name="groupId" value="de.thetaphi" />
   <property name="artifactId" value="forbiddenapis" />
   <property name="version" value="1.7-SNAPSHOT"/>
+  
+  <property name="description" value="Allows to parse Java byte code to find invocations of method/class/field signatures and fail build (Apache Ant, Apache Maven, or CLI)"/>
 
   <!-- define artifacts' name, which follows the convention of Maven -->
   <property name="pom-file" location="dist/${artifactId}-${version}.pom" />
@@ -203,6 +205,7 @@
         <filter token="VERSION" value="${version}"/>
         <filter token="GROUPID" value="${groupId}"/>
         <filter token="ARTIFACTID" value="${artifactId}"/>
+        <filter token="DESCRIPTION" value="${description}"/>
       </filterset>
       <globmapper from="*.template" to="*"/>
     </copy>
@@ -226,6 +229,10 @@
     </artifact:mvn>
     <javac includeantruntime="false" srcdir="build/maven/generated-sources/plugin" destdir="build/main"
       source="1.5" target="1.5" debug="true" deprecation="false" encoding="${build.encoding}" classpathref="path.build"/>
+    <mkdir dir="build/maven/docs"/>
+    <xslt basedir="build/maven/generated-site/xdoc" includes="*.xml" destdir="build/maven/docs" style="src/main/maven/xdoc2html.xsl" force="false">
+      <mapper type="glob" from="*.xml" to="*.html"/>
+    </xslt>
   </target>
 
   <target name="jar" depends="compile,-install-tasks,maven-descriptor" description="Create the binary JAR">
