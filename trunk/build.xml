@@ -213,8 +213,9 @@
   <target name="maven-descriptor" depends="compile,-maven-setup,-install-tasks,-uptodate" unless="maven-descriptor.uptodate" description="Creates the Maven Plugin Descriptor">
     <!-- with fork=false this somehow takes endless to download the internet, so let's fork - and slow down in an other way (startup) -->
     <artifact:mvn pom="build/maven/pom-build.xml" mavenVersion="${maven.version}" failonerror="true" fork="true">
-      <arg value="org.apache.maven.plugins:maven-plugin-plugin:${maven-plugin-plugin.version}:descriptor"/>
-      <arg value="org.apache.maven.plugins:maven-plugin-plugin:${maven-plugin-plugin.version}:xdoc"/>
+      <arg value="plugin:helpmojo"/>
+      <arg value="plugin:descriptor"/>
+      <arg value="plugin:xdoc"/>
       <sysproperty key="injected.src.dir" file="src/main/java"/>
       <sysproperty key="injected.target.dir" file="build/main"/>
       <sysproperty key="injected.build.dir" file="build/maven"/>
@@ -223,6 +224,8 @@
         <mapper type="glob" from="*" to="injected.*"/>
       </syspropertyset>
     </artifact:mvn>
+    <javac includeantruntime="false" srcdir="build/maven/generated-sources/plugin" destdir="build/main"
+      source="1.5" target="1.5" debug="true" deprecation="false" encoding="${build.encoding}" classpathref="path.build"/>
   </target>
 
   <target name="jar" depends="compile,-install-tasks,maven-descriptor" description="Create the binary JAR">
