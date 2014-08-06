@@ -61,7 +61,7 @@
 
   <property name="jdk.version" value="1.5"/>
   <property name="maven.version" value="2.2.1"/>
-  <property name="maven-plugin-plugin.version" value="3.2"/>
+  <property name="maven-plugin-plugin.version" value="3.3"/>
   
   <property name="compile.debug" value="true"/>
   <property name="compile.deprecation" value="true"/>
@@ -194,7 +194,7 @@
     </delete>
   </target>
 
-  <target name="-maven-setup">
+  <target name="-maven-setup" depends="-install-tasks">
     <mkdir dir="build/maven"/>
     <copy todir="build/maven" encoding="${build.encoding}" outputencoding="${build.encoding}">
       <fileset dir="src/main/maven" includes="*.template"/>
@@ -214,8 +214,10 @@
     <!-- with fork=false this somehow takes endless to download the internet, so let's fork - and slow down in an other way (startup) -->
     <artifact:mvn pom="build/maven/pom-build.xml" mavenVersion="${maven.version}" failonerror="true" fork="true">
       <arg value="org.apache.maven.plugins:maven-plugin-plugin:${maven-plugin-plugin.version}:descriptor"/>
+      <arg value="org.apache.maven.plugins:maven-plugin-plugin:${maven-plugin-plugin.version}:xdoc"/>
       <sysproperty key="injected.src.dir" file="src/main/java"/>
       <sysproperty key="injected.target.dir" file="build/main"/>
+      <sysproperty key="injected.build.dir" file="build/maven"/>
       <syspropertyset>
         <propertyref regex=".*\.version"/>
         <mapper type="glob" from="*" to="injected.*"/>
