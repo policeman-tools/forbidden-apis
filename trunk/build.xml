@@ -441,5 +441,12 @@
   
   <target name="generate-test-classes" depends="-generate-test-classes-init,-generate-test-classes-sunmisc,-generate-test-classes-jdk5,-generate-test-classes-jdk8" description="Regenerates .class files used by tests if the current JDK version supports it"/>
   
+  <target name="show-help-mojo" depends="install-maven-artifacts" description="Shows help about mojo usage">
+    <artifact:mvn mavenVersion="${maven.version}" failonerror="true" fork="true" taskname="help">
+      <arg value="${groupId}:${artifactId}:${version}:help"/>
+      <sysproperty key="detail" value="true"/>
+    </artifact:mvn>
+  </target>
+
   <target name="jenkins" depends="clean,dist,test,-stage.snapshots" description="Runs Jenkins Nightly"/>
 </project>
