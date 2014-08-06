@@ -9,9 +9,11 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.build.outputEncoding>UTF-8</project.build.outputEncoding>
   </properties>
   
   <build>
+    <directory>${injected.build.dir}</directory>
     <sourceDirectory>${injected.src.dir}</sourceDirectory>
     <outputDirectory>${injected.target.dir}</outputDirectory>
     <plugins>
