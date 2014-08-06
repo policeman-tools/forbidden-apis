@@ -22,7 +22,10 @@
         <artifactId>maven-plugin-plugin</artifactId>
         <version>${injected.maven-plugin-plugin.version}</version>
         <configuration>
-          <extractors><extractor>java-annotations</extractor></extractors>
+          <extractors>
+            <extractor>java</extractor>
+            <extractor>java-annotations</extractor>
+          </extractors>
         </configuration>
       </plugin>
     </plugins>
