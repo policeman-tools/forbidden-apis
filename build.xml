@@ -183,7 +183,7 @@
   </target>
 
   <target name="remove-local-artifacts" description="Removes the project's artifacts from the local Ivy and Maven repository">
-    <delete includeemptydirs="true">
+    <delete includeemptydirs="true" verbose="true">
       <fileset dir="${user.home}/.m2/repository" erroronmissingdir="false">
         <include name="de/thetaphi/forbiddenapis/**"/>
         <include name="de/thetaphi/example/**"/>
