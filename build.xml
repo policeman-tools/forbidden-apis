@@ -229,6 +229,9 @@
     </artifact:mvn>
     <javac includeantruntime="false" srcdir="build/maven/generated-sources/plugin" destdir="build/main"
       source="1.5" target="1.5" debug="true" deprecation="false" encoding="${build.encoding}" classpathref="path.build"/>
+  </target>
+  
+  <target name="documentation" depends="maven-descriptor">
     <mkdir dir="build/maven/docs"/>
     <xslt basedir="build/maven/generated-site/xdoc" includes="*.xml" destdir="build/maven/docs" style="src/main/maven/xdoc2html.xsl" force="false">
       <mapper type="glob" from="*.xml" to="*.html"/>
@@ -455,5 +458,5 @@
     </artifact:mvn>
   </target>
 
-  <target name="jenkins" depends="clean,dist,test,-stage.snapshots" description="Runs Jenkins Nightly"/>
+  <target name="jenkins" depends="clean,dist,test,documentation,-stage.snapshots" description="Runs Jenkins Nightly"/>
 </project>
