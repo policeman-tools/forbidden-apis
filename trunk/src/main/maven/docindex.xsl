@@ -44,10 +44,12 @@
             <xsl:value-of select="version"/>
           </code>
         </p>
-        <h2>Goals</h2>
+        <h2>Apache Maven: Mojo Goals</h2>
         <ul>
           <xsl:apply-templates select="mojos/mojo"/>
         </ul>
+        <h2>Apache Ant / CLI</h2>
+        <p>This page only contains the Mojo documentation. The Apache Ant task and the CLI documentation can be found on the project website.</p>
       </body>
     </html>
   </xsl:template>
