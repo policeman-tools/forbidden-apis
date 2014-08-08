@@ -27,6 +27,7 @@ import java.util.List;
 /**
  * Mojo to check if no project generated class files (test scope) contain calls to forbidden APIs
  * from the project classpath and a list of API signatures (either inline or as pointer to files or bundled signatures).
+ * At least one signature must be given, using any of the corresponding optional parameters.
  * @since 1.2
  */
 @Mojo(name = "testCheck", threadSafe = true, requiresProject = true, requiresDependencyResolution = ResolutionScope.TEST, defaultPhase = LifecyclePhase.PROCESS_TEST_CLASSES)
