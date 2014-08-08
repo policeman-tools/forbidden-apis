@@ -232,15 +232,28 @@
       source="1.5" target="1.5" debug="true" deprecation="false" encoding="${build.encoding}" classpathref="path.build"/>
   </target>
   
-  <target name="documentation" depends="maven-descriptor">
+  <target name="-get-cli-help" depends="compile" unless="cli-help">
+    <local name="-cli-help"/>
+    <java classname="de.thetaphi.forbiddenapis.CliMain" classpathref="path.run"
+      failonerror="true" fork="false" outputproperty="-cli-help">
+      <!-- hack, to not exit with exitcode != 0 -->
+      <sysproperty key="-CliMain-suppressExitCode" value="true"/>
+    </java>
+    <!-- fix the line endings (cannot be done in java task directly! -->
+    <loadresource property="cli-help">
+      <string value="${-cli-help}"/>
+      <filterchain><fixcrlf eol="lf"/></filterchain>
+    </loadresource>
+  </target>
+  
+  <target name="documentation" depends="maven-descriptor,-get-cli-help">
     <mkdir dir="build/maven/docs"/>
     <xslt basedir="build/maven/generated-site/xdoc" includes="*.xml" destdir="build/maven/docs" style="src/main/maven/xdoc2html.xsl" force="false">
       <mapper type="glob" from="*.xml" to="*.html"/>
     </xslt>
-    <xslt in="build/main/META-INF/maven/${groupId}/${artifactId}/plugin-help.xml"
-      out="build/maven/docs/index.html"
-      style="src/main/maven/docindex.xsl" force="false"
-    />
+    <xslt in="build/main/META-INF/maven/${groupId}/${artifactId}/plugin-help.xml" out="build/maven/docs/index.html" style="src/main/maven/docindex.xsl" force="false">
+      <param name="clihelp" expression="${cli-help}"/>
+    </xslt>
     <mkdir dir="dist"/>
     <zip destfile="${documentation-file}" encoding="${build.encoding}">
       <zipfileset dir="build/maven/docs" prefix="${artifactId}-${version}"/>

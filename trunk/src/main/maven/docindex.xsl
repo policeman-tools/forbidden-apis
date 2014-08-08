@@ -17,6 +17,8 @@
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
   <xsl:output method="html" encoding="UTF-8" media-type="text/html"/>
   
+  <xsl:param name="clihelp"/>
+  
   <xsl:template match="/plugin">
     <html>
       <head>
@@ -44,12 +46,19 @@
             <xsl:value-of select="version"/>
           </code>
         </p>
+        <h2>Apache Ant</h2>
+        <p>Coming soon!</p>
         <h2>Apache Maven: Mojo Goals</h2>
         <ul>
           <xsl:apply-templates select="mojos/mojo"/>
         </ul>
-        <h2>Apache Ant / CLI</h2>
-        <p>This page only contains the Mojo documentation. The Apache Ant task and the CLI documentation can be found on the project website.</p>
+        <h2>Command Line Interface</h2>
+        <p>
+          <xsl:text>The JAR file can be called as command line tool using </xsl:text>
+          <code>java -jar</code>
+          <xsl:text>. This is the documentation of the CLI executable as printed by itsself:</xsl:text>
+        </p>
+        <pre><xsl:value-of select="$clihelp"/></pre>
       </body>
     </html>
   </xsl:template>
