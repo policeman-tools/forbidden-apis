@@ -27,6 +27,7 @@ import java.util.List;
 /**
  * Mojo to check if no project generated class files (test scope) contain calls to forbidden APIs
  * from the project classpath and a list of API signatures (either inline or as pointer to files or bundled signatures).
+ * @since 1.2
  */
 @Mojo(name = "testCheck", threadSafe = true, requiresProject = true, requiresDependencyResolution = ResolutionScope.TEST, defaultPhase = LifecyclePhase.PROCESS_TEST_CLASSES)
 public final class TestCheckMojo extends AbstractCheckMojo {
@@ -40,7 +41,7 @@ public final class TestCheckMojo extends AbstractCheckMojo {
   /**
    * Directory with the class files to check.
    */
-  @Parameter(defaultValue = "${project.build.testOutputDirectory}", required = true)
+  @Parameter(required = false, defaultValue = "${project.build.testOutputDirectory}")
   private File classesDirectory;
   
   /**
@@ -49,6 +50,7 @@ public final class TestCheckMojo extends AbstractCheckMojo {
    * the target version solely used for tests.
    * E.g., if you use "jdk-deprecated", it will expand to this version.
    * This setting should be identical to the target version used in the compiler plugin.
+   * @since 1.4
    */
   @Parameter(required = false, defaultValue = "${maven.compiler.testTarget}")
   private String testTargetVersion;
