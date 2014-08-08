@@ -82,6 +82,7 @@
   <property name="pom-file" location="dist/${artifactId}-${version}.pom" />
   <property name="jar-file" location="dist/${artifactId}-${version}.jar" />
   <property name="sources-jar-file" location="dist/${artifactId}-${version}-sources.jar" />
+  <property name="documentation-file" location="dist/${artifactId}-${version}-docs.zip" />
 
   <!-- defined maven snapshots and staging repository id and url -->
   <property name="maven-snapshots-repository-id" value="sonatype-nexus-snapshots" />
@@ -236,6 +237,10 @@
     <xslt basedir="build/maven/generated-site/xdoc" includes="*.xml" destdir="build/maven/docs" style="src/main/maven/xdoc2html.xsl" force="false">
       <mapper type="glob" from="*.xml" to="*.html"/>
     </xslt>
+    <mkdir dir="dist"/>
+    <zip destfile="${documentation-file}" encoding="${build.encoding}">
+      <zipfileset dir="build/maven/docs" prefix="${artifactId}-${version}"/>
+    </zip>
   </target>
 
   <target name="jar" depends="compile,-install-tasks,maven-descriptor" description="Create the binary JAR">
@@ -270,10 +275,11 @@
     </zip>
   </target>
 
-  <target name="install-maven-artifacts" depends="-install-tasks,jar,jar-src" description="Installs the Maven artifacts in ~/.m2">
+  <target name="install-maven-artifacts" depends="-install-tasks,jar,jar-src,documentation" description="Installs the Maven artifacts in ~/.m2">
     <artifact:install file="${jar-file}">
       <pom refid="maven.deploy.pom"/>
       <attach file="${sources-jar-file}" classifier="sources"/>
+      <attach file="${documentation-file}" classifier="docs" type="zip"/>
     </artifact:install>
   </target>
 
@@ -287,10 +293,11 @@
     <artifact:deploy file="${jar-file}">
       <pom refid="maven.deploy.pom"/>
       <attach file="${sources-jar-file}" classifier="sources"/>
+      <attach file="${documentation-file}" classifier="docs" type="zip"/>
     </artifact:deploy>
   </target>
   
-  <target name="sign-artifacts" depends="dist">
+  <target name="sign-artifacts" depends="dist" unless="isSnapshot">
     <delete failonerror="false" dir="dist" includes="**/*.asc"/>
 
     <input message="Enter GPG keystore password: &gt;" addproperty="gpg.passphrase">
@@ -311,6 +318,7 @@
       <srcfile/>
       <fileset dir="dist">
         <include name="**/*.jar"/>
+        <include name="**/*.zip"/>
         <include name="**/*.pom"/>
       </fileset>
       <globmapper from="*" to="*.asc"/>
@@ -321,10 +329,12 @@
     <artifact:deploy file="${jar-file}">
       <pom refid="maven.deploy.pom"/>
       <attach file="${sources-jar-file}" classifier="sources"/>
+      <attach file="${documentation-file}" classifier="docs" type="zip"/>
       <!-- signatures: -->
       <attach file="${pom-file}.asc" type="pom.asc"/>
       <attach file="${jar-file}.asc" type="jar.asc"/>
       <attach file="${sources-jar-file}.asc" classifier="sources" type="jar.asc"/>
+      <attach file="${documentation-file}.asc" classifier="docs" type="zip.asc"/>
     </artifact:deploy>
   </target>
 
