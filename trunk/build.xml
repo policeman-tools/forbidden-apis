@@ -237,6 +237,10 @@
     <xslt basedir="build/maven/generated-site/xdoc" includes="*.xml" destdir="build/maven/docs" style="src/main/maven/xdoc2html.xsl" force="false">
       <mapper type="glob" from="*.xml" to="*.html"/>
     </xslt>
+    <xslt in="build/main/META-INF/maven/${groupId}/${artifactId}/plugin-help.xml"
+      out="build/maven/docs/index.html"
+      style="src/main/maven/docindex.xsl" force="false"
+    />
     <mkdir dir="dist"/>
     <zip destfile="${documentation-file}" encoding="${build.encoding}">
       <zipfileset dir="build/maven/docs" prefix="${artifactId}-${version}"/>
