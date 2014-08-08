@@ -315,8 +315,12 @@ public final class CliMain {
     try {
       new CliMain(args).run();
     } catch (ExitException e) {
-      if (e.getMessage() != null) System.err.println("ERROR: " + e.getMessage());
-      if (e.exitCode != 0) System.exit(e.exitCode);
+      if (e.getMessage() != null) {
+        System.err.println("ERROR: " + e.getMessage());
+      }
+      if (e.exitCode != 0 && !Boolean.parseBoolean(System.getProperty("-CliMain-suppressExitCode", "false"))) {
+        System.exit(e.exitCode);
+      }
     }
   }
   
