@@ -34,11 +34,16 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
+/**
+ * Base class for forbiddenapis Mojos.
+ * @since 1.0
+ */
 public abstract class AbstractCheckMojo extends AbstractMojo {
 
   /**
    * Lists all files, which contain signatures and comments for forbidden API calls.
    * The signatures are resolved against the compile classpath.
+   * @since 1.0
    */
   @Parameter(required = false)
   private File[] signaturesFiles;
@@ -46,6 +51,7 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
   /**
    * Gives a multiline list of signatures, inline in the pom.xml. Use an XML CDATA section to do that!
    * The signatures are resolved against the compile classpath.
+   * @since 1.0
    */
   @Parameter(required = false)
   private String signatures;
@@ -53,12 +59,14 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
   /**
    * Specifies built in signatures files (e.g., deprecated APIs for specific Java versions,
    * unsafe method calls using default locale, default charset,...)
+   * @since 1.0
    */
   @Parameter(required = false)
   private String[] bundledSignatures;
 
   /**
    * Forbids calls to classes from the internal java runtime (like sun.misc.Unsafe)
+   * @since 1.0
    */
   @Parameter(required = false, defaultValue = "false")
   private boolean internalRuntimeForbidden;
@@ -66,6 +74,7 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
   /**
    * Fail the build, if the bundled ASM library cannot read the class file format
    * of the runtime library or the runtime library cannot be discovered.
+   * @since 1.0
    */
   @Parameter(required = false, defaultValue = "false")
   private boolean failOnUnsupportedJava;
@@ -74,6 +83,7 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
    * Fail the build, if a class referenced in the scanned code is missing. This requires
    * that you pass the whole classpath including all dependencies to this Mojo
    * (Maven does this by default).
+   * @since 1.0
    */
   @Parameter(required = false, defaultValue = "true")
   private boolean failOnMissingClasses;
@@ -82,6 +92,7 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
    * Fail the build if a class referenced in a signature is missing. If this parameter is set to
    * to false, then such signatures are silently ignored. This is useful in multi-module Maven
    * projects where only some modules have the dependency to which the signature file(s) apply.
+   * @since 1.4
    */
   @Parameter(required = false, defaultValue = "true")
   private boolean failOnUnresolvableSignatures;
@@ -90,6 +101,7 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
    * The default compiler target version used to expand references to bundled JDK signatures.
    * E.g., if you use "jdk-deprecated", it will expand to this version.
    * This setting should be identical to the target version used in the compiler plugin.
+   * @since 1.0
    */
   @Parameter(required = false, defaultValue = "${maven.compiler.target}")
   private String targetVersion;
@@ -99,6 +111,7 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
    * Can be changed to e.g. exclude several files (using excludes).
    * The default is a single include with pattern '**&#47;*.class'
    * @see #excludes
+   * @since 1.0
    */
   @Parameter(required = false)
   private String[] includes;
@@ -106,19 +119,19 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
   /**
    * List of patterns matching class files to be excluded from checking.
    * @see #includes
+   * @since 1.0
    */
   @Parameter(required = false)
   private String[] excludes;
 
   /**
    * Skip entire check. Most useful on the command line via "-Dforbiddenapis.skip=true".
+   * @since 1.6
    */
-  @Parameter(property="forbiddenapis.skip", defaultValue="false")
+  @Parameter(required = false, property="forbiddenapis.skip", defaultValue="false")
   private boolean skip;
 
-  /**
-   * The project packaging (pom, jar, etc.).
-   */
+  /** The project packaging (pom, jar, etc.). */
   @Parameter(defaultValue = "${project.packaging}", readonly = true, required = true)
   private String packaging;
 
