@@ -35,3 +35,5 @@ line, 3 = unsupported JDK version, 4 = other error (I/O,...)
 </pre>
 
 The command line parameters match those of the [AntUsage Ant Task].
+
+The detailed documentation (based on nightly snapshots) can be found here: http://jenkins.thetaphi.de/job/Forbidden-APIs/javadoc/
