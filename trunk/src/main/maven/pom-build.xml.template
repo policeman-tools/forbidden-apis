@@ -16,7 +16,7 @@
   <build>
     <directory>${injected.build.dir}</directory>
     <sourceDirectory>${injected.src.dir}</sourceDirectory>
-    <outputDirectory>${injected.target.dir}</outputDirectory>
+    <outputDirectory>${injected.output.dir}</outputDirectory>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
