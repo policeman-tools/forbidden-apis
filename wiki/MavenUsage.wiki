@@ -56,4 +56,4 @@ The possible `<bundledSignatures>` can be found on a [BundledSignatures separate
 
 Since version 1.2 the goal was renamed to "check" and "testCheck" (to check the test classes) was added.
 
-The current documentation (based on nightly snapshots) can be found here: http://jenkins.thetaphi.de/job/Forbidden-APIs/javadoc/
+The detailed documentation (based on nightly snapshots) can be found here: http://jenkins.thetaphi.de/job/Forbidden-APIs/javadoc/
