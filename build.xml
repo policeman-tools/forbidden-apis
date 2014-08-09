@@ -127,6 +127,7 @@
   
   <target name="-init" depends="-install.ivy">
     <ivy:resolve log="${ivy.logging}"/>
+    <local name="ivy.version-message"/>
     <condition property="ivy.version-message"
       value="The correct Apache Ivy version ${ivy.version} is installed."
       else="You have installed a different Apache Ivy version (${ivy.version}) in your ANT classpath than the expected one (${ivy.install.version}). The build may fail!"
@@ -325,6 +326,7 @@
   
   <target name="sign-artifacts" depends="dist" unless="isSnapshot">
     <delete failonerror="false" dir="dist" includes="**/*.asc"/>
+    <local name="gpg.passphrase"/>
 
     <input message="Enter GPG keystore password: &gt;" addproperty="gpg.passphrase">
       <handler classname="org.apache.tools.ant.input.SecureInputHandler" />
@@ -395,6 +397,7 @@
   
   <target name="-antunit-fake-pom">
     <mkdir dir="build/test"/>
+    <local name="path.build.xslstr"/>
     <pathconvert property="path.build.xslstr" pathsep="|" refid="path.build"/>
     <xslt in="src/test/antunit/dummy.xml" out="build/test/fake-pom.xml"
       style="src/test/antunit/pom-generator.xsl" force="true"
