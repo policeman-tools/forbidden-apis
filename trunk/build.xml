@@ -70,6 +70,8 @@
   <property name="ivy.logging" value="download-only"/>
 
   <property name="signatures.dir" location="src/main/resources/de/thetaphi/forbiddenapis/signatures"/>
+  <property name="maven-build-dir" location="build/maven"/>
+  <property name="documentation-dir" location="build/docs"/>
 
   <!-- define Maven coordinates -->
   <property name="groupId" value="de.thetaphi" />
@@ -149,12 +151,6 @@
     <property name="installed.tasks" value="true"/>
   </target>
 
-  <target name="-uptodate"> 
-    <uptodate property="maven-descriptor.uptodate" targetfile="build/main/META-INF/maven/plugin.xml">
-      <srcfiles dir="src/main"/>
-    </uptodate>
-  </target>
-
   <macrodef name="compile">
     <attribute name="module"/>
     <attribute name="classpathref"/>
@@ -198,8 +194,8 @@
   </target>
 
   <target name="-maven-setup" depends="-install-tasks">
-    <mkdir dir="build/maven"/>
-    <copy todir="build/maven" encoding="${build.encoding}" outputencoding="${build.encoding}">
+    <mkdir dir="${maven-build-dir}"/>
+    <copy todir="${maven-build-dir}" encoding="${build.encoding}" outputencoding="${build.encoding}">
       <fileset dir="src/main/maven" includes="*.template"/>
       <filterset>
         <filter token="NAME" value="${ant.project.name}"/>
@@ -210,25 +206,31 @@
       </filterset>
       <globmapper from="*.template" to="*"/>
     </copy>
-    <property name="maven.deploy.pom" location="build/maven/pom-deploy.xml"/>
+    <property name="maven.deploy.pom" location="${maven-build-dir}/pom-deploy.xml"/>
     <artifact:pom id="maven.deploy.pom" file="${maven.deploy.pom}"/>
   </target>
   
-  <target name="maven-descriptor" depends="compile,-maven-setup,-install-tasks,-uptodate" unless="maven-descriptor.uptodate" description="Creates the Maven Plugin Descriptor">
+  <target name="-maven-uptodate"> 
+    <uptodate property="maven-descriptor.uptodate" targetfile="build/main/META-INF/maven/plugin.xml">
+      <srcfiles dir="src/main"/>
+    </uptodate>
+  </target>
+
+  <target name="maven-descriptor" depends="compile,-maven-setup,-install-tasks,-maven-uptodate" unless="maven-descriptor.uptodate" description="Creates the Maven Plugin Descriptor">
     <!-- with fork=false this somehow takes endless to download the internet, so let's fork - and slow down in an other way (startup) -->
-    <artifact:mvn pom="build/maven/pom-build.xml" mavenVersion="${maven.version}" failonerror="true" fork="true">
+    <artifact:mvn pom="${maven-build-dir}/pom-build.xml" mavenVersion="${maven.version}" failonerror="true" fork="true">
       <arg value="plugin:helpmojo"/>
       <arg value="plugin:descriptor"/>
       <arg value="plugin:xdoc"/>
       <sysproperty key="injected.src.dir" file="src/main/java"/>
       <sysproperty key="injected.target.dir" file="build/main"/>
-      <sysproperty key="injected.build.dir" file="build/maven"/>
+      <sysproperty key="injected.build.dir" file="${maven-build-dir}"/>
       <syspropertyset>
         <propertyref regex=".*\.version"/>
         <mapper type="glob" from="*" to="injected.*"/>
       </syspropertyset>
     </artifact:mvn>
-    <javac includeantruntime="false" srcdir="build/maven/generated-sources/plugin" destdir="build/main"
+    <javac includeantruntime="false" srcdir="${maven-build-dir}/generated-sources/plugin" destdir="build/main"
       source="1.5" target="1.5" debug="true" deprecation="false" encoding="${build.encoding}" classpathref="path.build"/>
   </target>
   
@@ -247,16 +249,16 @@
   </target>
   
   <target name="documentation" depends="maven-descriptor,-get-cli-help">
-    <mkdir dir="build/maven/docs"/>
-    <xslt basedir="build/maven/generated-site/xdoc" includes="*.xml" destdir="build/maven/docs" style="src/main/maven/xdoc2html.xsl" force="false">
+    <mkdir dir="${documentation-dir}"/>
+    <xslt basedir="${maven-build-dir}/generated-site/xdoc" includes="*.xml" destdir="${documentation-dir}" style="src/main/maven/xdoc2html.xsl" force="false">
       <mapper type="glob" from="*.xml" to="*.html"/>
     </xslt>
-    <xslt in="build/main/META-INF/maven/${groupId}/${artifactId}/plugin-help.xml" out="build/maven/docs/index.html" style="src/main/maven/docindex.xsl" force="false">
+    <xslt in="build/main/META-INF/maven/${groupId}/${artifactId}/plugin-help.xml" out="${documentation-dir}/index.html" style="src/main/maven/docindex.xsl" force="false">
       <param name="clihelp" expression="${cli-help}"/>
     </xslt>
     <mkdir dir="dist"/>
     <zip destfile="${documentation-file}" encoding="${build.encoding}">
-      <zipfileset dir="build/maven/docs" prefix="${artifactId}-${version}"/>
+      <zipfileset dir="${documentation-dir}" prefix="${artifactId}-${version}"/>
     </zip>
   </target>
 
