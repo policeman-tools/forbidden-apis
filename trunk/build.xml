@@ -226,7 +226,7 @@
       <arg value="plugin:descriptor"/>
       <arg value="plugin:xdoc"/>
       <sysproperty key="injected.src.dir" file="src/main/java"/>
-      <sysproperty key="injected.target.dir" file="build/main"/>
+      <sysproperty key="injected.output.dir" file="build/main"/>
       <sysproperty key="injected.build.dir" file="${maven-build-dir}"/>
       <syspropertyset>
         <propertyref regex=".*\.version"/>
