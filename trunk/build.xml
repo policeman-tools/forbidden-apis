@@ -72,6 +72,8 @@
   <property name="signatures.dir" location="src/main/resources/de/thetaphi/forbiddenapis/signatures"/>
   <property name="maven-build-dir" location="build/maven"/>
   <property name="documentation-dir" location="build/docs"/>
+  
+  <property name="cli-classname" value="de.thetaphi.forbiddenapis.CliMain"/>
 
   <!-- define Maven coordinates -->
   <property name="groupId" value="de.thetaphi" />
@@ -236,15 +238,20 @@
   
   <target name="-get-cli-help" depends="compile" unless="cli-help">
     <local name="-cli-help"/>
-    <java classname="de.thetaphi.forbiddenapis.CliMain" classpathref="path.run"
+    <java classname="${cli-classname}" classpathref="path.run"
       failonerror="true" fork="false" outputproperty="-cli-help">
       <!-- hack, to not exit with exitcode != 0 -->
       <sysproperty key="-CliMain-suppressExitCode" value="true"/>
     </java>
-    <!-- fix the line endings (cannot be done in java task directly! -->
+    <!-- fix the line endings & command line (cannot be done in java task directly! -->
     <loadresource property="cli-help">
       <string value="${-cli-help}"/>
-      <filterchain><fixcrlf eol="lf"/></filterchain>
+      <filterchain>
+        <fixcrlf eol="lf"/>
+        <tokenfilter>
+          <replacestring from=" ${cli-classname} " to=" -jar ${artifactId}-${version}.jar "/>
+        </tokenfilter>
+      </filterchain>
     </loadresource>
   </target>
   
@@ -281,7 +288,7 @@
         <attribute name="Implementation-Vendor" value="${groupId}"/>
         <attribute name="Implementation-Title" value="${artifactId}"/>
         <attribute name="Implementation-Version" value="${version}"/>
-        <attribute name="Main-Class" value="de.thetaphi.forbiddenapis.CliMain"/>
+        <attribute name="Main-Class" value="${cli-classname}"/>
       </manifest>
       <metainf dir="." includes="LICENSE.txt,NOTICE.txt,bundled-licenses/**"/>
     </jarjar>
