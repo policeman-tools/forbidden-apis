@@ -234,7 +234,8 @@
       </syspropertyset>
     </artifact:mvn>
     <javac includeantruntime="false" srcdir="${maven-build-dir}/generated-sources/plugin" destdir="build/main"
-      source="1.5" target="1.5" debug="true" deprecation="false" encoding="${build.encoding}" classpathref="path.build"/>
+      source="${jdk.version}" target="${jdk.version}" encoding="${build.encoding}" debug="${compile.debug}"
+      deprecation="${compile.deprecation}" classpathref="path.build"/>
   </target>
   
   <target name="-get-cli-help" depends="compile" unless="cli-help">
