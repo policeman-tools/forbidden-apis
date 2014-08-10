@@ -58,7 +58,10 @@
           <code>java -jar</code>
           <xsl:text>. This is the documentation of the CLI executable as printed by itsself:</xsl:text>
         </p>
-        <pre><xsl:value-of select="$clihelp"/></pre>
+        <pre>
+          <xsl:text>$ java -jar </xsl:text><xsl:value-of select="artifactId"/><xsl:text>-</xsl:text><xsl:value-of select="version"/><xsl:text>.jar --help&#10;</xsl:text>
+          <xsl:value-of select="$clihelp"/>
+        </pre>
       </body>
     </html>
   </xsl:template>
