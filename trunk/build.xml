@@ -242,8 +242,7 @@
     <local name="-cli-help"/>
     <java classname="${cli-classname}" classpathref="path.run"
       failonerror="true" fork="false" outputproperty="-cli-help">
-      <!-- hack, to not exit with exitcode != 0 -->
-      <sysproperty key="-CliMain-suppressExitCode" value="true"/>
+      <arg value="--help"/>
     </java>
     <!-- fix the line endings & command line (cannot be done in java task directly! -->
     <loadresource property="cli-help">
