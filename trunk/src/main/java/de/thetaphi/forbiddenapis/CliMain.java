@@ -121,37 +121,15 @@ public final class CliMain {
     try {
       this.cmd = new PosixParser().parse(options, args);
       if (cmd.hasOption(helpOpt.getLongOpt())) {
-        throw new org.apache.commons.cli.ParseException("");
+        printHelp(options);
+        throw new ExitException(EXIT_SUCCESS);
       }
       if (cmd.hasOption(versionOpt.getLongOpt())) {
         printVersion();
         throw new ExitException(EXIT_SUCCESS);
       }
     } catch (org.apache.commons.cli.ParseException pe) {
-      final HelpFormatter formatter = new HelpFormatter();
-      String cmdline = "java " + getClass().getName();
-      try {
-        final URLConnection conn = getClass().getResource(getClass().getSimpleName() + ".class").openConnection();
-        if (conn instanceof JarURLConnection) {
-          final URL jarUrl = ((JarURLConnection) conn).getJarFileURL();
-          if ("file".equalsIgnoreCase(jarUrl.getProtocol())) {
-            final String cwd = new File(".").getCanonicalPath(), path = new File(jarUrl.toURI()).getCanonicalPath();
-            cmdline = "java -jar " + (path.startsWith(cwd) ? path.substring(cwd.length() + File.separator.length()) : path);
-          }
-        }
-      } catch (IOException ioe) {
-        // ignore, use default cmdline value
-      } catch (URISyntaxException use) {
-        // ignore, use default cmdline value
-      }
-      formatter.printHelp(cmdline + " [options]",
-        "Scans a set of class files for forbidden API usage.",
-        options,
-        String.format(Locale.ENGLISH,
-          "Exit codes: %d = SUCCESS, %d = forbidden API detected, %d = invalid command line, %d = unsupported JDK version, %d = other error (I/O,...)",
-          EXIT_SUCCESS, EXIT_VIOLATION, EXIT_ERR_CMDLINE, EXIT_UNSUPPORTED_JDK, EXIT_ERR_OTHER
-        )
-      );
+      printHelp(options);
       throw new ExitException(EXIT_ERR_CMDLINE);
     }
   }
@@ -174,6 +152,33 @@ public final class CliMain {
       "%s %s",
       pkg.getImplementationTitle(), pkg.getImplementationVersion()
     ));
+  }
+  
+  private void printHelp(Options options) {
+    final HelpFormatter formatter = new HelpFormatter();
+    String cmdline = "java " + getClass().getName();
+    try {
+      final URLConnection conn = getClass().getResource(getClass().getSimpleName() + ".class").openConnection();
+      if (conn instanceof JarURLConnection) {
+        final URL jarUrl = ((JarURLConnection) conn).getJarFileURL();
+        if ("file".equalsIgnoreCase(jarUrl.getProtocol())) {
+          final String cwd = new File(".").getCanonicalPath(), path = new File(jarUrl.toURI()).getCanonicalPath();
+          cmdline = "java -jar " + (path.startsWith(cwd) ? path.substring(cwd.length() + File.separator.length()) : path);
+        }
+      }
+    } catch (IOException ioe) {
+      // ignore, use default cmdline value
+    } catch (URISyntaxException use) {
+      // ignore, use default cmdline value
+    }
+    formatter.printHelp(cmdline + " [options]",
+      "Scans a set of class files for forbidden API usage.",
+      options,
+      String.format(Locale.ENGLISH,
+        "Exit codes: %d = SUCCESS, %d = forbidden API detected, %d = invalid command line, %d = unsupported JDK version, %d = other error (I/O,...)",
+        EXIT_SUCCESS, EXIT_VIOLATION, EXIT_ERR_CMDLINE, EXIT_UNSUPPORTED_JDK, EXIT_ERR_OTHER
+      )
+    );
   }
   
   public void run() throws ExitException {
@@ -318,7 +323,7 @@ public final class CliMain {
       if (e.getMessage() != null) {
         System.err.println("ERROR: " + e.getMessage());
       }
-      if (e.exitCode != 0 && !Boolean.parseBoolean(System.getProperty("-CliMain-suppressExitCode", "false"))) {
+      if (e.exitCode != 0) {
         System.exit(e.exitCode);
       }
     }
