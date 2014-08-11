@@ -497,5 +497,5 @@
     </artifact:mvn>
   </target>
 
-  <target name="jenkins" depends="clean,dist,test,documentation,-stage.snapshots" description="Runs Jenkins Nightly"/>
+  <target name="jenkins" depends="remove-local-artifacts,clean,dist,test,documentation,-stage.snapshots" description="Runs Jenkins Nightly"/>
 </project>
