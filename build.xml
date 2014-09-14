@@ -388,8 +388,11 @@
     </artifact:deploy>
   </target>
 
-  <target name="test" depends="-check-myself,check-bundled-signatures,-antunit,-tests-unsupported" description="Run tests"/>
+  <target name="test" depends="-check-myself,-check-bundled-signatures,-antunit,-runtime-unsupported" description="Run tests"/>
 
+  <target name="check-bundled-signatures" depends="-check-bundled-signatures,-runtime-unsupported"
+    description="Checks bundled signatures file corresponding to the current JVM. Run after every update!"/>
+    
   <target name="-install-forbiddenapi-task" depends="compile" unless="installed.forbiddenapi-task">
     <taskdef name="forbiddenapis" classname="de.thetaphi.forbiddenapis.AntTask" classpathref="path.run"/>
     <property name="installed.forbiddenapi-task" value="true"/>
@@ -411,8 +414,7 @@
     </forbiddenapis>
   </target>
 
-  <target name="check-bundled-signatures" depends="-install-forbiddenapi-task" if="tests.supported"
-    description="Checks bundled signatures file corresponding to the current JVM. Run after every update!">
+  <target name="-check-bundled-signatures" depends="-install-forbiddenapi-task" if="tests.supported">
     <forbiddenapis failOnUnsupportedJava="true" classpathref="path.tools-run" ignoreEmptyFileset="true">
       <bundledsignatures name="jdk-unsafe-${build.java.runtime}"/>
       <bundledsignatures name="jdk-deprecated-${build.java.runtime}"/>
@@ -462,8 +464,8 @@
     </au:antunit>
   </target>
   
-  <target name="-tests-unsupported" unless="tests.supported">
-    <echo level="warn" message="Test suite was not executed, because the used JVM version is unsupported: ${build.java.info}"/>
+  <target name="-runtime-unsupported" unless="tests.supported">
+    <echo level="warn" message="Test suite / bundled signatures checker was not executed, because the used JVM version is unsupported: ${build.java.info}"/>
   </target>
   
   <target name="generate-deprecated" depends="compile-tools" description="Generates deprecated API signature lists for current JDK">
