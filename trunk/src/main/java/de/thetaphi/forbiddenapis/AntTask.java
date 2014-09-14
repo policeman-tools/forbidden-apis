@@ -23,6 +23,7 @@ import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.Task;
 import org.apache.tools.ant.types.Path;
+import org.apache.tools.ant.types.FileList;
 import org.apache.tools.ant.types.FileSet;
 import org.apache.tools.ant.types.Reference;
 import org.apache.tools.ant.types.Resource;
@@ -55,6 +56,7 @@ public final class AntTask extends Task {
   private boolean internalRuntimeForbidden = false;
   private boolean restrictClassFilename = true;
   private boolean failOnMissingClasses = true;
+  private boolean ignoreEmptyFileset = false;
     
   @Override
   public void execute() throws BuildException {
@@ -112,12 +114,9 @@ public final class AntTask extends Task {
         }
         
         @SuppressWarnings("unchecked")
-        Iterator<Resource> iter = (Iterator<Resource>) apiSignatures.iterator();
+        final Iterator<Resource> iter = (Iterator<Resource>) apiSignatures.iterator();
         while (iter.hasNext()) {
           final Resource r = iter.next();
-          if (!r.isExists()) { 
-            throw new BuildException("Signatures file does not exist: " + r);
-          }
           if (r instanceof StringResource) {
             final String s = ((StringResource) r).getValue();
             if (s != null && s.trim().length() > 0) {
@@ -142,23 +141,28 @@ public final class AntTask extends Task {
       log("Loading classes to check...", Project.MSG_INFO);
       try {
         @SuppressWarnings("unchecked")
-        Iterator<Resource> iter = (Iterator<Resource>) classFiles.iterator();
-        if (!iter.hasNext()) {
-          throw new BuildException("There is no <fileset/> given or the fileset does not contain any class files to check.");
-        }
+        final Iterator<Resource> iter = (Iterator<Resource>) classFiles.iterator();
+        boolean foundClass = false;
         while (iter.hasNext()) {
           final Resource r = iter.next();
           final String name = r.getName();
           if (restrictClassFilename && name != null && !name.endsWith(".class")) {
             continue;
           }
-          if (!r.isExists()) { 
-            throw new BuildException("Class file does not exist: " + r);
-          }
           checker.addClassToCheck(r.getInputStream());
+          foundClass = true;
+        }
+        if (!foundClass) {
+          if (ignoreEmptyFileset) {
+            log("There is no <fileset/> or other resource collection given, or the collection does not contain any class files to check.", Project.MSG_WARN);
+            log("Scanned 0 class files.", Project.MSG_INFO);
+            return;
+          } else {
+            throw new BuildException("There is no <fileset/> or other resource collection given, or the collection does not contain any class files to check.");
+          }
         }
       } catch (IOException ioe) {
-        throw new BuildException("Failed to load one of the given class files:" + ioe);
+        throw new BuildException("Failed to load one of the given class files: " + ioe);
       }
 
       log("Scanning for API signatures and dependencies...", Project.MSG_INFO);
@@ -200,6 +204,22 @@ public final class AntTask extends Task {
     fs.setProject(getProject());
     apiSignatures.add(fs);
     return fs;
+  }
+
+  /** List of files with API signatures as <signaturesFileList/> nested element */
+  public FileList createSignaturesFileList() {
+    final FileList fl = new FileList();
+    fl.setProject(getProject());
+    apiSignatures.add(fl);
+    return fl;
+  }
+
+  /** Single file with API signatures as <signaturesFile/> nested element */
+  public FileResource createSignaturesFile() {
+    final FileResource fr = new FileResource();
+    fr.setProject(getProject());
+    apiSignatures.add(fr);
+    return fr;
   }
 
   public BundledSignaturesType createBundledSignatures() {
@@ -276,6 +296,13 @@ public final class AntTask extends Task {
    */
   public void setRestrictClassFilename(boolean restrictClassFilename) {
     this.restrictClassFilename = restrictClassFilename;
+  }
+
+  /** Ignore empty fileset/resource collection and print a warning instead.
+   * Defaults to {@code false}.
+   */
+  public void setIgnoreEmptyFileSet(boolean ignoreEmptyFileset) {
+    this.ignoreEmptyFileset = ignoreEmptyFileset;
   }
 
 }
