@@ -37,4 +37,24 @@
     <au:assertLogContains level="error" text="java.lang.String#substring(int,int) [You are crazy that you disallow substrings]"/> 
   </target>
   
+  <target name="testFileList">
+    <au:expectfailure expectedMessage="Check for forbidden API calls failed, see log">
+      <forbiddenapis classpathref="path.run">
+        <fileset refid="main.classes"/>
+        <signaturesFilelist dir="." files="signatures1.txt"/>
+      </forbiddenapis>
+    </au:expectfailure>
+    <au:assertLogContains level="error" text="java.lang.String#substring(int,int) [You are crazy that you disallow substrings]"/> 
+  </target>
+  
+  <target name="testFileResource">
+    <au:expectfailure expectedMessage="Check for forbidden API calls failed, see log">
+      <forbiddenapis classpathref="path.run">
+        <fileset refid="main.classes"/>
+        <signaturesFile file="signatures1.txt"/>
+      </forbiddenapis>
+    </au:expectfailure>
+    <au:assertLogContains level="error" text="java.lang.String#substring(int,int) [You are crazy that you disallow substrings]"/> 
+  </target>
+  
 </project>

@@ -19,7 +19,7 @@
   <target name="testInternalRuntimeForbidden">
     <au:expectfailure expectedMessage="Check for forbidden API calls failed, see log">
       <forbiddenapis internalRuntimeForbidden="true" failOnMissingClasses="false">
-        <fileset file="OracleInternalRuntime.class"/>
+        <file file="OracleInternalRuntime.class"/>
       </forbiddenapis>
     </au:expectfailure>
     <au:assertLogContains level="error" text="sun.misc.BASE64Encoder [non-public internal runtime class]"/> 
