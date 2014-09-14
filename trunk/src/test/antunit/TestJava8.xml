@@ -19,7 +19,7 @@
   <target name="testDefaultMethodAndClosures">
     <au:expectfailure expectedMessage="Check for forbidden API calls failed, see log">
       <forbiddenapis failOnMissingClasses="false">
-        <fileset file="Java8Closures.class"/>
+        <file file="Java8Closures.class"/>
         java.io.Closeable @ Police alarm!
         java.lang.StringBuilder @ Police alarm!
         java.lang.Integer#compareTo(java.lang.Integer) @ Closure alarm!
