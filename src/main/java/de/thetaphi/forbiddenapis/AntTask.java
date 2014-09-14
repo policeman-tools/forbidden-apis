@@ -179,7 +179,6 @@ public final class AntTask extends Task {
   
   /** Set of class files to check */
   public void add(ResourceCollection rc) {
-    classFiles.setProject(getProject());
     classFiles.add(rc);
   }
   
@@ -190,20 +189,13 @@ public final class AntTask extends Task {
     fs.setDir(dir);
     // needed if somebody sets restrictClassFilename=false:
     fs.setIncludes("**/*.class");
-    classFiles.setProject(getProject());
     classFiles.add(fs);
   }
   
   private <T extends ResourceCollection> T addSignaturesResource(T res) {
     ((ProjectComponent) res).setProject(getProject());
-    apiSignatures.setProject(getProject());
     apiSignatures.add(res);
     return res;
-  }
-  
-  /** A file with API signatures signaturesFile= attribute */
-  public void setSignaturesFile(File file) {
-    addSignaturesResource(new FileResource(file));
   }
   
   /** Set of files with API signatures as <signaturesFileSet/> nested element */
@@ -221,6 +213,16 @@ public final class AntTask extends Task {
     return addSignaturesResource(new FileResource());
   }
 
+  /** A file with API signatures signaturesFile= attribute */
+  public void setSignaturesFile(File file) {
+    createSignaturesFile().setFile(file);
+  }
+  
+  /** Support for API signatures list as nested text */
+  public void addText(String text) {
+    addSignaturesResource(new StringResource(text));
+  }
+
   public BundledSignaturesType createBundledSignatures() {
     final BundledSignaturesType s = new BundledSignaturesType();
     s.setProject(getProject());
@@ -230,20 +232,9 @@ public final class AntTask extends Task {
 
   /** A bundled signatures name */
   public void setBundledSignatures(String name) {
-    final BundledSignaturesType s = new BundledSignaturesType();
-    s.setProject(getProject());
-    s.setName(name);
-    bundledSignatures.add(s);
+    createBundledSignatures().setName(name);
   }
   
-  /** Support for API signatures list as nested text */
-  public void addText(String text) {
-    final Resource res = new StringResource(text);
-    res.setProject(getProject());
-    apiSignatures.setProject(getProject());
-    apiSignatures.add(res);
-  }
-
   /** Classpath as classpath= attribute */
   public void setClasspath(Path classpath) {
     createClasspath().append(classpath);
