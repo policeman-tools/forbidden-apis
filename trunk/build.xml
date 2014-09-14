@@ -25,30 +25,50 @@
     </condition>
   </fail>
 
+  <fail message="Minimum supported Java version is 1.5.">
+    <condition>
+      <not><available classname="java.lang.StringBuilder"/></not>
+    </condition>
+  </fail>
+
+  <!-- temporary for cleanup of java.specification.version, to be in format "x.y" -->
+  <loadresource property="-cleaned.specification.version">
+    <propertyresource name="java.specification.version"/>
+    <filterchain>
+      <tokenfilter>
+        <filetokenizer/>
+        <replaceregex pattern="^(\d+\.\d+)(|\..*)$" replace="\1" flags="s"/>
+      </tokenfilter>
+    </filterchain>
+  </loadresource>
+
   <!-- 
     the propery "ant.java.version" is not always correct, depending on used ANT version.
     E.g. Java 8 is only detected in ANT 1.8.3+.
-    Add newer Java version checks at beginning,
-    because ANT will nevert override existing properties!
+    
+    We want to detect here only a limited set of versions and placed in normalized form in ${build.java.runtime},
+    every other version is normalized to "unknown":
+    - To define a target to be only run on a specific version, add <equals/> condition to one of the supplied versions.
+    - To explicitely exclude specific versions (and unknown ones), add a condition to disallow "unknown" and some versions like "1.9"!
    -->
-  <condition property="build.java.runtime" value="1.8">
-    <hasmethod classname="java.util.Collections" method="emptySortedSet"/>
+  <condition property="build.java.runtime" value="${-cleaned.specification.version}" else="unknown">
+    <or>
+      <equals arg1="${-cleaned.specification.version}" arg2="1.5"/>
+      <equals arg1="${-cleaned.specification.version}" arg2="1.6"/>
+      <equals arg1="${-cleaned.specification.version}" arg2="1.7"/>
+      <equals arg1="${-cleaned.specification.version}" arg2="1.8"/>
+    </or>
   </condition>
-  <condition property="build.java.runtime" value="1.7">
-    <hasmethod classname="java.lang.Throwable" method="getSuppressed"/>
-  </condition>
-  <condition property="build.java.runtime" value="1.6">
-    <hasmethod classname="java.lang.String" method="isEmpty"/>
-  </condition>
-  <condition property="build.java.runtime" value="1.5">
-    <available classname="java.lang.StringBuilder"/>
-  </condition>
-  <fail message="Minimum supported Java version is 1.5." unless="build.java.runtime"/>
-
+  
+  <property name="build.java.info" value="${java.version} / JVM: ${java.vm.name} / Vendor: ${java.vendor} / OS: ${os.name} (${os.version})"/>
+  
   <!-- workaround for https://issues.apache.org/bugzilla/show_bug.cgi?id=53347 -->
   <condition property="build.compiler" value="javac1.7">
     <and>
-      <equals arg1="${build.java.runtime}" arg2="1.8"/>
+      <or>
+        <equals arg1="${build.java.runtime}" arg2="1.8"/>
+        <equals arg1="${build.java.runtime}" arg2="unknown"/>
+      </or>
       <or>
         <antversion exactly="1.8.3" />
         <antversion exactly="1.8.4" />
@@ -126,6 +146,8 @@
   </target>
   
   <target name="-init" depends="-install.ivy">
+    <echo level="info" message="Detected Java runtime major version: ${build.java.runtime}"/>
+    <echo level="info" message="Java runtime: ${build.java.info}"/>
     <ivy:resolve log="${ivy.logging}"/>
     <local name="ivy.version-message"/>
     <condition property="ivy.version-message"
@@ -134,7 +156,7 @@
     >
       <equals arg1="${ivy.version}" arg2="${ivy.install.version}"/>
     </condition>
-    <echo taskname="check-ivy" message="${ivy.version-message}"/>
+    <echo level="warn" taskname="check-ivy" message="${ivy.version-message}"/>
     <ivy:cachepath pathid="path.build" conf="build" log="${ivy.logging}"/>
     <ivy:cachepath pathid="path.test" conf="test" log="${ivy.logging}"/>
     <path id="path.run">
@@ -366,7 +388,7 @@
     </artifact:deploy>
   </target>
 
-  <target name="test" depends="-check-myself,-antunit" description="Run tests"/>
+  <target name="test" depends="-check-myself,-antunit,-tests-unsupported" description="Run tests"/>
 
   <target name="-install-forbiddenapi-task" depends="compile" unless="installed.forbiddenapi-task">
     <taskdef name="forbiddenapis" classname="de.thetaphi.forbiddenapis.AntTask" classpathref="path.run"/>
@@ -431,8 +453,12 @@
     </au:antunit>
   </target>
   
+  <target name="-tests-unsupported" unless="tests.supported">
+    <echo level="warn" message="Test suite was not executed, because the used JVM version is unsupported: ${build.java.info}"/>
+  </target>
+  
   <target name="generate-deprecated" depends="compile-tools" description="Generates deprecated API signature lists for current JDK">
-    <fail message="Regenerating the deprecated signatures files need stock Oracle/Sun JDK, but your Java version or operating system is unsupported: ${java.version} / JVM: ${java.vm.name} / Vendor: ${java.vendor} / OS: ${os.name} (${os.version})">
+    <fail message="Regenerating the deprecated signatures files need stock Oracle/Sun JDK, but your Java version or operating system is unsupported: ${build.java.info}">
       <condition>
         <not>
           <and>
@@ -447,7 +473,7 @@
       </condition>
     </fail>
     <mkdir dir="${signatures.dir}"/>
-    <echo message="Building deprecated signatures for JDK ${build.java.runtime}:"/>
+    <echo level="info" message="Building deprecated signatures for JDK ${build.java.runtime}:"/>
     <java fork="false" classpathref="path.tools-run" classname="de.thetaphi.forbiddenapis.DeprecatedGen">
       <arg value="${build.java.runtime}"/>
       <arg file="${java.home}/lib/rt.jar"/>
@@ -460,12 +486,12 @@
       <available classname="sun.misc.BASE64Encoder"/>
     </condition>
     <condition property="-gen.jdk8">
-      <equals arg1="${build.java.runtime}" arg2="1.8"/>
+      <hasmethod classname="java.util.Collections" method="emptySortedSet"/>
     </condition>
   </target>
   
   <target name="-generate-test-classes-sunmisc" if="-gen.sunmisc">
-    <echo message="Generating test classes using sun.misc internal APIs (needs Oracle Java):"/>
+    <echo level="info" message="Generating test classes using sun.misc internal APIs (needs Oracle Java):"/>
     <delete dir="src/test/antunit" includes="Oracle*.class"/>
     <javac includeantruntime="false" srcdir="src/test/antunit" destdir="src/test/antunit" includes="Oracle*.java"
       nowarn="true" source="1.5" target="1.5" debug="true" deprecation="false" encoding="${build.encoding}">
@@ -475,14 +501,14 @@
   </target>
   
   <target name="-generate-test-classes-jdk5">
-    <echo message="Generating test classes for Java 5:"/>
+    <echo level="info" message="Generating test classes for Java 5:"/>
     <delete dir="src/test/antunit" includes="Java5*.class"/>
     <javac includeantruntime="false" srcdir="src/test/antunit" destdir="src/test/antunit" includes="Java5*.java"
       nowarn="true" source="1.5" target="1.5" debug="true" deprecation="false" encoding="${build.encoding}"/>
   </target>
   
   <target name="-generate-test-classes-jdk8" if="-gen.jdk8">
-    <echo message="Generating test classes for Java 8:"/>
+    <echo level="info" message="Generating test classes for Java 8:"/>
     <delete dir="src/test/antunit" includes="Java8*.class"/>
     <javac includeantruntime="false" srcdir="src/test/antunit" destdir="src/test/antunit" includes="Java8*.java"
       nowarn="true" source="1.8" target="1.8" debug="true" deprecation="false" encoding="${build.encoding}"/>
