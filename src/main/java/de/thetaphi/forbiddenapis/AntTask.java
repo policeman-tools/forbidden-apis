@@ -21,6 +21,7 @@ package de.thetaphi.forbiddenapis;
 import org.apache.tools.ant.AntClassLoader;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Project;
+import org.apache.tools.ant.ProjectComponent;
 import org.apache.tools.ant.Task;
 import org.apache.tools.ant.types.Path;
 import org.apache.tools.ant.types.FileList;
@@ -178,6 +179,7 @@ public final class AntTask extends Task {
   
   /** Set of class files to check */
   public void add(ResourceCollection rc) {
+    classFiles.setProject(getProject());
     classFiles.add(rc);
   }
   
@@ -188,38 +190,35 @@ public final class AntTask extends Task {
     fs.setDir(dir);
     // needed if somebody sets restrictClassFilename=false:
     fs.setIncludes("**/*.class");
+    classFiles.setProject(getProject());
     classFiles.add(fs);
+  }
+  
+  private <T extends ResourceCollection> T addSignaturesResource(T res) {
+    ((ProjectComponent) res).setProject(getProject());
+    apiSignatures.setProject(getProject());
+    apiSignatures.add(res);
+    return res;
   }
   
   /** A file with API signatures signaturesFile= attribute */
   public void setSignaturesFile(File file) {
-    final Resource res = new FileResource(file);
-    res.setProject(getProject());
-    apiSignatures.add(res);
+    addSignaturesResource(new FileResource(file));
   }
   
   /** Set of files with API signatures as <signaturesFileSet/> nested element */
   public FileSet createSignaturesFileSet() {
-    final FileSet fs = new FileSet();
-    fs.setProject(getProject());
-    apiSignatures.add(fs);
-    return fs;
+    return addSignaturesResource(new FileSet());
   }
 
   /** List of files with API signatures as <signaturesFileList/> nested element */
   public FileList createSignaturesFileList() {
-    final FileList fl = new FileList();
-    fl.setProject(getProject());
-    apiSignatures.add(fl);
-    return fl;
+    return addSignaturesResource(new FileList());
   }
 
   /** Single file with API signatures as <signaturesFile/> nested element */
   public FileResource createSignaturesFile() {
-    final FileResource fr = new FileResource();
-    fr.setProject(getProject());
-    apiSignatures.add(fr);
-    return fr;
+    return addSignaturesResource(new FileResource());
   }
 
   public BundledSignaturesType createBundledSignatures() {
@@ -241,6 +240,7 @@ public final class AntTask extends Task {
   public void addText(String text) {
     final Resource res = new StringResource(text);
     res.setProject(getProject());
+    apiSignatures.setProject(getProject());
     apiSignatures.add(res);
   }
 
