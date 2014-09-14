@@ -388,7 +388,7 @@
     </artifact:deploy>
   </target>
 
-  <target name="test" depends="-check-myself,-antunit,-tests-unsupported" description="Run tests"/>
+  <target name="test" depends="-check-myself,check-bundled-signatures,-antunit,-tests-unsupported" description="Run tests"/>
 
   <target name="-install-forbiddenapi-task" depends="compile" unless="installed.forbiddenapi-task">
     <taskdef name="forbiddenapis" classname="de.thetaphi.forbiddenapis.AntTask" classpathref="path.run"/>
@@ -408,6 +408,15 @@
     </forbiddenapis>
     <forbiddenapis internalRuntimeForbidden="true" failOnUnsupportedJava="false" bundledSignatures="jdk-system-out" classpathref="path.run">
       <fileset dir="build/main" excludes="de/thetaphi/forbiddenapis/CliMain.class"/>
+    </forbiddenapis>
+  </target>
+
+  <target name="check-bundled-signatures" depends="-install-forbiddenapi-task" if="tests.supported"
+    description="Checks bundled signatures file corresponding to the current JVM. Run after every update!">
+    <forbiddenapis failOnUnsupportedJava="true" classpathref="path.tools-run" ignoreEmptyFileset="true">
+      <bundledsignatures name="jdk-unsafe-${build.java.runtime}"/>
+      <bundledsignatures name="jdk-deprecated-${build.java.runtime}"/>
+      <bundledsignatures name="jdk-system-out"/>
     </forbiddenapis>
   </target>
 
