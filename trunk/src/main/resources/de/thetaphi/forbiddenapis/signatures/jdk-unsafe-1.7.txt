@@ -14,6 +14,7 @@
 
 # These methods and classes should not be used by server classes (unsafe, no charset, no locale,...):
 
-# We only include 1.6 for now.
-# TODO: Scan Java 7 API for additional locale/charset/... violations!
 @includeBundled jdk-unsafe-1.6
+
+@defaultMessage Uses default charset
+java.util.Scanner#<init>(java.nio.file.Path)
