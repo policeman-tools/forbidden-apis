@@ -49,21 +49,23 @@
       <artifact:mvn pom="${antunit.fake-pom}" mavenVersion="${maven.version}" failonerror="true" fork="true">
         <arg value="${groupId}:${artifactId}:${version}:check"/>
         <syspropertyset refid="injected-properties"/>
-        <sysproperty key="antunit.signatures" value="foo.bar.ForbiddenApis#testMethod()"/>
+        <sysproperty key="antunit.signatures" value="foo.bar.ForbiddenApis#testMethod()&#10;java.lang.String#forbiddenFoobarMethod()&#10;java.lang.String#forbiddenFoobarField"/>
         <sysproperty key="antunit.failOnUnresolvableSignatures" value="true"/>
       </artifact:mvn>
     </au:expectfailure>
-    <au:assertLogContains text="Parsing signatures failed: Loading of class foo.bar.ForbiddenApis failed: Not found"/> 
+    <au:assertLogContains text="Parsing signatures failed: Class 'foo.bar.ForbiddenApis' not found on classpath while parsing signature: foo.bar.ForbiddenApis#testMethod()"/> 
   </target>
   
   <target name="testPassOnUnresolveableSignaturesMaven2">
     <artifact:mvn pom="${antunit.fake-pom}" mavenVersion="${maven.version}" failonerror="true" fork="true">
       <arg value="${groupId}:${artifactId}:${version}:check"/>
       <syspropertyset refid="injected-properties"/>
-      <sysproperty key="antunit.signatures" value="foo.bar.ForbiddenApis#testMethod()"/>
+      <sysproperty key="antunit.signatures" value="foo.bar.ForbiddenApis#testMethod()&#10;java.lang.String#forbiddenFoobarMethod()&#10;java.lang.String#forbiddenFoobarField"/>
       <sysproperty key="antunit.failOnUnresolvableSignatures" value="false"/>
     </artifact:mvn>
-    <au:assertLogContains text="The class 'foo.bar.ForbiddenApis' referenced in a signature cannot be loaded, ignoring signature: foo.bar.ForbiddenApis#testMethod()"/> 
+    <au:assertLogContains text="Class 'foo.bar.ForbiddenApis' not found on classpath while parsing signature: foo.bar.ForbiddenApis#testMethod() [signature ignored]"/> 
+    <au:assertLogContains text="Method not found while parsing signature: java.lang.String#forbiddenFoobarMethod() [signature ignored]"/> 
+    <au:assertLogContains text="Field not found while parsing signature: java.lang.String#forbiddenFoobarField [signature ignored]"/> 
   </target>
   
   <target name="testMissingTargetVersion">
