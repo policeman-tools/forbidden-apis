@@ -83,9 +83,22 @@
       java.lang.String#forbiddenFoobarField @ should be ignored
       java.awt.Color @ Color is disallowed, thats not bad, because ANT has no colors... (this was just added to don't fail because of missing signatures)
     </forbiddenapis>
-    <au:assertLogContains text="Class 'foo.bar.ForbiddenApis' not found on classpath while parsing signature: foo.bar.ForbiddenApis#testMethod() [signature ignored]"/> 
-    <au:assertLogContains text="Method not found while parsing signature: java.lang.String#forbiddenFoobarMethod() [signature ignored]"/> 
-    <au:assertLogContains text="Field not found while parsing signature: java.lang.String#forbiddenFoobarField [signature ignored]"/> 
+    <au:assertLogContains level="warning" text="Class 'foo.bar.ForbiddenApis' not found on classpath while parsing signature: foo.bar.ForbiddenApis#testMethod() [signature ignored]"/> 
+    <au:assertLogContains level="warning" text="Method not found while parsing signature: java.lang.String#forbiddenFoobarMethod() [signature ignored]"/> 
+    <au:assertLogContains level="warning" text="Field not found while parsing signature: java.lang.String#forbiddenFoobarField [signature ignored]"/> 
+  </target>
+  
+  <target name="testDontFailOnMissingWithAttribute">
+    <forbiddenapis classpathref="path.run" failOnUnresolvableSignatures="false">
+      <fileset refid="main.classes"/>
+      foo.bar.ForbiddenApis#testMethod() @ should be ignored
+      java.lang.String#forbiddenFoobarMethod() @ should be ignored
+      java.lang.String#forbiddenFoobarField @ should be ignored
+      java.awt.Color @ Color is disallowed, thats not bad, because ANT has no colors... (this was just added to don't fail because of missing signatures)
+    </forbiddenapis>
+    <au:assertLogContains level="warning" text="Class 'foo.bar.ForbiddenApis' not found on classpath while parsing signature: foo.bar.ForbiddenApis#testMethod() [signature ignored]"/> 
+    <au:assertLogContains level="warning" text="Method not found while parsing signature: java.lang.String#forbiddenFoobarMethod() [signature ignored]"/> 
+    <au:assertLogContains level="warning" text="Field not found while parsing signature: java.lang.String#forbiddenFoobarField [signature ignored]"/> 
   </target>
   
 </project>
