@@ -5,6 +5,7 @@
 
 # This file contains all public, deprecated API signatures in Java version 1.5 (extracted from build 1.5.0_22).
 
+@ignoreUnresolvable
 @defaultMessage Deprecated in Java 1.5
 
 java.awt.BorderLayout#addLayoutComponent(java.lang.String,java.awt.Component)

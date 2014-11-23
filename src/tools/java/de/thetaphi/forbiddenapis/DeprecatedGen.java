@@ -54,6 +54,7 @@ public class DeprecatedGen implements Opcodes {
       .append("# This file contains all public, deprecated API signatures in Java version ").append(javaVersion)
         .append(" (extracted from build ").append(System.getProperty("java.version")).append(").").append(NL)
       .append(NL)
+      .append("@ignoreUnresolvable").append(NL)
       .append("@defaultMessage Deprecated in Java ").append(javaVersion).append(NL)
       .append(NL)
       .toString();
