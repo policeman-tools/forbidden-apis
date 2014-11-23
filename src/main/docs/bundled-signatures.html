@@ -1,0 +1,32 @@
+<html>
+<head>
+<META http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Bundled Signatures Documentation</title>
+</head>
+<body>
+<h1>Bundled Signatures Documentation</h1>
+
+<p>The JAR file contains the following signatures and can be used in Maven or Ant using <tt>&lt;bundledSignatures&gt;</tt>.
+All signatures are versioned against the specified JDK version: </p>
+
+<ul>
+
+<li><strong><tt>jdk-unsafe-*</tt>:</strong> Signatures
+of &quot;unsafe&quot; methods that use default charset, default locale, or default timezone. For server applications it is very
+stupid to call those methods, as the results will definitely not what the user wants
+(for Java <tt>*</tt> = 1.5, 1.6, 1.7, 1.8; Maven automatically adds the compile Java version).</li>
+
+<li><strong><tt>jdk-deprecated-*</tt>:</strong> This disallows all deprecated
+methods from the JDK (for Java <tt>*</tt> = 1.5, 1.6, 1.7, 1.8; Maven automatically adds the compile Java version).</li>
+
+<li><strong><tt>jdk-system-out</tt>:</strong> On server-side applications or libraries used by other programs, printing to
+<tt>System.out</tt> or <tt>System.err</tt> is discouraged and should be avoided (any java version, no specific version).</li>
+
+<li><strong><tt>commons-io-unsafe-*</tt>:</strong> If your application uses the famous <i>Apache Common-IO</i> library,
+this adds signatures of all methods that depend on default charset
+(for versions <tt>*</tt> = 1.0, 1.1, 1.2, 1.3, 1.4, 2.0, 2.1, 2.2, 2.3, 2.4).</li>
+
+</ul>
+
+</body>
+</html>
