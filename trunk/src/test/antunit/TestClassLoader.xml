@@ -17,14 +17,14 @@
 <project xmlns:au="antlib:org.apache.ant.antunit">
 
   <target name="testAntFreeClassLoader">
-    <au:expectfailure expectedMessage="Loading of class org.apache.tools.ant.Project failed: Not found">
+    <au:expectfailure expectedMessage="Parsing signatures failed: Class 'org.apache.tools.ant.Project' not found on classpath while parsing signature: org.apache.tools.ant.Project">
       <forbiddenapis>
         java.lang.String
         # ANT should not be available in classpath!
         org.apache.tools.ant.Project
       </forbiddenapis>
     </au:expectfailure>
-    <au:expectfailure expectedMessage="Loading of class org.apache.tools.ant.Project failed: Not found">
+    <au:expectfailure expectedMessage="Parsing signatures failed: Class 'org.apache.tools.ant.Project' not found on classpath while parsing signature: org.apache.tools.ant.Project">
       <forbiddenapis classpath="${antunit.testclasses}">
         java.lang.String
         # ANT should not be available in classpath, especially if we pass a custom one!

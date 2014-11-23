@@ -72,7 +72,7 @@ public abstract class Checker {
   final Set<File> bootClassPathJars;
   final Set<String> bootClassPathDirs;
   final ClassLoader loader;
-  final boolean internalRuntimeForbidden, failOnMissingClasses, failOnUnresolvableSignatures;
+  final boolean internalRuntimeForbidden, failOnMissingClasses, defaultFailOnUnresolvableSignatures;
   
   // key is the internal name (slashed):
   final Map<String,ClassSignatureLookup> classesToCheck = new HashMap<String,ClassSignatureLookup>();
@@ -90,11 +90,11 @@ public abstract class Checker {
   protected abstract void logWarn(String msg);
   protected abstract void logInfo(String msg);
   
-  public Checker(ClassLoader loader, boolean internalRuntimeForbidden, boolean failOnMissingClasses, boolean failOnUnresolvableSignatures) {
+  public Checker(ClassLoader loader, boolean internalRuntimeForbidden, boolean failOnMissingClasses, boolean defaultFailOnUnresolvableSignatures) {
     this.loader = loader;
     this.internalRuntimeForbidden = internalRuntimeForbidden;
     this.failOnMissingClasses = failOnMissingClasses;
-    this.failOnUnresolvableSignatures = failOnUnresolvableSignatures;
+    this.defaultFailOnUnresolvableSignatures = defaultFailOnUnresolvableSignatures;
     this.start = System.currentTimeMillis();
     
     boolean isSupportedJDK = false;
@@ -132,7 +132,7 @@ public abstract class Checker {
       // check if we can load runtime classes (e.g. java.lang.Object).
       // If this fails, we have a newer Java version than ASM supports:
       try {
-        isSupportedJDK = getClassFromClassLoader(Object.class.getName(), true).isRuntimeClass;
+        isSupportedJDK = getClassFromClassLoader(Object.class.getName()).isRuntimeClass;
       } catch (IllegalArgumentException iae) {
         isSupportedJDK = false;
       } catch (ClassNotFoundException cnfe) {
@@ -145,23 +145,19 @@ public abstract class Checker {
   }
   
   /** Reads a class (binary name) from the given {@link ClassLoader}. */
-  private ClassSignatureLookup getClassFromClassLoader(final String clazz, boolean throwCNFE) throws ClassNotFoundException {
+  private ClassSignatureLookup getClassFromClassLoader(final String clazz) throws ClassNotFoundException {
     final ClassSignatureLookup c;
     if (classpathClassCache.containsKey(clazz)) {
       c = classpathClassCache.get(clazz);
-      if (throwCNFE && c == null) {
-        throw new ClassNotFoundException("Loading of class " + clazz + " failed: Not found");
+      if (c == null) {
+        throw new ClassNotFoundException("Class '" + clazz + "' not found on classpath");
       }
     } else {
       try {
         final URL url = loader.getResource(clazz.replace('.', '/') + ".class");
         if (url == null) {
           classpathClassCache.put(clazz, null);
-          if (throwCNFE) {
-            throw new ClassNotFoundException("Loading of class " + clazz + " failed: Not found");
-          } else {
-            return null;
-          }
+          throw new ClassNotFoundException("Class '" + clazz + "' not found on classpath");
         }
         boolean isRuntimeClass = false;
         final URLConnection conn = url.openConnection();
@@ -196,18 +192,22 @@ public abstract class Checker {
         }
       } catch (IOException ioe) {
         classpathClassCache.put(clazz, null);
-        if (throwCNFE) {
-          throw new ClassNotFoundException("Loading of class " + clazz + " failed.", ioe);
-        } else {
-          return null;
-        }
+        throw new ClassNotFoundException("I/O error while loading of class '" + clazz + "'", ioe);
       }
     }
     return c;
   }
+  
+  private void reportParseFailed(boolean failOnUnresolvableSignatures, String message, String signature) throws ParseException {
+    if (failOnUnresolvableSignatures) {
+      throw new ParseException(String.format(Locale.ENGLISH, "%s while parsing signature: %s", message, signature));
+    } else {
+      logWarn(String.format(Locale.ENGLISH, "%s while parsing signature: %s [signature ignored]", message, signature));
+    }
+  }
  
   /** Adds the method signature to the list of disallowed methods. The Signature is checked against the given ClassLoader. */
-  private void addSignature(final String line, final String defaultMessage) throws ParseException {
+  private void addSignature(final String line, final String defaultMessage, final boolean failOnUnresolvableSignatures) throws ParseException {
     final String clazz, field, signature, message;
     final Method method;
     int p = line.indexOf('@');
@@ -249,16 +249,10 @@ public abstract class Checker {
     // check class & method/field signature, if it is really existent (in classpath), but we don't really load the class into JVM:
     final ClassSignatureLookup c;
     try {
-      c = getClassFromClassLoader(clazz, failOnUnresolvableSignatures);
-      if (c == null) {
-        logWarn(String.format(Locale.ENGLISH,
-          "The class '%s' referenced in a signature cannot be loaded, ignoring signature: %s",
-          clazz, signature
-        ));
-        return;
-      }
+      c = getClassFromClassLoader(clazz);
     } catch (ClassNotFoundException cnfe) {
-      throw new ParseException(cnfe.getMessage());
+      reportParseFailed(failOnUnresolvableSignatures, cnfe.getMessage(), signature);
+      return;
     }
     if (method != null) {
       assert field == null;
@@ -272,12 +266,14 @@ public abstract class Checker {
         }
       }
       if (!found) {
-        throw new ParseException("No method found with following signature: " + signature);
+        reportParseFailed(failOnUnresolvableSignatures, "Method not found", signature);
+        return;
       }
     } else if (field != null) {
       assert method == null;
       if (!c.fields.contains(field)) {
-        throw new ParseException("No field found with following name: " + signature);
+        reportParseFailed(failOnUnresolvableSignatures, "Field not found", signature);
+        return;
       }
       forbiddenFields.put(c.className + '\000' + field, printout);
     } else {
@@ -320,11 +316,13 @@ public abstract class Checker {
 
   private static final String BUNDLED_PREFIX = "@includeBundled ";
   private static final String DEFAULT_MESSAGE_PREFIX = "@defaultMessage ";
+  private static final String IGNORE_UNRESOLVABLE_LINE = "@ignoreUnresolvable";
 
   private void parseSignaturesFile(Reader reader, boolean allowBundled) throws IOException,ParseException {
     final BufferedReader r = new BufferedReader(reader);
     try {
       String line, defaultMessage = null;
+      boolean failOnUnresolvableSignatures = this.defaultFailOnUnresolvableSignatures;
       while ((line = r.readLine()) != null) {
         line = line.trim();
         if (line.length() == 0 || line.startsWith("#"))
@@ -336,11 +334,13 @@ public abstract class Checker {
           } else if (line.startsWith(DEFAULT_MESSAGE_PREFIX)) {
             defaultMessage = line.substring(DEFAULT_MESSAGE_PREFIX.length()).trim();
             if (defaultMessage.length() == 0) defaultMessage = null;
+          } else if (line.equals(IGNORE_UNRESOLVABLE_LINE)) {
+            failOnUnresolvableSignatures = false;
           } else {
             throw new ParseException("Invalid line in signature file: " + line);
           }
         } else {
-          addSignature(line, defaultMessage);
+          addSignature(line, defaultMessage, failOnUnresolvableSignatures);
         }
       }
     } finally {
@@ -378,15 +378,16 @@ public abstract class Checker {
         ClassSignatureLookup c = classesToCheck.get(internalName);
         if (c == null) try {
           // use binary name, so we need to convert:
-          c = getClassFromClassLoader(type.getClassName(), failOnMissingClasses);
-          if (c == null) {
+          c = getClassFromClassLoader(type.getClassName());
+        } catch (ClassNotFoundException cnfe) {
+          if (failOnMissingClasses) {
+            throw new WrapperRuntimeException(cnfe);
+          } else {
             logWarn(String.format(Locale.ENGLISH,
               "The referenced class '%s' cannot be loaded. Please fix the classpath!",
               type.getClassName()
             ));
           }
-        } catch (ClassNotFoundException cnfe) {
-          throw new WrapperRuntimeException(cnfe);
         }
         return c;
       }
