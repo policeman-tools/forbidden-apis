@@ -280,6 +280,9 @@
   
   <target name="documentation" depends="maven-descriptor,-get-cli-help">
     <mkdir dir="${documentation-dir}"/>
+    <copy todir="${documentation-dir}">
+      <fileset dir="src/main/docs" excludes="*.xsl" />
+    </copy>
     <xslt basedir="${maven-build-dir}/generated-site/xdoc" includes="*.xml" destdir="${documentation-dir}" style="src/main/docs/xdoc2html.xsl" force="false">
       <mapper type="glob" from="*.xml" to="*.html"/>
     </xslt>

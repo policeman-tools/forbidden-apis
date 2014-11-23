@@ -57,7 +57,7 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
   private String signatures;
 
   /**
-   * Specifies built in signatures files (e.g., deprecated APIs for specific Java versions,
+   * Specifies <a href="bundled-signatures.html">built-in signatures</a> files (e.g., deprecated APIs for specific Java versions,
    * unsafe method calls using default locale, default charset,...)
    * @since 1.0
    */

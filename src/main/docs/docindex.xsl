@@ -47,7 +47,7 @@
           </code>
         </p>
         <h2>Apache Ant</h2>
-        <p>Coming soon!</p>
+        <p><a href="ant-task.html">Task Documentation</a></p>
         <h2>Apache Maven: Mojo Goals</h2>
         <ul>
           <xsl:apply-templates select="mojos/mojo"/>
