@@ -275,7 +275,7 @@ public final class AntTask extends Task {
   }
 
   /**
-   * Fail the build if a class referenced in a signature is missing. If this parameter is set to
+   * Fail the build if a signature is not resolving. If this parameter is set to
    * to false, then such signatures are silently ignored.
    * Defaults to {@code true}. 
    */
