@@ -118,7 +118,7 @@ public final class CliMain {
         .withLongOpt("allowmissingclasses")
         .create());
     options.addOption(allowunresolvablesignaturesOpt = OptionBuilder
-        .withDescription("don't fail if a signature is not resolving.")
+        .withDescription("don't fail if a signature is not resolving")
         .withLongOpt("allowunresolvablesignatures")
         .create());
 
