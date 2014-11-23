@@ -63,4 +63,29 @@
     <au:assertLogContains level="error" text="java.util.Locale#ENGLISH [We are speaking chinese here!]"/> 
   </target>
   
+  <target name="testFailOnMissing">
+    <au:expectfailure expectedMessage="Parsing signatures failed: Class 'foo.bar.ForbiddenApis' not found on classpath while parsing signature: foo.bar.ForbiddenApis#testMethod()">
+      <forbiddenapis classpathref="path.run">
+        <fileset refid="main.classes"/>
+        foo.bar.ForbiddenApis#testMethod() @ should fail here
+        java.lang.String#forbiddenFoobarMethod() @ should also fail
+        java.lang.String#forbiddenFoobarField @ should also fail
+      </forbiddenapis>
+    </au:expectfailure>
+  </target>
+  
+  <target name="testDontFailOnMissing">
+    <forbiddenapis classpathref="path.run">
+      <fileset refid="main.classes"/>
+      @ignoreUnresolvable
+      foo.bar.ForbiddenApis#testMethod() @ should be ignored
+      java.lang.String#forbiddenFoobarMethod() @ should be ignored
+      java.lang.String#forbiddenFoobarField @ should be ignored
+      java.awt.Color @ Color is disallowed, thats not bad, because ANT has no colors... (this was just added to don't fail because of missing signatures)
+    </forbiddenapis>
+    <au:assertLogContains text="Class 'foo.bar.ForbiddenApis' not found on classpath while parsing signature: foo.bar.ForbiddenApis#testMethod() [signature ignored]"/> 
+    <au:assertLogContains text="Method not found while parsing signature: java.lang.String#forbiddenFoobarMethod() [signature ignored]"/> 
+    <au:assertLogContains text="Field not found while parsing signature: java.lang.String#forbiddenFoobarField [signature ignored]"/> 
+  </target>
+  
 </project>
