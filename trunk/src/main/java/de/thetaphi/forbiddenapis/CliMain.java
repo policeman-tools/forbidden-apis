@@ -45,7 +45,7 @@ import org.codehaus.plexus.util.DirectoryScanner;
 public final class CliMain {
 
   private final Option classpathOpt, dirOpt, includesOpt, excludesOpt, signaturesfileOpt, bundledsignaturesOpt,
-    internalruntimeforbiddenOpt, nofailonmissingclassesOpt, versionOpt, helpOpt;
+    internalruntimeforbiddenOpt, nofailonmissingclassesOpt, allowunresolvablesignaturesOpt, versionOpt, helpOpt;
   private final CommandLine cmd;
   
   public static final int EXIT_SUCCESS = 0;
@@ -116,6 +116,10 @@ public final class CliMain {
     options.addOption(nofailonmissingclassesOpt = OptionBuilder
         .withDescription("don't fail if a referenced class is missing on classpath")
         .withLongOpt("nofailonmissingclasses")
+        .create());
+    options.addOption(allowunresolvablesignaturesOpt = OptionBuilder
+        .withDescription("don't fail if a signature is not resolving.")
+        .withLongOpt("allowunresolvablesignatures")
         .create());
 
     try {
@@ -206,7 +210,8 @@ public final class CliMain {
 
     final URLClassLoader loader = URLClassLoader.newInstance(urls, ClassLoader.getSystemClassLoader());
     try {
-      final Checker checker = new Checker(loader, cmd.hasOption(internalruntimeforbiddenOpt.getLongOpt()), !cmd.hasOption(nofailonmissingclassesOpt.getLongOpt()), true) {
+      final Checker checker = new Checker(loader, cmd.hasOption(internalruntimeforbiddenOpt.getLongOpt()),
+        !cmd.hasOption(nofailonmissingclassesOpt.getLongOpt()), !cmd.hasOption(allowunresolvablesignaturesOpt.getLongOpt())) {
         @Override
         protected void logError(String msg) {
           CliMain.this.logError(msg);

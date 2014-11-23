@@ -89,7 +89,7 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
   private boolean failOnMissingClasses;
   
   /**
-   * Fail the build if a class referenced in a signature is missing. If this parameter is set to
+   * Fail the build if a signature is not resolving. If this parameter is set to
    * to false, then such signatures are silently ignored. This is useful in multi-module Maven
    * projects where only some modules have the dependency to which the signature file(s) apply.
    * @since 1.4
