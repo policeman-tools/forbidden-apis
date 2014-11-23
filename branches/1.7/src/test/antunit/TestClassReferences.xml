@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ * (C) Copyright 2013 Uwe Schindler (Generics Policeman) and others.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+-->
+<project xmlns:au="antlib:org.apache.ant.antunit">
+
+  <target name="testClassReferences">
+    <au:expectfailure expectedMessage="Check for forbidden API calls failed, see log">
+      <forbiddenapis>
+        <file file="Java5ClassReferences.class"/>
+        java.lang.Integer @ Forbidden class reference!
+        java.util.List @ Forbidden class reference!
+        java.util.AbstractCollection @ Forbidden class reference!
+        java.util.AbstractSet @ Forbidden class reference!
+      </forbiddenapis>
+    </au:expectfailure>
+    <au:assertLogContains level="error" text="java.lang.Integer [Forbidden class reference!]"/> 
+    <au:assertLogContains level="error" text=" 11 error(s)"/> 
+  </target>
+  
+</project>
