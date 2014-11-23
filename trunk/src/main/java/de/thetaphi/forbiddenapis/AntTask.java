@@ -57,6 +57,7 @@ public final class AntTask extends Task {
   private boolean internalRuntimeForbidden = false;
   private boolean restrictClassFilename = true;
   private boolean failOnMissingClasses = true;
+  private boolean failOnUnresolvableSignatures = true;
   private boolean ignoreEmptyFileset = false;
     
   @Override
@@ -74,7 +75,7 @@ public final class AntTask extends Task {
       classFiles.setProject(getProject());
       apiSignatures.setProject(getProject());
       
-      final Checker checker = new Checker(loader, internalRuntimeForbidden, failOnMissingClasses, true) {
+      final Checker checker = new Checker(loader, internalRuntimeForbidden, failOnMissingClasses, failOnUnresolvableSignatures) {
         @Override
         protected void logError(String msg) {
           log(msg, Project.MSG_ERR);
@@ -271,6 +272,15 @@ public final class AntTask extends Task {
    */
   public void setFailOnMissingClasses(boolean failOnMissingClasses) {
     this.failOnMissingClasses = failOnMissingClasses;
+  }
+
+  /**
+   * Fail the build if a class referenced in a signature is missing. If this parameter is set to
+   * to false, then such signatures are silently ignored.
+   * Defaults to {@code true}. 
+   */
+  public void setFailOnUnresolvableSignatures(boolean failOnUnresolvableSignatures) {
+    this.failOnUnresolvableSignatures = failOnUnresolvableSignatures;
   }
 
   /**
