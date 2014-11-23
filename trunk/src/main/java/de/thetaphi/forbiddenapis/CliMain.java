@@ -45,7 +45,7 @@ import org.codehaus.plexus.util.DirectoryScanner;
 public final class CliMain {
 
   private final Option classpathOpt, dirOpt, includesOpt, excludesOpt, signaturesfileOpt, bundledsignaturesOpt,
-    internalruntimeforbiddenOpt, nofailonmissingclassesOpt, allowunresolvablesignaturesOpt, versionOpt, helpOpt;
+    internalruntimeforbiddenOpt, allowmissingclassesOpt, allowunresolvablesignaturesOpt, versionOpt, helpOpt;
   private final CommandLine cmd;
   
   public static final int EXIT_SUCCESS = 0;
@@ -113,9 +113,9 @@ public final class CliMain {
         .withDescription("forbids calls to classes from the internal java runtime (like sun.misc.Unsafe)")
         .withLongOpt("internalruntimeforbidden")
         .create());
-    options.addOption(nofailonmissingclassesOpt = OptionBuilder
+    options.addOption(allowmissingclassesOpt = OptionBuilder
         .withDescription("don't fail if a referenced class is missing on classpath")
-        .withLongOpt("nofailonmissingclasses")
+        .withLongOpt("allowmissingclasses")
         .create());
     options.addOption(allowunresolvablesignaturesOpt = OptionBuilder
         .withDescription("don't fail if a signature is not resolving.")
@@ -211,7 +211,7 @@ public final class CliMain {
     final URLClassLoader loader = URLClassLoader.newInstance(urls, ClassLoader.getSystemClassLoader());
     try {
       final Checker checker = new Checker(loader, cmd.hasOption(internalruntimeforbiddenOpt.getLongOpt()),
-        !cmd.hasOption(nofailonmissingclassesOpt.getLongOpt()), !cmd.hasOption(allowunresolvablesignaturesOpt.getLongOpt())) {
+        !cmd.hasOption(allowmissingclassesOpt.getLongOpt()), !cmd.hasOption(allowunresolvablesignaturesOpt.getLongOpt())) {
         @Override
         protected void logError(String msg) {
           CliMain.this.logError(msg);
