@@ -24,8 +24,8 @@
   </licenses>
   
   <scm>
-    <connection>scm:svn:http://forbidden-apis.googlecode.com/svn/trunk/</connection>
-    <developerConnection>scm:svn:https://forbidden-apis.googlecode.com/svn/trunk/</developerConnection>
+    <connection>scm:svn:http://forbidden-apis.googlecode.com/svn/branches/1.7/</connection>
+    <developerConnection>scm:svn:https://forbidden-apis.googlecode.com/svn/branches/1.7/</developerConnection>
     <url>http://code.google.com/p/forbidden-apis/source/browse/</url>
   </scm>
   
