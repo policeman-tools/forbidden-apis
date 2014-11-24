@@ -1,0 +1,138 @@
+<html>
+<head>
+<META http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Ant Task Documentation</title>
+<style type="text/css">
+  table {
+    border-collapse: collapse;
+  }
+  table, tr, th, td {
+    border: 1px solid dimgray;
+    vertical-align: top;
+    text-align: left;
+  }
+  th, td {
+    padding: .2em;
+  }
+</style>
+</head>
+<body>
+<h1>Ant Task Documentation</h1>
+
+<h2>Description</h2>
+
+<p>Task to check if a set of class files contains calls to forbidden APIs
+from a given classpath and list of API signatures (either inline or as pointer to files).
+In contrast to other ANT tasks, this tool does only visit the given classpath
+and the system classloader, not ANT's class loader.</p>
+
+<h2>Parameters</h2>
+
+<table>
+
+<tr>
+  <th>Name</th>
+  <th>Type</th>
+  <th>Default</th>
+  <th>Description</th>
+</tr>
+
+<tr>
+  <td>dir</td>
+  <td><code>File</code></td>
+  <td></td>
+  <td>Directory to scan for class files. This directory is automatically converted to a <code>FileSet</code> with <code>**/*.class</code> as include pattern.</td>
+</tr>
+
+<tr>
+  <td>signaturesfile</td>
+  <td><code>File</code></td>
+  <td></td>
+  <td>A single signatures file.</td>
+</tr>
+
+<tr>
+  <td>bundledsignatures</td>
+  <td><code>String</code></td>
+  <td></td>
+  <td>Name of a <a href="bundled-signatures.html">built-in signatures</a> file.</td>
+</tr>
+
+<tr>
+  <td>classpath</td>
+  <td><code>Path</code></td>
+  <td></td>
+  <td>Classpath in ANT format. Should be identical to classpath used for compiling the class files.</td>
+</tr>
+
+<tr>
+  <td>classpathref</td>
+  <td><code>Reference</code></td>
+  <td></td>
+  <td>Reference to a <code>path</code> defined anywhere else. Should be identical to classpath used for compiling the class files.</td>
+</tr>
+
+<tr>
+  <td>failOnUnsupportedJava</td>
+  <td><code>boolean</code></td>
+  <td><code>false</code></td>
+  <td>Fail the build, if the bundled ASM library cannot read the class file format of the runtime library or the runtime library cannot be discovered.</td>
+</tr>
+
+<tr>
+  <td>failOnMissingClasses</td>
+  <td><code>boolean</code></td>
+  <td><code>true</code></td>
+  <td>Fail the build, if a referenced class is missing. This requires that you pass the whole classpath including all dependencies.
+  If you don't have all classes in the filesets, the application classes must be reachable through this classpath, too.</td>
+</tr>
+
+<tr>
+  <td>failOnUnresolvableSignatures</td>
+  <td><code>boolean</code></td>
+  <td><code>true</code></td>
+  <td>Fail the build if a signature is not resolving. If this parameter is set to to false, then such signatures are silently ignored.</td>
+</tr>
+
+<tr>
+  <td>internalRuntimeForbidden</td>
+  <td><code>boolean</code></td>
+  <td><code>false</code></td>
+  <td>Forbids calls to classes from the internal java runtime (like <code>sun.misc.Unsafe</code>).</td>
+</tr>
+
+<tr>
+  <td>restrictClassFilename</td>
+  <td><code>boolean</code></td>
+  <td><code>true</code></td>
+  <td>Automatically restrict resource names included to files with a name ending in <code>'.class'</code>. This makes filesets easier, as the <code>includes="**/*.class"</code> is not needed.</td>
+</tr>
+
+<tr>
+  <td>ignoreEmptyFileset</td>
+  <td><code>boolean</code></td>
+  <td><code>false</code></td>
+  <td>Ignore empty fileset/resource collection and print a warning instead.</td>
+</tr>
+
+</table>
+
+<h2>Parameters specified as nested elements</h2>
+
+<p>This task supports all resource collections Ant provides (<code>fileset</code>, <code>filelist</code>,
+<code>file</code>, <code>tarfileset</code>, <code>zipfileset</code>,...)
+and uses all class files from them. It automatically adds an implcit filter to file names ending in <code>'.class'</code>,
+so you don't need to add this as include attribute to those collections.</p>
+
+<p>You can also pass one or multiple <code>classpath</code> elements to form a classpath. Ideally use the same configuration like the <code>javac</code> task.</p>
+
+<p>To pass in signatures, you have 3 possibilities:</p>
+
+<ul>
+  <li>Use <code>bundledSignatures</code> element to pass a <a href="bundled-signatures.html">built-in signatures</a> file, e.g. <code>&lt;bundledsignatures name=&quot;jdk-unsafe-1.7&quot;/&gt;</code></li>
+  <li>Use <code>signaturesFileSet</code>, <code>signaturesFileList</code>, <code>signaturesFile</code> elements to pass in collections of signatures files. Those elements behave like the corresponding standard Ant types.</li>
+  <li>Place signatures as plain text (use CDATA sections) inside the <code>forbiddenapis</code> element.</li>
+</ul>
+
+</body>
+</html>

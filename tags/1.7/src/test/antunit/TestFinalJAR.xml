@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ * (C) Copyright 2013 Uwe Schindler (Generics Policeman) and others.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+-->
+<project xmlns:au="antlib:org.apache.ant.antunit">
+
+  <taskdef name="forbiddenapis-jar" classname="de.thetaphi.forbiddenapis.AntTask" classpath="${jar-file}"/>
+
+  <target name="testMySelfWithFinalJAR1">
+    <forbiddenapis-jar internalRuntimeForbidden="true" classpathref="path.run">
+      <fileset dir="${antunit.main.classes}"/>
+      <bundledsignatures name="jdk-unsafe-${jdk.version}"/>
+      <bundledsignatures name="jdk-deprecated-${jdk.version}"/>
+    </forbiddenapis-jar>
+    <au:assertLogContains level="info" text=" 0 error(s)."/> 
+  </target>
+  
+  <target name="testMySelfWithFinalJAR2">
+    <forbiddenapis-jar dir="${antunit.main.classes}" internalRuntimeForbidden="true" classpathref="path.run">
+      <bundledsignatures name="jdk-unsafe-${jdk.version}"/>
+      <bundledsignatures name="jdk-deprecated-${jdk.version}"/>
+    </forbiddenapis-jar>
+    <au:assertLogContains level="info" text=" 0 error(s)."/> 
+  </target>
+  
+  <target name="testMySelfWithAntLib">
+    <taskdef uri="antlib:de.thetaphi.forbiddenapis" classpath="${jar-file}"/>
+    <fa:forbiddenapis xmlns:fa="antlib:de.thetaphi.forbiddenapis" dir="${antunit.main.classes}" internalRuntimeForbidden="true" classpathref="path.run">
+      <bundledsignatures name="jdk-unsafe-${jdk.version}"/>
+      <bundledsignatures name="jdk-deprecated-${jdk.version}"/>
+    </fa:forbiddenapis>
+    <au:assertLogContains level="info" text=" 0 error(s)."/> 
+  </target>
+  
+  <target name="testFinalJARWithFinalJAR">
+    <!--
+    This is a crazy test: It uses the ANT task in the JAR file to test
+    the contents of the JAR file itsself. This showed a bug in newer
+    plexus-utils versions (uses String#toLowerCase()). We now bundle
+    only plexus-utils v1.1, which is much slimmer and does not reference
+    broken StringUtils. ASM is completely forbidden-api bug-free!
+    -->
+    <forbiddenapis-jar internalRuntimeForbidden="true">
+      <zipfileset src="${jar-file}" excludes="de/thetaphi/forbiddenapis/commons/cli/**"/>
+      <bundledsignatures name="jdk-unsafe-${jdk.version}"/>
+      <bundledsignatures name="jdk-deprecated-${jdk.version}"/>
+      <classpath>
+        <pathelement path="${jar-file}"/>
+        <path refid="path.build"/>
+      </classpath>
+    </forbiddenapis-jar>
+    <au:assertLogContains level="info" text=" 0 error(s)."/> 
+  </target>
+  
+</project>
