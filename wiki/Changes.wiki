@@ -1,5 +1,22 @@
 This page lists all changes since the first released version.
 
+= Version 1.7 (released 2014-11-24) =
+
+*New features:*
+  * Auto-generate HTML documentation for Ant Task, Maven Mojo, and CLI (issue #32, issue #37).
+  * Add a new documentation ZIP file to release (issue #32, issue #37).
+  * Add help-mojo (issue #32, issue #37).
+  * Add support for signaturesFilelist and signaturesFile elements (issue #36).
+  * Add option to also ignore unresolvable signatures in Ant and CLI (issue #42).
+  * Allow option to only print warning if Ant fileset of classes to scan is empty (like Maven) (issue #35).
+
+*Bug fixes:*
+  * Fix bug that deprecated signatures of Java 8 fail to load on Java 9 (issue #41).
+
+*Backwards compatibility:*
+  * Remove deprecated Mojo from version 1.0 (issue #33).
+  * Rename some CLI options to be consistent with others (issue #42).
+  
 = Version 1.6.1 (released 2014-08-05) =
 
 *Bug fixes:*
