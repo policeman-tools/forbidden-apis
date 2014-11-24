@@ -14,7 +14,7 @@ This page lists all changes since the first released version.
   * Fix bug that deprecated signatures of Java 8 fail to load on Java 9 (issue #41).
 
 *Backwards compatibility:*
-  * Remove deprecated Mojo from version 1.0 (issue #33).
+  * Remove deprecated Mojo of version 1.0 (issue #33).
   * Rename some CLI options to be consistent with others (issue #42).
   
 = Version 1.6.1 (released 2014-08-05) =
