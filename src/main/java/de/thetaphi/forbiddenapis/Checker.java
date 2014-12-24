@@ -65,6 +65,9 @@ import java.lang.management.RuntimeMXBean;
  */
 public abstract class Checker {
 
+  static final Type DEPRECATED_TYPE = Type.getType(Deprecated.class);
+  static final String DEPRECATED_DESCRIPTOR = DEPRECATED_TYPE.getDescriptor();
+
   public final boolean isSupportedJDK;
   
   private final long start;
@@ -369,6 +372,7 @@ public abstract class Checker {
     reader.accept(new ClassVisitor(Opcodes.ASM5) {
       final String className = Type.getObjectType(reader.getClassName()).getClassName();
       String source = null;
+      boolean isDeprecated = false;
       
       ClassSignatureLookup lookupRelatedClass(String internalName) {
         final Type type = Type.getObjectType(internalName);
@@ -486,7 +490,11 @@ public abstract class Checker {
 
       @Override
       public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
+        this.isDeprecated = (access & Opcodes.ACC_DEPRECATED) != 0;
         reportClassViolation(checkClassDefinition(superName, interfaces), "class declaration");
+        if (this.isDeprecated) {
+          reportClassViolation(checkType(DEPRECATED_TYPE), "deprecation on class declaration");
+        }
       }
 
       @Override
@@ -496,7 +504,13 @@ public abstract class Checker {
       
       @Override
       public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
-        if (visible) reportClassViolation(checkDescriptor(desc), "annotation on class declaration");
+        if (this.isDeprecated && DEPRECATED_DESCRIPTOR.equals(desc)) {
+          // don't report 2 times!
+          return null;
+        }
+        if (visible) {
+          reportClassViolation(checkDescriptor(desc), "annotation on class declaration");
+        }
         return null;
       }
 
@@ -509,16 +523,26 @@ public abstract class Checker {
       @Override
       public FieldVisitor visitField(final int access, final String name, final String desc, String signature, Object value) {
         return new FieldVisitor(Opcodes.ASM5) {
+          final boolean isDeprecated = (access & Opcodes.ACC_DEPRECATED) != 0;
           {
             // only check signature, if field is not synthetic
             if ((access & Opcodes.ACC_SYNTHETIC) == 0) {
               reportFieldViolation(checkDescriptor(desc), "field declaration");
             }
+            if (this.isDeprecated) {
+              reportFieldViolation(checkType(DEPRECATED_TYPE), "deprecation on field declaration");
+            }
           }
           
           @Override
           public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
-            if (visible) reportFieldViolation(checkDescriptor(desc), "annotation on field declaration");
+            if (this.isDeprecated && DEPRECATED_DESCRIPTOR.equals(desc)) {
+              // don't report 2 times!
+              return null;
+            }
+            if (visible) {
+              reportFieldViolation(checkDescriptor(desc), "annotation on field declaration");
+            }
             return null;
           }
 
@@ -546,12 +570,16 @@ public abstract class Checker {
       @Override
       public MethodVisitor visitMethod(final int access, final String name, final String desc, String signature, String[] exceptions) {
         return new MethodVisitor(Opcodes.ASM5) {
+          final boolean isDeprecated = (access & Opcodes.ACC_DEPRECATED) != 0;
           private int lineNo = -1;
           
           {
             // only check signature, if method is not synthetic
             if ((access & Opcodes.ACC_SYNTHETIC) == 0) {
               reportMethodViolation(checkDescriptor(desc), "method declaration");
+            }
+            if (this.isDeprecated) {
+              reportMethodViolation(checkType(DEPRECATED_TYPE), "deprecation on method declaration");
             }
           }
           
@@ -649,7 +677,13 @@ public abstract class Checker {
           
           @Override
           public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
-            if (visible) reportMethodViolation(checkDescriptor(desc), "annotation on method declaration");
+            if (this.isDeprecated && DEPRECATED_DESCRIPTOR.equals(desc)) {
+              // don't report 2 times!
+              return null;
+            }
+            if (visible) {
+              reportMethodViolation(checkDescriptor(desc), "annotation on method declaration");
+            }
             return null;
           }
 
