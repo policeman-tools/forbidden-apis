@@ -29,4 +29,15 @@
     <au:assertLogContains level="error" text=" 15 error(s)"/> 
   </target>
   
+  <target name="testMissingDeprecatedAnnotation">
+    <au:expectfailure expectedMessage="Check for forbidden API calls failed, see log">
+      <forbiddenapis failOnMissingClasses="true" classpath="${basedir}">
+        <fileset file="Java5DeprecatedAnnotation.class"/>
+        java.lang.Deprecated @ Deprecated annotation
+      </forbiddenapis>
+    </au:expectfailure>
+    <au:assertLogContains level="error" text="java.lang.Deprecated [Deprecated annotation]"/> 
+    <au:assertLogContains level="error" text=" 1 error(s)"/> 
+  </target>
+  
 </project>
