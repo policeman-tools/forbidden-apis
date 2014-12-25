@@ -18,7 +18,9 @@ package de.thetaphi.forbiddenapis;
  * limitations under the License.
  */
 
-import java.util.Formatter;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -37,10 +39,9 @@ final class ClassScanner extends ClassVisitor {
   static final Type DEPRECATED_TYPE = Type.getType(Deprecated.class);
   static final String DEPRECATED_DESCRIPTOR = DEPRECATED_TYPE.getDescriptor();
 
-  final boolean internalRuntimeForbidden;
+  private final boolean internalRuntimeForbidden;
   final RelatedClassLookup lookup;
-  final int[] violations;
-  final String className;
+  final List<ForbiddenViolation> violations = new ArrayList<ForbiddenViolation>();
   
   // key is the internal name (slashed), followed by \000 and the field name:
   final Map<String,String> forbiddenFields;
@@ -49,116 +50,132 @@ final class ClassScanner extends ClassVisitor {
   // key is the internal name (slashed):
   final Map<String,String> forbiddenClasses;
   
-  String source = null;
-  boolean isDeprecated = false;
+  private String source = null;
+  private boolean isDeprecated = false;
   
-  public ClassScanner(RelatedClassLookup lookup, String className,
+  public ClassScanner(RelatedClassLookup lookup,
       final Map<String,String> forbiddenClasses, Map<String,String> forbiddenMethods, Map<String,String> forbiddenFields,
-      boolean internalRuntimeForbidden, int[] violations) {
+      boolean internalRuntimeForbidden) {
     super(Opcodes.ASM5);
     this.lookup = lookup;
-    this.className = className;
     this.forbiddenClasses = forbiddenClasses;
     this.forbiddenMethods = forbiddenMethods;
     this.forbiddenFields = forbiddenFields;
     this.internalRuntimeForbidden = internalRuntimeForbidden;
-    this.violations = violations;
   }
   
-  // TODO: Hack - remove me!
-  void logError(String msg) {
-    ((Checker) lookup).logError(msg);
+  public List<ForbiddenViolation> getSortedViolations() {
+    // don't sort yet, needs more work: Collections.sort(violations);
+    return Collections.unmodifiableList(violations);
+  }
+  
+  public String getSourceFile() {
+    return source;
   }
   
   private boolean isInternalClass(String className) {
     return className.startsWith("sun.") || className.startsWith("com.sun.") || className.startsWith("com.oracle.") || className.startsWith("jdk.")  || className.startsWith("sunw.");
   }
   
-  boolean checkClassUse(String internalName) {
+  String checkClassUse(String internalName) {
     final String printout = forbiddenClasses.get(internalName);
     if (printout != null) {
-      logError("Forbidden class/interface/annotation use: " + printout);
-      return true;
+      return "Forbidden class/interface/annotation use: " + printout;
     }
     if (internalRuntimeForbidden) {
       final String referencedClassName = Type.getObjectType(internalName).getClassName();
       if (isInternalClass(referencedClassName)) {
         final ClassSignature c = lookup.lookupRelatedClass(internalName);
         if (c == null || c.isRuntimeClass) {
-          logError(String.format(Locale.ENGLISH,
+          return String.format(Locale.ENGLISH,
             "Forbidden class/interface/annotation use: %s [non-public internal runtime class]",
             referencedClassName
-          ));
-          return true;
+          );
         }
       }
     }
-    return false;
+    return null;
   }
   
-  private boolean checkClassDefinition(String superName, String[] interfaces) {
+  private String checkClassDefinition(String superName, String[] interfaces) {
     if (superName != null) {
-      if (checkClassUse(superName)) {
-        return true;
+      String violation = checkClassUse(superName);
+      if (violation != null) {
+        return violation;
       }
       final ClassSignature c = lookup.lookupRelatedClass(superName);
-      if (c != null && checkClassDefinition(c.superName, c.interfaces)) {
-        return true;
+      if (c != null && (violation = checkClassDefinition(c.superName, c.interfaces)) != null) {
+        return violation;
       }
     }
     if (interfaces != null) {
       for (String intf : interfaces) {
-        if (checkClassUse(intf)) {
-          return true;
+        String violation = checkClassUse(intf);
+        if (violation != null) {
+          return violation;
         }
         final ClassSignature c = lookup.lookupRelatedClass(intf);
-        if (c != null && checkClassDefinition(c.superName, c.interfaces)) {
-          return true;
+        if (c != null && (violation = checkClassDefinition(c.superName, c.interfaces)) != null) {
+          return violation;
         }
       }
     }
-    return false;
+    return null;
   }
   
-  boolean checkType(Type type) {
+  String checkType(Type type) {
     while (type != null) {
+      String violation;
       switch (type.getSort()) {
         case Type.OBJECT:
-          if (checkClassUse(type.getInternalName())) {
-            return true;
+          violation = checkClassUse(type.getInternalName());
+          if (violation != null) {
+            return violation;
           }
           final ClassSignature c = lookup.lookupRelatedClass(type.getInternalName());
-          return (c != null && checkClassDefinition(c.superName, c.interfaces));
+          if (c == null) return null;
+          return checkClassDefinition(c.superName, c.interfaces);
         case Type.ARRAY:
           type = type.getElementType();
           break;
         case Type.METHOD:
-          boolean violation = checkType(type.getReturnType());
-          for (final Type t : type.getArgumentTypes()) {
-            violation |= checkType(t);
+          final ArrayList<String> violations = new ArrayList<String>();
+          violation = checkType(type.getReturnType());
+          if (violation != null) {
+            violations.add(violation);
           }
-          return violation;
+          for (final Type t : type.getArgumentTypes()) {
+            violation = checkType(t);
+            if (violation != null) {
+              violations.add(violation);
+            }
+          }
+          if (violations.isEmpty()) {
+            return null;
+          } else if (violations.size() == 1) {
+            return violations.get(0);
+          } else {
+            final StringBuilder sb = new StringBuilder();
+            for (final String v : violations) {
+              sb.append(v).append('\n');
+            }
+            sb.setLength(sb.length() - 1);
+            return sb.toString();
+          }
         default:
-          return false;
+          return null;
       }
     }
-    return false;
+    return null;
   }
   
-  boolean checkDescriptor(String desc) {
+  String checkDescriptor(String desc) {
     return checkType(Type.getType(desc));
   }
   
-  private void reportClassViolation(boolean violation, String where) {
-    if (violation) {
-      violations[0]++;
-      final StringBuilder sb = new StringBuilder("  in ").append(className);
-      if (source != null) {
-        new Formatter(sb, Locale.ENGLISH).format(" (%s, %s)", source, where).flush();
-      } else {
-        new Formatter(sb, Locale.ENGLISH).format(" (%s)", where).flush();
-      }
-      logError(sb.toString());
+  private void reportClassViolation(String violation, String where) {
+    if (violation != null) {
+      violations.add(new ForbiddenViolation(violation, where, -1));
     }
   }
   
@@ -226,16 +243,9 @@ final class ClassScanner extends ClassVisitor {
         return null;
       }
       
-      private void reportFieldViolation(boolean violation, String where) {
-        if (violation) {
-          violations[0]++;
-          final StringBuilder sb = new StringBuilder("  in ").append(className);
-          if (source != null) {
-            new Formatter(sb, Locale.ENGLISH).format(" (%s, %s of '%s')", source, where, name).flush();
-          } else {
-            new Formatter(sb, Locale.ENGLISH).format(" (%s of '%s')", where, name).flush();
-          }
-          logError(sb.toString());
+      private void reportFieldViolation(String violation, String where) {
+        if (violation != null) {
+          violations.add(new ForbiddenViolation(violation, String.format(Locale.ENGLISH, "%s of '%s'", where, name), -1));
         }
       }
     };
@@ -257,59 +267,59 @@ final class ClassScanner extends ClassVisitor {
         }
       }
       
-      private boolean checkMethodAccess(String owner, Method method) {
-        if (checkClassUse(owner)) {
-          return true;
+      private String checkMethodAccess(String owner, Method method) {
+        String violation = checkClassUse(owner);
+        if (violation != null) {
+          return violation;
         }
         final String printout = forbiddenMethods.get(owner + '\000' + method);
         if (printout != null) {
-          logError("Forbidden method invocation: " + printout);
-          return true;
+          return "Forbidden method invocation: " + printout;
         }
         final ClassSignature c = lookup.lookupRelatedClass(owner);
         if (c != null && !c.methods.contains(method)) {
-          if (c.superName != null && checkMethodAccess(c.superName, method)) {
-            return true;
+          if (c.superName != null && (violation = checkMethodAccess(c.superName, method)) != null) {
+            return violation;
           }
           // JVM spec says: interfaces after superclasses
           if (c.interfaces != null) {
             for (String intf : c.interfaces) {
-              if (intf != null && checkMethodAccess(intf, method)) {
-                return true;
+              if (intf != null && (violation = checkMethodAccess(intf, method)) != null) {
+                return violation;
               }
             }
           }
         }
-        return false;
+        return null;
       }
       
-      private boolean checkFieldAccess(String owner, String field) {
-        if (checkClassUse(owner)) {
-          return true;
+      private String checkFieldAccess(String owner, String field) {
+        String violation = checkClassUse(owner);
+        if (violation != null) {
+          return violation;
         }
         final String printout = forbiddenFields.get(owner + '\000' + field);
         if (printout != null) {
-          logError("Forbidden field access: " + printout);
-          return true;
+          return "Forbidden field access: " + printout;
         }
         final ClassSignature c = lookup.lookupRelatedClass(owner);
         if (c != null && !c.fields.contains(field)) {
           if (c.interfaces != null) {
             for (String intf : c.interfaces) {
-              if (intf != null && checkFieldAccess(intf, field)) {
-                return true;
+              if (intf != null && (violation = checkFieldAccess(intf, field)) != null) {
+                return violation;
               }
             }
           }
           // JVM spec says: superclasses after interfaces
-          if (c.superName != null && checkFieldAccess(c.superName, field)) {
-            return true;
+          if (c.superName != null && (violation = checkFieldAccess(c.superName, field)) != null) {
+            return violation;
           }
         }
-        return false;
+        return null;
       }
 
-      private boolean checkHandle(Handle handle) {
+      private String checkHandle(Handle handle) {
         switch (handle.getTag()) {
           case Opcodes.H_GETFIELD:
           case Opcodes.H_PUTFIELD:
@@ -323,20 +333,16 @@ final class ClassScanner extends ClassVisitor {
           case Opcodes.H_INVOKEINTERFACE:
             return checkMethodAccess(handle.getOwner(), new Method(handle.getName(), handle.getDesc()));
         }
-        return false;
+        return null;
       }
       
-      private boolean checkConstant(Object cst) {
+      private String checkConstant(Object cst) {
         if (cst instanceof Type) {
-          if (checkType((Type) cst)) {
-            return true;
-          }
+          return checkType((Type) cst);
         } else if (cst instanceof Handle) {
-          if (checkHandle((Handle) cst)) {
-            return true;
-          }
+          return checkHandle((Handle) cst);
         }
-        return false;
+        return null;
       }
 
       @Override
@@ -429,20 +435,9 @@ final class ClassScanner extends ClassVisitor {
         return sb.toString();
       }
 
-      private void reportMethodViolation(boolean violation, String where) {
-        if (violation) {
-          violations[0]++;
-          final StringBuilder sb = new StringBuilder("  in ").append(className);
-          if (source != null) {
-            if (lineNo >= 0) {
-              new Formatter(sb, Locale.ENGLISH).format(" (%s:%d)", source, lineNo).flush();
-            } else {
-              new Formatter(sb, Locale.ENGLISH).format(" (%s, %s of '%s')", source, where, getHumanReadableMethodSignature()).flush();
-            }
-          } else {
-            new Formatter(sb, Locale.ENGLISH).format(" (%s of '%s')", where, getHumanReadableMethodSignature()).flush();
-          }
-          logError(sb.toString());
+      private void reportMethodViolation(String violation, String where) {
+        if (violation != null) {
+          violations.add(new ForbiddenViolation(violation, String.format(Locale.ENGLISH, "%s of '%s'", where, getHumanReadableMethodSignature()), lineNo));
         }
       }
       
