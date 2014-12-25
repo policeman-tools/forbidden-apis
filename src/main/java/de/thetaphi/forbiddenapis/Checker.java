@@ -43,6 +43,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.regex.Pattern;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
 
@@ -382,8 +383,9 @@ public abstract class Checker implements RelatedClassLookup {
     final ClassScanner scanner = new ClassScanner(this, forbiddenClasses, forbiddenMethods, forbiddenFields, internalRuntimeForbidden); 
     reader.accept(scanner, ClassReader.SKIP_FRAMES);
     final List<ForbiddenViolation> violations = scanner.getSortedViolations();
+    final Pattern splitter = Pattern.compile(Pattern.quote("\n"));
     for (final ForbiddenViolation v : violations) {
-      for (final String line : v.format(className, scanner.getSourceFile()).split("\n")) {
+      for (final String line : splitter.split(v.format(className, scanner.getSourceFile()))) {
         logError(line);
       }
     }
