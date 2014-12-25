@@ -116,7 +116,7 @@ public final class AntTask extends Task {
         }
         
         @SuppressWarnings("unchecked")
-        final Iterator<Resource> iter = (Iterator<Resource>) apiSignatures.iterator();
+        final Iterator<Resource> iter = apiSignatures.iterator();
         while (iter.hasNext()) {
           final Resource r = iter.next();
           if (r instanceof StringResource) {
@@ -143,7 +143,7 @@ public final class AntTask extends Task {
       log("Loading classes to check...", Project.MSG_INFO);
       try {
         @SuppressWarnings("unchecked")
-        final Iterator<Resource> iter = (Iterator<Resource>) classFiles.iterator();
+        final Iterator<Resource> iter = classFiles.iterator();
         boolean foundClass = false;
         while (iter.hasNext()) {
           final Resource r = iter.next();
