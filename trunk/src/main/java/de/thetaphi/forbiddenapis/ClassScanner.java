@@ -163,10 +163,12 @@ final class ClassScanner extends ClassVisitor {
             return violations.get(0);
           } else {
             final StringBuilder sb = new StringBuilder();
+            boolean nl = false;
             for (final String v : violations) {
-              sb.append(v).append('\n');
+              if (nl) sb.append('\n');
+              sb.append(v);
+              nl = true;
             }
-            sb.setLength(sb.length() - 1);
             return sb.toString();
           }
         default:
