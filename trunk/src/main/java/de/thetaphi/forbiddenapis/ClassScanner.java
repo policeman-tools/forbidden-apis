@@ -65,7 +65,6 @@ final class ClassScanner extends ClassVisitor {
   }
   
   public List<ForbiddenViolation> getSortedViolations() {
-    // don't sort yet, needs more work: Collections.sort(violations);
     return Collections.unmodifiableList(violations);
   }
   
@@ -447,4 +446,10 @@ final class ClassScanner extends ClassVisitor {
       }
     };
   }
+
+  @Override
+  public void visitEnd() {
+    // don't sort yet, needs more work: Collections.sort(violations);
+  }
+  
 }
