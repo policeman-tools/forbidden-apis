@@ -32,7 +32,7 @@ import java.util.Set;
 
 /** Utility class that is used to get an overview of all fields and implemented
  * methods of a class. It make the signatures available as Sets. */
-final class ClassSignatureLookup {
+final class ClassSignature {
   private ClassReader reader;
   
   public final boolean isRuntimeClass;
@@ -41,7 +41,7 @@ final class ClassSignatureLookup {
 	public final String className, superName;
 	public final String[] interfaces;
   
-  public ClassSignatureLookup(final ClassReader classReader, boolean isRuntimeClass, boolean withReader) {
+  public ClassSignature(final ClassReader classReader, boolean isRuntimeClass, boolean withReader) {
     this.reader = withReader ? classReader : null;
     this.isRuntimeClass = isRuntimeClass;
     this.className = classReader.getClassName();
