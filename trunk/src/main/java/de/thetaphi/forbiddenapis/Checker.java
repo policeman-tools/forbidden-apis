@@ -31,12 +31,10 @@ import org.objectweb.asm.TypePath;
 import org.objectweb.asm.commons.Method;
 
 import java.io.BufferedReader;
-import java.io.EOFException;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.PushbackInputStream;
 import java.io.Reader;
 import java.io.File;
 import java.io.StringReader;
