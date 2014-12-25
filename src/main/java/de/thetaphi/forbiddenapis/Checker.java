@@ -52,7 +52,7 @@ import java.lang.management.RuntimeMXBean;
  * and the system classloader. It uses the local classpath in preference to the system classpath
  * (which violates the spec).
  */
-public abstract class Checker {
+public abstract class Checker implements RelatedClassLookup {
 
   public final boolean isSupportedJDK;
   
@@ -64,9 +64,9 @@ public abstract class Checker {
   final boolean internalRuntimeForbidden, failOnMissingClasses, defaultFailOnUnresolvableSignatures;
   
   // key is the internal name (slashed):
-  final Map<String,ClassSignatureLookup> classesToCheck = new HashMap<String,ClassSignatureLookup>();
+  final Map<String,ClassSignature> classesToCheck = new HashMap<String,ClassSignature>();
   // key is the binary name (dotted):
-  final Map<String,ClassSignatureLookup> classpathClassCache = new HashMap<String,ClassSignatureLookup>();
+  final Map<String,ClassSignature> classpathClassCache = new HashMap<String,ClassSignature>();
   
   // key is the internal name (slashed), followed by \000 and the field name:
   final Map<String,String> forbiddenFields = new HashMap<String,String>();
@@ -134,8 +134,8 @@ public abstract class Checker {
   }
   
   /** Reads a class (binary name) from the given {@link ClassLoader}. */
-  ClassSignatureLookup getClassFromClassLoader(final String clazz) throws ClassNotFoundException {
-    final ClassSignatureLookup c;
+  private ClassSignature getClassFromClassLoader(final String clazz) throws ClassNotFoundException {
+    final ClassSignature c;
     if (classpathClassCache.containsKey(clazz)) {
       c = classpathClassCache.get(clazz);
       if (c == null) {
@@ -175,7 +175,7 @@ public abstract class Checker {
         }
         final InputStream in = conn.getInputStream();
         try {
-          classpathClassCache.put(clazz, c = new ClassSignatureLookup(new ClassReader(in), isRuntimeClass, false));
+          classpathClassCache.put(clazz, c = new ClassSignature(new ClassReader(in), isRuntimeClass, false));
         } finally {
           in.close();
         }
@@ -187,12 +187,13 @@ public abstract class Checker {
     return c;
   }
   
-  ClassSignatureLookup lookupRelatedClass(String internalName) {
+  // not before Java 6: @Override
+  public ClassSignature lookupRelatedClass(String internalName) {
     final Type type = Type.getObjectType(internalName);
     if (type.getSort() != Type.OBJECT) {
       return null;
     }
-    ClassSignatureLookup c = classesToCheck.get(internalName);
+    ClassSignature c = classesToCheck.get(internalName);
     if (c == null) try {
       // use binary name, so we need to convert:
       c = getClassFromClassLoader(type.getClassName());
@@ -258,7 +259,7 @@ public abstract class Checker {
     final String printout = (message != null && message.length() > 0) ?
       (signature + " [" + message + "]") : signature;
     // check class & method/field signature, if it is really existent (in classpath), but we don't really load the class into JVM:
-    final ClassSignatureLookup c;
+    final ClassSignature c;
     try {
       c = getClassFromClassLoader(clazz);
     } catch (ClassNotFoundException cnfe) {
@@ -367,7 +368,7 @@ public abstract class Checker {
     } finally {
       in.close();
     }
-    classesToCheck.put(reader.getClassName(), new ClassSignatureLookup(reader, false, true));
+    classesToCheck.put(reader.getClassName(), new ClassSignature(reader, false, true));
   }
   
   public final boolean hasNoSignatures() {
@@ -385,7 +386,7 @@ public abstract class Checker {
   public final void run() throws ForbiddenApiException {
     int errors = 0;
     try {
-      for (final ClassSignatureLookup c : classesToCheck.values()) {
+      for (final ClassSignature c : classesToCheck.values()) {
         errors += checkClass(c.getReader());
       }
     } catch (WrapperRuntimeException wre) {
