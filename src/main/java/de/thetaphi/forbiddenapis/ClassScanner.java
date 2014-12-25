@@ -52,6 +52,7 @@ final class ClassScanner extends ClassVisitor {
   
   private String source = null;
   private boolean isDeprecated = false;
+  private boolean done = false;
   
   public ClassScanner(RelatedClassLookup lookup,
       final Map<String,String> forbiddenClasses, Map<String,String> forbiddenMethods, Map<String,String> forbiddenFields,
@@ -64,11 +65,18 @@ final class ClassScanner extends ClassVisitor {
     this.internalRuntimeForbidden = internalRuntimeForbidden;
   }
   
+  private void checkDone() {
+    if (done) return;
+    throw new IllegalStateException("Class not fully scanned.");
+  }
+  
   public List<ForbiddenViolation> getSortedViolations() {
+    checkDone();
     return Collections.unmodifiableList(violations);
   }
   
   public String getSourceFile() {
+    checkDone();
     return source;
   }
   
@@ -450,6 +458,7 @@ final class ClassScanner extends ClassVisitor {
   @Override
   public void visitEnd() {
     // don't sort yet, needs more work: Collections.sort(violations);
+    done = true;
   }
   
 }
