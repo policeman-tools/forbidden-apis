@@ -187,6 +187,28 @@ public abstract class Checker {
     return c;
   }
   
+  ClassSignatureLookup lookupRelatedClass(String internalName) {
+    final Type type = Type.getObjectType(internalName);
+    if (type.getSort() != Type.OBJECT) {
+      return null;
+    }
+    ClassSignatureLookup c = classesToCheck.get(internalName);
+    if (c == null) try {
+      // use binary name, so we need to convert:
+      c = getClassFromClassLoader(type.getClassName());
+    } catch (ClassNotFoundException cnfe) {
+      if (failOnMissingClasses) {
+        throw new WrapperRuntimeException(cnfe);
+      } else {
+        logWarn(String.format(Locale.ENGLISH,
+          "The referenced class '%s' cannot be loaded. Please fix the classpath!",
+          type.getClassName()
+        ));
+      }
+    }
+    return c;
+  }
+  
   private void reportParseFailed(boolean failOnUnresolvableSignatures, String message, String signature) throws ParseException {
     if (failOnUnresolvableSignatures) {
       throw new ParseException(String.format(Locale.ENGLISH, "%s while parsing signature: %s", message, signature));
@@ -356,7 +378,7 @@ public abstract class Checker {
   private int checkClass(final ClassReader reader) {
     final int[] violations = new int[1];
     final String className = Type.getObjectType(reader.getClassName()).getClassName();
-    reader.accept(new ClassScanner(this, className, violations), ClassReader.SKIP_FRAMES);
+    reader.accept(new ClassScanner(this, className, forbiddenClasses, forbiddenMethods, forbiddenFields, internalRuntimeForbidden, violations), ClassReader.SKIP_FRAMES);
     return violations[0];
   }
   
