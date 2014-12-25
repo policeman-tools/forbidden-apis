@@ -20,7 +20,7 @@ final class ClassScanner extends ClassVisitor {
   static final String DEPRECATED_DESCRIPTOR = DEPRECATED_TYPE.getDescriptor();
 
   final boolean internalRuntimeForbidden;
-  final Checker checker;
+  final RelatedClassLookup lookup;
   final int[] violations;
   final String className;
   
@@ -34,17 +34,22 @@ final class ClassScanner extends ClassVisitor {
   String source = null;
   boolean isDeprecated = false;
   
-  public ClassScanner(Checker checker, String className,
+  public ClassScanner(RelatedClassLookup lookup, String className,
       final Map<String,String> forbiddenClasses, Map<String,String> forbiddenMethods, Map<String,String> forbiddenFields,
       boolean internalRuntimeForbidden, int[] violations) {
     super(Opcodes.ASM5);
-    this.checker = checker;
-    this.violations = violations;
+    this.lookup = lookup;
     this.className = className;
     this.forbiddenClasses = forbiddenClasses;
     this.forbiddenMethods = forbiddenMethods;
     this.forbiddenFields = forbiddenFields;
     this.internalRuntimeForbidden = internalRuntimeForbidden;
+    this.violations = violations;
+  }
+  
+  // TODO: Hack - remove me!
+  void logError(String msg) {
+    ((Checker) lookup).logError(msg);
   }
   
   private boolean isInternalClass(String className) {
@@ -54,15 +59,15 @@ final class ClassScanner extends ClassVisitor {
   boolean checkClassUse(String internalName) {
     final String printout = forbiddenClasses.get(internalName);
     if (printout != null) {
-      checker.logError("Forbidden class/interface/annotation use: " + printout);
+      logError("Forbidden class/interface/annotation use: " + printout);
       return true;
     }
     if (internalRuntimeForbidden) {
       final String referencedClassName = Type.getObjectType(internalName).getClassName();
       if (isInternalClass(referencedClassName)) {
-        final ClassSignatureLookup c = checker.lookupRelatedClass(internalName);
+        final ClassSignature c = lookup.lookupRelatedClass(internalName);
         if (c == null || c.isRuntimeClass) {
-          checker.logError(String.format(Locale.ENGLISH,
+          logError(String.format(Locale.ENGLISH,
             "Forbidden class/interface/annotation use: %s [non-public internal runtime class]",
             referencedClassName
           ));
@@ -78,7 +83,7 @@ final class ClassScanner extends ClassVisitor {
       if (checkClassUse(superName)) {
         return true;
       }
-      final ClassSignatureLookup c = checker.lookupRelatedClass(superName);
+      final ClassSignature c = lookup.lookupRelatedClass(superName);
       if (c != null && checkClassDefinition(c.superName, c.interfaces)) {
         return true;
       }
@@ -88,7 +93,7 @@ final class ClassScanner extends ClassVisitor {
         if (checkClassUse(intf)) {
           return true;
         }
-        final ClassSignatureLookup c = checker.lookupRelatedClass(intf);
+        final ClassSignature c = lookup.lookupRelatedClass(intf);
         if (c != null && checkClassDefinition(c.superName, c.interfaces)) {
           return true;
         }
@@ -104,7 +109,7 @@ final class ClassScanner extends ClassVisitor {
           if (checkClassUse(type.getInternalName())) {
             return true;
           }
-          final ClassSignatureLookup c = checker.lookupRelatedClass(type.getInternalName());
+          final ClassSignature c = lookup.lookupRelatedClass(type.getInternalName());
           return (c != null && checkClassDefinition(c.superName, c.interfaces));
         case Type.ARRAY:
           type = type.getElementType();
@@ -135,7 +140,7 @@ final class ClassScanner extends ClassVisitor {
       } else {
         new Formatter(sb, Locale.ENGLISH).format(" (%s)", where).flush();
       }
-      checker.logError(sb.toString());
+      logError(sb.toString());
     }
   }
   
@@ -212,7 +217,7 @@ final class ClassScanner extends ClassVisitor {
           } else {
             new Formatter(sb, Locale.ENGLISH).format(" (%s of '%s')", where, name).flush();
           }
-          ClassScanner.this.checker.logError(sb.toString());
+          logError(sb.toString());
         }
       }
     };
@@ -240,10 +245,10 @@ final class ClassScanner extends ClassVisitor {
         }
         final String printout = forbiddenMethods.get(owner + '\000' + method);
         if (printout != null) {
-          ClassScanner.this.checker.logError("Forbidden method invocation: " + printout);
+          logError("Forbidden method invocation: " + printout);
           return true;
         }
-        final ClassSignatureLookup c = checker.lookupRelatedClass(owner);
+        final ClassSignature c = lookup.lookupRelatedClass(owner);
         if (c != null && !c.methods.contains(method)) {
           if (c.superName != null && checkMethodAccess(c.superName, method)) {
             return true;
@@ -266,10 +271,10 @@ final class ClassScanner extends ClassVisitor {
         }
         final String printout = forbiddenFields.get(owner + '\000' + field);
         if (printout != null) {
-          ClassScanner.this.checker.logError("Forbidden field access: " + printout);
+          logError("Forbidden field access: " + printout);
           return true;
         }
-        final ClassSignatureLookup c = checker.lookupRelatedClass(owner);
+        final ClassSignature c = lookup.lookupRelatedClass(owner);
         if (c != null && !c.fields.contains(field)) {
           if (c.interfaces != null) {
             for (String intf : c.interfaces) {
@@ -419,7 +424,7 @@ final class ClassScanner extends ClassVisitor {
           } else {
             new Formatter(sb, Locale.ENGLISH).format(" (%s of '%s')", where, getHumanReadableMethodSignature()).flush();
           }
-          ClassScanner.this.checker.logError(sb.toString());
+          logError(sb.toString());
         }
       }
       
