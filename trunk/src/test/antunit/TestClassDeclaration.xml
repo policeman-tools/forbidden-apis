@@ -26,7 +26,7 @@
       </forbiddenapis>
     </au:expectfailure>
     <au:assertLogContains level="error" text="java.lang.Object [Every class is not allowed!]"/> 
-    <au:assertLogContains level="error" text="(class declaration)"/> 
+    <au:assertLogContains level="error" text="class declaration"/> 
   </target>
   
   <target name="testForbiddenInterfaces">

@@ -1,0 +1,61 @@
+package de.thetaphi.forbiddenapis;
+
+/*
+ * (C) Copyright 2014 Uwe Schindler (Generics Policeman) and others.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+import java.util.Formatter;
+import java.util.Locale;
+
+public final class ForbiddenViolation implements Comparable<ForbiddenViolation> {
+  
+  public final String description;
+  public final String locationInfo;
+  public final int lineNo;
+  
+  ForbiddenViolation(String description, String locationInfo, int lineNo) {
+    this.description = description;
+    this.locationInfo = locationInfo;
+    this.lineNo = lineNo;
+  }
+  
+  @SuppressWarnings("resource")
+  public String format(String className, String source) {
+    final StringBuilder sb = new StringBuilder(description);
+    sb.append("\n  in ").append(className);
+    if (source != null) {
+      if (lineNo >= 0) {
+        new Formatter(sb, Locale.ENGLISH).format(" (%s:%d)", source, lineNo).flush();
+      } else {
+        new Formatter(sb, Locale.ENGLISH).format(" (%s, %s)", source, locationInfo).flush();
+      }
+    } else {
+      new Formatter(sb, Locale.ENGLISH).format(" (%s)", locationInfo).flush();
+    }
+    return sb.toString();
+  }
+
+  // not before Java 6: @Override
+  public int compareTo(ForbiddenViolation other) {
+    if (this.lineNo != other.lineNo) {
+      return Long.signum((long) this.lineNo - (long) other.lineNo);
+    } else if (this.locationInfo != null && other.locationInfo != null) {
+      return this.locationInfo.compareTo(other.locationInfo);
+    } else {
+      return 0;
+    }
+  }
+  
+}

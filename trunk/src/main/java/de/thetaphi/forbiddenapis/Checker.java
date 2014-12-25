@@ -38,6 +38,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -377,10 +378,16 @@ public abstract class Checker implements RelatedClassLookup {
   
   /** Parses a class and checks for valid method invocations */
   private int checkClass(final ClassReader reader) {
-    final int[] violations = new int[1];
     final String className = Type.getObjectType(reader.getClassName()).getClassName();
-    reader.accept(new ClassScanner(this, className, forbiddenClasses, forbiddenMethods, forbiddenFields, internalRuntimeForbidden, violations), ClassReader.SKIP_FRAMES);
-    return violations[0];
+    final ClassScanner scanner = new ClassScanner(this, forbiddenClasses, forbiddenMethods, forbiddenFields, internalRuntimeForbidden); 
+    reader.accept(scanner, ClassReader.SKIP_FRAMES);
+    final List<ForbiddenViolation> violations = scanner.getSortedViolations();
+    for (final ForbiddenViolation v : violations) {
+      for (final String line : v.format(className, scanner.getSourceFile()).split("\n")) {
+        logError(line);
+      }
+    }
+    return violations.size();
   }
   
   public final void run() throws ForbiddenApiException {
