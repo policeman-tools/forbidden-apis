@@ -2,6 +2,7 @@ package de.thetaphi.forbiddenapis;
 
 import java.util.Formatter;
 import java.util.Locale;
+import java.util.Map;
 
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.ClassVisitor;
@@ -18,40 +19,32 @@ final class ClassScanner extends ClassVisitor {
   static final Type DEPRECATED_TYPE = Type.getType(Deprecated.class);
   static final String DEPRECATED_DESCRIPTOR = DEPRECATED_TYPE.getDescriptor();
 
+  final boolean internalRuntimeForbidden;
   final Checker checker;
   final int[] violations;
   final String className;
   
+  // key is the internal name (slashed), followed by \000 and the field name:
+  final Map<String,String> forbiddenFields;
+  // key is the internal name (slashed), followed by \000 and the method signature:
+  final Map<String,String> forbiddenMethods;
+  // key is the internal name (slashed):
+  final Map<String,String> forbiddenClasses;
+  
   String source = null;
   boolean isDeprecated = false;
   
-  public ClassScanner(Checker checker, String className, int[] violations) {
+  public ClassScanner(Checker checker, String className,
+      final Map<String,String> forbiddenClasses, Map<String,String> forbiddenMethods, Map<String,String> forbiddenFields,
+      boolean internalRuntimeForbidden, int[] violations) {
     super(Opcodes.ASM5);
     this.checker = checker;
     this.violations = violations;
     this.className = className;
-  }
-  
-  ClassSignatureLookup lookupRelatedClass(String internalName) {
-    final Type type = Type.getObjectType(internalName);
-    if (type.getSort() != Type.OBJECT) {
-      return null;
-    }
-    ClassSignatureLookup c = checker.classesToCheck.get(internalName);
-    if (c == null) try {
-      // use binary name, so we need to convert:
-      c = checker.getClassFromClassLoader(type.getClassName());
-    } catch (ClassNotFoundException cnfe) {
-      if (checker.failOnMissingClasses) {
-        throw new WrapperRuntimeException(cnfe);
-      } else {
-        checker.logWarn(String.format(Locale.ENGLISH,
-          "The referenced class '%s' cannot be loaded. Please fix the classpath!",
-          type.getClassName()
-        ));
-      }
-    }
-    return c;
+    this.forbiddenClasses = forbiddenClasses;
+    this.forbiddenMethods = forbiddenMethods;
+    this.forbiddenFields = forbiddenFields;
+    this.internalRuntimeForbidden = internalRuntimeForbidden;
   }
   
   private boolean isInternalClass(String className) {
@@ -59,15 +52,15 @@ final class ClassScanner extends ClassVisitor {
   }
   
   boolean checkClassUse(String internalName) {
-    final String printout = checker.forbiddenClasses.get(internalName);
+    final String printout = forbiddenClasses.get(internalName);
     if (printout != null) {
       checker.logError("Forbidden class/interface/annotation use: " + printout);
       return true;
     }
-    if (checker.internalRuntimeForbidden) {
+    if (internalRuntimeForbidden) {
       final String referencedClassName = Type.getObjectType(internalName).getClassName();
       if (isInternalClass(referencedClassName)) {
-        final ClassSignatureLookup c = lookupRelatedClass(internalName);
+        final ClassSignatureLookup c = checker.lookupRelatedClass(internalName);
         if (c == null || c.isRuntimeClass) {
           checker.logError(String.format(Locale.ENGLISH,
             "Forbidden class/interface/annotation use: %s [non-public internal runtime class]",
@@ -85,7 +78,7 @@ final class ClassScanner extends ClassVisitor {
       if (checkClassUse(superName)) {
         return true;
       }
-      final ClassSignatureLookup c = lookupRelatedClass(superName);
+      final ClassSignatureLookup c = checker.lookupRelatedClass(superName);
       if (c != null && checkClassDefinition(c.superName, c.interfaces)) {
         return true;
       }
@@ -95,7 +88,7 @@ final class ClassScanner extends ClassVisitor {
         if (checkClassUse(intf)) {
           return true;
         }
-        final ClassSignatureLookup c = lookupRelatedClass(intf);
+        final ClassSignatureLookup c = checker.lookupRelatedClass(intf);
         if (c != null && checkClassDefinition(c.superName, c.interfaces)) {
           return true;
         }
@@ -111,7 +104,7 @@ final class ClassScanner extends ClassVisitor {
           if (checkClassUse(type.getInternalName())) {
             return true;
           }
-          final ClassSignatureLookup c = lookupRelatedClass(type.getInternalName());
+          final ClassSignatureLookup c = checker.lookupRelatedClass(type.getInternalName());
           return (c != null && checkClassDefinition(c.superName, c.interfaces));
         case Type.ARRAY:
           type = type.getElementType();
@@ -245,12 +238,12 @@ final class ClassScanner extends ClassVisitor {
         if (checkClassUse(owner)) {
           return true;
         }
-        final String printout = ClassScanner.this.checker.forbiddenMethods.get(owner + '\000' + method);
+        final String printout = forbiddenMethods.get(owner + '\000' + method);
         if (printout != null) {
           ClassScanner.this.checker.logError("Forbidden method invocation: " + printout);
           return true;
         }
-        final ClassSignatureLookup c = lookupRelatedClass(owner);
+        final ClassSignatureLookup c = checker.lookupRelatedClass(owner);
         if (c != null && !c.methods.contains(method)) {
           if (c.superName != null && checkMethodAccess(c.superName, method)) {
             return true;
@@ -271,12 +264,12 @@ final class ClassScanner extends ClassVisitor {
         if (checkClassUse(owner)) {
           return true;
         }
-        final String printout = ClassScanner.this.checker.forbiddenFields.get(owner + '\000' + field);
+        final String printout = forbiddenFields.get(owner + '\000' + field);
         if (printout != null) {
           ClassScanner.this.checker.logError("Forbidden field access: " + printout);
           return true;
         }
-        final ClassSignatureLookup c = lookupRelatedClass(owner);
+        final ClassSignatureLookup c = checker.lookupRelatedClass(owner);
         if (c != null && !c.fields.contains(field)) {
           if (c.interfaces != null) {
             for (String intf : c.interfaces) {
