@@ -90,10 +90,10 @@ final class ClassScanner extends ClassVisitor {
     return className.startsWith("sun.") || className.startsWith("com.sun.") || className.startsWith("com.oracle.") || className.startsWith("jdk.")  || className.startsWith("sunw.");
   }
   
-  String checkClassUse(String internalName) {
+  String checkClassUse(String internalName, String what) {
     final String printout = forbiddenClasses.get(internalName);
     if (printout != null) {
-      return "Forbidden class/interface/annotation use: " + printout;
+      return String.format(Locale.ENGLISH, "Forbidden %s use: %s", what, printout);
     }
     if (internalRuntimeForbidden) {
       final String referencedClassName = Type.getObjectType(internalName).getClassName();
@@ -101,8 +101,8 @@ final class ClassScanner extends ClassVisitor {
         final ClassSignature c = lookup.lookupRelatedClass(internalName);
         if (c == null || c.isRuntimeClass) {
           return String.format(Locale.ENGLISH,
-            "Forbidden class/interface/annotation use: %s [non-public internal runtime class]",
-            referencedClassName
+            "Forbidden %s use: %s [non-public internal runtime class]",
+            what, referencedClassName
           );
         }
       }
@@ -112,7 +112,7 @@ final class ClassScanner extends ClassVisitor {
   
   private String checkClassDefinition(String superName, String[] interfaces) {
     if (superName != null) {
-      String violation = checkClassUse(superName);
+      String violation = checkClassUse(superName, "class");
       if (violation != null) {
         return violation;
       }
@@ -123,7 +123,7 @@ final class ClassScanner extends ClassVisitor {
     }
     if (interfaces != null) {
       for (String intf : interfaces) {
-        String violation = checkClassUse(intf);
+        String violation = checkClassUse(intf, "interface");
         if (violation != null) {
           return violation;
         }
@@ -141,7 +141,7 @@ final class ClassScanner extends ClassVisitor {
       String violation;
       switch (type.getSort()) {
         case Type.OBJECT:
-          violation = checkClassUse(type.getInternalName());
+          violation = checkClassUse(type.getInternalName(), "class/interface");
           if (violation != null) {
             return violation;
           }
@@ -188,6 +188,28 @@ final class ClassScanner extends ClassVisitor {
     return checkType(Type.getType(desc));
   }
   
+  String checkAnnotationDescriptor(String desc, boolean visible) {
+    final Type type = Type.getType(desc);
+    if (type.getSort() != Type.OBJECT) {
+      // should never happen for annotations!
+      throw new IllegalArgumentException("Annotation descriptor '" + desc + "' has wrong sort: " + type.getSort());
+    }
+    if (visible) {
+      // for visible annotations, we don't need to look into super-classes, interfaces,...
+      // -> we just check if its disallowed or internal runtime!
+      return checkClassUse(type.getInternalName(), "annotation");
+    } else {
+      // if annotation is not visible at runtime, we don't do deep checks (not
+      // even internal runtime checks), just lookup in forbidden classes list!
+      // The reason for this is: They may not be available in classpath at all!!!
+      final String printout = forbiddenClasses.get(type.getInternalName());
+      if (printout != null) {
+        return "Forbidden annotation use: " + printout;
+      }
+    }
+    return null;
+  }
+  
   private void reportClassViolation(String violation, String where) {
     if (violation != null) {
       violations.add(new ForbiddenViolation(currentGroupId, violation, where, -1));
@@ -215,15 +237,13 @@ final class ClassScanner extends ClassVisitor {
       // don't report 2 times!
       return null;
     }
-    if (visible) {
-      reportClassViolation(checkDescriptor(desc), "annotation on class declaration");
-    }
+    reportClassViolation(checkAnnotationDescriptor(desc, visible), "annotation on class declaration");
     return null;
   }
   
   @Override
   public AnnotationVisitor visitTypeAnnotation(int typeRef, TypePath typePath, String desc, boolean visible) {
-    if (visible) reportClassViolation(checkDescriptor(desc), "type annotation on class declaration");
+    reportClassViolation(checkAnnotationDescriptor(desc, visible), "type annotation on class declaration");
     return null;
   }
   
@@ -248,15 +268,13 @@ final class ClassScanner extends ClassVisitor {
           // don't report 2 times!
           return null;
         }
-        if (visible) {
-          reportFieldViolation(checkDescriptor(desc), "annotation on field declaration");
-        }
+        reportFieldViolation(checkAnnotationDescriptor(desc, visible), "annotation on field declaration");
         return null;
       }
 
       @Override
       public AnnotationVisitor visitTypeAnnotation(int typeRef, TypePath typePath, String desc, boolean visible) {
-        if (visible) reportFieldViolation(checkDescriptor(desc), "type annotation on field declaration");
+        reportFieldViolation(checkAnnotationDescriptor(desc, visible), "type annotation on field declaration");
         return null;
       }
       
@@ -287,7 +305,7 @@ final class ClassScanner extends ClassVisitor {
       }
       
       private String checkMethodAccess(String owner, Method method) {
-        String violation = checkClassUse(owner);
+        String violation = checkClassUse(owner, "class/interface");
         if (violation != null) {
           return violation;
         }
@@ -313,7 +331,7 @@ final class ClassScanner extends ClassVisitor {
       }
       
       private String checkFieldAccess(String owner, String field) {
-        String violation = checkClassUse(owner);
+        String violation = checkClassUse(owner, "class/interface");
         if (violation != null) {
           return violation;
         }
@@ -387,39 +405,37 @@ final class ClassScanner extends ClassVisitor {
           // don't report 2 times!
           return null;
         }
-        if (visible) {
-          reportMethodViolation(checkDescriptor(desc), "annotation on method declaration");
-        }
+        reportMethodViolation(checkAnnotationDescriptor(desc, visible), "annotation on method declaration");
         return null;
       }
 
       @Override
       public AnnotationVisitor visitParameterAnnotation(int parameter, String desc, boolean visible) {
-        if (visible) reportMethodViolation(checkDescriptor(desc), "parameter annotation on method declaration");
+        reportMethodViolation(checkAnnotationDescriptor(desc, visible), "parameter annotation on method declaration");
         return null;
       }
 
       @Override
       public AnnotationVisitor visitTypeAnnotation(int typeRef, TypePath typePath, String desc, boolean visible) {
-        if (visible) reportMethodViolation(checkDescriptor(desc), "type annotation on method declaration");
+        reportMethodViolation(checkAnnotationDescriptor(desc, visible), "type annotation on method declaration");
         return null;
       }
 
       @Override
       public AnnotationVisitor visitInsnAnnotation(int typeRef, TypePath typePath, String desc, boolean visible) {
-        if (visible) reportMethodViolation(checkDescriptor(desc), "annotation in method body");
+        reportMethodViolation(checkAnnotationDescriptor(desc, visible), "annotation in method body");
         return null;
       }
 
       @Override
       public AnnotationVisitor visitLocalVariableAnnotation(int typeRef, TypePath typePath, Label[] start, Label[] end, int[] index, String desc, boolean visible) {
-        if (visible) reportMethodViolation(checkDescriptor(desc), "annotation in method body");
+        reportMethodViolation(checkAnnotationDescriptor(desc, visible), "annotation in method body");
         return null;
       }
       
       @Override
       public AnnotationVisitor visitTryCatchAnnotation(int typeRef, TypePath typePath, String desc, boolean visible) {
-        if (visible) reportMethodViolation(checkDescriptor(desc), "annotation in method body");
+        reportMethodViolation(checkAnnotationDescriptor(desc, visible), "annotation in method body");
         return null;
       }
       
