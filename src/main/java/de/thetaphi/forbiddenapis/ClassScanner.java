@@ -39,6 +39,9 @@ import org.objectweb.asm.commons.Method;
 final class ClassScanner extends ClassVisitor {
   static final Type DEPRECATED_TYPE = Type.getType(Deprecated.class);
   static final String DEPRECATED_DESCRIPTOR = DEPRECATED_TYPE.getDescriptor();
+  
+  static final String LAMBDA_META_FACTORY_INTERNALNAME = "java/lang/invoke/LambdaMetafactory";
+  static final String LAMBDA_METHOD_NAME_PREFIX = "lambda$";
 
   private final boolean internalRuntimeForbidden;
   final RelatedClassLookup lookup;
@@ -356,7 +359,7 @@ final class ClassScanner extends ClassVisitor {
         return null;
       }
 
-      private String checkHandle(Handle handle, boolean isIndyBSMArg) {
+      private String checkHandle(Handle handle, boolean checkLambdaHandle) {
         switch (handle.getTag()) {
           case Opcodes.H_GETFIELD:
           case Opcodes.H_PUTFIELD:
@@ -369,7 +372,7 @@ final class ClassScanner extends ClassVisitor {
           case Opcodes.H_NEWINVOKESPECIAL:
           case Opcodes.H_INVOKEINTERFACE:
             final Method m = new Method(handle.getName(), handle.getDesc());
-            if (isIndyBSMArg && handle.getOwner().equals(internalName) && handle.getName().startsWith("lambda$")) {
+            if (checkLambdaHandle && handle.getOwner().equals(internalName) && handle.getName().startsWith(LAMBDA_METHOD_NAME_PREFIX)) {
               // as described in <http://cr.openjdk.java.net/~briangoetz/lambda/lambda-translation.html>,
               // we will record this metafactory call as "lambda" invokedynamic,
               // so we can assign the called lambda with the same groupId like *this* method:
@@ -380,11 +383,11 @@ final class ClassScanner extends ClassVisitor {
         return null;
       }
       
-      private String checkConstant(Object cst, boolean isIndyBSMArg) {
+      private String checkConstant(Object cst, boolean checkLambdaHandle) {
         if (cst instanceof Type) {
           return checkType((Type) cst);
         } else if (cst instanceof Handle) {
-          return checkHandle((Handle) cst, isIndyBSMArg);
+          return checkHandle((Handle) cst, checkLambdaHandle);
         }
         return null;
       }
@@ -458,9 +461,10 @@ final class ClassScanner extends ClassVisitor {
       
       @Override
       public void visitInvokeDynamicInsn(String name, String desc, Handle bsm, Object... bsmArgs) {
+        final boolean isLambdaMetaFactory = LAMBDA_META_FACTORY_INTERNALNAME.equals(bsm.getOwner());
         reportMethodViolation(checkHandle(bsm, false), "method body");
         for (final Object cst : bsmArgs) {
-          reportMethodViolation(checkConstant(cst, true), "method body");
+          reportMethodViolation(checkConstant(cst, isLambdaMetaFactory), "method body");
         }
       }
       
