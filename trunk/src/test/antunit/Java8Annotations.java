@@ -51,7 +51,14 @@ class Java8Annotations<@Java8Annotations.FooBar X> {
   @FooBar
   public int testField2;
   
+  @ClassFileOnly
+  public int testField3;
+  
   @Retention(value=RetentionPolicy.RUNTIME)
   @Target({ElementType.TYPE_USE, ElementType.PARAMETER, ElementType.METHOD, ElementType.TYPE})
   static @interface FooBar {}
+  
+  @Retention(value=RetentionPolicy.CLASS)
+  @Target({ElementType.TYPE_USE, ElementType.PARAMETER, ElementType.METHOD, ElementType.TYPE})
+  static @interface ClassFileOnly {}
 }
