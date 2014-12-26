@@ -393,16 +393,6 @@ final class ClassScanner extends ClassVisitor {
       }
 
       @Override
-      public void visitMethodInsn(int opcode, String owner, String name, String desc, boolean itf) {
-        reportMethodViolation(checkMethodAccess(owner, new Method(name, desc)), "method body");
-      }
-      
-      @Override
-      public void visitFieldInsn(int opcode, String owner, String name, String desc) {
-        reportMethodViolation(checkFieldAccess(owner, name), "method body");
-      }
-      
-      @Override
       public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
         if (this.isDeprecated && DEPRECATED_DESCRIPTOR.equals(desc)) {
           // don't report 2 times!
@@ -440,6 +430,16 @@ final class ClassScanner extends ClassVisitor {
       public AnnotationVisitor visitTryCatchAnnotation(int typeRef, TypePath typePath, String desc, boolean visible) {
         reportMethodViolation(checkAnnotationDescriptor(desc, visible), "annotation in method body");
         return null;
+      }
+      
+      @Override
+      public void visitMethodInsn(int opcode, String owner, String name, String desc, boolean itf) {
+        reportMethodViolation(checkMethodAccess(owner, new Method(name, desc)), "method body");
+      }
+      
+      @Override
+      public void visitFieldInsn(int opcode, String owner, String name, String desc) {
+        reportMethodViolation(checkFieldAccess(owner, name), "method body");
       }
       
       @Override
