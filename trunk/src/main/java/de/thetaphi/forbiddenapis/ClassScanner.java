@@ -371,7 +371,7 @@ final class ClassScanner extends ClassVisitor {
             final Method m = new Method(handle.getName(), handle.getDesc());
             if (isIndyBSMArg && handle.getOwner().equals(internalName) && handle.getName().startsWith("lambda$")) {
               // as described in <http://cr.openjdk.java.net/~briangoetz/lambda/lambda-translation.html>,
-              // we will record this metafactory call as "lamda" invokedynamic,
+              // we will record this metafactory call as "lambda" invokedynamic,
               // so we can assign the called lambda with the same groupId like *this* method:
               lambdas.put(m, currentGroupId);
             }
