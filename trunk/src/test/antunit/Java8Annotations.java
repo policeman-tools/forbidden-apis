@@ -59,6 +59,6 @@ class Java8Annotations<@Java8Annotations.FooBar X> {
   static @interface FooBar {}
   
   @Retention(value=RetentionPolicy.CLASS)
-  @Target({ElementType.TYPE_USE, ElementType.PARAMETER, ElementType.METHOD, ElementType.TYPE})
+  @Target({ElementType.FIELD, ElementType.METHOD})
   static @interface ClassFileOnly {}
 }
