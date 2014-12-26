@@ -20,6 +20,7 @@ package de.thetaphi.forbiddenapis;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -53,6 +54,11 @@ final class ClassScanner extends ClassVisitor {
   private String source = null;
   private boolean isDeprecated = false;
   private boolean done = false;
+  String internalName = null;
+  int currentGroupId = 0;
+  
+  // Mapping from a (possible) lambda Method to groupId of declaring method
+  final Map<Method,Integer> lambdas = new HashMap<Method,Integer>();
   
   public ClassScanner(RelatedClassLookup lookup,
       final Map<String,String> forbiddenClasses, Map<String,String> forbiddenMethods, Map<String,String> forbiddenFields,
@@ -184,12 +190,13 @@ final class ClassScanner extends ClassVisitor {
   
   private void reportClassViolation(String violation, String where) {
     if (violation != null) {
-      violations.add(new ForbiddenViolation(violation, where, -1));
+      violations.add(new ForbiddenViolation(currentGroupId, violation, where, -1));
     }
   }
   
   @Override
   public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
+    this.internalName = name;
     this.isDeprecated = (access & Opcodes.ACC_DEPRECATED) != 0;
     reportClassViolation(checkClassDefinition(superName, interfaces), "class declaration");
     if (this.isDeprecated) {
@@ -222,6 +229,7 @@ final class ClassScanner extends ClassVisitor {
   
   @Override
   public FieldVisitor visitField(final int access, final String name, final String desc, String signature, Object value) {
+    currentGroupId++;
     return new FieldVisitor(Opcodes.ASM5) {
       final boolean isDeprecated = (access & Opcodes.ACC_DEPRECATED) != 0;
       {
@@ -254,7 +262,7 @@ final class ClassScanner extends ClassVisitor {
       
       private void reportFieldViolation(String violation, String where) {
         if (violation != null) {
-          violations.add(new ForbiddenViolation(violation, String.format(Locale.ENGLISH, "%s of '%s'", where, name), -1));
+          violations.add(new ForbiddenViolation(currentGroupId, violation, String.format(Locale.ENGLISH, "%s of '%s'", where, name), -1));
         }
       }
     };
@@ -262,8 +270,10 @@ final class ClassScanner extends ClassVisitor {
   
   @Override
   public MethodVisitor visitMethod(final int access, final String name, final String desc, String signature, String[] exceptions) {
+    currentGroupId++;
     return new MethodVisitor(Opcodes.ASM5) {
-      final boolean isDeprecated = (access & Opcodes.ACC_DEPRECATED) != 0;
+      private final Method myself = new Method(name, desc);
+      private final boolean isDeprecated = (access & Opcodes.ACC_DEPRECATED) != 0;
       private int lineNo = -1;
       
       {
@@ -340,7 +350,14 @@ final class ClassScanner extends ClassVisitor {
           case Opcodes.H_INVOKESPECIAL:
           case Opcodes.H_NEWINVOKESPECIAL:
           case Opcodes.H_INVOKEINTERFACE:
-            return checkMethodAccess(handle.getOwner(), new Method(handle.getName(), handle.getDesc()));
+            final Method m = new Method(handle.getName(), handle.getDesc());
+            if (handle.getOwner().equals(internalName) && handle.getName().startsWith("lambda$")) {
+              // as described in <http://cr.openjdk.java.net/~briangoetz/lambda/lambda-translation.html>,
+              // we will record this metafactory call as "lamda" invokedynamic,
+              // so we can assign the called lambda with the same groupId like *this* method:
+              lambdas.put(m, currentGroupId);
+            }
+            return checkMethodAccess(handle.getOwner(), m);
         }
         return null;
       }
@@ -432,8 +449,8 @@ final class ClassScanner extends ClassVisitor {
       }
       
       private String getHumanReadableMethodSignature() {
-        final Type[] args = Type.getType(desc).getArgumentTypes();
-        final StringBuilder sb = new StringBuilder(name).append('(');
+        final Type[] args = Type.getType(myself.getDescriptor()).getArgumentTypes();
+        final StringBuilder sb = new StringBuilder(myself.getName()).append('(');
         boolean comma = false;
         for (final Type t : args) {
           if (comma) sb.append(',');
@@ -446,7 +463,7 @@ final class ClassScanner extends ClassVisitor {
 
       private void reportMethodViolation(String violation, String where) {
         if (violation != null) {
-          violations.add(new ForbiddenViolation(violation, String.format(Locale.ENGLISH, "%s of '%s'", where, getHumanReadableMethodSignature()), lineNo));
+          violations.add(new ForbiddenViolation(currentGroupId, myself, violation, String.format(Locale.ENGLISH, "%s of '%s'", where, getHumanReadableMethodSignature()), lineNo));
         }
       }
       
@@ -459,7 +476,17 @@ final class ClassScanner extends ClassVisitor {
 
   @Override
   public void visitEnd() {
-    // don't sort yet, needs more work: Collections.sort(violations);
+    // fixup lambdas by assigning them the groupId where they were originally declared:
+    for (final ForbiddenViolation v : violations) {
+      if (v.targetMethod != null) {
+        final Integer newGroupId = lambdas.get(v.targetMethod);
+        if (newGroupId != null) {
+          v.setGroupId(newGroupId.intValue());
+        }
+      }
+    }
+    // sort the violations by group id and later by line number:
+    Collections.sort(violations);
     done = true;
   }
   
