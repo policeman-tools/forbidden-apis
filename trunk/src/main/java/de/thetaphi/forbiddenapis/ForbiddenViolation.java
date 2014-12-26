@@ -19,16 +19,30 @@ package de.thetaphi.forbiddenapis;
 import java.util.Formatter;
 import java.util.Locale;
 
+import org.objectweb.asm.commons.Method;
+
 public final class ForbiddenViolation implements Comparable<ForbiddenViolation> {
   
+  private int groupId;
+  public final Method targetMethod;
   public final String description;
   public final String locationInfo;
   public final int lineNo;
   
-  ForbiddenViolation(String description, String locationInfo, int lineNo) {
+  ForbiddenViolation(int counter, String description, String locationInfo, int lineNo) {
+    this(counter, null, description, locationInfo, lineNo);
+  }
+
+  ForbiddenViolation(int counter, Method targetMethod, String description, String locationInfo, int lineNo) {
+    this.groupId = counter;
+    this.targetMethod = targetMethod;
     this.description = description;
     this.locationInfo = locationInfo;
     this.lineNo = lineNo;
+  }
+  
+  public void setGroupId(int groupId) {
+    this.groupId = groupId;
   }
   
   @SuppressWarnings("resource")
@@ -49,12 +63,10 @@ public final class ForbiddenViolation implements Comparable<ForbiddenViolation> 
 
   // not before Java 6: @Override
   public int compareTo(ForbiddenViolation other) {
-    if (this.lineNo != other.lineNo) {
+    if (this.groupId == other.groupId) {
       return Long.signum((long) this.lineNo - (long) other.lineNo);
-    } else if (this.locationInfo != null && other.locationInfo != null) {
-      return this.locationInfo.compareTo(other.locationInfo);
     } else {
-      return 0;
+      return Long.signum((long) this.groupId - (long) other.groupId);
     }
   }
   
