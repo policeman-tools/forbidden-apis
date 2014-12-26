@@ -356,7 +356,7 @@ final class ClassScanner extends ClassVisitor {
         return null;
       }
 
-      private String checkHandle(Handle handle) {
+      private String checkHandle(Handle handle, boolean indy) {
         switch (handle.getTag()) {
           case Opcodes.H_GETFIELD:
           case Opcodes.H_PUTFIELD:
@@ -369,7 +369,7 @@ final class ClassScanner extends ClassVisitor {
           case Opcodes.H_NEWINVOKESPECIAL:
           case Opcodes.H_INVOKEINTERFACE:
             final Method m = new Method(handle.getName(), handle.getDesc());
-            if (handle.getOwner().equals(internalName) && handle.getName().startsWith("lambda$")) {
+            if (indy && handle.getOwner().equals(internalName) && handle.getName().startsWith("lambda$")) {
               // as described in <http://cr.openjdk.java.net/~briangoetz/lambda/lambda-translation.html>,
               // we will record this metafactory call as "lamda" invokedynamic,
               // so we can assign the called lambda with the same groupId like *this* method:
@@ -380,11 +380,11 @@ final class ClassScanner extends ClassVisitor {
         return null;
       }
       
-      private String checkConstant(Object cst) {
+      private String checkConstant(Object cst, boolean indy) {
         if (cst instanceof Type) {
           return checkType((Type) cst);
         } else if (cst instanceof Handle) {
-          return checkHandle((Handle) cst);
+          return checkHandle((Handle) cst, indy);
         }
         return null;
       }
@@ -453,14 +453,14 @@ final class ClassScanner extends ClassVisitor {
       
       @Override
       public void visitLdcInsn(Object cst) {
-        reportMethodViolation(checkConstant(cst), "method body");
+        reportMethodViolation(checkConstant(cst, false), "method body");
       }
       
       @Override
       public void visitInvokeDynamicInsn(String name, String desc, Handle bsm, Object... bsmArgs) {
-        reportMethodViolation(checkHandle(bsm), "method body");
+        reportMethodViolation(checkHandle(bsm, true), "method body");
         for (final Object cst : bsmArgs) {
-          reportMethodViolation(checkConstant(cst), "method body");
+          reportMethodViolation(checkConstant(cst, true), "method body");
         }
       }
       
