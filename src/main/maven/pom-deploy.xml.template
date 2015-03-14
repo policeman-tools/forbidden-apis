@@ -41,7 +41,7 @@
 
   <developers>
     <developer>
-      <id>uwe.h.schindler</id>
+      <id>uschindler</id>
       <name>Uwe Schindler</name>
       <url>http://www.thetaphi.de/</url>
       <roles>
@@ -51,7 +51,7 @@
       <timezone>+1</timezone>
     </developer>
     <developer>
-      <id>rcmuir</id>
+      <id>rmuir</id>
       <name>Robert Muir</name>
       <roles>
         <role>developer</role>
