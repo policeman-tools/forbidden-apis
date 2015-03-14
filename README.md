@@ -1,4 +1,4 @@
-= Policeman's Forbidden API Checker =
+# Policeman's Forbidden API Checker #
 
 Allows to parse Java byte code to find invocations of method/class/field
 signatures and fail build (Apache Ant or Apache Maven).
