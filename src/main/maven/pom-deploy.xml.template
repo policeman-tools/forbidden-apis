@@ -6,7 +6,7 @@
   <version>@VERSION@</version>
   <name>@NAME@</name>
   <description>@DESCRIPTION@</description>
-  <url>http://code.google.com/p/forbidden-apis/</url>
+  <url>https://github.com/policeman-tools/forbidden-apis</url>
   <inceptionYear>2013</inceptionYear>
   <packaging>maven-plugin</packaging>
   
@@ -24,14 +24,14 @@
   </licenses>
   
   <scm>
-    <connection>scm:svn:http://forbidden-apis.googlecode.com/svn/trunk/</connection>
-    <developerConnection>scm:svn:https://forbidden-apis.googlecode.com/svn/trunk/</developerConnection>
-    <url>http://code.google.com/p/forbidden-apis/source/browse/</url>
+    <connection>scm:git:https://github.com/policeman-tools/forbidden-apis.git</connection>
+    <developerConnection>scm:git:https://github.com/policeman-tools/forbidden-apis.git</developerConnection>
+    <url>https://github.com/policeman-tools/forbidden-apis</url>
   </scm>
   
   <issueManagement>
-    <system>Google Code Issue Tracker</system>
-    <url>http://code.google.com/p/forbidden-apis/issues/list</url>
+    <system>Github Issue Tracker</system>
+    <url>https://github.com/policeman-tools/forbidden-apis/issues</url>
   </issueManagement>
   
   <ciManagement>
