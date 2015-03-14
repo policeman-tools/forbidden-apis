@@ -4,12 +4,13 @@ Allows to parse Java byte code to find invocations of method/class/field
 signatures and fail build (Apache Ant or Apache Maven).
 
 Please refer to the Github
-[Wiki & Documentation](https://github.com/policeman-tools/forbidden-apis/wiki)
+[Wiki & Documentation](https://github.com/policeman-tools/forbidden-apis/wiki).
 
 See also:
 
   * [Github Homepage](https://github.com/policeman-tools/forbidden-apis)
   * [Blog Post](http://blog.thetaphi.de/2012/07/default-locales-default-charsets-and.html)
+  * [Jenkins CI](http://jenkins.thetaphi.de/job/Forbidden-APIs/)
 
 The checker is available as Apache Ant Task or as Apache Maven Mojo.
 In addition there is a command line tool (CLI):
