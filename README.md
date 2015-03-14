@@ -25,3 +25,4 @@ version of Ant automatically.
   * [Github Homepage](https://github.com/policeman-tools/forbidden-apis)
   * [Blog Post](http://blog.thetaphi.de/2012/07/default-locales-default-charsets-and.html)
   * [Jenkins CI](http://jenkins.thetaphi.de/job/Forbidden-APIs/)
+  * [Open HUB](https://www.openhub.net/p/forbidden-apis)
