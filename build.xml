@@ -323,7 +323,7 @@
   <target name="jar-src" description="Create source distribution">
     <mkdir dir="dist"/>
     <zip destfile="${sources-jar-file}" encoding="${build.encoding}">
-      <zipfileset dir="." includes="*.xml,*.txt,src/**,bundled-licenses/**" prefix="${artifactId}-${version}"/>
+      <zipfileset dir="." excludes="build/**,dist/**" prefix="${artifactId}-${version}"/>
     </zip>
   </target>
 
