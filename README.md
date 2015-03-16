@@ -18,7 +18,7 @@ In addition there is a command line tool (CLI):
 This project uses Apache Ant (and Apache Ivy) to build. The minimum
 Ant version is 1.8.0 and it is recommended to not have Apache Ivy in
 the Ant lib folder, because the build script will download the correct
-version of Ant automatically.
+version of Ivy automatically.
 
 ## Project Resources ##
 
