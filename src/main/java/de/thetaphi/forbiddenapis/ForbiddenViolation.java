@@ -45,6 +45,10 @@ public final class ForbiddenViolation implements Comparable<ForbiddenViolation> 
     this.groupId = groupId;
   }
   
+  public int getGroupId() {
+    return groupId;
+  }
+  
   @SuppressWarnings("resource")
   public String format(String className, String source) {
     final StringBuilder sb = new StringBuilder(description);

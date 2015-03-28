@@ -19,11 +19,14 @@ package de.thetaphi.forbiddenapis;
  */
 
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.ClassVisitor;
@@ -53,6 +56,8 @@ final class ClassScanner extends ClassVisitor {
   final Map<String,String> forbiddenMethods;
   // key is the internal name (slashed):
   final Map<String,String> forbiddenClasses;
+  // internal names of all annotation that suppress:
+  final Set<String> suppressAnnotations;
   
   private String source = null;
   private boolean isDeprecated = false;
@@ -63,6 +68,9 @@ final class ClassScanner extends ClassVisitor {
   // Mapping from a (possible) lambda Method to groupId of declaring method
   final Map<Method,Integer> lambdas = new HashMap<Method,Integer>();
   
+  // all groups that were disabled due to supressing annotation
+  final BitSet suppressedGroups = new BitSet();
+  
   public ClassScanner(RelatedClassLookup lookup,
       final Map<String,String> forbiddenClasses, Map<String,String> forbiddenMethods, Map<String,String> forbiddenFields,
       boolean internalRuntimeForbidden) {
@@ -71,6 +79,7 @@ final class ClassScanner extends ClassVisitor {
     this.forbiddenClasses = forbiddenClasses;
     this.forbiddenMethods = forbiddenMethods;
     this.forbiddenFields = forbiddenFields;
+    this.suppressAnnotations = Collections.emptySet();
     this.internalRuntimeForbidden = internalRuntimeForbidden;
   }
   
@@ -502,6 +511,15 @@ final class ClassScanner extends ClassVisitor {
         final Integer newGroupId = lambdas.get(v.targetMethod);
         if (newGroupId != null) {
           v.setGroupId(newGroupId.intValue());
+        }
+      }
+    }
+    // filter out suppressed groups
+    if (!suppressedGroups.isEmpty()) {
+      for (final Iterator<ForbiddenViolation> it = violations.iterator(); it.hasNext();) {
+        final ForbiddenViolation v = it.next();
+        if (suppressedGroups.get(v.getGroupId())) {
+          it.remove();
         }
       }
     }
