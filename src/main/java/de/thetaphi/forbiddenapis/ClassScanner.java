@@ -56,7 +56,7 @@ final class ClassScanner extends ClassVisitor {
   final Map<String,String> forbiddenMethods;
   // key is the internal name (slashed):
   final Map<String,String> forbiddenClasses;
-  // internal names of all annotation that suppress:
+  // descriptors (not internal names) of all annotation that suppress:
   final Set<String> suppressAnnotations;
   
   private String source = null;
@@ -70,6 +70,7 @@ final class ClassScanner extends ClassVisitor {
   
   // all groups that were disabled due to supressing annotation
   final BitSet suppressedGroups = new BitSet();
+  boolean classSuppressed = false;
   
   public ClassScanner(RelatedClassLookup lookup,
       final Map<String,String> forbiddenClasses, Map<String,String> forbiddenMethods, Map<String,String> forbiddenFields,
@@ -79,7 +80,7 @@ final class ClassScanner extends ClassVisitor {
     this.forbiddenClasses = forbiddenClasses;
     this.forbiddenMethods = forbiddenMethods;
     this.forbiddenFields = forbiddenFields;
-    this.suppressAnnotations = Collections.emptySet();
+    this.suppressAnnotations = Collections.singleton(Type.getDescriptor(SuppressForbidden.class));
     this.internalRuntimeForbidden = internalRuntimeForbidden;
   }
   
@@ -90,7 +91,7 @@ final class ClassScanner extends ClassVisitor {
   
   public List<ForbiddenViolation> getSortedViolations() {
     checkDone();
-    return Collections.unmodifiableList(violations);
+    return classSuppressed ? Collections.<ForbiddenViolation>emptyList() : Collections.unmodifiableList(violations);
   }
   
   public String getSourceFile() {
@@ -222,6 +223,12 @@ final class ClassScanner extends ClassVisitor {
     return null;
   }
   
+  void maybeSuppressCurrentGroup(String annotationDesc) {
+    if (suppressAnnotations.contains(annotationDesc)) {
+      suppressedGroups.set(currentGroupId);
+    }
+  }
+  
   private void reportClassViolation(String violation, String where) {
     if (violation != null) {
       violations.add(new ForbiddenViolation(currentGroupId, violation, where, -1));
@@ -234,6 +241,7 @@ final class ClassScanner extends ClassVisitor {
     this.isDeprecated = (access & Opcodes.ACC_DEPRECATED) != 0;
     reportClassViolation(checkClassDefinition(superName, interfaces), "class declaration");
     if (this.isDeprecated) {
+      classSuppressed |= suppressAnnotations.contains(DEPRECATED_DESCRIPTOR);
       reportClassViolation(checkType(DEPRECATED_TYPE), "deprecation on class declaration");
     }
   }
@@ -249,6 +257,7 @@ final class ClassScanner extends ClassVisitor {
       // don't report 2 times!
       return null;
     }
+    classSuppressed |= suppressAnnotations.contains(desc);
     reportClassViolation(checkAnnotationDescriptor(desc, visible), "annotation on class declaration");
     return null;
   }
@@ -262,6 +271,9 @@ final class ClassScanner extends ClassVisitor {
   @Override
   public FieldVisitor visitField(final int access, final String name, final String desc, String signature, Object value) {
     currentGroupId++;
+    if (classSuppressed) {
+      return null;
+    }
     return new FieldVisitor(Opcodes.ASM5) {
       final boolean isDeprecated = (access & Opcodes.ACC_DEPRECATED) != 0;
       {
@@ -270,6 +282,7 @@ final class ClassScanner extends ClassVisitor {
           reportFieldViolation(checkDescriptor(desc), "field declaration");
         }
         if (this.isDeprecated) {
+          maybeSuppressCurrentGroup(DEPRECATED_DESCRIPTOR);
           reportFieldViolation(checkType(DEPRECATED_TYPE), "deprecation on field declaration");
         }
       }
@@ -280,6 +293,7 @@ final class ClassScanner extends ClassVisitor {
           // don't report 2 times!
           return null;
         }
+        maybeSuppressCurrentGroup(desc);
         reportFieldViolation(checkAnnotationDescriptor(desc, visible), "annotation on field declaration");
         return null;
       }
@@ -301,6 +315,9 @@ final class ClassScanner extends ClassVisitor {
   @Override
   public MethodVisitor visitMethod(final int access, final String name, final String desc, String signature, String[] exceptions) {
     currentGroupId++;
+    if (classSuppressed) {
+      return null;
+    }
     return new MethodVisitor(Opcodes.ASM5) {
       private final Method myself = new Method(name, desc);
       private final boolean isDeprecated = (access & Opcodes.ACC_DEPRECATED) != 0;
@@ -312,6 +329,7 @@ final class ClassScanner extends ClassVisitor {
           reportMethodViolation(checkDescriptor(desc), "method declaration");
         }
         if (this.isDeprecated) {
+          maybeSuppressCurrentGroup(DEPRECATED_DESCRIPTOR);
           reportMethodViolation(checkType(DEPRECATED_TYPE), "deprecation on method declaration");
         }
       }
@@ -407,6 +425,7 @@ final class ClassScanner extends ClassVisitor {
           // don't report 2 times!
           return null;
         }
+        maybeSuppressCurrentGroup(desc);
         reportMethodViolation(checkAnnotationDescriptor(desc, visible), "annotation on method declaration");
         return null;
       }

@@ -197,8 +197,8 @@
     <compile module="main" classpathref="path.build"/>
   </target>
 
-  <target name="compile-tools" depends="-init" description="Compile tools">
-    <compile module="tools" classpathref="path.build"/>
+  <target name="compile-tools" depends="compile" description="Compile tools">
+    <compile module="tools" classpathref="path.run"/>
   </target>
 
   <target name="clean" description="Clean">
@@ -411,9 +411,7 @@
       <fileset dir="build/tools"/>
       <bundledsignatures name="jdk-unsafe-${jdk.version}"/>
       <bundledsignatures name="jdk-deprecated-${jdk.version}"/>
-    </forbiddenapis>
-    <forbiddenapis internalRuntimeForbidden="true" failOnUnsupportedJava="false" bundledSignatures="jdk-system-out" classpathref="path.run">
-      <fileset dir="build/main" excludes="de/thetaphi/forbiddenapis/CliMain.class"/>
+      <bundledsignatures name="jdk-system-out"/>
     </forbiddenapis>
   </target>
 

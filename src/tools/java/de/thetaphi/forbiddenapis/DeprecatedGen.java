@@ -136,6 +136,7 @@ public class DeprecatedGen implements Opcodes {
     }
   }
   
+  @SuppressForbidden
   void writeOutput(OutputStream out) throws IOException {
     BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(out, "UTF-8"));
     writer.write(header);
@@ -147,6 +148,7 @@ public class DeprecatedGen implements Opcodes {
     System.err.println("Deprecated API signatures for Java version " + javaVersion + " written successfully.");
   }
 
+  @SuppressForbidden
   public static void main(String... args) throws Exception {
     if (args.length != 3) {
       System.err.println("Invalid parameters; must be: java_version /path/to/rt.jar /path/to/outputfile.txt");

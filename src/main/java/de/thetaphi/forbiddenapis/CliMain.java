@@ -138,14 +138,17 @@ public final class CliMain {
     }
   }
   
+  @SuppressForbidden
   void logError(String msg) {
     System.err.println("ERROR: " + msg);
   }
   
+  @SuppressForbidden
   void logWarn(String msg) {
     System.err.println("WARNING: " + msg);
   }
   
+  @SuppressForbidden
   void logInfo(String msg) {
     System.out.println(msg);
   }
@@ -321,6 +324,7 @@ public final class CliMain {
     }
   }
 
+  @SuppressForbidden
   public static void main(String... args) {
     try {
       new CliMain(args).run();
