@@ -27,6 +27,7 @@ import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.lang.annotation.RetentionPolicy;
 import java.net.URLClassLoader;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -125,6 +126,18 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
   private String[] excludes;
 
   /**
+   * List of a custom Java annotations (full class names) that are used in the checked
+   * code to suppress errors. Those annotations must have at least
+   * {@link RetentionPolicy#CLASS}. They can be applied to classes, their methods,
+   * or fields. By default, {@code @de.thetaphi.forbiddenapis.SuppressForbidden}
+   * can always be used, but needs the {@code forbidden-apis.jar} file in classpath
+   * of compiled project, which may not be wanted.
+   * @since 1.8
+   */
+  @Parameter(required = false)
+  private String[] suppressAnnotations;
+
+  /**
    * Skip entire check. Most useful on the command line via "-Dforbiddenapis.skip=true".
    * @since 1.6
    */
@@ -211,6 +224,12 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
         } else {
           log.warn(msg);
           return;
+        }
+      }
+      
+      if (suppressAnnotations != null) {
+        for (String a : suppressAnnotations) {
+          checker.addSuppressAnnotation(a);
         }
       }
       

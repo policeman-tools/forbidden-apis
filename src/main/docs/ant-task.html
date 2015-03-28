@@ -45,14 +45,14 @@ and the system classloader, not ANT's class loader.</p>
 </tr>
 
 <tr>
-  <td>signaturesfile</td>
+  <td>signaturesFile</td>
   <td><code>File</code></td>
   <td></td>
   <td>A single signatures file.</td>
 </tr>
 
 <tr>
-  <td>bundledsignatures</td>
+  <td>bundledSignatures</td>
   <td><code>String</code></td>
   <td></td>
   <td>Name of a <a href="bundled-signatures.html">built-in signatures</a> file.</td>
@@ -115,6 +115,18 @@ and the system classloader, not ANT's class loader.</p>
   <td>Ignore empty fileset/resource collection and print a warning instead.</td>
 </tr>
 
+<tr>
+  <td>suppressAnnotation</td>
+  <td><code>class name</code></td>
+  <td></td>
+  <td>Class name of a custom Java annotation that are used in the checked
+  code to suppress errors. This annotation must have at least
+  <code>RetentionPolicy#CLASS</code>. It can be applied to classes, their methods,
+  or fields. By default, <code>@de.thetaphi.forbiddenapis.SuppressForbidden</code>
+  can always be used, but needs the <code>forbidden-apis.jar</code> file in classpath
+  of compiled project, which may not be wanted.</td>
+</tr>
+
 </table>
 
 <h2>Parameters specified as nested elements</h2>
@@ -133,6 +145,11 @@ so you don't need to add this as include attribute to those collections.</p>
   <li>Use <code>signaturesFileSet</code>, <code>signaturesFileList</code>, <code>signaturesFile</code> elements to pass in collections of signatures files. Those elements behave like the corresponding standard Ant types.</li>
   <li>Place signatures as plain text (use CDATA sections) inside the <code>forbiddenapis</code> element.</li>
 </ul>
+
+<p>You can include multiple <code>&lt;suppressAnnotation classname=&quot;...&quot;&gt;</code> elements to specify class names of custom Java annotations that are used in the checked
+code to suppress errors. Those annotations must have at least
+<code>RetentionPolicy#CLASS</code>. They can be applied to classes, their methods, or fields. By default, <code>@de.thetaphi.forbiddenapis.SuppressForbidden</code>
+can always be used, but needs the <code>forbidden-apis.jar</code> file in classpath of compiled project, which may not be wanted.</p>
 
 </body>
 </html>

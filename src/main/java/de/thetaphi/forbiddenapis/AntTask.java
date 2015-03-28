@@ -51,6 +51,7 @@ public final class AntTask extends Task {
   private final Resources classFiles = new Resources();
   private final Resources apiSignatures = new Resources();
   private final List<BundledSignaturesType> bundledSignatures = new ArrayList<BundledSignaturesType>();
+  private final List<SuppressAnnotationType> suppressAnnotations = new ArrayList<SuppressAnnotationType>();
   private Path classpath = null;
   
   private boolean failOnUnsupportedJava = false;
@@ -103,6 +104,10 @@ public final class AntTask extends Task {
           log("WARNING: " + msg, Project.MSG_WARN);
           return;
         }
+      }
+      
+      for (final SuppressAnnotationType a : suppressAnnotations) {
+        checker.addSuppressAnnotation(a.getClassname());
       }
       
       try {
@@ -224,6 +229,7 @@ public final class AntTask extends Task {
     addSignaturesResource(new StringResource(text));
   }
 
+  /** Creates a bundled signatures instance */
   public BundledSignaturesType createBundledSignatures() {
     final BundledSignaturesType s = new BundledSignaturesType();
     s.setProject(getProject());
@@ -234,6 +240,19 @@ public final class AntTask extends Task {
   /** A bundled signatures name */
   public void setBundledSignatures(String name) {
     createBundledSignatures().setName(name);
+  }
+  
+  /** Creates a instance of an annotation class name that suppresses error reporting in classes/methods/fields. */
+  public SuppressAnnotationType createSuppressAnnotation() {
+    final SuppressAnnotationType s = new SuppressAnnotationType();
+    s.setProject(getProject());
+    suppressAnnotations.add(s);
+    return s;
+  }
+
+  /** Class name of annotation that suppresses error reporting in classes/methods/fields. */
+  public void setSuppressAnnotation(String classname) {
+    createSuppressAnnotation().setClassname(classname);
   }
   
   /** Classpath as classpath= attribute */
