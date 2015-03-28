@@ -37,6 +37,7 @@ import java.net.URLConnection;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
@@ -44,6 +45,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.regex.Pattern;
+import java.lang.annotation.Annotation;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
 
@@ -77,7 +79,7 @@ public abstract class Checker implements RelatedClassLookup {
   // key is the internal name (slashed):
   final Map<String,String> forbiddenClasses = new HashMap<String,String>();
   // descriptors (not internal names) of all annotations that suppress:
-  final Set<String> suppressAnnotations = Collections.singleton(Type.getDescriptor(SuppressForbidden.class));;
+  final Set<String> suppressAnnotations = new HashSet<String>();
     
   protected abstract void logError(String msg);
   protected abstract void logWarn(String msg);
@@ -89,6 +91,9 @@ public abstract class Checker implements RelatedClassLookup {
     this.failOnMissingClasses = failOnMissingClasses;
     this.defaultFailOnUnresolvableSignatures = defaultFailOnUnresolvableSignatures;
     this.start = System.currentTimeMillis();
+    
+    // default (always available)
+    addSuppressAnnotation(SuppressForbidden.class);
     
     boolean isSupportedJDK = false;
     final Set<File> bootClassPathJars = new LinkedHashSet<File>();
@@ -377,6 +382,18 @@ public abstract class Checker implements RelatedClassLookup {
   
   public final boolean hasNoSignatures() {
     return forbiddenMethods.isEmpty() && forbiddenClasses.isEmpty() && forbiddenFields.isEmpty() && (!internalRuntimeForbidden);
+  }
+  
+  public final void addSuppressAnnotation(Class<? extends Annotation> anno) {
+    suppressAnnotations.add(Type.getDescriptor(anno));
+  }
+  
+  public final void addSuppressAnnotation(String annoName) throws ParseException {
+    final Type type = Type.getObjectType(annoName.replace('.', '/'));
+    if (type.getSort() != Type.OBJECT) {
+      throw new ParseException(String.format(Locale.ENGLISH, "'%s' is not a valid annotation class name.", annoName));
+    }
+    suppressAnnotations.add(type.getDescriptor());
   }
   
   /** Parses a class and checks for valid method invocations */
