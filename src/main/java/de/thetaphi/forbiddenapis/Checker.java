@@ -142,6 +142,7 @@ public abstract class Checker implements RelatedClassLookup {
     this.isSupportedJDK = isSupportedJDK;
   }
   
+  /** Converts a binary class name (dotted) to the JVM internal one (slashed). Only accepts valid class names, no arrays. */
   private String binaryToInternal(String clazz) {
     if (clazz.indexOf('/') >= 0 || clazz.indexOf('[') >= 0) {
       throw new IllegalArgumentException(String.format(Locale.ENGLISH, "'%s' is not a valid binary class name.", clazz));
