@@ -44,7 +44,7 @@ import org.codehaus.plexus.util.DirectoryScanner;
  */
 public final class CliMain {
 
-  private final Option classpathOpt, dirOpt, includesOpt, excludesOpt, signaturesfileOpt, bundledsignaturesOpt,
+  private final Option classpathOpt, dirOpt, includesOpt, excludesOpt, signaturesfileOpt, bundledsignaturesOpt, suppressannotationsOpt,
     internalruntimeforbiddenOpt, allowmissingclassesOpt, allowunresolvablesignaturesOpt, versionOpt, helpOpt;
   private final CommandLine cmd;
   
@@ -109,6 +109,13 @@ public final class CliMain {
         .withValueSeparator(',')
         .withArgName("name")
         .create('b'));
+    options.addOption(suppressannotationsOpt = OptionBuilder
+        .withDescription("class name of annotation that suppresses error reporting in classes/methods/fields (separated by commas or option can be given multiple times)")
+        .withLongOpt("suppressannotation")
+        .hasArgs()
+        .withValueSeparator(',')
+        .withArgName("classname")
+        .create());
     options.addOption(internalruntimeforbiddenOpt = OptionBuilder
         .withDescription("forbids calls to classes from the internal java runtime (like sun.misc.Unsafe)")
         .withLongOpt("internalruntimeforbidden")
@@ -235,6 +242,11 @@ public final class CliMain {
         throw new ExitException(EXIT_UNSUPPORTED_JDK, String.format(Locale.ENGLISH, 
           "Your Java runtime (%s %s) is not supported by forbiddenapis. Please run the checks with a supported JDK!",
           System.getProperty("java.runtime.name"), System.getProperty("java.runtime.version")));
+      }
+      
+      final String[] suppressAnnotations = cmd.getOptionValues(suppressannotationsOpt.getLongOpt());
+      if (suppressAnnotations != null) for (String a : suppressAnnotations) {
+        checker.addSuppressAnnotation(a);
       }
       
       logInfo("Scanning for classes to check...");
