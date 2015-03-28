@@ -76,7 +76,9 @@ public abstract class Checker implements RelatedClassLookup {
   final Map<String,String> forbiddenMethods = new HashMap<String,String>();
   // key is the internal name (slashed):
   final Map<String,String> forbiddenClasses = new HashMap<String,String>();
-  
+  // descriptors (not internal names) of all annotations that suppress:
+  final Set<String> suppressAnnotations = Collections.singleton(Type.getDescriptor(SuppressForbidden.class));;
+    
   protected abstract void logError(String msg);
   protected abstract void logWarn(String msg);
   protected abstract void logInfo(String msg);
@@ -380,7 +382,7 @@ public abstract class Checker implements RelatedClassLookup {
   /** Parses a class and checks for valid method invocations */
   private int checkClass(final ClassReader reader) {
     final String className = Type.getObjectType(reader.getClassName()).getClassName();
-    final ClassScanner scanner = new ClassScanner(this, forbiddenClasses, forbiddenMethods, forbiddenFields, internalRuntimeForbidden); 
+    final ClassScanner scanner = new ClassScanner(this, forbiddenClasses, forbiddenMethods, forbiddenFields, suppressAnnotations, internalRuntimeForbidden); 
     reader.accept(scanner, ClassReader.SKIP_FRAMES);
     final List<ForbiddenViolation> violations = scanner.getSortedViolations();
     final Pattern splitter = Pattern.compile(Pattern.quote("\n"));

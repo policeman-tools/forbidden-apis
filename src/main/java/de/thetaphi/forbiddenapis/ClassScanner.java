@@ -56,7 +56,7 @@ final class ClassScanner extends ClassVisitor {
   final Map<String,String> forbiddenMethods;
   // key is the internal name (slashed):
   final Map<String,String> forbiddenClasses;
-  // descriptors (not internal names) of all annotation that suppress:
+  // descriptors (not internal names) of all annotations that suppress:
   final Set<String> suppressAnnotations;
   
   private String source = null;
@@ -74,13 +74,14 @@ final class ClassScanner extends ClassVisitor {
   
   public ClassScanner(RelatedClassLookup lookup,
       final Map<String,String> forbiddenClasses, Map<String,String> forbiddenMethods, Map<String,String> forbiddenFields,
+      final Set<String> suppressAnnotations,
       boolean internalRuntimeForbidden) {
     super(Opcodes.ASM5);
     this.lookup = lookup;
     this.forbiddenClasses = forbiddenClasses;
     this.forbiddenMethods = forbiddenMethods;
     this.forbiddenFields = forbiddenFields;
-    this.suppressAnnotations = Collections.singleton(Type.getDescriptor(SuppressForbidden.class));
+    this.suppressAnnotations = suppressAnnotations;
     this.internalRuntimeForbidden = internalRuntimeForbidden;
   }
   
