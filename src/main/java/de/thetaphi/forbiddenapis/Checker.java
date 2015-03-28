@@ -384,10 +384,12 @@ public abstract class Checker implements RelatedClassLookup {
     return forbiddenMethods.isEmpty() && forbiddenClasses.isEmpty() && forbiddenFields.isEmpty() && (!internalRuntimeForbidden);
   }
   
+  /** Adds the given annotation class for suppressing errors. */
   public final void addSuppressAnnotation(Class<? extends Annotation> anno) {
     suppressAnnotations.add(Type.getDescriptor(anno));
   }
   
+  /** Adds suppressing annotation name in binary form (dotted). The class name is not checked. */
   public final void addSuppressAnnotation(String annoName) throws ParseException {
     final Type type = Type.getObjectType(annoName.replace('.', '/'));
     if (type.getSort() != Type.OBJECT) {
