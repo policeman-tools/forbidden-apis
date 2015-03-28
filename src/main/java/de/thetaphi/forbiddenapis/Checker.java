@@ -142,6 +142,13 @@ public abstract class Checker implements RelatedClassLookup {
     this.isSupportedJDK = isSupportedJDK;
   }
   
+  private String binaryToInternal(String clazz) {
+    if (clazz.indexOf('/') >= 0 || clazz.indexOf('[') >= 0) {
+      throw new IllegalArgumentException(String.format(Locale.ENGLISH, "'%s' is not a valid binary class name.", clazz));
+    }
+    return clazz.replace('.', '/');
+  }
+  
   /** Reads a class (binary name) from the given {@link ClassLoader}. */
   private ClassSignature getClassFromClassLoader(final String clazz) throws ClassNotFoundException {
     final ClassSignature c;
@@ -152,7 +159,7 @@ public abstract class Checker implements RelatedClassLookup {
       }
     } else {
       try {
-        final URL url = loader.getResource(clazz.replace('.', '/') + ".class");
+        final URL url = loader.getResource(binaryToInternal(clazz) + ".class");
         if (url == null) {
           classpathClassCache.put(clazz, null);
           throw new ClassNotFoundException("Class '" + clazz + "' not found on classpath");
@@ -389,11 +396,11 @@ public abstract class Checker implements RelatedClassLookup {
     suppressAnnotations.add(Type.getDescriptor(anno));
   }
   
-  /** Adds suppressing annotation name in binary form (dotted). The class name is not checked. */
-  public final void addSuppressAnnotation(String annoName) throws ParseException {
-    final Type type = Type.getObjectType(annoName.replace('.', '/'));
+  /** Adds suppressing annotation name in binary form (dotted). The class name is not checked for existence. */
+  public final void addSuppressAnnotation(String annoName) {
+    final Type type = Type.getObjectType(binaryToInternal(annoName));
     if (type.getSort() != Type.OBJECT) {
-      throw new ParseException(String.format(Locale.ENGLISH, "'%s' is not a valid annotation class name.", annoName));
+      throw new IllegalArgumentException("Descriptor is not of OBJECT sort: " + type.getDescriptor());
     }
     suppressAnnotations.add(type.getDescriptor());
   }
