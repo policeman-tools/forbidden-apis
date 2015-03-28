@@ -6,7 +6,7 @@ import java.lang.annotation.Target;
 import java.lang.annotation.ElementType;
 
 /*
- * (C) Copyright 2015 Uwe Schindler (Generics Policeman) and others.
+ * (C) Copyright Uwe Schindler (Generics Policeman) and others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.

@@ -1,7 +1,7 @@
 package de.thetaphi.forbiddenapis;
 
 /*
- * (C) Copyright 2013 Uwe Schindler (Generics Policeman) and others.
+ * (C) Copyright Uwe Schindler (Generics Policeman) and others.
  * Parts of this work are licensed to the Apache Software Foundation (ASF)
  * under one or more contributor license agreements.
  *
