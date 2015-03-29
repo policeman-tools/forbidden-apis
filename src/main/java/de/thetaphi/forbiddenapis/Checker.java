@@ -99,8 +99,9 @@ public abstract class Checker implements RelatedClassLookup {
     final Set<File> bootClassPathJars = new LinkedHashSet<File>();
     final Set<String> bootClassPathDirs = new LinkedHashSet<String>();
     try {
-      final boolean isJava9Modules = "jrt".equalsIgnoreCase(loader.getResource(Object.class.getName().replace('.','/') + ".class").getProtocol());
-      if (isJava9Modules) {
+      final URL objectClassURL = loader.getResource("java/lang/Object.class");
+      if (objectClassURL != null && "jrt".equalsIgnoreCase(objectClassURL.getProtocol())) {
+        // this is Java 9 with modules!
         isSupportedJDK = true;
       } else {
         final RuntimeMXBean rb = ManagementFactory.getRuntimeMXBean();
