@@ -34,12 +34,47 @@
   <target name="testMissingDeprecatedAnnotation">
     <au:expectfailure expectedMessage="Check for forbidden API calls failed, see log">
       <forbiddenapis failOnMissingClasses="true" classpath="${basedir}">
-        <fileset file="Java5DeprecatedAnnotation.class"/>
+        <file file="Java5DeprecatedAnnotation.class"/>
         java.lang.Deprecated @ Deprecated annotation
       </forbiddenapis>
     </au:expectfailure>
     <au:assertLogContains level="error" text="java.lang.Deprecated [Deprecated annotation]"/> 
     <au:assertLogContains level="error" text=" 1 error(s)"/> 
+  </target>
+  
+  <target name="testSuppressAnnotationsDeprecated1">
+    <forbiddenapis failOnMissingClasses="true" classpath="${basedir}" suppressAnnotation="java.lang.Deprecated">
+      <file file="Java5DeprecatedAnnotation.class"/>
+      java.lang.StringBuilder
+    </forbiddenapis>
+  </target>
+  
+  <target name="testSuppressAnnotationsDeprecated2">
+    <forbiddenapis failOnMissingClasses="true" classpath="${basedir}">
+      <suppressAnnotation classname="java.lang.Deprecated"/>
+      <file file="Java5DeprecatedAnnotation.class"/>
+      java.lang.StringBuilder
+    </forbiddenapis>
+  </target>
+  
+  <target name="testSuppressAnnotationsJava8">
+    <forbiddenapis failOnMissingClasses="true" classpath="${basedir}">
+      <!-- this should disable whole class scanning: -->
+      <suppressAnnotation classname="Java8Annotations$FooBar"/>
+      <!-- normally, this should produce similar errors like 'testAnnotations': -->
+      <file file="Java8Annotations.class"/>
+      Java8Annotations$ClassFileOnly @ Forbidden class-only annotation
+      Java8Annotations$FooBar @ Forbidden annotation
+      java.lang.Deprecated @ Deprecated annotation
+    </forbiddenapis>
+  </target>
+  
+  <target name="testSuppressAnnotationsJava8ClassFileOnly">
+    <forbiddenapis failOnMissingClasses="true" classpath="${basedir}">
+      <suppressAnnotation classname="Java8Annotations$ClassFileOnly"/>
+      <file file="Java8Annotations.class"/>
+      java.lang.StringBuilder
+    </forbiddenapis>
   </target>
   
 </project>

@@ -52,7 +52,7 @@ class Java8Annotations<@Java8Annotations.FooBar X> {
   public int testField2;
   
   @ClassFileOnly
-  public int testField3;
+  public StringBuilder testField3;
   
   @Retention(value=RetentionPolicy.RUNTIME)
   @Target({ElementType.TYPE_USE, ElementType.PARAMETER, ElementType.METHOD, ElementType.TYPE})

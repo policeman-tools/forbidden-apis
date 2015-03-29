@@ -21,6 +21,7 @@ class Java5DeprecatedAnnotation {
   
   /** @deprecated **/
   public Java5DeprecatedAnnotation() {
+    new StringBuilder();
   }
   
 }
