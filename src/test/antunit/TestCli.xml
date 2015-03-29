@@ -33,23 +33,42 @@
     <au:assertLogContains text="Reading bundled API signatures: jdk-unsafe-${jdk.version}"/> 
   </target>
 
-  <target name="testExcludes">
+  <target name="testIncludesExcludes">
     <java jar="${jar-file}" failonerror="true" fork="true">
       <arg value="-c"/>
       <arg value="${cp}"/>
       <arg value="-d"/>
-      <arg file="${antunit.main.classes}"/>
+      <arg file="."/>
       <arg value="-b"/>
       <arg value="jdk-unsafe-${jdk.version},jdk-deprecated-${jdk.version}"/>
       <arg value="--bundledsignatures"/>
       <arg value="jdk-system-out"/>
+      <arg value="--includes"/>
+      <arg value="Java5*.class"/>
       <arg value="--excludes"/>
-      <arg value="de/thetaphi/forbiddenapis/CliMain.class"/>
+      <arg value="Java5ClassReferences.class"/>
       <arg value="--internalruntimeforbidden"/>
     </java>
     <au:assertLogContains text=" 0 error(s)."/> 
     <au:assertLogContains text="Reading bundled API signatures: jdk-deprecated-${jdk.version}"/> 
     <au:assertLogContains text="Reading bundled API signatures: jdk-unsafe-${jdk.version}"/> 
+    <au:assertLogContains text="Reading bundled API signatures: jdk-system-out"/> 
+  </target>
+
+  <target name="testSuppressAnnotations">
+    <java jar="${jar-file}" failonerror="true" fork="true">
+      <arg value="-c"/>
+      <arg value="${cp}"/>
+      <arg value="-d"/>
+      <arg file="."/>
+      <arg value="-b"/>
+      <arg value="jdk-system-out"/>
+      <arg value="--includes"/>
+      <arg value="Java8Annotations.class"/>
+      <arg value="--suppressannotation"/>
+      <arg value="Java8Annotations$FooBar"/>
+    </java>
+    <au:assertLogContains text=" 0 error(s)."/> 
     <au:assertLogContains text="Reading bundled API signatures: jdk-system-out"/> 
   </target>
 

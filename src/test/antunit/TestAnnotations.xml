@@ -47,6 +47,7 @@
       <file file="Java5DeprecatedAnnotation.class"/>
       java.lang.StringBuilder
     </forbiddenapis>
+    <au:assertLogContains text=" 0 error(s)."/> 
   </target>
   
   <target name="testSuppressAnnotationsDeprecated2">
@@ -55,6 +56,7 @@
       <file file="Java5DeprecatedAnnotation.class"/>
       java.lang.StringBuilder
     </forbiddenapis>
+    <au:assertLogContains text=" 0 error(s)."/> 
   </target>
   
   <target name="testSuppressAnnotationsJava8">
@@ -67,6 +69,7 @@
       Java8Annotations$FooBar @ Forbidden annotation
       java.lang.Deprecated @ Deprecated annotation
     </forbiddenapis>
+    <au:assertLogContains text=" 0 error(s)."/> 
   </target>
   
   <target name="testSuppressAnnotationsJava8ClassFileOnly">
@@ -75,6 +78,7 @@
       <file file="Java8Annotations.class"/>
       java.lang.StringBuilder
     </forbiddenapis>
+    <au:assertLogContains text=" 0 error(s)."/> 
   </target>
   
 </project>
