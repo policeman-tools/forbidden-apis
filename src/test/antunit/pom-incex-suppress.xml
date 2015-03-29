@@ -35,15 +35,13 @@
             <bundledSignature>jdk-system-out</bundledSignature>
           </bundledSignatures>
           <signatures><![CDATA[
-            Java8Annotations$ClassFileOnly @ Forbidden class-only annotation
-            Java8Annotations$FooBar @ Forbidden annotation
             java.lang.Deprecated @ Deprecated annotation
           ]]></signatures>
           <includes>
             <include>Java8Annotations*.class</include>
           </includes>
           <excludes>
-            <!-- ecludes all inner classes: -->
+            <!-- excludes all inner classes, so only Java8Annotations.class stays alive: -->
             <exclude>Java8Annotations$*.class</exclude>
           </excludes>
           <suppressAnnotations>
