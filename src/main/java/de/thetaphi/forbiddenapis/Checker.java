@@ -99,25 +99,30 @@ public abstract class Checker implements RelatedClassLookup {
     final Set<File> bootClassPathJars = new LinkedHashSet<File>();
     final Set<String> bootClassPathDirs = new LinkedHashSet<String>();
     try {
-      final RuntimeMXBean rb = ManagementFactory.getRuntimeMXBean();
-      if (rb.isBootClassPathSupported()) {
-        final String cp = rb.getBootClassPath();
-        final StringTokenizer st = new StringTokenizer(cp, File.pathSeparator);
-        while (st.hasMoreTokens()) {
-          final File f = new File(st.nextToken());
-          if (f.isFile()) {
-            bootClassPathJars.add(f.getCanonicalFile());
-          } else if (f.isDirectory()) {
-            String fp = f.getCanonicalPath();
-            if (!fp.endsWith(File.separator)) {
-              fp += File.separator;
+      final boolean isJava9Modules = "jrt".equalsIgnoreCase(loader.getResource(Object.class.getName().replace('.','/') + ".class").getProtocol());
+      if (isJava9Modules) {
+        isSupportedJDK = true;
+      } else {
+        final RuntimeMXBean rb = ManagementFactory.getRuntimeMXBean();
+        if (rb.isBootClassPathSupported()) {
+          final String cp = rb.getBootClassPath();
+          final StringTokenizer st = new StringTokenizer(cp, File.pathSeparator);
+          while (st.hasMoreTokens()) {
+            final File f = new File(st.nextToken());
+            if (f.isFile()) {
+              bootClassPathJars.add(f.getCanonicalFile());
+            } else if (f.isDirectory()) {
+              String fp = f.getCanonicalPath();
+              if (!fp.endsWith(File.separator)) {
+                fp += File.separator;
+              }
+              bootClassPathDirs.add(fp);
             }
-            bootClassPathDirs.add(fp);
           }
         }
+        isSupportedJDK = !(bootClassPathJars.isEmpty() && bootClassPathDirs.isEmpty());
+        // logInfo("JARs in boot-classpath: " + bootClassPathJars + "; dirs in boot-classpath: " + bootClassPathDirs);
       }
-      isSupportedJDK = !(bootClassPathJars.isEmpty() && bootClassPathDirs.isEmpty());
-      // logInfo("JARs in boot-classpath: " + bootClassPathJars + "; dirs in boot-classpath: " + bootClassPathDirs);
     } catch (IOException ioe) {
       isSupportedJDK = false;
       bootClassPathJars.clear();
@@ -179,16 +184,17 @@ public abstract class Checker implements RelatedClassLookup {
           } catch (URISyntaxException use) {
             // ignore (should not happen, but if it's happening, it's definitely not a runtime class)
           }
-        } else {
-          if (conn instanceof JarURLConnection) {
-            final URL jarUrl = ((JarURLConnection) conn).getJarFileURL();
-            if ("file".equalsIgnoreCase(jarUrl.getProtocol())) try {
-              final File jarFile = new File(jarUrl.toURI()).getCanonicalFile();
-              isRuntimeClass = bootClassPathJars.contains(jarFile);
-            } catch (URISyntaxException use) {
-              // ignore (should not happen, but if it's happening, it's definitely not a runtime class)
-            }
+        } else if ("jar".equalsIgnoreCase(url.getProtocol()) && conn instanceof JarURLConnection) {
+          final URL jarUrl = ((JarURLConnection) conn).getJarFileURL();
+          if ("file".equalsIgnoreCase(jarUrl.getProtocol())) try {
+            final File jarFile = new File(jarUrl.toURI()).getCanonicalFile();
+            isRuntimeClass = bootClassPathJars.contains(jarFile);
+          } catch (URISyntaxException use) {
+            // ignore (should not happen, but if it's happening, it's definitely not a runtime class)
           }
+        } else if ("jrt".equalsIgnoreCase(url.getProtocol())) {
+          // all 'jrt:' URLs refer to a module in the Java 9+ runtime (see http://openjdk.java.net/jeps/220):
+          isRuntimeClass = true;
         }
         final InputStream in = conn.getInputStream();
         try {
