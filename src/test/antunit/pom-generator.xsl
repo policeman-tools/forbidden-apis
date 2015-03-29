@@ -53,9 +53,6 @@
                 <bundledSignature>jdk-deprecated</bundledSignature>
                 <bundledSignature>jdk-system-out</bundledSignature>
               </bundledSignatures>
-              <excludes>
-                <exclude>de/thetaphi/forbiddenapis/CliMain.class</exclude>
-              </excludes>
               <signatures>${antunit.signatures}</signatures>
             </configuration>
             <executions>
