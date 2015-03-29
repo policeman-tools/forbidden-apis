@@ -86,6 +86,7 @@
       <arg value="${groupId}:${artifactId}:${version}:check"/>
     </artifact:mvn>
     <au:assertLogContains text=" 0 error(s)."/> 
+    <au:assertLogContains text=" Scanned 1 "/> 
   </target>
   
   <target name="testMyselfMaven3">

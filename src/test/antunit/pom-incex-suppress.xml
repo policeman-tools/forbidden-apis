@@ -29,6 +29,7 @@
         <artifactId>${artifactId}</artifactId>
         <version>${version}</version>
         <configuration>
+          <classesDirectory>.</classesDirectory>
           <internalRuntimeForbidden>false</internalRuntimeForbidden>
           <failOnUnresolvableSignatures>true</failOnUnresolvableSignatures>
           <bundledSignatures>
@@ -58,7 +59,6 @@
         </executions>
       </plugin>
     </plugins>
-    <outputDirectory>.</outputDirectory>
   </build>
 
 </project>
