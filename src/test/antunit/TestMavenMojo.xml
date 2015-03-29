@@ -80,7 +80,7 @@
     <au:assertLogContains text="Bundled signatures resource not found"/> 
   </target>
   
-  <target name="testIncludesExcludes-SuppressedAnnotations">
+  <target name="testIncludesExcludes-SuppressedAnnotations-Maven2">
     <artifact:mvn pom="pom-incex-suppress.xml" mavenVersion="${maven.version}" failonerror="true" fork="true">
       <syspropertyset refid="injected-properties"/>
       <arg value="${groupId}:${artifactId}:${version}:check"/>
