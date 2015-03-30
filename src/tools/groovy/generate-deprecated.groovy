@@ -14,9 +14,21 @@
  * limitations under the License.
  */
 
-URL objectClassURL = getClass().getClassLoader().getResource("java/lang/Object.class");
-if (objectClassURL != null && "jrt".equalsIgnoreCase(objectClassURL.getProtocol())) {
-  return evaluate(new File("src/tools/groovy/generate-deprecated-java9.groovy"))
+import org.apache.tools.ant.BuildException;
+
+def objectClassURL = ClassLoader.getSystemClassLoader().getResource("java/lang/Object.class");
+def isJava9 = objectClassURL != null && "jrt".equalsIgnoreCase(objectClassURL.getProtocol());
+
+def hasRTJar = new File(properties['java.home'], "lib/rt.jar").isFile();
+
+def vendor = properties['java.vendor'];
+def isOracle = vendor.contains("Oracle") || vendor.contains("Sun Microsystems");
+def isDetectedJavaVersion = properties['java.version'].startsWith(properties['build.java.runtime']);
+
+if (isOracle && isDetectedJavaVersion && (isJava9 || hasRTJar)) {
+  def script = isJava9 ? "generate-deprecated-java9.groovy" : "generate-deprecated-java5.groovy";
+  evaluate(new File(properties['groovy-tools.dir'], script));
 } else {
-  return evaluate(new File("src/tools/groovy/generate-deprecated-java5.groovy"))
+  throw new BuildException("Regenerating the deprecated signatures files need stock Oracle/Sun JDK, "+
+    "but your Java version or operating system is unsupported: " + properties['build.java.info']);
 }

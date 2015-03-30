@@ -78,13 +78,6 @@
     </and>
   </condition>
 
-  <condition property="isMinimumJava9">
-    <or>
-      <equals arg1="${build.java.runtime}" arg2="1.9"/>
-      <equals arg1="${build.java.runtime}" arg2="unknown"/>
-    </or>
-  </condition>
-
   <property file="${user.home}/build.properties" />
   <property file="build.properties" />
 
@@ -99,6 +92,7 @@
   <property name="ivy.logging" value="download-only"/>
 
   <property name="signatures.dir" location="src/main/resources/de/thetaphi/forbiddenapis/signatures"/>
+  <property name="groovy-tools.dir" location="src/tools/groovy"/>
   <property name="maven-build-dir" location="build/maven"/>
   <property name="documentation-dir" location="build/docs"/>
   
@@ -480,26 +474,8 @@
   </target>
   
   <target name="generate-deprecated" depends="compile-tools,-install-tasks" description="Generates deprecated API signature lists for current JDK">
-    <local name="generator-class"/>
-    <fail message="Regenerating the deprecated signatures files need stock Oracle/Sun JDK, but your Java version or operating system is unsupported: ${build.java.info}">
-      <condition>
-        <not>
-          <and>
-            <or>
-              <isset property="isMinimumJava9"/>
-              <available file="${java.home}/lib/rt.jar"/>
-            </or>
-            <matches string="${java.version}" pattern="^\Q${build.java.runtime}\E" casesensitive="true"/>
-            <or>
-              <contains string="${java.vendor}" substring="Oracle" casesensitive="false"/>
-              <contains string="${java.vendor}" substring="Sun Microsystems" casesensitive="false"/>
-            </or>
-          </and>
-        </not>
-      </condition>
-    </fail>
     <mkdir dir="${signatures.dir}"/>
-    <echo level="info" message="Building deprecated signatures for JDK ${build.java.runtime}:"/>
+    <property name="deprecated.output.file" location="${signatures.dir}/jdk-deprecated-${build.java.runtime}.txt"/>
     <groovy classpathref="path.tools-run" src="src/tools/groovy/generate-deprecated.groovy"/>
   </target>
 

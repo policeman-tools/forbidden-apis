@@ -17,12 +17,10 @@
 import de.thetaphi.forbiddenapis.DeprecatedGen;
 import java.util.zip.ZipInputStream;
 
-def output = new File(properties['signatures.dir'], "jdk-deprecated-" + properties['build.java.runtime'] + ".txt");
-
-new DeprecatedGen(properties['build.java.runtime'], new File(System.getProperty("java.home"), "lib/rt.jar"), output) {
+new DeprecatedGen(properties['build.java.runtime'], new File(System.getProperty("java.home"), "lib/rt.jar"), new File(properties['deprecated.output.file'])) {
   @Override
   protected void collectClasses(def source) throws IOException {
-    (new ZipInputStream(new FileInputStream(source))).withStream {
+    new ZipInputStream(new FileInputStream(source)).withStream {
       def entry;
       while ((entry = it.getNextEntry()) != null) {
         try {

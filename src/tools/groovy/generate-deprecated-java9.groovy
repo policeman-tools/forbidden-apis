@@ -18,9 +18,7 @@ import de.thetaphi.forbiddenapis.DeprecatedGen;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 
-def output = new File(properties['signatures.dir'], "jdk-deprecated-" + properties['build.java.runtime'] + ".txt");
-
-new DeprecatedGen(properties['build.java.runtime'], URI.create("jrt:/"), output) {
+new DeprecatedGen(properties['build.java.runtime'], URI.create("jrt:/"), new File(properties['deprecated.output.file'])) {
   @Override
   protected void collectClasses(def uri) throws IOException {
     Path modules = Paths.get(uri);
