@@ -182,6 +182,7 @@
     <ivy:cachepath pathid="path.tasks" conf="buildtools" log="${ivy.logging}"/>
     <taskdef name="jarjar" classname="com.tonicsystems.jarjar.JarJarTask" classpathref="path.tasks"/>
     <taskdef uri="antlib:org.apache.maven.artifact.ant" classpathref="path.tasks"/>
+    <taskdef name="groovy" classname="org.codehaus.groovy.ant.Groovy" classpathref="path.tasks"/>
     <property name="installed.tasks" value="true"/>
   </target>
 
@@ -478,7 +479,7 @@
     <echo level="warn" message="Test suite / bundled signatures checker was not executed, because the used JVM version is unsupported: ${build.java.info}"/>
   </target>
   
-  <target name="generate-deprecated" depends="compile-tools" description="Generates deprecated API signature lists for current JDK">
+  <target name="generate-deprecated" depends="compile-tools,-install-tasks" description="Generates deprecated API signature lists for current JDK">
     <local name="generator-class"/>
     <fail message="Regenerating the deprecated signatures files need stock Oracle/Sun JDK, but your Java version or operating system is unsupported: ${build.java.info}">
       <condition>
@@ -497,15 +498,9 @@
         </not>
       </condition>
     </fail>
-    <condition property="generator-class" value="de.thetaphi.forbiddenapis.DeprecatedGen9" else="de.thetaphi.forbiddenapis.DeprecatedGen5">
-      <isset property="isMinimumJava9"/>
-    </condition>
     <mkdir dir="${signatures.dir}"/>
     <echo level="info" message="Building deprecated signatures for JDK ${build.java.runtime}:"/>
-    <java fork="false" classpathref="path.tools-run" classname="${generator-class}">
-      <arg value="${build.java.runtime}"/>
-      <arg file="${signatures.dir}/jdk-deprecated-${build.java.runtime}.txt"/>
-    </java>
+    <groovy classpathref="path.tools-run" src="src/tools/groovy/generate-deprecated.groovy"/>
   </target>
 
   <target name="-generate-test-classes-init">

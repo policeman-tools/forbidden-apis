@@ -44,7 +44,7 @@ public abstract class DeprecatedGen<Input> implements Opcodes {
   private final Input source;
   private final File output;
   
-  protected DeprecatedGen(String javaVersion, Input source, File output) {
+  public DeprecatedGen(String javaVersion, Input source, File output) {
     this.javaVersion = javaVersion;
     this.source = source;
     this.output = output;

@@ -1,5 +1,3 @@
-package de.thetaphi.forbiddenapis;
-
 /*
  * (C) Copyright Uwe Schindler (Generics Policeman) and others.
  *
@@ -16,40 +14,24 @@ package de.thetaphi.forbiddenapis;
  * limitations under the License.
  */
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.URI;
+import de.thetaphi.forbiddenapis.DeprecatedGen;
+import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.nio.file.Files;
-import java.nio.file.FileVisitResult;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.PathMatcher;
-import java.nio.file.SimpleFileVisitor;
-import java.util.Locale;
 
-/** Variant of {@link DeprecatedGen}, suitable for scanning Java 9+ runtime modules. */
-public class DeprecatedGen9 extends DeprecatedGen<URI> {
+def output = new File(properties['signatures.dir'], "jdk-deprecated-" + properties['build.java.runtime'] + ".txt");
 
-  protected DeprecatedGen9(String javaVersion, URI source, File output) {
-    super(javaVersion, source, output);
-  }
-
+new DeprecatedGen(properties['build.java.runtime'], URI.create("jrt:/"), output) {
   @Override
-  protected void collectClasses(URI uri) throws IOException {
-    final Path modules = Paths.get(uri);
-    final PathMatcher fileMatcher = modules.getFileSystem().getPathMatcher("glob:*.class"),
+  protected void collectClasses(def uri) throws IOException {
+    Path modules = Paths.get(uri);
+    PathMatcher fileMatcher = modules.getFileSystem().getPathMatcher("glob:*.class"),
       prefixMatcher = modules.getFileSystem().getPathMatcher("glob:/java.**");
     Files.walkFileTree(modules, new SimpleFileVisitor<Path>() {
       @Override
       public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
         if (fileMatcher.matches(file.getFileName())) {
           // System.out.println(file);
-          try (final InputStream in = Files.newInputStream(file)) {
-            parseClass(in);
-          }
+          Files.newInputStream(file).withStream { parseClass(it) };
         }
         return FileVisitResult.CONTINUE;
       }
@@ -60,13 +42,4 @@ public class DeprecatedGen9 extends DeprecatedGen<URI> {
       }
    });
   }
-  
-  @SuppressForbidden
-  public static void main(String... args) throws Exception {
-    if (args.length != 2) {
-      System.err.println("Invalid parameters; must be: java_version /path/to/outputfile.txt");
-      System.exit(1);
-    }
-    new DeprecatedGen9(args[0], URI.create("jrt:/"), new File(args[1])).run();
-  }
-}
+}.run();
