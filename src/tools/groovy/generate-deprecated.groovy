@@ -16,17 +16,17 @@
 
 import org.apache.tools.ant.BuildException;
 
-def objectClassURL = ClassLoader.getSystemClassLoader().getResource("java/lang/Object.class");
-def isJava9 = objectClassURL != null && "jrt".equalsIgnoreCase(objectClassURL.getProtocol());
+URL objectClassURL = ClassLoader.getSystemClassLoader().getResource("java/lang/Object.class");
+boolean isJava9 = objectClassURL != null && "jrt".equalsIgnoreCase(objectClassURL.getProtocol());
 
-def hasRTJar = new File(properties['java.home'], "lib/rt.jar").isFile();
+boolean hasRTJar = new File(properties['java.home'], "lib/rt.jar").isFile();
 
-def vendor = properties['java.vendor'].toLowerCase(Locale.ENGLISH);
-def isOracle = vendor.contains("oracle") || vendor.contains("sun microsystems");
-def isDetectedJavaVersion = properties['java.version'].startsWith(properties['build.java.runtime']);
+String vendor = properties['java.vendor'].toLowerCase(Locale.ENGLISH);
+boolean isOracle = vendor.contains("oracle") || vendor.contains("sun microsystems");
+boolean isDetectedJavaVersion = properties['java.version'].startsWith(properties['build.java.runtime']);
 
 if (isOracle && isDetectedJavaVersion && (isJava9 || hasRTJar)) {
-  def script = isJava9 ? "generate-deprecated-java9.groovy" : "generate-deprecated-java5.groovy";
+  String script = isJava9 ? "generate-deprecated-java9.groovy" : "generate-deprecated-java5.groovy";
   evaluate(new File(properties['groovy-tools.dir'], script));
 } else {
   throw new BuildException("Regenerating the deprecated signatures files need stock Oracle/Sun JDK, "+

@@ -15,12 +15,18 @@
  */
 
 import de.thetaphi.forbiddenapis.DeprecatedGen;
-import java.nio.file.*;
+
+import java.nio.file.Files;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.PathMatcher;
+import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 
-new DeprecatedGen(properties['build.java.runtime'], URI.create("jrt:/"), new File(properties['deprecated.output.file'])) {
+new DeprecatedGen<URI>(properties['build.java.runtime'], URI.create("jrt:/"), properties['deprecated.output.file'] as File) {
   @Override
-  protected void collectClasses(def uri) throws IOException {
+  protected void collectClasses(URI uri) throws IOException {
     Path modules = Paths.get(uri);
     PathMatcher fileMatcher = modules.getFileSystem().getPathMatcher("glob:*.class"),
       prefixMatcher = modules.getFileSystem().getPathMatcher("glob:/java.**");

@@ -15,13 +15,15 @@
  */
 
 import de.thetaphi.forbiddenapis.DeprecatedGen;
+
+import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-new DeprecatedGen(properties['build.java.runtime'], new File(System.getProperty("java.home"), "lib/rt.jar"), new File(properties['deprecated.output.file'])) {
+new DeprecatedGen<File>(properties['build.java.runtime'], new File(System.getProperty("java.home"), "lib/rt.jar"), properties['deprecated.output.file'] as File) {
   @Override
-  protected void collectClasses(def source) throws IOException {
+  protected void collectClasses(File source) throws IOException {
     new ZipInputStream(new FileInputStream(source)).withStream {
-      def entry;
+      ZipEntry entry;
       while ((entry = it.getNextEntry()) != null) {
         try {
           if (entry.isDirectory()) continue;
