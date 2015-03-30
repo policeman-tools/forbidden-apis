@@ -57,6 +57,7 @@
       <equals arg1="${-cleaned.specification.version}" arg2="1.6"/>
       <equals arg1="${-cleaned.specification.version}" arg2="1.7"/>
       <equals arg1="${-cleaned.specification.version}" arg2="1.8"/>
+      <equals arg1="${-cleaned.specification.version}" arg2="1.9"/>
     </or>
   </condition>
   
@@ -66,6 +67,7 @@
   <condition property="build.compiler" value="javac1.7">
     <and>
       <or>
+        <equals arg1="${build.java.runtime}" arg2="1.9"/>
         <equals arg1="${build.java.runtime}" arg2="1.8"/>
         <equals arg1="${build.java.runtime}" arg2="unknown"/>
       </or>
@@ -74,6 +76,13 @@
         <antversion exactly="1.8.4" />
       </or>
     </and>
+  </condition>
+
+  <condition property="isMinimumJava9">
+    <or>
+      <equals arg1="${build.java.runtime}" arg2="1.9"/>
+      <equals arg1="${build.java.runtime}" arg2="unknown"/>
+    </or>
   </condition>
 
   <property file="${user.home}/build.properties" />
@@ -470,11 +479,15 @@
   </target>
   
   <target name="generate-deprecated" depends="compile-tools" description="Generates deprecated API signature lists for current JDK">
+    <local name="generator-class"/>
     <fail message="Regenerating the deprecated signatures files need stock Oracle/Sun JDK, but your Java version or operating system is unsupported: ${build.java.info}">
       <condition>
         <not>
           <and>
-            <available file="${java.home}/lib/rt.jar"/>
+            <or>
+              <isset property="isMinimumJava9"/>
+              <available file="${java.home}/lib/rt.jar"/>
+            </or>
             <matches string="${java.version}" pattern="^\Q${build.java.runtime}\E" casesensitive="true"/>
             <or>
               <contains string="${java.vendor}" substring="Oracle" casesensitive="false"/>
@@ -484,11 +497,13 @@
         </not>
       </condition>
     </fail>
+    <condition property="generator-class" value="de.thetaphi.forbiddenapis.DeprecatedGen9" else="de.thetaphi.forbiddenapis.DeprecatedGen">
+      <isset property="isMinimumJava9"/>
+    </condition>
     <mkdir dir="${signatures.dir}"/>
     <echo level="info" message="Building deprecated signatures for JDK ${build.java.runtime}:"/>
-    <java fork="false" classpathref="path.tools-run" classname="de.thetaphi.forbiddenapis.DeprecatedGen">
+    <java fork="false" classpathref="path.tools-run" classname="${generator-class}">
       <arg value="${build.java.runtime}"/>
-      <arg file="${java.home}/lib/rt.jar"/>
       <arg file="${signatures.dir}/jdk-deprecated-${build.java.runtime}.txt"/>
     </java>
   </target>
