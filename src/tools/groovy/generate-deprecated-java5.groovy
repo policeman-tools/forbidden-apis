@@ -19,7 +19,7 @@ import de.thetaphi.forbiddenapis.DeprecatedGen;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-new DeprecatedGen<File>(properties['build.java.runtime'], new File(System.getProperty("java.home"), "lib/rt.jar"), properties['deprecated.output.file'] as File) {
+new DeprecatedGen<File>(properties['build.java.runtime'], new File(properties['java.home'], "lib/rt.jar"), properties['deprecated.output.file'] as File) {
   @Override
   protected void collectClasses(File source) throws IOException {
     new ZipInputStream(new FileInputStream(source)).withStream {
