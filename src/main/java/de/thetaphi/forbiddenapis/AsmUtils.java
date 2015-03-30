@@ -1,8 +1,5 @@
 package de.thetaphi.forbiddenapis;
 
-import java.util.Arrays;
-import java.util.regex.Pattern;
-
 /*
  * (C) Copyright Uwe Schindler (Generics Policeman) and others.
  *
@@ -18,6 +15,9 @@ import java.util.regex.Pattern;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+import java.util.Arrays;
+import java.util.regex.Pattern;
 
 /** Some static utilities for analyzing with ASM, also constants. */
 public final class AsmUtils {
