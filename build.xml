@@ -497,7 +497,7 @@
         </not>
       </condition>
     </fail>
-    <condition property="generator-class" value="de.thetaphi.forbiddenapis.DeprecatedGen9" else="de.thetaphi.forbiddenapis.DeprecatedGen">
+    <condition property="generator-class" value="de.thetaphi.forbiddenapis.DeprecatedGen9" else="de.thetaphi.forbiddenapis.DeprecatedGen5">
       <isset property="isMinimumJava9"/>
     </condition>
     <mkdir dir="${signatures.dir}"/>

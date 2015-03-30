@@ -16,6 +16,17 @@ package de.thetaphi.forbiddenapis;
  * limitations under the License.
  */
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.util.Locale;
+import java.util.SortedSet;
+import java.util.TreeSet;
+
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.FieldVisitor;
@@ -23,29 +34,20 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 
-import java.io.IOException;
-import java.io.BufferedWriter;
-import java.io.OutputStreamWriter;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.util.SortedSet;
-import java.util.TreeSet;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
-import java.util.Locale;
-
 /** Lists all classes in Java runtime, scans them for deprecated signatures and writes them to a signatures file. */
-public class DeprecatedGen implements Opcodes {
+public abstract class DeprecatedGen<Input> implements Opcodes {
   
   final static String NL = System.getProperty("line.separator", "\n");
   final SortedSet<String> deprecated = new TreeSet<String>();
   final String javaVersion, header;
   
-  protected DeprecatedGen(String javaVersion) {
+  private final Input source;
+  private final File output;
+  
+  protected DeprecatedGen(String javaVersion, Input source, File output) {
     this.javaVersion = javaVersion;
+    this.source = source;
+    this.output = output;
     if (!System.getProperty("java.version").startsWith(javaVersion))
       throw new IllegalArgumentException("Java version mismatch: build " + System.getProperty("java.version") + " != expected " + javaVersion);
     this.header = new StringBuilder()
@@ -124,7 +126,6 @@ public class DeprecatedGen implements Opcodes {
     }, ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES);
   }
   
-  @SuppressForbidden
   protected void writeOutput(OutputStream out) throws IOException {
     BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(out, "UTF-8"));
     writer.write(header);
@@ -133,44 +134,21 @@ public class DeprecatedGen implements Opcodes {
       writer.newLine();
     }
     writer.flush();
+  }
+  
+  protected abstract void collectClasses(Input source) throws IOException;
+  
+  @SuppressForbidden
+  public void run() throws IOException {
+    System.err.println(String.format(Locale.ENGLISH, "Reading '%s' and extracting deprecated APIs to signatures file '%s'...", source, output));
+    collectClasses(source);
+    final FileOutputStream out = new FileOutputStream(output);
+    try {
+      writeOutput(out);
+    } finally {
+      out.close();
+    }
     System.err.println("Deprecated API signatures for Java version " + javaVersion + " written successfully.");
   }
 
-  private void parseRT(InputStream in) throws IOException  {
-    final ZipInputStream zip = new ZipInputStream(in);
-    ZipEntry entry;
-    while ((entry = zip.getNextEntry()) != null) {
-      try {
-        if (entry.isDirectory()) continue;
-        if (entry.getName().endsWith(".class")) {
-          parseClass(zip);
-        }
-      } finally {
-        zip.closeEntry();
-      }
-    }
-  }
-  
-  @SuppressForbidden
-  public static void main(String... args) throws Exception {
-    if (args.length != 2) {
-      System.err.println("Invalid parameters; must be: java_version /path/to/outputfile.txt");
-      System.exit(1);
-    }
-    final File rt = new File(System.getProperty("java.home"), "lib/rt.jar");
-    System.err.println(String.format(Locale.ENGLISH, "Reading '%s' and extracting deprecated APIs to signatures file '%s'...", rt, args[1]));
-    final InputStream in = new FileInputStream(rt);
-    try { 
-      final DeprecatedGen parser = new DeprecatedGen(args[0]);
-      parser.parseRT(in);
-      final FileOutputStream out = new FileOutputStream(args[1]);
-      try {
-        parser.writeOutput(out);
-      } finally {
-        out.close();
-      }
-    } finally {
-      in.close();
-    }
-  }
 }

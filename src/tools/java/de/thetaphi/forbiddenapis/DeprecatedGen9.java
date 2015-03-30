@@ -16,6 +16,7 @@ package de.thetaphi.forbiddenapis;
  * limitations under the License.
  */
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -30,13 +31,14 @@ import java.nio.file.SimpleFileVisitor;
 import java.util.Locale;
 
 /** Variant of {@link DeprecatedGen}, suitable for scanning Java 9+ runtime modules. */
-public class DeprecatedGen9 extends DeprecatedGen {
+public class DeprecatedGen9 extends DeprecatedGen<URI> {
 
-  protected DeprecatedGen9(String javaVersion) {
-    super(javaVersion);
+  protected DeprecatedGen9(String javaVersion, URI source, File output) {
+    super(javaVersion, source, output);
   }
 
-  private void parseFS(URI uri) throws IOException {
+  @Override
+  protected void collectClasses(URI uri) throws IOException {
     final Path modules = Paths.get(uri);
     final PathMatcher fileMatcher = modules.getFileSystem().getPathMatcher("glob:*.class"),
       prefixMatcher = modules.getFileSystem().getPathMatcher("glob:/java.**");
@@ -65,12 +67,6 @@ public class DeprecatedGen9 extends DeprecatedGen {
       System.err.println("Invalid parameters; must be: java_version /path/to/outputfile.txt");
       System.exit(1);
     }
-    final URI uri = URI.create("jrt:/");
-    System.err.println(String.format(Locale.ENGLISH, "Reading '%s' and extracting deprecated APIs to signatures file '%s'...", uri, args[1]));
-    final DeprecatedGen9 parser = new DeprecatedGen9(args[0]);
-    parser.parseFS(uri);
-    try (final OutputStream out = Files.newOutputStream(Paths.get(args[1]))) {
-      parser.writeOutput(out);
-    }
+    new DeprecatedGen9(args[0], URI.create("jrt:/"), new File(args[1])).run();
   }
 }
