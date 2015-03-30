@@ -127,6 +127,7 @@
       <equals arg1="${build.java.runtime}" arg2="1.6"/>
       <equals arg1="${build.java.runtime}" arg2="1.7"/>
       <equals arg1="${build.java.runtime}" arg2="1.8"/>
+      <equals arg1="${build.java.runtime}" arg2="1.9"/>
     </or>
   </condition>
 
