@@ -57,6 +57,7 @@
       <equals arg1="${-cleaned.specification.version}" arg2="1.6"/>
       <equals arg1="${-cleaned.specification.version}" arg2="1.7"/>
       <equals arg1="${-cleaned.specification.version}" arg2="1.8"/>
+      <equals arg1="${-cleaned.specification.version}" arg2="1.9"/>
     </or>
   </condition>
   
@@ -66,6 +67,7 @@
   <condition property="build.compiler" value="javac1.7">
     <and>
       <or>
+        <equals arg1="${build.java.runtime}" arg2="1.9"/>
         <equals arg1="${build.java.runtime}" arg2="1.8"/>
         <equals arg1="${build.java.runtime}" arg2="unknown"/>
       </or>
@@ -90,6 +92,7 @@
   <property name="ivy.logging" value="download-only"/>
 
   <property name="signatures.dir" location="src/main/resources/de/thetaphi/forbiddenapis/signatures"/>
+  <property name="groovy-tools.dir" location="src/tools/groovy"/>
   <property name="maven-build-dir" location="build/maven"/>
   <property name="documentation-dir" location="build/docs"/>
   
@@ -173,6 +176,7 @@
     <ivy:cachepath pathid="path.tasks" conf="buildtools" log="${ivy.logging}"/>
     <taskdef name="jarjar" classname="com.tonicsystems.jarjar.JarJarTask" classpathref="path.tasks"/>
     <taskdef uri="antlib:org.apache.maven.artifact.ant" classpathref="path.tasks"/>
+    <taskdef name="groovy" classname="org.codehaus.groovy.ant.Groovy" classpathref="path.tasks"/>
     <property name="installed.tasks" value="true"/>
   </target>
 
@@ -469,28 +473,10 @@
     <echo level="warn" message="Test suite / bundled signatures checker was not executed, because the used JVM version is unsupported: ${build.java.info}"/>
   </target>
   
-  <target name="generate-deprecated" depends="compile-tools" description="Generates deprecated API signature lists for current JDK">
-    <fail message="Regenerating the deprecated signatures files need stock Oracle/Sun JDK, but your Java version or operating system is unsupported: ${build.java.info}">
-      <condition>
-        <not>
-          <and>
-            <available file="${java.home}/lib/rt.jar"/>
-            <matches string="${java.version}" pattern="^\Q${build.java.runtime}\E" casesensitive="true"/>
-            <or>
-              <contains string="${java.vendor}" substring="Oracle" casesensitive="false"/>
-              <contains string="${java.vendor}" substring="Sun Microsystems" casesensitive="false"/>
-            </or>
-          </and>
-        </not>
-      </condition>
-    </fail>
+  <target name="generate-deprecated" depends="compile-tools,-install-tasks" description="Generates deprecated API signature lists for current JDK">
     <mkdir dir="${signatures.dir}"/>
-    <echo level="info" message="Building deprecated signatures for JDK ${build.java.runtime}:"/>
-    <java fork="false" classpathref="path.tools-run" classname="de.thetaphi.forbiddenapis.DeprecatedGen">
-      <arg value="${build.java.runtime}"/>
-      <arg file="${java.home}/lib/rt.jar"/>
-      <arg file="${signatures.dir}/jdk-deprecated-${build.java.runtime}.txt"/>
-    </java>
+    <property name="deprecated.output.file" location="${signatures.dir}/jdk-deprecated-${build.java.runtime}.txt"/>
+    <groovy classpathref="path.tools-run" src="${groovy-tools.dir}/generate-deprecated.groovy"/>
   </target>
 
   <target name="-generate-test-classes-init">
