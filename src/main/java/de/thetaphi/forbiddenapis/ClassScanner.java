@@ -101,7 +101,7 @@ final class ClassScanner extends ClassVisitor {
   }
   
   private boolean isInternalClass(String className) {
-    return className.startsWith("sun.") || className.startsWith("com.sun.") || className.startsWith("com.oracle.") || className.startsWith("jdk.")  || className.startsWith("sunw.");
+    return className.startsWith("sun.") || className.startsWith("com.sun.") || className.startsWith("com.oracle.") || className.startsWith("jdk.") || className.startsWith("sunw.") || className.startsWith("oracle.");
   }
   
   String checkClassUse(String internalName, String what) {
