@@ -100,10 +100,6 @@ final class ClassScanner extends ClassVisitor {
     return source;
   }
   
-  private boolean isInternalClass(String className) {
-    return className.startsWith("sun.") || className.startsWith("com.sun.") || className.startsWith("com.oracle.") || className.startsWith("jdk.") || className.startsWith("sunw.") || className.startsWith("oracle.");
-  }
-  
   String checkClassUse(String internalName, String what) {
     final String printout = forbiddenClasses.get(internalName);
     if (printout != null) {
@@ -111,7 +107,7 @@ final class ClassScanner extends ClassVisitor {
     }
     if (internalRuntimeForbidden) {
       final String referencedClassName = Type.getObjectType(internalName).getClassName();
-      if (isInternalClass(referencedClassName)) {
+      if (AsmUtils.isInternalClass(referencedClassName)) {
         final ClassSignature c = lookup.lookupRelatedClass(internalName);
         if (c == null || c.isRuntimeClass) {
           return String.format(Locale.ENGLISH,

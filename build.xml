@@ -168,7 +168,7 @@
       <pathelement path="build/main"/>
     </path>
     <path id="path.tools-run">
-      <path refid="path.build"/>
+      <path refid="path.run"/>
       <pathelement path="build/tools"/>
     </path>
   </target>
