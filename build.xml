@@ -476,7 +476,7 @@
   <target name="generate-deprecated" depends="compile-tools,-install-tasks" description="Generates deprecated API signature lists for current JDK">
     <mkdir dir="${signatures.dir}"/>
     <property name="deprecated.output.file" location="${signatures.dir}/jdk-deprecated-${build.java.runtime}.txt"/>
-    <groovy classpathref="path.tools-run" src="src/tools/groovy/generate-deprecated.groovy"/>
+    <groovy classpathref="path.tools-run" src="${groovy-tools.dir}/generate-deprecated.groovy"/>
   </target>
 
   <target name="-generate-test-classes-init">
