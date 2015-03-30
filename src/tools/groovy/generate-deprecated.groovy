@@ -21,8 +21,8 @@ def isJava9 = objectClassURL != null && "jrt".equalsIgnoreCase(objectClassURL.ge
 
 def hasRTJar = new File(properties['java.home'], "lib/rt.jar").isFile();
 
-def vendor = properties['java.vendor'];
-def isOracle = vendor.contains("Oracle") || vendor.contains("Sun Microsystems");
+def vendor = properties['java.vendor'].toLowerCase(Locale.ENGLISH);
+def isOracle = vendor.contains("oracle") || vendor.contains("sun microsystems");
 def isDetectedJavaVersion = properties['java.version'].startsWith(properties['build.java.runtime']);
 
 if (isOracle && isDetectedJavaVersion && (isJava9 || hasRTJar)) {
