@@ -14,6 +14,6 @@
 
 # These methods and classes should not be used by server classes (unsafe, no charset, no locale,...):
 
-# We only include 1.9 for now.
+# We only include 1.8 for now.
 # TODO: Scan Java 9 API for additional locale/charset/... violations!
 @includeBundled jdk-unsafe-1.8
