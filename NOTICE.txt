@@ -3,7 +3,7 @@ Allows to parse Java byte code to find invocations of method/class/field
 signatures and fail build (Apache Ant or Apache Maven)
 
 
-Copyright © 2013 Uwe Schindler (Generics Policeman) and others.
+Copyright © Uwe Schindler (Generics Policeman) and others.
 Parts of this work are licensed to the Apache Software Foundation (ASF)
 under one or more contributor license agreements.
 
