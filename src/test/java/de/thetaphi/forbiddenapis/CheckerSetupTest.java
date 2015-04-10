@@ -81,4 +81,22 @@ public final class CheckerSetupTest {
     assertEquals(Collections.emptyMap(), checker.forbiddenMethods);
   }
   
+  @Test
+  public void testFieldSignature() throws Exception {
+    checker.parseSignaturesString("java.lang.String#CASE_INSENSITIVE_ORDER @ Foobar");
+    assertEquals(Collections.emptyMap(), checker.forbiddenClasses);
+    assertEquals(Collections.emptyMap(), checker.forbiddenClassPatterns);
+    assertEquals(Collections.singletonMap("java/lang/String\000CASE_INSENSITIVE_ORDER", "java.lang.String#CASE_INSENSITIVE_ORDER [Foobar]"), checker.forbiddenFields);
+    assertEquals(Collections.emptyMap(), checker.forbiddenMethods);
+  }
+
+  @Test
+  public void testMethodSignature() throws Exception {
+    checker.parseSignaturesString("java.lang.Object#toString() @ Foobar");
+    assertEquals(Collections.emptyMap(), checker.forbiddenClasses);
+    assertEquals(Collections.emptyMap(), checker.forbiddenClassPatterns);
+    assertEquals(Collections.emptyMap(), checker.forbiddenFields);
+    assertEquals(Collections.singletonMap("java/lang/Object\000toString()Ljava/lang/String;", "java.lang.Object#toString() [Foobar]"), checker.forbiddenMethods);
+  }
+  
 }
