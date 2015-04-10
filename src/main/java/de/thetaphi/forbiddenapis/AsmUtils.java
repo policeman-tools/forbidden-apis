@@ -17,6 +17,7 @@ package de.thetaphi.forbiddenapis;
  */
 
 import java.util.Arrays;
+import java.util.Locale;
 import java.util.regex.Pattern;
 
 /** Some static utilities for analyzing with ASM, also constants. */
@@ -43,6 +44,14 @@ public final class AsmUtils {
   /** Returns true, if the given binary class name (dotted) is likely a internal class (like sun.misc.Unsafe) */
   public static boolean isInternalClass(String className) {
     return INTERNAL_PACKAGE_PATTERN.matcher(className).matches();
+  }
+  
+  /** Converts a binary class name (dotted) to the JVM internal one (slashed). Only accepts valid class names, no arrays. */
+  public static String binaryToInternal(String clazz) {
+    if (clazz.indexOf('/') >= 0 || clazz.indexOf('[') >= 0) {
+      throw new IllegalArgumentException(String.format(Locale.ENGLISH, "'%s' is not a valid binary class name.", clazz));
+    }
+    return clazz.replace('.', '/');
   }
   
   public static boolean isGlob(String s) {
