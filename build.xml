@@ -95,6 +95,7 @@
   <property name="groovy-tools.dir" location="src/tools/groovy"/>
   <property name="maven-build-dir" location="build/maven"/>
   <property name="documentation-dir" location="build/docs"/>
+  <property name="test-results-dir" location="build/test-results"/>
   
   <property name="cli-classname" value="de.thetaphi.forbiddenapis.CliMain"/>
 
@@ -171,6 +172,14 @@
       <path refid="path.run"/>
       <pathelement path="build/tools"/>
     </path>
+    <path id="path.junit-build">
+      <path refid="path.test"/>
+      <path refid="path.run"/>
+    </path>
+    <path id="path.junit-run">
+      <path refid="path.junit-build"/>
+      <pathelement path="build/test"/>
+    </path>
   </target>
 
   <target name="-install-tasks" depends="-init" unless="installed.tasks">
@@ -204,6 +213,10 @@
 
   <target name="compile-tools" depends="compile" description="Compile tools">
     <compile module="tools" classpathref="path.run"/>
+  </target>
+
+  <target name="compile-test" depends="compile" description="Compile tests">
+    <compile module="test" classpathref="path.junit-build"/>
   </target>
 
   <target name="clean" description="Clean">
@@ -396,7 +409,7 @@
     </artifact:deploy>
   </target>
 
-  <target name="test" depends="-check-myself,-check-bundled-signatures,-antunit,-runtime-unsupported" description="Run tests"/>
+  <target name="test" depends="-check-myself,-check-bundled-signatures,-junit,-antunit,-runtime-unsupported" description="Run tests"/>
 
   <target name="check-bundled-signatures" depends="-check-bundled-signatures,-runtime-unsupported"
     description="Checks bundled signatures file corresponding to the current JVM. Run after every update!"/>
@@ -435,27 +448,27 @@
   </target>
   
   <target name="-antunit-fake-pom">
-    <mkdir dir="build/test"/>
+    <mkdir dir="build/test-maven"/>
     <local name="path.build.xslstr"/>
     <pathconvert property="path.build.xslstr" pathsep="|" refid="path.build"/>
-    <xslt in="src/test/antunit/dummy.xml" out="build/test/fake-pom.xml"
+    <xslt in="src/test/antunit/dummy.xml" out="build/test-maven/fake-pom.xml"
       style="src/test/antunit/pom-generator.xsl" force="true"
     >
       <outputproperty name="indent" value="yes"/>
       <param name="jarfiles" expression="${path.build.xslstr}"/>
     </xslt>
-    <property name="antunit.fake-pom" location="build/test/fake-pom.xml"/>
+    <property name="antunit.fake-pom" location="build/test-maven/fake-pom.xml"/>
   </target>
 
   <target name="-antunit" depends="install-maven-artifacts,-install-forbiddenapi-task,-install-antunit,-antunit-fake-pom" if="tests.supported">
-    <mkdir dir="build/test-results"/>
+    <mkdir dir="${test-results-dir}"/>
     <property name="antunit.main.classes" location="build/main"/>
     <property name="antunit.tools.classes" location="build/tools"/>
     <property name="antunit.maven3.version" value="3.0.4"/>
     <au:antunit>
       <fileset dir="src/test/antunit" includes="Test*.xml"/>
       <au:plainlistener/>
-      <au:xmllistener toDir="build/test-results" logLevel="info"/>
+      <au:xmllistener toDir="${test-results-dir}" logLevel="info"/>
       <propertyset>
         <propertyref prefix="antunit."/>
         <propertyref name="jar-file"/>
@@ -468,6 +481,18 @@
         <reference regex="path\..*"/>
       </referenceset>
     </au:antunit>
+  </target>
+  
+  <target name="-junit" depends="compile-test">
+    <mkdir dir="${test-results-dir}"/>
+    <junit haltonfailure="yes" includeantruntime="no">
+      <classpath refid="path.junit-run"/>
+      <formatter type="brief" usefile="false" />
+      <formatter type="xml"/>
+      <batchtest fork="no" todir="${test-results-dir}">
+        <fileset dir="src/test/java" includes="**/*Test.java"/>
+      </batchtest>
+    </junit>
   </target>
   
   <target name="-runtime-unsupported" unless="tests.supported">

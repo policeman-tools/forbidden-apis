@@ -42,6 +42,8 @@
     <dependency org="org.codehaus.groovy" name="groovy-all" rev="2.2.2" conf="buildtools"/>
     <dependency org="org.apache.ant" name="ant-antunit" rev="1.3" conf="test"/>
     <dependency org="ant-contrib" name="ant-contrib" rev="1.0b3" conf="test"/>
+    <dependency org="junit" name="junit" rev="4.12" conf="test"/>
+    <dependency org="org.hamcrest" name="hamcrest-core" rev="1.3" conf="test"/>
     <exclude org="*" ext="*" matcher="regexp" type="source|javadoc"/> 
   </dependencies>
 </ivy-module>
