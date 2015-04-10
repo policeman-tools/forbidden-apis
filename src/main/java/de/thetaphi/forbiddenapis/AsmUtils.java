@@ -24,6 +24,7 @@ public final class AsmUtils {
 
   private AsmUtils() {}
   
+  private static final String REGEX_META_CHARS = ".^$+{}[]|()\\";
   private static final Pattern INTERNAL_PACKAGE_PATTERN;
   static {
     final StringBuilder sb = new StringBuilder();
@@ -35,9 +36,50 @@ public final class AsmUtils {
     INTERNAL_PACKAGE_PATTERN = Pattern.compile(sb.append(").*").toString());
   }
   
+  private static boolean isRegexMeta(char c) {
+    return REGEX_META_CHARS.indexOf(c) != -1;
+  }
+
   /** Returns true, if the given binary class name (dotted) is likely a internal class (like sun.misc.Unsafe) */
   public static boolean isInternalClass(String className) {
     return INTERNAL_PACKAGE_PATTERN.matcher(className).matches();
   }
-    
+  
+  public static boolean isGlob(String s) {
+    return s.indexOf('*') >= 0 || s.indexOf('?') >= 0;
+  }
+  
+  /** Returns a regex pattern that matches the glob on class names (e.g., "sun.misc.**") */
+  public static Pattern glob2Pattern(String glob) {
+    final StringBuilder regex = new StringBuilder();
+    int i = 0, len = glob.length();
+    while (i < len) {
+      char c = glob.charAt(i++);
+      switch (c) {
+        case '*':
+          if (i < len && glob.charAt(i) == '*') {
+            // crosses package boundaries
+            regex.append(".*");
+            i++;
+          } else {
+            // do not cross package boundaries
+            regex.append("[^.]*");
+          }
+          break;
+          
+        case '?':
+          // do not cross package boundaries
+          regex.append("[^.]");
+          break;
+        
+        default:
+          if (isRegexMeta(c)) {
+            regex.append('\\');
+          }
+          regex.append(c);
+      }
+    }
+    return Pattern.compile(regex.toString());
+  }
+
 }

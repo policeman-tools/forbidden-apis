@@ -29,6 +29,18 @@
     <au:assertLogContains level="error" text="java.lang.String [You are crazy that you disallow strings]"/> 
   </target>
   
+  <target name="testForbiddenClassPatternWithMessage">
+    <au:expectfailure expectedMessage="Check for forbidden API calls failed, see log">
+      <forbiddenapis classpathref="path.run">
+        <fileset refid="main.classes"/>
+        java.util.Array* @ You are crazy that you disallow all Array*
+        java.lang.** @ You are crazy that you disallow all java.lang
+      </forbiddenapis>
+    </au:expectfailure>
+    <au:assertLogContains level="error" text="java.util.Array* [You are crazy that you disallow all Array*]"/> 
+    <au:assertLogContains level="error" text="java.lang.** [You are crazy that you disallow all java.lang]"/> 
+  </target>
+  
   <target name="testForbiddenClassWithDefaultMessage">
     <au:expectfailure expectedMessage="Check for forbidden API calls failed, see log">
       <forbiddenapis classpathref="path.run">

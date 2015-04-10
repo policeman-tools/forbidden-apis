@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.ClassVisitor;
@@ -56,13 +57,15 @@ final class ClassScanner extends ClassVisitor {
   final Map<String,String> forbiddenMethods;
   // key is the internal name (slashed):
   final Map<String,String> forbiddenClasses;
+  // key is pattern to binary class name:
+  final Map<Pattern,String> forbiddenClassPatterns;
   // descriptors (not internal names) of all annotations that suppress:
   final Set<String> suppressAnnotations;
   
   private String source = null;
   private boolean isDeprecated = false;
   private boolean done = false;
-  String internalName = null;
+  String internalMainClassName = null;
   int currentGroupId = 0;
   
   // Mapping from a (possible) lambda Method to groupId of declaring method
@@ -73,12 +76,14 @@ final class ClassScanner extends ClassVisitor {
   boolean classSuppressed = false;
   
   public ClassScanner(RelatedClassLookup lookup,
-      final Map<String,String> forbiddenClasses, Map<String,String> forbiddenMethods, Map<String,String> forbiddenFields,
+      final Map<String,String> forbiddenClasses, final Map<Pattern,String> forbiddenClassPatterns,
+      final Map<String,String> forbiddenMethods, final Map<String,String> forbiddenFields,
       final Set<String> suppressAnnotations,
-      boolean internalRuntimeForbidden) {
+      final boolean internalRuntimeForbidden) {
     super(Opcodes.ASM5);
     this.lookup = lookup;
     this.forbiddenClasses = forbiddenClasses;
+    this.forbiddenClassPatterns = forbiddenClassPatterns;
     this.forbiddenMethods = forbiddenMethods;
     this.forbiddenFields = forbiddenFields;
     this.suppressAnnotations = suppressAnnotations;
@@ -100,24 +105,41 @@ final class ClassScanner extends ClassVisitor {
     return source;
   }
   
-  String checkClassUse(String internalName, String what) {
+  String checkClassUse(Type type, String what, boolean deep) {
+    if (type.getSort() != Type.OBJECT) {
+      throw new IllegalArgumentException("Type '" + type + "' has wrong sort: " + type.getSort());
+    }
+    final String internalName = type.getInternalName();
     final String printout = forbiddenClasses.get(internalName);
     if (printout != null) {
       return String.format(Locale.ENGLISH, "Forbidden %s use: %s", what, printout);
     }
-    if (internalRuntimeForbidden) {
-      final String referencedClassName = Type.getObjectType(internalName).getClassName();
-      if (AsmUtils.isInternalClass(referencedClassName)) {
+    final String binaryClassName = type.getClassName();
+    for (final Map.Entry<Pattern,String> pat : forbiddenClassPatterns.entrySet()) {
+      if (pat.getKey().matcher(binaryClassName).matches()) {
+        return String.format(Locale.ENGLISH, "Forbidden %s use: %s", what, pat.getValue());
+      }
+    }
+    if (deep) {
+      if (AsmUtils.isInternalClass(binaryClassName)) {
         final ClassSignature c = lookup.lookupRelatedClass(internalName);
         if (c == null || c.isRuntimeClass) {
           return String.format(Locale.ENGLISH,
             "Forbidden %s use: %s [non-public internal runtime class]",
-            what, referencedClassName
+            what, binaryClassName
           );
         }
       }
     }
     return null;
+  }
+  
+  String checkClassUse(Type type, String what) {
+    return checkClassUse(type, what, internalRuntimeForbidden);
+  }
+  
+  String checkClassUse(String internalName, String what) {
+    return checkClassUse(Type.getObjectType(internalName), what, internalRuntimeForbidden);
   }
   
   private String checkClassDefinition(String superName, String[] interfaces) {
@@ -151,7 +173,7 @@ final class ClassScanner extends ClassVisitor {
       String violation;
       switch (type.getSort()) {
         case Type.OBJECT:
-          violation = checkClassUse(type.getInternalName(), "class/interface");
+          violation = checkClassUse(type, "class/interface");
           if (violation != null) {
             return violation;
           }
@@ -204,20 +226,9 @@ final class ClassScanner extends ClassVisitor {
       // should never happen for annotations!
       throw new IllegalArgumentException("Annotation descriptor '" + desc + "' has wrong sort: " + type.getSort());
     }
-    if (visible) {
-      // for visible annotations, we don't need to look into super-classes, interfaces,...
-      // -> we just check if its disallowed or internal runtime!
-      return checkClassUse(type.getInternalName(), "annotation");
-    } else {
-      // if annotation is not visible at runtime, we don't do deep checks (not
-      // even internal runtime checks), just lookup in forbidden classes list!
-      // The reason for this is: They may not be available in classpath at all!!!
-      final String printout = forbiddenClasses.get(type.getInternalName());
-      if (printout != null) {
-        return "Forbidden annotation use: " + printout;
-      }
-    }
-    return null;
+    // for annotations, we don't need to look into super-classes, interfaces,...
+    // -> we just check if its disallowed or internal runtime (only if visible)!
+    return checkClassUse(type, "annotation", visible && internalRuntimeForbidden);
   }
   
   void maybeSuppressCurrentGroup(String annotationDesc) {
@@ -234,7 +245,7 @@ final class ClassScanner extends ClassVisitor {
   
   @Override
   public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
-    this.internalName = name;
+    this.internalMainClassName = name;
     this.isDeprecated = (access & Opcodes.ACC_DEPRECATED) != 0;
     reportClassViolation(checkClassDefinition(superName, interfaces), "class declaration");
     if (this.isDeprecated) {
@@ -396,7 +407,7 @@ final class ClassScanner extends ClassVisitor {
           case Opcodes.H_NEWINVOKESPECIAL:
           case Opcodes.H_INVOKEINTERFACE:
             final Method m = new Method(handle.getName(), handle.getDesc());
-            if (checkLambdaHandle && handle.getOwner().equals(internalName) && handle.getName().startsWith(LAMBDA_METHOD_NAME_PREFIX)) {
+            if (checkLambdaHandle && handle.getOwner().equals(internalMainClassName) && handle.getName().startsWith(LAMBDA_METHOD_NAME_PREFIX)) {
               // as described in <http://cr.openjdk.java.net/~briangoetz/lambda/lambda-translation.html>,
               // we will record this metafactory call as "lambda" invokedynamic,
               // so we can assign the called lambda with the same groupId like *this* method:

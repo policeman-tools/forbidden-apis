@@ -38,6 +38,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
@@ -78,6 +79,8 @@ public abstract class Checker implements RelatedClassLookup {
   final Map<String,String> forbiddenMethods = new HashMap<String,String>();
   // key is the internal name (slashed):
   final Map<String,String> forbiddenClasses = new HashMap<String,String>();
+  // key is pattern to binary class name:
+  final Map<Pattern,String> forbiddenClassPatterns = new LinkedHashMap<Pattern,String>();
   // descriptors (not internal names) of all annotations that suppress:
   final Set<String> suppressAnnotations = new HashSet<String>();
     
@@ -283,39 +286,46 @@ public abstract class Checker implements RelatedClassLookup {
     final String printout = (message != null && message.length() > 0) ?
       (signature + " [" + message + "]") : signature;
     // check class & method/field signature, if it is really existent (in classpath), but we don't really load the class into JVM:
-    final ClassSignature c;
-    try {
-      c = getClassFromClassLoader(clazz);
-    } catch (ClassNotFoundException cnfe) {
-      reportParseFailed(failOnUnresolvableSignatures, cnfe.getMessage(), signature);
-      return;
-    }
-    if (method != null) {
-      assert field == null;
-      // list all methods with this signature:
-      boolean found = false;
-      for (final Method m : c.methods) {
-        if (m.getName().equals(method.getName()) && Arrays.equals(m.getArgumentTypes(), method.getArgumentTypes())) {
-          found = true;
-          forbiddenMethods.put(c.className + '\000' + m, printout);
-          // don't break when found, as there may be more covariant overrides!
-        }
+    if (AsmUtils.isGlob(clazz)) {
+      if (method != null || field != null) {
+        throw new ParseException(String.format(Locale.ENGLISH, "Class level glob pattern cannot be combined with methods/fields: %s", signature));
       }
-      if (!found) {
-        reportParseFailed(failOnUnresolvableSignatures, "Method not found", signature);
-        return;
-      }
-    } else if (field != null) {
-      assert method == null;
-      if (!c.fields.contains(field)) {
-        reportParseFailed(failOnUnresolvableSignatures, "Field not found", signature);
-        return;
-      }
-      forbiddenFields.put(c.className + '\000' + field, printout);
+      forbiddenClassPatterns.put(AsmUtils.glob2Pattern(clazz), printout);
     } else {
-      assert field == null && method == null;
-      // only add the signature as class name
-      forbiddenClasses.put(c.className, printout);
+      final ClassSignature c;
+      try {
+        c = getClassFromClassLoader(clazz);
+      } catch (ClassNotFoundException cnfe) {
+        reportParseFailed(failOnUnresolvableSignatures, cnfe.getMessage(), signature);
+        return;
+      }
+      if (method != null) {
+        assert field == null;
+        // list all methods with this signature:
+        boolean found = false;
+        for (final Method m : c.methods) {
+          if (m.getName().equals(method.getName()) && Arrays.equals(m.getArgumentTypes(), method.getArgumentTypes())) {
+            found = true;
+            forbiddenMethods.put(c.className + '\000' + m, printout);
+            // don't break when found, as there may be more covariant overrides!
+          }
+        }
+        if (!found) {
+          reportParseFailed(failOnUnresolvableSignatures, "Method not found", signature);
+          return;
+        }
+      } else if (field != null) {
+        assert method == null;
+        if (!c.fields.contains(field)) {
+          reportParseFailed(failOnUnresolvableSignatures, "Field not found", signature);
+          return;
+        }
+        forbiddenFields.put(c.className + '\000' + field, printout);
+      } else {
+        assert field == null && method == null;
+        // only add the signature as class name
+        forbiddenClasses.put(c.className, printout);
+      }
     }
   }
 
@@ -396,7 +406,7 @@ public abstract class Checker implements RelatedClassLookup {
   }
   
   public final boolean hasNoSignatures() {
-    return forbiddenMethods.isEmpty() && forbiddenClasses.isEmpty() && forbiddenFields.isEmpty() && (!internalRuntimeForbidden);
+    return forbiddenMethods.isEmpty() && forbiddenFields.isEmpty() && forbiddenClasses.isEmpty() && forbiddenClassPatterns.isEmpty() && (!internalRuntimeForbidden);
   }
   
   /** Adds the given annotation class for suppressing errors. */
@@ -416,7 +426,7 @@ public abstract class Checker implements RelatedClassLookup {
   /** Parses a class and checks for valid method invocations */
   private int checkClass(final ClassReader reader) {
     final String className = Type.getObjectType(reader.getClassName()).getClassName();
-    final ClassScanner scanner = new ClassScanner(this, forbiddenClasses, forbiddenMethods, forbiddenFields, suppressAnnotations, internalRuntimeForbidden); 
+    final ClassScanner scanner = new ClassScanner(this, forbiddenClasses, forbiddenClassPatterns, forbiddenMethods, forbiddenFields, suppressAnnotations, internalRuntimeForbidden); 
     reader.accept(scanner, ClassReader.SKIP_FRAMES);
     final List<ForbiddenViolation> violations = scanner.getSortedViolations();
     final Pattern splitter = Pattern.compile(Pattern.quote("\n"));
