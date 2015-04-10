@@ -120,7 +120,7 @@ final class ClassScanner extends ClassVisitor {
         return String.format(Locale.ENGLISH, "Forbidden %s use: %s", what, pat.getValue());
       }
     }
-    if (deep) {
+    if (deep && internalRuntimeForbidden) {
       if (AsmUtils.isInternalClass(binaryClassName)) {
         final ClassSignature c = lookup.lookupRelatedClass(internalName);
         if (c == null || c.isRuntimeClass) {
@@ -134,12 +134,8 @@ final class ClassScanner extends ClassVisitor {
     return null;
   }
   
-  String checkClassUse(Type type, String what) {
-    return checkClassUse(type, what, internalRuntimeForbidden);
-  }
-  
   String checkClassUse(String internalName, String what) {
-    return checkClassUse(Type.getObjectType(internalName), what, internalRuntimeForbidden);
+    return checkClassUse(Type.getObjectType(internalName), what, true);
   }
   
   private String checkClassDefinition(String superName, String[] interfaces) {
@@ -173,7 +169,7 @@ final class ClassScanner extends ClassVisitor {
       String violation;
       switch (type.getSort()) {
         case Type.OBJECT:
-          violation = checkClassUse(type, "class/interface");
+          violation = checkClassUse(type, "class/interface", true);
           if (violation != null) {
             return violation;
           }
@@ -228,7 +224,7 @@ final class ClassScanner extends ClassVisitor {
     }
     // for annotations, we don't need to look into super-classes, interfaces,...
     // -> we just check if its disallowed or internal runtime (only if visible)!
-    return checkClassUse(type, "annotation", visible && internalRuntimeForbidden);
+    return checkClassUse(type, "annotation", visible);
   }
   
   void maybeSuppressCurrentGroup(String annotationDesc) {
