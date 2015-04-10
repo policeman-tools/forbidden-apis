@@ -16,8 +16,11 @@ package de.thetaphi.forbiddenapis;
  * limitations under the License.
  */
 
-import static de.thetaphi.forbiddenapis.AsmUtils.*;
-import static org.junit.Assert.*;
+import static de.thetaphi.forbiddenapis.AsmUtils.glob2Pattern;
+import static de.thetaphi.forbiddenapis.AsmUtils.isGlob;
+import static de.thetaphi.forbiddenapis.AsmUtils.isInternalClass;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.util.regex.Pattern;
 
