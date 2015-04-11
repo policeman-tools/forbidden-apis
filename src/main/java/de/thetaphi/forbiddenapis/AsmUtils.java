@@ -59,35 +59,42 @@ public final class AsmUtils {
     return s.indexOf('*') >= 0 || s.indexOf('?') >= 0;
   }
   
-  /** Returns a regex pattern that matches the glob on class names (e.g., "sun.misc.**") */
-  public static Pattern glob2Pattern(String glob) {
+  /** Returns a regex pattern that matches on any of the globs on class names (e.g., "sun.misc.**") */
+  public static Pattern glob2Pattern(String... globs) {
     final StringBuilder regex = new StringBuilder();
-    int i = 0, len = glob.length();
-    while (i < len) {
-      char c = glob.charAt(i++);
-      switch (c) {
-        case '*':
-          if (i < len && glob.charAt(i) == '*') {
-            // crosses package boundaries
-            regex.append(".*");
-            i++;
-          } else {
-            // do not cross package boundaries
-            regex.append("[^.]*");
-          }
-          break;
-          
-        case '?':
-          // do not cross package boundaries
-          regex.append("[^.]");
-          break;
-        
-        default:
-          if (isRegexMeta(c)) {
-            regex.append('\\');
-          }
-          regex.append(c);
+    boolean needOr = false;
+    for (String glob : globs) {
+      if (needOr) {
+        regex.append('|');
       }
+      int i = 0, len = glob.length();
+      while (i < len) {
+        char c = glob.charAt(i++);
+        switch (c) {
+          case '*':
+            if (i < len && glob.charAt(i) == '*') {
+              // crosses package boundaries
+              regex.append(".*");
+              i++;
+            } else {
+              // do not cross package boundaries
+              regex.append("[^.]*");
+            }
+            break;
+            
+          case '?':
+            // do not cross package boundaries
+            regex.append("[^.]");
+            break;
+          
+          default:
+            if (isRegexMeta(c)) {
+              regex.append('\\');
+            }
+            regex.append(c);
+        }
+      }
+      needOr = true;
     }
     return Pattern.compile(regex.toString(), 0);
   }

@@ -110,7 +110,7 @@ public final class CliMain {
         .withArgName("name")
         .create('b'));
     options.addOption(suppressannotationsOpt = OptionBuilder
-        .withDescription("class name of annotation that suppresses error reporting in classes/methods/fields (separated by commas or option can be given multiple times)")
+        .withDescription("class name or glob pattern of annotation that suppresses error reporting in classes/methods/fields (separated by commas or option can be given multiple times)")
         .withLongOpt("suppressannotation")
         .hasArgs()
         .withValueSeparator(',')

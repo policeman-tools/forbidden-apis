@@ -26,7 +26,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
+import java.util.regex.Pattern;
 
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.ClassVisitor;
@@ -58,8 +58,8 @@ final class ClassScanner extends ClassVisitor {
   final Map<String,String> forbiddenClasses;
   // key is pattern to binary class name:
   final Iterable<ClassPatternRule> forbiddenClassPatterns;
-  // descriptors (not internal names) of all annotations that suppress:
-  final Set<String> suppressAnnotations;
+  // pattern that matches binary (dotted) class name of all annotations that suppress:
+  final Pattern suppressAnnotations;
   
   private String source = null;
   private boolean isDeprecated = false;
@@ -77,7 +77,7 @@ final class ClassScanner extends ClassVisitor {
   public ClassScanner(RelatedClassLookup lookup,
       final Map<String,String> forbiddenClasses, final Iterable<ClassPatternRule> forbiddenClassPatterns,
       final Map<String,String> forbiddenMethods, final Map<String,String> forbiddenFields,
-      final Set<String> suppressAnnotations,
+      final Pattern suppressAnnotations,
       final boolean internalRuntimeForbidden) {
     super(Opcodes.ASM5);
     this.lookup = lookup;
@@ -215,19 +215,18 @@ final class ClassScanner extends ClassVisitor {
     return checkType(Type.getType(desc));
   }
   
-  String checkAnnotationDescriptor(String desc, boolean visible) {
-    final Type type = Type.getType(desc);
+  String checkAnnotationDescriptor(Type type, boolean visible) {
     if (type.getSort() != Type.OBJECT) {
       // should never happen for annotations!
-      throw new IllegalArgumentException("Annotation descriptor '" + desc + "' has wrong sort: " + type.getSort());
+      throw new IllegalArgumentException("Annotation descriptor '" + type.getDescriptor() + "' has wrong sort: " + type.getSort());
     }
     // for annotations, we don't need to look into super-classes, interfaces,...
     // -> we just check if its disallowed or internal runtime (only if visible)!
     return checkClassUse(type, "annotation", visible);
   }
   
-  void maybeSuppressCurrentGroup(String annotationDesc) {
-    if (suppressAnnotations.contains(annotationDesc)) {
+  void maybeSuppressCurrentGroup(Type annotation) {
+    if (suppressAnnotations.matcher(annotation.getClassName()).matches()) {
       suppressedGroups.set(currentGroupId);
     }
   }
@@ -244,7 +243,7 @@ final class ClassScanner extends ClassVisitor {
     this.isDeprecated = (access & Opcodes.ACC_DEPRECATED) != 0;
     reportClassViolation(checkClassDefinition(superName, interfaces), "class declaration");
     if (this.isDeprecated) {
-      classSuppressed |= suppressAnnotations.contains(DEPRECATED_DESCRIPTOR);
+      classSuppressed |= suppressAnnotations.matcher(DEPRECATED_TYPE.getClassName()).matches();
       reportClassViolation(checkType(DEPRECATED_TYPE), "deprecation on class declaration");
     }
   }
@@ -260,14 +259,15 @@ final class ClassScanner extends ClassVisitor {
       // don't report 2 times!
       return null;
     }
-    classSuppressed |= suppressAnnotations.contains(desc);
-    reportClassViolation(checkAnnotationDescriptor(desc, visible), "annotation on class declaration");
+    final Type type = Type.getType(desc);
+    classSuppressed |= suppressAnnotations.matcher(type.getClassName()).matches();
+    reportClassViolation(checkAnnotationDescriptor(type, visible), "annotation on class declaration");
     return null;
   }
   
   @Override
   public AnnotationVisitor visitTypeAnnotation(int typeRef, TypePath typePath, String desc, boolean visible) {
-    reportClassViolation(checkAnnotationDescriptor(desc, visible), "type annotation on class declaration");
+    reportClassViolation(checkAnnotationDescriptor(Type.getType(desc), visible), "type annotation on class declaration");
     return null;
   }
   
@@ -285,7 +285,7 @@ final class ClassScanner extends ClassVisitor {
           reportFieldViolation(checkDescriptor(desc), "field declaration");
         }
         if (this.isDeprecated) {
-          maybeSuppressCurrentGroup(DEPRECATED_DESCRIPTOR);
+          maybeSuppressCurrentGroup(DEPRECATED_TYPE);
           reportFieldViolation(checkType(DEPRECATED_TYPE), "deprecation on field declaration");
         }
       }
@@ -296,14 +296,15 @@ final class ClassScanner extends ClassVisitor {
           // don't report 2 times!
           return null;
         }
-        maybeSuppressCurrentGroup(desc);
-        reportFieldViolation(checkAnnotationDescriptor(desc, visible), "annotation on field declaration");
+        final Type type = Type.getType(desc);
+        maybeSuppressCurrentGroup(type);
+        reportFieldViolation(checkAnnotationDescriptor(type, visible), "annotation on field declaration");
         return null;
       }
 
       @Override
       public AnnotationVisitor visitTypeAnnotation(int typeRef, TypePath typePath, String desc, boolean visible) {
-        reportFieldViolation(checkAnnotationDescriptor(desc, visible), "type annotation on field declaration");
+        reportFieldViolation(checkAnnotationDescriptor(Type.getType(desc), visible), "type annotation on field declaration");
         return null;
       }
       
@@ -332,7 +333,7 @@ final class ClassScanner extends ClassVisitor {
           reportMethodViolation(checkDescriptor(desc), "method declaration");
         }
         if (this.isDeprecated) {
-          maybeSuppressCurrentGroup(DEPRECATED_DESCRIPTOR);
+          maybeSuppressCurrentGroup(DEPRECATED_TYPE);
           reportMethodViolation(checkType(DEPRECATED_TYPE), "deprecation on method declaration");
         }
       }
@@ -428,38 +429,39 @@ final class ClassScanner extends ClassVisitor {
           // don't report 2 times!
           return null;
         }
-        maybeSuppressCurrentGroup(desc);
-        reportMethodViolation(checkAnnotationDescriptor(desc, visible), "annotation on method declaration");
+        final Type type = Type.getType(desc);
+        maybeSuppressCurrentGroup(type);
+        reportMethodViolation(checkAnnotationDescriptor(type, visible), "annotation on method declaration");
         return null;
       }
 
       @Override
       public AnnotationVisitor visitParameterAnnotation(int parameter, String desc, boolean visible) {
-        reportMethodViolation(checkAnnotationDescriptor(desc, visible), "parameter annotation on method declaration");
+        reportMethodViolation(checkAnnotationDescriptor(Type.getType(desc), visible), "parameter annotation on method declaration");
         return null;
       }
 
       @Override
       public AnnotationVisitor visitTypeAnnotation(int typeRef, TypePath typePath, String desc, boolean visible) {
-        reportMethodViolation(checkAnnotationDescriptor(desc, visible), "type annotation on method declaration");
+        reportMethodViolation(checkAnnotationDescriptor(Type.getType(desc), visible), "type annotation on method declaration");
         return null;
       }
 
       @Override
       public AnnotationVisitor visitInsnAnnotation(int typeRef, TypePath typePath, String desc, boolean visible) {
-        reportMethodViolation(checkAnnotationDescriptor(desc, visible), "annotation in method body");
+        reportMethodViolation(checkAnnotationDescriptor(Type.getType(desc), visible), "annotation in method body");
         return null;
       }
 
       @Override
       public AnnotationVisitor visitLocalVariableAnnotation(int typeRef, TypePath typePath, Label[] start, Label[] end, int[] index, String desc, boolean visible) {
-        reportMethodViolation(checkAnnotationDescriptor(desc, visible), "annotation in method body");
+        reportMethodViolation(checkAnnotationDescriptor(Type.getType(desc), visible), "annotation in method body");
         return null;
       }
       
       @Override
       public AnnotationVisitor visitTryCatchAnnotation(int typeRef, TypePath typePath, String desc, boolean visible) {
-        reportMethodViolation(checkAnnotationDescriptor(desc, visible), "annotation in method body");
+        reportMethodViolation(checkAnnotationDescriptor(Type.getType(desc), visible), "annotation in method body");
         return null;
       }
       

@@ -37,7 +37,6 @@ import java.net.URLConnection;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
@@ -81,7 +80,7 @@ public abstract class Checker implements RelatedClassLookup {
   // key is pattern to binary class name:
   final Set<ClassPatternRule> forbiddenClassPatterns = new LinkedHashSet<ClassPatternRule>();
   // descriptors (not internal names) of all annotations that suppress:
-  final Set<String> suppressAnnotations = new HashSet<String>();
+  final Set<String> suppressAnnotations = new LinkedHashSet<String>();
     
   protected abstract void logError(String msg);
   protected abstract void logWarn(String msg);
@@ -402,22 +401,18 @@ public abstract class Checker implements RelatedClassLookup {
   
   /** Adds the given annotation class for suppressing errors. */
   public final void addSuppressAnnotation(Class<? extends Annotation> anno) {
-    suppressAnnotations.add(Type.getDescriptor(anno));
+    suppressAnnotations.add(anno.getName());
   }
   
-  /** Adds suppressing annotation name in binary form (dotted). The class name is not checked for existence. */
+  /** Adds suppressing annotation name in binary form (dotted). It may also be a glob pattern. The class name is not checked for existence. */
   public final void addSuppressAnnotation(String annoName) {
-    final Type type = Type.getObjectType(AsmUtils.binaryToInternal(annoName));
-    if (type.getSort() != Type.OBJECT) {
-      throw new IllegalArgumentException("Descriptor is not of OBJECT sort: " + type.getDescriptor());
-    }
-    suppressAnnotations.add(type.getDescriptor());
+    suppressAnnotations.add(annoName);
   }
   
   /** Parses a class and checks for valid method invocations */
-  private int checkClass(final ClassReader reader) {
+  private int checkClass(final ClassReader reader, Pattern suppressAnnotationsPattern) {
     final String className = Type.getObjectType(reader.getClassName()).getClassName();
-    final ClassScanner scanner = new ClassScanner(this, forbiddenClasses, forbiddenClassPatterns, forbiddenMethods, forbiddenFields, suppressAnnotations, internalRuntimeForbidden); 
+    final ClassScanner scanner = new ClassScanner(this, forbiddenClasses, forbiddenClassPatterns, forbiddenMethods, forbiddenFields, suppressAnnotationsPattern, internalRuntimeForbidden); 
     reader.accept(scanner, ClassReader.SKIP_FRAMES);
     final List<ForbiddenViolation> violations = scanner.getSortedViolations();
     final Pattern splitter = Pattern.compile(Pattern.quote("\n"));
@@ -431,9 +426,10 @@ public abstract class Checker implements RelatedClassLookup {
   
   public final void run() throws ForbiddenApiException {
     int errors = 0;
+    final Pattern suppressAnnotationsPattern = AsmUtils.glob2Pattern(suppressAnnotations.toArray(new String[suppressAnnotations.size()]));
     try {
       for (final ClassSignature c : classesToCheck.values()) {
-        errors += checkClass(c.getReader());
+        errors += checkClass(c.getReader(), suppressAnnotationsPattern);
       }
     } catch (WrapperRuntimeException wre) {
       Throwable cause = wre.getCause();

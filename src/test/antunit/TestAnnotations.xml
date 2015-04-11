@@ -62,7 +62,7 @@
   <target name="testSuppressAnnotationsJava8">
     <forbiddenapis failOnMissingClasses="true" classpath="${basedir}">
       <!-- this should disable whole class scanning: -->
-      <suppressAnnotation classname="Java8Annotations$FooBar"/>
+      <suppressAnnotation classname="*$FooBar"/>
       <!-- normally, this should produce similar errors like 'testAnnotations': -->
       <file file="Java8Annotations.class"/>
       Java8Annotations$ClassFileOnly @ Forbidden class-only annotation

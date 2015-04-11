@@ -47,7 +47,7 @@
           </excludes>
           <suppressAnnotations>
             <!-- this should suppress the whole tested class, so above signatures have no effect -->
-            <suppressAnnotation>Java8Annotations$FooBar</suppressAnnotation>
+            <suppressAnnotation>Java8Annotations$*</suppressAnnotation>
           </suppressAnnotations>
         </configuration>
         <executions>

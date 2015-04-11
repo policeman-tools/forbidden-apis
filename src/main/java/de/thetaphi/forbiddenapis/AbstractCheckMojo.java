@@ -132,6 +132,8 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
    * or fields. By default, {@code @de.thetaphi.forbiddenapis.SuppressForbidden}
    * can always be used, but needs the {@code forbidden-apis.jar} file in classpath
    * of compiled project, which may not be wanted.
+   * Instead of a full class name, a glob pattern may be used (e.g.,
+   * {@code **.SuppressForbidden}).
    * @since 1.8
    */
   @Parameter(required = false)

@@ -139,7 +139,8 @@ and the system classloader, not ANT's class loader.</p>
   <code>RetentionPolicy#CLASS</code>. It can be applied to classes, their methods,
   or fields. By default, <code>@de.thetaphi.forbiddenapis.SuppressForbidden</code>
   can always be used, but needs the <code>forbidden-apis.jar</code> file in classpath
-  of compiled project, which may not be wanted.</td>
+  of compiled project, which may not be wanted. Instead of a full class name, a glob
+  pattern may be used (e.g., <code>**.SuppressForbidden</code>).</td>
 </tr>
 
 </table>
@@ -164,7 +165,8 @@ so you don't need to add this as include attribute to those collections.</p>
 <p>You can include multiple <code>&lt;suppressAnnotation classname=&quot;...&quot;&gt;</code> elements to specify class names of custom Java annotations that are used in the checked
 code to suppress errors. Those annotations must have at least
 <code>RetentionPolicy#CLASS</code>. They can be applied to classes, their methods, or fields. By default, <code>@de.thetaphi.forbiddenapis.SuppressForbidden</code>
-can always be used, but needs the <code>forbidden-apis.jar</code> file in classpath of compiled project, which may not be wanted.</p>
+can always be used, but needs the <code>forbidden-apis.jar</code> file in classpath of compiled project, which may not be wanted. Instead of a full class name, a glob
+  pattern may be used (e.g., <code>**.SuppressForbidden</code>).</p>
 
 </body>
 </html>
