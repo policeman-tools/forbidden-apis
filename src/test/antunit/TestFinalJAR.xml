@@ -19,7 +19,7 @@
   <taskdef name="forbiddenapis-jar" classname="de.thetaphi.forbiddenapis.AntTask" classpath="${jar-file}"/>
 
   <target name="testMySelfWithFinalJAR1">
-    <forbiddenapis-jar internalRuntimeForbidden="true" classpathref="path.main-run">
+    <forbiddenapis-jar internalRuntimeForbidden="true" classpathref="path.all">
       <fileset dir="${antunit.main.classes}"/>
       <bundledsignatures name="jdk-unsafe-${jdk.version}"/>
       <bundledsignatures name="jdk-deprecated-${jdk.version}"/>
@@ -28,7 +28,7 @@
   </target>
   
   <target name="testMySelfWithFinalJAR2">
-    <forbiddenapis-jar dir="${antunit.main.classes}" internalRuntimeForbidden="true" classpathref="path.main-run">
+    <forbiddenapis-jar dir="${antunit.main.classes}" internalRuntimeForbidden="true" classpathref="path.all">
       <bundledsignatures name="jdk-unsafe-${jdk.version}"/>
       <bundledsignatures name="jdk-deprecated-${jdk.version}"/>
     </forbiddenapis-jar>
@@ -37,7 +37,7 @@
   
   <target name="testMySelfWithAntLib">
     <taskdef uri="antlib:de.thetaphi.forbiddenapis" classpath="${jar-file}"/>
-    <fa:forbiddenapis xmlns:fa="antlib:de.thetaphi.forbiddenapis" dir="${antunit.main.classes}" internalRuntimeForbidden="true" classpathref="path.main-run">
+    <fa:forbiddenapis xmlns:fa="antlib:de.thetaphi.forbiddenapis" dir="${antunit.main.classes}" internalRuntimeForbidden="true" classpathref="path.all">
       <bundledsignatures name="jdk-unsafe-${jdk.version}"/>
       <bundledsignatures name="jdk-deprecated-${jdk.version}"/>
     </fa:forbiddenapis>

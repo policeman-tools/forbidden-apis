@@ -20,7 +20,7 @@
   
   <target name="testAttribute">
     <au:expectfailure expectedMessage="Check for forbidden API calls failed, see log">
-      <forbiddenapis signaturesfile="signatures1.txt" classpathref="path.main-run">
+      <forbiddenapis signaturesfile="signatures1.txt" classpathref="path.all">
         <fileset refid="main.classes"/>
       </forbiddenapis>
     </au:expectfailure>
@@ -29,7 +29,7 @@
   
   <target name="testFileSet">
     <au:expectfailure expectedMessage="Check for forbidden API calls failed, see log">
-      <forbiddenapis classpathref="path.main-run">
+      <forbiddenapis classpathref="path.all">
         <fileset refid="main.classes"/>
         <signaturesFileset file="signatures1.txt"/>
       </forbiddenapis>
@@ -39,7 +39,7 @@
   
   <target name="testFileList">
     <au:expectfailure expectedMessage="Check for forbidden API calls failed, see log">
-      <forbiddenapis classpathref="path.main-run">
+      <forbiddenapis classpathref="path.all">
         <fileset refid="main.classes"/>
         <signaturesFilelist dir="." files="signatures1.txt"/>
       </forbiddenapis>
@@ -49,7 +49,7 @@
   
   <target name="testFileResource">
     <au:expectfailure expectedMessage="Check for forbidden API calls failed, see log">
-      <forbiddenapis classpathref="path.main-run">
+      <forbiddenapis classpathref="path.all">
         <fileset refid="main.classes"/>
         <signaturesFile file="signatures1.txt"/>
       </forbiddenapis>

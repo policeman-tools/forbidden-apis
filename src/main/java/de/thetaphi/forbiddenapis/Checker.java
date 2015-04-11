@@ -38,7 +38,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
@@ -80,7 +79,7 @@ public abstract class Checker implements RelatedClassLookup {
   // key is the internal name (slashed):
   final Map<String,String> forbiddenClasses = new HashMap<String,String>();
   // key is pattern to binary class name:
-  final Map<Pattern,String> forbiddenClassPatterns = new LinkedHashMap<Pattern,String>();
+  final Set<ClassPatternRule> forbiddenClassPatterns = new LinkedHashSet<ClassPatternRule>();
   // descriptors (not internal names) of all annotations that suppress:
   final Set<String> suppressAnnotations = new HashSet<String>();
     
@@ -282,7 +281,7 @@ public abstract class Checker implements RelatedClassLookup {
       if (method != null || field != null) {
         throw new ParseException(String.format(Locale.ENGLISH, "Class level glob pattern cannot be combined with methods/fields: %s", signature));
       }
-      forbiddenClassPatterns.put(AsmUtils.glob2Pattern(clazz), printout);
+      forbiddenClassPatterns.add(new ClassPatternRule(clazz, printout));
     } else {
       final ClassSignature c;
       try {

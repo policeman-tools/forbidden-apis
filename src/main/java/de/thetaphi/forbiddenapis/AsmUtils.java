@@ -54,6 +54,7 @@ public final class AsmUtils {
     return clazz.replace('.', '/');
   }
   
+  /** Returns true is a string is a glob pattern */
   public static boolean isGlob(String s) {
     return s.indexOf('*') >= 0 || s.indexOf('?') >= 0;
   }
@@ -88,7 +89,7 @@ public final class AsmUtils {
           regex.append(c);
       }
     }
-    return Pattern.compile(regex.toString());
+    return Pattern.compile(regex.toString(), 0);
   }
 
 }

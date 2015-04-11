@@ -20,7 +20,7 @@
 
   <target name="testForbiddenClassWithMessage">
     <au:expectfailure expectedMessage="Check for forbidden API calls failed, see log">
-      <forbiddenapis classpathref="path.main-run">
+      <forbiddenapis classpathref="path.all">
         <fileset refid="main.classes"/>
         java.awt.Color @ Color is disallowed, thats not bad, because ANT has no colors...
         java.lang.String @ You are crazy that you disallow strings
@@ -31,7 +31,7 @@
   
   <target name="testForbiddenClassPatternWithMessage">
     <au:expectfailure expectedMessage="Check for forbidden API calls failed, see log">
-      <forbiddenapis classpathref="path.main-run">
+      <forbiddenapis classpathref="path.all">
         <fileset refid="main.classes"/>
         java.util.Array* @ You are crazy that you disallow all Array*
         java.lang.** @ You are crazy that you disallow all java.lang
@@ -43,7 +43,7 @@
   
   <target name="testForbiddenClassWithDefaultMessage">
     <au:expectfailure expectedMessage="Check for forbidden API calls failed, see log">
-      <forbiddenapis classpathref="path.main-run">
+      <forbiddenapis classpathref="path.all">
         <fileset refid="main.classes"/>
         @defaultMessage Let's disable some of AWT
         java.awt.BorderLayout
@@ -57,7 +57,7 @@
   
   <target name="testForbiddenMethodWithMessage">
     <au:expectfailure expectedMessage="Check for forbidden API calls failed, see log">
-      <forbiddenapis classpathref="path.main-run">
+      <forbiddenapis classpathref="path.all">
         <fileset refid="main.classes"/>
         java.lang.String#substring(int,int) @ You are crazy that you disallow substrings
       </forbiddenapis>
@@ -67,7 +67,7 @@
   
   <target name="testForbiddenFieldWithMessage">
     <au:expectfailure expectedMessage="Check for forbidden API calls failed, see log">
-      <forbiddenapis classpathref="path.main-run">
+      <forbiddenapis classpathref="path.all">
         <fileset refid="main.classes"/>
         java.util.Locale#ENGLISH @ We are speaking chinese here!
       </forbiddenapis>
@@ -77,7 +77,7 @@
   
   <target name="testFailOnMissing">
     <au:expectfailure expectedMessage="Parsing signatures failed: Class 'foo.bar.ForbiddenApis' not found on classpath while parsing signature: foo.bar.ForbiddenApis#testMethod()">
-      <forbiddenapis classpathref="path.main-run">
+      <forbiddenapis classpathref="path.all">
         <fileset refid="main.classes"/>
         foo.bar.ForbiddenApis#testMethod() @ should fail here
         java.lang.String#forbiddenFoobarMethod() @ should also fail
@@ -87,7 +87,7 @@
   </target>
   
   <target name="testDontFailOnMissing">
-    <forbiddenapis classpathref="path.main-run">
+    <forbiddenapis classpathref="path.all">
       <fileset refid="main.classes"/>
       @ignoreUnresolvable
       foo.bar.ForbiddenApis#testMethod() @ should be ignored
@@ -101,7 +101,7 @@
   </target>
   
   <target name="testDontFailOnMissingWithAttribute">
-    <forbiddenapis classpathref="path.main-run" failOnUnresolvableSignatures="false">
+    <forbiddenapis classpathref="path.all" failOnUnresolvableSignatures="false">
       <fileset refid="main.classes"/>
       foo.bar.ForbiddenApis#testMethod() @ should be ignored
       java.lang.String#forbiddenFoobarMethod() @ should be ignored

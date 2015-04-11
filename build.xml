@@ -163,9 +163,10 @@
     </condition>
     <echo level="warn" taskname="check-ivy" message="${ivy.version-message}"/>
     <ivy:cachepath pathid="path.main-build" conf="build" log="${ivy.logging}"/>
+    <ivy:cachepath pathid="path.main-bundle" conf="bundle" log="${ivy.logging}"/>
     <ivy:cachepath pathid="path.test" conf="test" log="${ivy.logging}"/>
     <path id="path.main-run">
-      <path refid="path.main-build"/>
+      <path refid="path.main-bundle"/>
       <pathelement path="build/main"/>
     </path>
     <path id="path.tools-build" refid="path.main-run"/>
@@ -174,11 +175,18 @@
       <pathelement path="build/tools"/>
     </path>
     <path id="path.junit-build">
-      <path refid="path.test"/>
       <path refid="path.main-run"/>
+      <path refid="path.test"/>
     </path>
     <path id="path.junit-run">
       <path refid="path.junit-build"/>
+      <pathelement path="build/test"/>
+    </path>
+    <path id="path.all">
+      <path refid="path.main-build"/>
+      <path refid="path.test"/>
+      <pathelement path="build/main"/>
+      <pathelement path="build/tools"/>
       <pathelement path="build/test"/>
     </path>
   </target>
@@ -422,11 +430,7 @@
   
   <target name="-check-myself" depends="compile,compile-tools,compile-test,-install-forbiddenapi-task">
     <forbiddenapis internalRuntimeForbidden="true" failOnUnsupportedJava="false">
-      <classpath>
-        <path refid="path.main-run"/>
-        <path refid="path.junit-run"/>
-        <path refid="path.tools-run"/>
-      </classpath>
+      <classpath refid="path.all"/>
       <fileset dir="build/main"/>
       <fileset dir="build/tools"/>
       <fileset dir="build/test"/>
@@ -488,11 +492,14 @@
   
   <target name="-junit" depends="compile-test">
     <mkdir dir="${test-results-dir}"/>
-    <junit haltonfailure="yes" includeantruntime="no">
+    <junit haltonfailure="yes" fork="yes" forkmode="once">
       <classpath refid="path.junit-run"/>
       <formatter type="brief" usefile="false" />
       <formatter type="xml"/>
-      <batchtest fork="no" todir="${test-results-dir}">
+      <assertions>
+        <enable package="de.thetaphi.forbiddenapis"/>
+      </assertions>
+      <batchtest todir="${test-results-dir}">
         <fileset dir="src/test/java" includes="**/*Test.java"/>
       </batchtest>
     </junit>

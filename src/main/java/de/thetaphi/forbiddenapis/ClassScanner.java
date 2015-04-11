@@ -27,7 +27,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Pattern;
 
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.ClassVisitor;
@@ -58,7 +57,7 @@ final class ClassScanner extends ClassVisitor {
   // key is the internal name (slashed):
   final Map<String,String> forbiddenClasses;
   // key is pattern to binary class name:
-  final Map<Pattern,String> forbiddenClassPatterns;
+  final Iterable<ClassPatternRule> forbiddenClassPatterns;
   // descriptors (not internal names) of all annotations that suppress:
   final Set<String> suppressAnnotations;
   
@@ -76,7 +75,7 @@ final class ClassScanner extends ClassVisitor {
   boolean classSuppressed = false;
   
   public ClassScanner(RelatedClassLookup lookup,
-      final Map<String,String> forbiddenClasses, final Map<Pattern,String> forbiddenClassPatterns,
+      final Map<String,String> forbiddenClasses, final Iterable<ClassPatternRule> forbiddenClassPatterns,
       final Map<String,String> forbiddenMethods, final Map<String,String> forbiddenFields,
       final Set<String> suppressAnnotations,
       final boolean internalRuntimeForbidden) {
@@ -115,9 +114,9 @@ final class ClassScanner extends ClassVisitor {
       return String.format(Locale.ENGLISH, "Forbidden %s use: %s", what, printout);
     }
     final String binaryClassName = type.getClassName();
-    for (final Map.Entry<Pattern,String> pat : forbiddenClassPatterns.entrySet()) {
-      if (pat.getKey().matcher(binaryClassName).matches()) {
-        return String.format(Locale.ENGLISH, "Forbidden %s use: %s", what, pat.getValue());
+    for (final ClassPatternRule r : forbiddenClassPatterns) {
+      if (r.matches(binaryClassName)) {
+        return String.format(Locale.ENGLISH, "Forbidden %s use: %s", what, r.printout);
       }
     }
     if (deep && internalRuntimeForbidden) {

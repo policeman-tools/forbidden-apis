@@ -20,7 +20,7 @@
 
   <target name="testForbiddenExtends">
     <au:expectfailure expectedMessage="Check for forbidden API calls failed, see log">
-      <forbiddenapis classpathref="path.main-run">
+      <forbiddenapis classpathref="path.all">
         <fileset refid="main.classes"/>
         java.lang.Object @ Every class is not allowed!
       </forbiddenapis>
@@ -31,7 +31,7 @@
   
   <target name="testForbiddenInterfaces">
     <au:expectfailure expectedMessage="Check for forbidden API calls failed, see log">
-      <forbiddenapis dir="${antunit.tools.classes}" classpathref="path.main-run">
+      <forbiddenapis dir="${antunit.tools.classes}" classpathref="path.all">
         org.objectweb.asm.Opcodes @ demo interface
       </forbiddenapis>
     </au:expectfailure>
