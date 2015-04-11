@@ -419,14 +419,16 @@
     <property name="installed.forbiddenapi-task" value="true"/>
   </target>
   
-  <target name="-check-myself" depends="compile,compile-tools,-install-forbiddenapi-task">
+  <target name="-check-myself" depends="compile,compile-tools,compile-test,-install-forbiddenapi-task">
     <forbiddenapis internalRuntimeForbidden="true" failOnUnsupportedJava="false">
       <classpath>
         <path refid="path.run"/>
+        <path refid="path.junit-run"/>
         <path refid="path.tools-run"/>
       </classpath>
       <fileset dir="build/main"/>
       <fileset dir="build/tools"/>
+      <fileset dir="build/test"/>
       <bundledsignatures name="jdk-unsafe-${jdk.version}"/>
       <bundledsignatures name="jdk-deprecated-${jdk.version}"/>
       <bundledsignatures name="jdk-system-out"/>
