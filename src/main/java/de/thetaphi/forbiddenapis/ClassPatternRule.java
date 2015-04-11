@@ -20,9 +20,12 @@ import java.util.regex.Pattern;
 
 public final class ClassPatternRule {
 
-  public final Pattern pattern;
+  private final Pattern pattern;
+  
+  /** the message printed if rule is violated */
   public final String printout;
   
+  /** Create new rule for class glob and given printout */
   public ClassPatternRule(String glob, String printout) {
     if (glob == null || printout == null) {
       throw new NullPointerException();
@@ -32,11 +35,12 @@ public final class ClassPatternRule {
     this.printout = printout;
   }
   
+  /** returns true, if the given class (binary name, dotted) matches this rule. */
   public boolean matches(String className) {
     return pattern.matcher(className).matches();
   }
 
-  // equals() / hashcode() use the string representation of pattern for comparisons
+  // equals() / hashCode() use the string representation of pattern for comparisons
   // (Pattern unfortunately does not implement equals/hashCode)
   
   @Override

@@ -19,6 +19,7 @@ package de.thetaphi.forbiddenapis;
 import static de.thetaphi.forbiddenapis.AsmUtils.glob2Pattern;
 import static de.thetaphi.forbiddenapis.AsmUtils.isGlob;
 import static de.thetaphi.forbiddenapis.AsmUtils.isInternalClass;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -62,6 +63,14 @@ public final class AsmUtilsTest {
     assertFalse(pat.matcher("java.util.ArrayList").matches());
     assertFalse(pat.matcher("java.util.Array").matches());
     assertTrue(pat.matcher("java.lang.reflect.Arrays").matches());
+  }
+  
+  @Test
+  public void testCrazyPatterns() {
+    // those should not cause havoc:
+    assertEquals("java\\.\\{.*\\}\\.Array", glob2Pattern("java.{**}.Array").pattern());
+    assertEquals("java\\./.*<>\\.Array\\$1", glob2Pattern("java./**<>.Array$1").pattern());
+    assertEquals("\\+\\^\\$", glob2Pattern("+^$").pattern());
   }
   
   @Test
