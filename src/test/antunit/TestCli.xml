@@ -16,7 +16,7 @@
 -->
 <project xmlns:au="antlib:org.apache.ant.antunit">
 
-  <pathconvert property="cp" refid="path.build"/>
+  <pathconvert property="cp" refid="path.main-build"/>
 
   <target name="testBundledSignatures">
     <java jar="${jar-file}" failonerror="true" fork="true">

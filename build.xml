@@ -162,19 +162,20 @@
       <equals arg1="${ivy.version}" arg2="${ivy.install.version}"/>
     </condition>
     <echo level="warn" taskname="check-ivy" message="${ivy.version-message}"/>
-    <ivy:cachepath pathid="path.build" conf="build" log="${ivy.logging}"/>
+    <ivy:cachepath pathid="path.main-build" conf="build" log="${ivy.logging}"/>
     <ivy:cachepath pathid="path.test" conf="test" log="${ivy.logging}"/>
-    <path id="path.run">
-      <path refid="path.build"/>
+    <path id="path.main-run">
+      <path refid="path.main-build"/>
       <pathelement path="build/main"/>
     </path>
+    <path id="path.tools-build" refid="path.main-run"/>
     <path id="path.tools-run">
-      <path refid="path.run"/>
+      <path refid="path.tools-build"/>
       <pathelement path="build/tools"/>
     </path>
     <path id="path.junit-build">
       <path refid="path.test"/>
-      <path refid="path.run"/>
+      <path refid="path.main-run"/>
     </path>
     <path id="path.junit-run">
       <path refid="path.junit-build"/>
@@ -208,11 +209,11 @@
   </macrodef>
 
   <target name="compile" depends="-init" description="Compile">
-    <compile module="main" classpathref="path.build"/>
+    <compile module="main" classpathref="path.main-build"/>
   </target>
 
   <target name="compile-tools" depends="compile" description="Compile tools">
-    <compile module="tools" classpathref="path.run"/>
+    <compile module="tools" classpathref="path.tools-build"/>
   </target>
 
   <target name="compile-test" depends="compile" description="Compile tests">
@@ -275,12 +276,12 @@
     </artifact:mvn>
     <javac includeantruntime="false" srcdir="${maven-build-dir}/generated-sources/plugin" destdir="build/main"
       source="${jdk.version}" target="${jdk.version}" encoding="${build.encoding}" debug="${compile.debug}"
-      deprecation="${compile.deprecation}" classpathref="path.build"/>
+      deprecation="${compile.deprecation}" classpathref="path.main-build"/>
   </target>
   
   <target name="-get-cli-help" depends="compile" unless="cli-help">
     <local name="-cli-help"/>
-    <java classname="${cli-classname}" classpathref="path.run"
+    <java classname="${cli-classname}" classpathref="path.main-run"
       failonerror="true" fork="false" outputproperty="-cli-help">
       <arg value="--help"/>
     </java>
@@ -415,14 +416,14 @@
     description="Checks bundled signatures file corresponding to the current JVM. Run after every update!"/>
     
   <target name="-install-forbiddenapi-task" depends="compile" unless="installed.forbiddenapi-task">
-    <taskdef name="forbiddenapis" classname="de.thetaphi.forbiddenapis.AntTask" classpathref="path.run"/>
+    <taskdef name="forbiddenapis" classname="de.thetaphi.forbiddenapis.AntTask" classpathref="path.main-run"/>
     <property name="installed.forbiddenapi-task" value="true"/>
   </target>
   
   <target name="-check-myself" depends="compile,compile-tools,compile-test,-install-forbiddenapi-task">
     <forbiddenapis internalRuntimeForbidden="true" failOnUnsupportedJava="false">
       <classpath>
-        <path refid="path.run"/>
+        <path refid="path.main-run"/>
         <path refid="path.junit-run"/>
         <path refid="path.tools-run"/>
       </classpath>
@@ -451,13 +452,13 @@
   
   <target name="-antunit-fake-pom">
     <mkdir dir="build/test-maven"/>
-    <local name="path.build.xslstr"/>
-    <pathconvert property="path.build.xslstr" pathsep="|" refid="path.build"/>
+    <local name="path.main-build.xslstr"/>
+    <pathconvert property="path.main-build.xslstr" pathsep="|" refid="path.main-build"/>
     <xslt in="src/test/antunit/dummy.xml" out="build/test-maven/fake-pom.xml"
       style="src/test/antunit/pom-generator.xsl" force="true"
     >
       <outputproperty name="indent" value="yes"/>
-      <param name="jarfiles" expression="${path.build.xslstr}"/>
+      <param name="jarfiles" expression="${path.main-build.xslstr}"/>
     </xslt>
     <property name="antunit.fake-pom" location="build/test-maven/fake-pom.xml"/>
   </target>
