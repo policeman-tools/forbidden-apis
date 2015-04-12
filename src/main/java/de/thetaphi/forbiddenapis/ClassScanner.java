@@ -105,8 +105,8 @@ final class ClassScanner extends ClassVisitor {
   }
   
   String checkClassUse(Type type, String what, boolean deep) {
-    if (type.getSort() != Type.OBJECT) {
-      throw new IllegalArgumentException("Type '" + type + "' has wrong sort: " + type.getSort());
+    if (type.getSort() != Type.OBJECT && type.getSort() != Type.ARRAY) {
+      return null; // we don't know this type, just pass!
     }
     final String internalName = type.getInternalName();
     final String printout = forbiddenClasses.get(internalName);
@@ -216,10 +216,6 @@ final class ClassScanner extends ClassVisitor {
   }
   
   String checkAnnotationDescriptor(Type type, boolean visible) {
-    if (type.getSort() != Type.OBJECT) {
-      // should never happen for annotations!
-      throw new IllegalArgumentException("Annotation descriptor '" + type.getDescriptor() + "' has wrong sort: " + type.getSort());
-    }
     // for annotations, we don't need to look into super-classes, interfaces,...
     // -> we just check if its disallowed or internal runtime (only if visible)!
     return checkClassUse(type, "annotation", visible);
