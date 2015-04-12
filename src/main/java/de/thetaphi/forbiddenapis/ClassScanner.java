@@ -105,7 +105,10 @@ final class ClassScanner extends ClassVisitor {
   }
   
   String checkClassUse(Type type, String what, boolean deep) {
-    if (type.getSort() != Type.OBJECT && type.getSort() != Type.ARRAY) {
+    while (type.getSort() == Type.ARRAY) {
+      type = type.getElementType();
+    }
+    if (type.getSort() != Type.OBJECT) {
       return null; // we don't know this type, just pass!
     }
     final String internalName = type.getInternalName();
