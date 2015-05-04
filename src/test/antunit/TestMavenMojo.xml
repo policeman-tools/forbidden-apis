@@ -81,7 +81,7 @@
   </target>
   
   <target name="testIncludesExcludes-SuppressedAnnotations-Maven2">
-    <artifact:mvn pom="pom-index-suppress.xml" mavenVersion="${maven.version}" failonerror="true" fork="true">
+    <artifact:mvn pom="pom-InclExclSuppress.xml" mavenVersion="${maven.version}" failonerror="true" fork="true">
       <syspropertyset refid="injected-properties"/>
       <arg value="${groupId}:${artifactId}:${version}:check"/>
     </artifact:mvn>
