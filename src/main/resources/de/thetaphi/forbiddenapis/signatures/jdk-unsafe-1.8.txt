@@ -14,6 +14,15 @@
 
 # These methods and classes should not be used by server classes (unsafe, no charset, no locale,...):
 
-# We only include 1.7 for now.
-# TODO: Scan Java 8 API for additional locale/charset/... violations!
 @includeBundled jdk-unsafe-1.7
+
+@defaultMessage Uses default time zone
+java.time.LocalDateTime#now()
+java.time.LocalDate#now()
+java.time.LocalTime#now()
+java.time.OffsetDateTime#now()
+java.time.OffsetTime#now()
+java.time.Year#now()
+java.time.YearMonth#now()
+java.time.MonthDay#now()
+
