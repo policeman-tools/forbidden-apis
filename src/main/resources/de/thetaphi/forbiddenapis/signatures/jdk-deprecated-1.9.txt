@@ -18,7 +18,6 @@ java.awt.Component#deliverEvent(java.awt.Event)
 java.awt.Component#disable()
 java.awt.Component#enable()
 java.awt.Component#enable(boolean)
-java.awt.Component#getPeer()
 java.awt.Component#gotFocus(java.awt.Event,java.lang.Object)
 java.awt.Component#handleEvent(java.awt.Event)
 java.awt.Component#hide()
@@ -58,7 +57,6 @@ java.awt.Container#preferredSize()
 java.awt.Cursor#predefined
 java.awt.Dialog#hide()
 java.awt.Dialog#show()
-java.awt.Font#getPeer()
 java.awt.FontMetrics#getMaxDecent()
 java.awt.Frame#CROSSHAIR_CURSOR
 java.awt.Frame#DEFAULT_CURSOR
@@ -92,7 +90,6 @@ java.awt.List#preferredSize(int)
 java.awt.List#setMultipleSelections(boolean)
 java.awt.Menu#countItems()
 java.awt.MenuBar#countMenus()
-java.awt.MenuComponent#getPeer()
 java.awt.MenuComponent#postEvent(java.awt.Event)
 java.awt.MenuContainer#postEvent(java.awt.Event)
 java.awt.MenuItem#disable()
@@ -124,7 +121,6 @@ java.awt.TextField#preferredSize(int)
 java.awt.TextField#setEchoCharacter(char)
 java.awt.Toolkit#getFontList()
 java.awt.Toolkit#getFontMetrics(java.awt.Font)
-java.awt.Toolkit#getFontPeer(java.lang.String,int)
 java.awt.Window#applyResourceBundle(java.lang.String)
 java.awt.Window#applyResourceBundle(java.util.ResourceBundle)
 java.awt.Window#hide()
@@ -225,6 +221,14 @@ java.security.Signature#setParameter(java.lang.String,java.lang.Object)
 java.security.SignatureSpi#engineGetParameter(java.lang.String)
 java.security.SignatureSpi#engineSetParameter(java.lang.String,java.lang.Object)
 java.security.Signer
+java.security.acl.Acl
+java.security.acl.AclEntry
+java.security.acl.AclNotFoundException
+java.security.acl.Group
+java.security.acl.LastOwnerException
+java.security.acl.NotOwnerException
+java.security.acl.Owner
+java.security.acl.Permission
 java.sql.CallableStatement#getBigDecimal(int,int)
 java.sql.Date#<init>(int,int,int)
 java.sql.Date#getHours()
@@ -333,7 +337,16 @@ javax.management.monitor.StringMonitorMBean#getDerivedGauge()
 javax.management.monitor.StringMonitorMBean#getDerivedGaugeTimeStamp()
 javax.management.openmbean.OpenType#ALLOWED_CLASSNAMES
 javax.naming.Context#APPLET
+javax.net.ssl.HandshakeCompletedEvent#getPeerCertificateChain()
+javax.net.ssl.SSLSession#getPeerCertificateChain()
 javax.security.auth.Policy
+javax.security.cert.Certificate
+javax.security.cert.CertificateEncodingException
+javax.security.cert.CertificateException
+javax.security.cert.CertificateExpiredException
+javax.security.cert.CertificateNotYetValidException
+javax.security.cert.CertificateParsingException
+javax.security.cert.X509Certificate
 javax.sql.rowset.BaseRowSet#setUnicodeStream(int,java.io.InputStream,int)
 javax.sql.rowset.CachedRowSet#COMMIT_ON_ACCEPT_CHANGES
 javax.swing.AbstractButton#getLabel()
