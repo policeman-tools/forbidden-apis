@@ -97,7 +97,14 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
    */
   @Parameter(required = false, defaultValue = "true")
   private boolean failOnUnresolvableSignatures;
-  
+
+  /**
+   * Fail the build if violations have been found. Defaults to {@code true}.
+   * @since 1.9
+   */
+  @Parameter(required = false, defaultValue = "true")
+  private boolean failOnViolation;
+
   /**
    * The default compiler target version used to expand references to bundled JDK signatures.
    * E.g., if you use "jdk-deprecated", it will expand to this version.
@@ -200,7 +207,7 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
       ClassLoader.getSystemClassLoader();
     
     try {
-      final Checker checker = new Checker(loader, internalRuntimeForbidden, failOnMissingClasses, failOnUnresolvableSignatures) {
+      final Checker checker = new Checker(loader, internalRuntimeForbidden, failOnMissingClasses, failOnViolation, failOnUnresolvableSignatures) {
         @Override
         protected void logError(String msg) {
           log.error(msg);

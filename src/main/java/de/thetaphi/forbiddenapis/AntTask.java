@@ -59,6 +59,7 @@ public final class AntTask extends Task {
   private boolean restrictClassFilename = true;
   private boolean failOnMissingClasses = true;
   private boolean failOnUnresolvableSignatures = true;
+  private boolean failOnViolation = true;
   private boolean ignoreEmptyFileset = false;
     
   @Override
@@ -76,7 +77,7 @@ public final class AntTask extends Task {
       classFiles.setProject(getProject());
       apiSignatures.setProject(getProject());
       
-      final Checker checker = new Checker(loader, internalRuntimeForbidden, failOnMissingClasses, failOnUnresolvableSignatures) {
+      final Checker checker = new Checker(loader, internalRuntimeForbidden, failOnMissingClasses, failOnViolation, failOnUnresolvableSignatures) {
         @Override
         protected void logError(String msg) {
           log(msg, Project.MSG_ERR);
@@ -325,4 +326,12 @@ public final class AntTask extends Task {
     this.ignoreEmptyFileset = ignoreEmptyFileset;
   }
 
+  /**
+   * Fail the build if violations have been found. If this parameter is set to {@code false},
+   * then the build will continue even if violations have been found.
+   * Defaults to {@code true}.
+   */
+  public void setFailOnViolation(boolean failOnViolation) {
+    this.failOnViolation = failOnViolation;
+  }
 }

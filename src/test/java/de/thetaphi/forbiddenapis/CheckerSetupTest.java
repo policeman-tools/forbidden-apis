@@ -29,7 +29,7 @@ public final class CheckerSetupTest {
   @SuppressForbidden
   static final class MyChecker extends Checker {
     public MyChecker() {
-      super(ClassLoader.getSystemClassLoader(), true, true, true);
+      super(ClassLoader.getSystemClassLoader(), true, true, true, true);
     }
 
     @Override
