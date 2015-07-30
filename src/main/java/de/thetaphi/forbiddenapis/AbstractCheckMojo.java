@@ -102,7 +102,7 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
    * Fail the build if violations have been found. Defaults to {@code true}.
    * @since 1.9
    */
-  @Parameter(required = false, defaultValue = "true")
+  @Parameter(required = false, property="forbiddenapis.failOnViolation", defaultValue = "true")
   private boolean failOnViolation;
 
   /**
