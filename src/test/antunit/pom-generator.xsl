@@ -48,6 +48,7 @@
             <configuration>
               <internalRuntimeForbidden>true</internalRuntimeForbidden>
               <failOnUnresolvableSignatures>${antunit.failOnUnresolvableSignatures}</failOnUnresolvableSignatures>
+              <failOnViolation>${antunit.failOnViolation}</failOnViolation>
               <bundledSignatures>
                 <bundledSignature>jdk-unsafe</bundledSignature>
                 <bundledSignature>jdk-deprecated</bundledSignature>

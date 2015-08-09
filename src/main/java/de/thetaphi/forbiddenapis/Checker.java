@@ -64,7 +64,7 @@ public abstract class Checker implements RelatedClassLookup {
   final Set<File> bootClassPathJars;
   final Set<String> bootClassPathDirs;
   final ClassLoader loader;
-  final boolean internalRuntimeForbidden, failOnMissingClasses, defaultFailOnUnresolvableSignatures;
+  final boolean internalRuntimeForbidden, failOnMissingClasses, failOnViolation, defaultFailOnUnresolvableSignatures;
   
   // key is the internal name (slashed):
   final Map<String,ClassSignature> classesToCheck = new HashMap<String,ClassSignature>();
@@ -86,10 +86,11 @@ public abstract class Checker implements RelatedClassLookup {
   protected abstract void logWarn(String msg);
   protected abstract void logInfo(String msg);
   
-  public Checker(ClassLoader loader, boolean internalRuntimeForbidden, boolean failOnMissingClasses, boolean defaultFailOnUnresolvableSignatures) {
+  public Checker(ClassLoader loader, boolean internalRuntimeForbidden, boolean failOnMissingClasses, boolean failOnViolation, boolean defaultFailOnUnresolvableSignatures) {
     this.loader = loader;
     this.internalRuntimeForbidden = internalRuntimeForbidden;
     this.failOnMissingClasses = failOnMissingClasses;
+    this.failOnViolation = failOnViolation;
     this.defaultFailOnUnresolvableSignatures = defaultFailOnUnresolvableSignatures;
     this.start = System.currentTimeMillis();
     
@@ -439,7 +440,7 @@ public abstract class Checker implements RelatedClassLookup {
     final String message = String.format(Locale.ENGLISH, 
         "Scanned %d (and %d related) class file(s) for forbidden API invocations (in %.2fs), %d error(s).",
         classesToCheck.size(), classesToCheck.isEmpty() ? 0 : classpathClassCache.size(), (System.currentTimeMillis() - start) / 1000.0, errors);
-    if (errors > 0) {
+    if (failOnViolation && errors > 0) {
       logError(message);
       throw new ForbiddenApiException("Check for forbidden API calls failed, see log.");
     } else {
