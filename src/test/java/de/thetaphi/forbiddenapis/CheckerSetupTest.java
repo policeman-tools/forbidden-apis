@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assume.assumeTrue;
 
 import java.util.Collections;
+import java.util.EnumSet;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -55,6 +56,7 @@ public final class CheckerSetupTest {
   public void setUp() {
     checker = new MyChecker();
     assumeTrue("This test only works with a supported JDK (see docs)", checker.isSupportedJDK);
+    assertEquals(EnumSet.of(INTERNAL_RUNTIME_FORBIDDEN, FAIL_ON_MISSING_CLASSES, FAIL_ON_VIOLATION, FAIL_ON_UNRESOLVABLE_SIGNATURES), checker.options);
   }
 
   @Test
@@ -99,6 +101,16 @@ public final class CheckerSetupTest {
     assertEquals(Collections.emptySet(), checker.forbiddenClassPatterns);
     assertEquals(Collections.emptyMap(), checker.forbiddenFields);
     assertEquals(Collections.singletonMap("java/lang/Object\000toString()Ljava/lang/String;", "java.lang.Object#toString() [Foobar]"), checker.forbiddenMethods);
+  }
+  
+  @Test
+  public void testEmptyCtor() throws Exception {
+    Checker chk = new Checker(ClassLoader.getSystemClassLoader()) {
+      @Override protected void logError(String msg) { }
+      @Override protected void logWarn(String msg) { }
+      @Override protected void logInfo(String msg) { }
+    };
+    assertEquals(EnumSet.noneOf(Checker.Option.class), chk.options);
   }
   
 }

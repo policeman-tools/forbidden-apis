@@ -94,9 +94,8 @@ public abstract class Checker implements RelatedClassLookup {
   protected abstract void logWarn(String msg);
   protected abstract void logInfo(String msg);
   
-  //public Checker(ClassLoader loader, boolean internalRuntimeForbidden, boolean failOnMissingClasses, boolean failOnViolation, boolean defaultFailOnUnresolvableSignatures) {
   public Checker(ClassLoader loader, Option... options) {
-    this(loader, EnumSet.copyOf(Arrays.asList(options)));
+    this(loader, (options.length == 0) ? EnumSet.noneOf(Option.class) : EnumSet.copyOf(Arrays.asList(options)));
   }
   
   public Checker(ClassLoader loader, EnumSet<Option> options) {
