@@ -16,11 +16,14 @@ package de.thetaphi.forbiddenapis;
  * limitations under the License.
  */
 
+import static de.thetaphi.forbiddenapis.Checker.Option.*;
+
 import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.Locale;
 import java.net.JarURLConnection;
 import java.net.URLConnection;
@@ -220,8 +223,11 @@ public final class CliMain {
 
     final URLClassLoader loader = URLClassLoader.newInstance(urls, ClassLoader.getSystemClassLoader());
     try {
-      final Checker checker = new Checker(loader, cmd.hasOption(internalruntimeforbiddenOpt.getLongOpt()),
-        !cmd.hasOption(allowmissingclassesOpt.getLongOpt()), true, !cmd.hasOption(allowunresolvablesignaturesOpt.getLongOpt())) {
+      final EnumSet<Checker.Option> options = EnumSet.of(FAIL_ON_VIOLATION);
+      if (cmd.hasOption(internalruntimeforbiddenOpt.getLongOpt())) options.add(INTERNAL_RUNTIME_FORBIDDEN);
+      if (!cmd.hasOption(allowmissingclassesOpt.getLongOpt())) options.add(FAIL_ON_MISSING_CLASSES);
+      if (!cmd.hasOption(allowunresolvablesignaturesOpt.getLongOpt())) options.add(FAIL_ON_UNRESOLVABLE_SIGNATURES);
+      final Checker checker = new Checker(loader, options) {
         @Override
         protected void logError(String msg) {
           CliMain.this.logError(msg);
