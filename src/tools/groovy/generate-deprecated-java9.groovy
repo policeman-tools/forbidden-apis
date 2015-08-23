@@ -28,21 +28,15 @@ new DeprecatedGen<URI>(properties['build.java.runtime'], URI.create("jrt:/"), pr
   @Override
   protected void collectClasses(URI uri) throws IOException {
     Path modules = Paths.get(uri);
-    PathMatcher fileMatcher = modules.getFileSystem().getPathMatcher("glob:*.class"),
-      prefixMatcher = modules.getFileSystem().getPathMatcher("glob:/java.**");
+    PathMatcher fileMatcher = modules.getFileSystem().getPathMatcher("glob:/modules/java.**/*.class");
     Files.walkFileTree(modules, new SimpleFileVisitor<Path>() {
       @Override
       public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-        if (fileMatcher.matches(file.getFileName())) {
+        if (fileMatcher.matches(file)) {
           // System.out.println(file);
           Files.newInputStream(file).withStream { parseClass(it) };
         }
         return FileVisitResult.CONTINUE;
-      }
-      
-      @Override
-      public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
-        return (dir.getNameCount() == 0 || prefixMatcher.matches(dir)) ? FileVisitResult.CONTINUE : FileVisitResult.SKIP_SUBTREE;
       }
    });
   }
