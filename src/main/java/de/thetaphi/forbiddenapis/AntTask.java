@@ -18,6 +18,8 @@ package de.thetaphi.forbiddenapis;
  * limitations under the License.
  */
 
+import static de.thetaphi.forbiddenapis.Checker.Option.*;
+
 import org.apache.tools.ant.AntClassLoader;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Project;
@@ -36,6 +38,7 @@ import org.apache.tools.ant.types.resources.StringResource;
 import java.io.IOException;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
@@ -77,7 +80,12 @@ public final class AntTask extends Task {
       classFiles.setProject(getProject());
       apiSignatures.setProject(getProject());
       
-      final Checker checker = new Checker(loader, internalRuntimeForbidden, failOnMissingClasses, failOnViolation, failOnUnresolvableSignatures) {
+      final EnumSet<Checker.Option> options = EnumSet.noneOf(Checker.Option.class);
+      if (internalRuntimeForbidden) options.add(INTERNAL_RUNTIME_FORBIDDEN);
+      if (failOnMissingClasses) options.add(FAIL_ON_MISSING_CLASSES);
+      if (failOnViolation) options.add(FAIL_ON_VIOLATION);
+      if (failOnUnresolvableSignatures) options.add(FAIL_ON_UNRESOLVABLE_SIGNATURES);
+      final Checker checker = new Checker(loader, options) {
         @Override
         protected void logError(String msg) {
           log(msg, Project.MSG_ERR);

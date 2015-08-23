@@ -16,6 +16,7 @@ package de.thetaphi.forbiddenapis;
  * limitations under the License.
  */
 
+import static de.thetaphi.forbiddenapis.Checker.Option.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assume.assumeTrue;
 
@@ -29,7 +30,7 @@ public final class CheckerSetupTest {
   @SuppressForbidden
   static final class MyChecker extends Checker {
     public MyChecker() {
-      super(ClassLoader.getSystemClassLoader(), true, true, true, true);
+      super(ClassLoader.getSystemClassLoader(), INTERNAL_RUNTIME_FORBIDDEN, FAIL_ON_MISSING_CLASSES, FAIL_ON_VIOLATION, FAIL_ON_UNRESOLVABLE_SIGNATURES);
     }
 
     @Override

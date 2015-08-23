@@ -36,6 +36,7 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -56,6 +57,13 @@ import java.lang.management.RuntimeMXBean;
  * (which violates the spec).
  */
 public abstract class Checker implements RelatedClassLookup {
+  
+  public static enum Option {
+    INTERNAL_RUNTIME_FORBIDDEN,
+    FAIL_ON_MISSING_CLASSES,
+    FAIL_ON_VIOLATION,
+    FAIL_ON_UNRESOLVABLE_SIGNATURES
+  }
 
   public final boolean isSupportedJDK;
   
@@ -64,7 +72,7 @@ public abstract class Checker implements RelatedClassLookup {
   final Set<File> bootClassPathJars;
   final Set<String> bootClassPathDirs;
   final ClassLoader loader;
-  final boolean internalRuntimeForbidden, failOnMissingClasses, failOnViolation, defaultFailOnUnresolvableSignatures;
+  final EnumSet<Option> options;
   
   // key is the internal name (slashed):
   final Map<String,ClassSignature> classesToCheck = new HashMap<String,ClassSignature>();
@@ -86,12 +94,14 @@ public abstract class Checker implements RelatedClassLookup {
   protected abstract void logWarn(String msg);
   protected abstract void logInfo(String msg);
   
-  public Checker(ClassLoader loader, boolean internalRuntimeForbidden, boolean failOnMissingClasses, boolean failOnViolation, boolean defaultFailOnUnresolvableSignatures) {
+  //public Checker(ClassLoader loader, boolean internalRuntimeForbidden, boolean failOnMissingClasses, boolean failOnViolation, boolean defaultFailOnUnresolvableSignatures) {
+  public Checker(ClassLoader loader, Option... options) {
+    this(loader, EnumSet.copyOf(Arrays.asList(options)));
+  }
+  
+  public Checker(ClassLoader loader, EnumSet<Option> options) {
     this.loader = loader;
-    this.internalRuntimeForbidden = internalRuntimeForbidden;
-    this.failOnMissingClasses = failOnMissingClasses;
-    this.failOnViolation = failOnViolation;
-    this.defaultFailOnUnresolvableSignatures = defaultFailOnUnresolvableSignatures;
+    this.options = options;
     this.start = System.currentTimeMillis();
     
     // default (always available)
@@ -216,7 +226,7 @@ public abstract class Checker implements RelatedClassLookup {
       // use binary name, so we need to convert:
       c = getClassFromClassLoader(type.getClassName());
     } catch (ClassNotFoundException cnfe) {
-      if (failOnMissingClasses) {
+      if (options.contains(Option.FAIL_ON_MISSING_CLASSES)) {
         throw new WrapperRuntimeException(cnfe);
       } else {
         logWarn(String.format(Locale.ENGLISH,
@@ -359,7 +369,7 @@ public abstract class Checker implements RelatedClassLookup {
     final BufferedReader r = new BufferedReader(reader);
     try {
       String line, defaultMessage = null;
-      boolean failOnUnresolvableSignatures = this.defaultFailOnUnresolvableSignatures;
+      boolean failOnUnresolvableSignatures = options.contains(Option.FAIL_ON_UNRESOLVABLE_SIGNATURES);
       while ((line = r.readLine()) != null) {
         line = line.trim();
         if (line.length() == 0 || line.startsWith("#"))
@@ -397,7 +407,7 @@ public abstract class Checker implements RelatedClassLookup {
   }
   
   public final boolean hasNoSignatures() {
-    return forbiddenMethods.isEmpty() && forbiddenFields.isEmpty() && forbiddenClasses.isEmpty() && forbiddenClassPatterns.isEmpty() && (!internalRuntimeForbidden);
+    return forbiddenMethods.isEmpty() && forbiddenFields.isEmpty() && forbiddenClasses.isEmpty() && forbiddenClassPatterns.isEmpty() && (!options.contains(Option.INTERNAL_RUNTIME_FORBIDDEN));
   }
   
   /** Adds the given annotation class for suppressing errors. */
@@ -413,7 +423,7 @@ public abstract class Checker implements RelatedClassLookup {
   /** Parses a class and checks for valid method invocations */
   private int checkClass(final ClassReader reader, Pattern suppressAnnotationsPattern) {
     final String className = Type.getObjectType(reader.getClassName()).getClassName();
-    final ClassScanner scanner = new ClassScanner(this, forbiddenClasses, forbiddenClassPatterns, forbiddenMethods, forbiddenFields, suppressAnnotationsPattern, internalRuntimeForbidden); 
+    final ClassScanner scanner = new ClassScanner(this, forbiddenClasses, forbiddenClassPatterns, forbiddenMethods, forbiddenFields, suppressAnnotationsPattern, options.contains(Option.INTERNAL_RUNTIME_FORBIDDEN)); 
     reader.accept(scanner, ClassReader.SKIP_FRAMES);
     final List<ForbiddenViolation> violations = scanner.getSortedViolations();
     final Pattern splitter = Pattern.compile(Pattern.quote("\n"));
@@ -440,7 +450,7 @@ public abstract class Checker implements RelatedClassLookup {
     final String message = String.format(Locale.ENGLISH, 
         "Scanned %d (and %d related) class file(s) for forbidden API invocations (in %.2fs), %d error(s).",
         classesToCheck.size(), classesToCheck.isEmpty() ? 0 : classpathClassCache.size(), (System.currentTimeMillis() - start) / 1000.0, errors);
-    if (failOnViolation && errors > 0) {
+    if (options.contains(Option.FAIL_ON_VIOLATION) && errors > 0) {
       logError(message);
       throw new ForbiddenApiException("Check for forbidden API calls failed, see log.");
     } else {
