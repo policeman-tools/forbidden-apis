@@ -24,15 +24,15 @@ import java.nio.file.PathMatcher;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 
-new DeprecatedGen<URI>(properties['build.java.runtime'], URI.create("jrt:/"), properties['deprecated.output.file'] as File) {
+new DeprecatedGen<URI>(properties['build.java.runtime'], URI.create("jrt:/modules/"), properties['deprecated.output.file'] as File) {
   @Override
   protected void collectClasses(URI uri) throws IOException {
     Path modules = Paths.get(uri);
-    PathMatcher fileMatcher = modules.getFileSystem().getPathMatcher("glob:/modules/java.**/*.class");
+    PathMatcher fileMatcher = modules.getFileSystem().getPathMatcher("glob:java.**/*.class");
     Files.walkFileTree(modules, new SimpleFileVisitor<Path>() {
       @Override
       public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-        if (fileMatcher.matches(file)) {
+        if (fileMatcher.matches(modules.relativize(file))) {
           // System.out.println(file);
           Files.newInputStream(file).withStream { parseClass(it) };
         }
