@@ -85,23 +85,20 @@ public final class AntTask extends Task {
       if (failOnMissingClasses) options.add(FAIL_ON_MISSING_CLASSES);
       if (failOnViolation) options.add(FAIL_ON_VIOLATION);
       if (failOnUnresolvableSignatures) options.add(FAIL_ON_UNRESOLVABLE_SIGNATURES);
-      final Checker checker = new Checker(loader, options) {
-        @Override
-        protected void logError(String msg) {
+      final Checker checker = new Checker(new Logger() {
+        public void error(String msg) {
           log(msg, Project.MSG_ERR);
         }
         
-        @Override
-        protected void logWarn(String msg) {
+        public void warn(String msg) {
           // ANT has no real log levels printed, so prefix with "WARNING":
           log("WARNING: " + msg, Project.MSG_WARN);
         }
         
-        @Override
-        protected void logInfo(String msg) {
+        public void info(String msg) {
           log(msg, Project.MSG_INFO);
         }
-      };
+      }, loader, options);
       
       if (!checker.isSupportedJDK) {
         final String msg = String.format(Locale.ENGLISH, 

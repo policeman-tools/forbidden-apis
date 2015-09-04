@@ -215,22 +215,19 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
       if (failOnMissingClasses) options.add(FAIL_ON_MISSING_CLASSES);
       if (failOnViolation) options.add(FAIL_ON_VIOLATION);
       if (failOnUnresolvableSignatures) options.add(FAIL_ON_UNRESOLVABLE_SIGNATURES);
-      final Checker checker = new Checker(loader, options) {
-        @Override
-        protected void logError(String msg) {
+      final Checker checker = new Checker(new Logger() {
+        public void error(String msg) {
           log.error(msg);
         }
         
-        @Override
-        protected void logWarn(String msg) {
+        public void warn(String msg) {
           log.warn(msg);
         }
         
-        @Override
-        protected void logInfo(String msg) {
+        public void info(String msg) {
           log.info(msg);
         }
-      };
+      }, loader, options);
       
       if (!checker.isSupportedJDK) {
         final String msg = String.format(Locale.ENGLISH, 

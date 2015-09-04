@@ -28,33 +28,11 @@ import org.junit.Test;
 
 public final class CheckerSetupTest {
   
-  @SuppressForbidden
-  static final class MyChecker extends Checker {
-    public MyChecker() {
-      super(ClassLoader.getSystemClassLoader(), INTERNAL_RUNTIME_FORBIDDEN, FAIL_ON_MISSING_CLASSES, FAIL_ON_VIOLATION, FAIL_ON_UNRESOLVABLE_SIGNATURES);
-    }
-
-    @Override
-    protected void logError(String msg) {
-      System.err.println("ERROR: " + msg);
-    }
-
-    @Override
-    protected void logWarn(String msg) {
-      System.err.println("WARN: " + msg);
-    }
-
-    @Override
-    protected void logInfo(String msg) {
-      System.err.println(msg);
-    }
-  }
-  
   protected Checker checker;
   
   @Before
   public void setUp() {
-    checker = new MyChecker();
+    checker = new Checker(StdIoLogger.INSTANCE, ClassLoader.getSystemClassLoader(), INTERNAL_RUNTIME_FORBIDDEN, FAIL_ON_MISSING_CLASSES, FAIL_ON_VIOLATION, FAIL_ON_UNRESOLVABLE_SIGNATURES);
     assumeTrue("This test only works with a supported JDK (see docs)", checker.isSupportedJDK);
     assertEquals(EnumSet.of(INTERNAL_RUNTIME_FORBIDDEN, FAIL_ON_MISSING_CLASSES, FAIL_ON_VIOLATION, FAIL_ON_UNRESOLVABLE_SIGNATURES), checker.options);
   }
@@ -105,11 +83,7 @@ public final class CheckerSetupTest {
   
   @Test
   public void testEmptyCtor() throws Exception {
-    Checker chk = new Checker(ClassLoader.getSystemClassLoader()) {
-      @Override protected void logError(String msg) { }
-      @Override protected void logWarn(String msg) { }
-      @Override protected void logInfo(String msg) { }
-    };
+    Checker chk = new Checker(StdIoLogger.INSTANCE, ClassLoader.getSystemClassLoader());
     assertEquals(EnumSet.noneOf(Checker.Option.class), chk.options);
   }
   

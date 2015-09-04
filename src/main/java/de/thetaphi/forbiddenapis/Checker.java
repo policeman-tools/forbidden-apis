@@ -56,7 +56,7 @@ import java.lang.management.RuntimeMXBean;
  * and the system classloader. It uses the local classpath in preference to the system classpath
  * (which violates the spec).
  */
-public abstract class Checker implements RelatedClassLookup {
+public final class Checker implements RelatedClassLookup {
   
   public static enum Option {
     INTERNAL_RUNTIME_FORBIDDEN,
@@ -68,6 +68,8 @@ public abstract class Checker implements RelatedClassLookup {
   public final boolean isSupportedJDK;
   
   private final long start;
+  
+  final Logger logger;
   
   final Set<File> bootClassPathJars;
   final Set<String> bootClassPathDirs;
@@ -90,15 +92,12 @@ public abstract class Checker implements RelatedClassLookup {
   // descriptors (not internal names) of all annotations that suppress:
   final Set<String> suppressAnnotations = new LinkedHashSet<String>();
     
-  protected abstract void logError(String msg);
-  protected abstract void logWarn(String msg);
-  protected abstract void logInfo(String msg);
-  
-  public Checker(ClassLoader loader, Option... options) {
-    this(loader, (options.length == 0) ? EnumSet.noneOf(Option.class) : EnumSet.copyOf(Arrays.asList(options)));
+  public Checker(Logger logger, ClassLoader loader, Option... options) {
+    this(logger, loader, (options.length == 0) ? EnumSet.noneOf(Option.class) : EnumSet.copyOf(Arrays.asList(options)));
   }
   
-  public Checker(ClassLoader loader, EnumSet<Option> options) {
+  public Checker(Logger logger, ClassLoader loader, EnumSet<Option> options) {
+    this.logger = logger;
     this.loader = loader;
     this.options = options;
     this.start = System.currentTimeMillis();
@@ -228,7 +227,7 @@ public abstract class Checker implements RelatedClassLookup {
       if (options.contains(Option.FAIL_ON_MISSING_CLASSES)) {
         throw new WrapperRuntimeException(cnfe);
       } else {
-        logWarn(String.format(Locale.ENGLISH,
+        logger.warn(String.format(Locale.ENGLISH,
           "The referenced class '%s' cannot be loaded. Please fix the classpath!",
           type.getClassName()
         ));
@@ -241,7 +240,7 @@ public abstract class Checker implements RelatedClassLookup {
     if (failOnUnresolvableSignatures) {
       throw new ParseException(String.format(Locale.ENGLISH, "%s while parsing signature: %s", message, signature));
     } else {
-      logWarn(String.format(Locale.ENGLISH, "%s while parsing signature: %s [signature ignored]", message, signature));
+      logger.warn(String.format(Locale.ENGLISH, "%s while parsing signature: %s [signature ignored]", message, signature));
     }
   }
  
@@ -428,7 +427,7 @@ public abstract class Checker implements RelatedClassLookup {
     final Pattern splitter = Pattern.compile(Pattern.quote("\n"));
     for (final ForbiddenViolation v : violations) {
       for (final String line : splitter.split(v.format(className, scanner.getSourceFile()))) {
-        logError(line);
+        logger.error(line);
       }
     }
     return violations.size();
@@ -450,10 +449,10 @@ public abstract class Checker implements RelatedClassLookup {
         "Scanned %d (and %d related) class file(s) for forbidden API invocations (in %.2fs), %d error(s).",
         classesToCheck.size(), classesToCheck.isEmpty() ? 0 : classpathClassCache.size(), (System.currentTimeMillis() - start) / 1000.0, errors);
     if (options.contains(Option.FAIL_ON_VIOLATION) && errors > 0) {
-      logError(message);
+      logger.error(message);
       throw new ForbiddenApiException("Check for forbidden API calls failed, see log.");
     } else {
-      logInfo(message);
+      logger.info(message);
     }
   }
   

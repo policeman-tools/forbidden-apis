@@ -51,6 +51,8 @@ public final class CliMain {
     internalruntimeforbiddenOpt, allowmissingclassesOpt, allowunresolvablesignaturesOpt, versionOpt, helpOpt;
   private final CommandLine cmd;
   
+  private static final Logger LOG = StdIoLogger.INSTANCE;
+  
   public static final int EXIT_SUCCESS = 0;
   public static final int EXIT_VIOLATION = 1;
   public static final int EXIT_ERR_CMDLINE = 2;
@@ -148,24 +150,9 @@ public final class CliMain {
     }
   }
   
-  @SuppressForbidden
-  void logError(String msg) {
-    System.err.println("ERROR: " + msg);
-  }
-  
-  @SuppressForbidden
-  void logWarn(String msg) {
-    System.err.println("WARNING: " + msg);
-  }
-  
-  @SuppressForbidden
-  void logInfo(String msg) {
-    System.out.println(msg);
-  }
-  
   private void printVersion() {
     final Package pkg = this.getClass().getPackage();
-    logInfo(String.format(Locale.ENGLISH,
+    LOG.info(String.format(Locale.ENGLISH,
       "%s %s",
       pkg.getImplementationTitle(), pkg.getImplementationVersion()
     ));
@@ -227,22 +214,7 @@ public final class CliMain {
       if (cmd.hasOption(internalruntimeforbiddenOpt.getLongOpt())) options.add(INTERNAL_RUNTIME_FORBIDDEN);
       if (!cmd.hasOption(allowmissingclassesOpt.getLongOpt())) options.add(FAIL_ON_MISSING_CLASSES);
       if (!cmd.hasOption(allowunresolvablesignaturesOpt.getLongOpt())) options.add(FAIL_ON_UNRESOLVABLE_SIGNATURES);
-      final Checker checker = new Checker(loader, options) {
-        @Override
-        protected void logError(String msg) {
-          CliMain.this.logError(msg);
-        }
-        
-        @Override
-        protected void logWarn(String msg) {
-          CliMain.this.logWarn(msg);
-        }
-        
-        @Override
-        protected void logInfo(String msg) {
-          CliMain.this.logInfo(msg);
-        }
-      };
+      final Checker checker = new Checker(LOG, loader, options);
       
       if (!checker.isSupportedJDK) {
         throw new ExitException(EXIT_UNSUPPORTED_JDK, String.format(Locale.ENGLISH, 
@@ -255,7 +227,7 @@ public final class CliMain {
         checker.addSuppressAnnotation(a);
       }
       
-      logInfo("Scanning for classes to check...");
+      LOG.info("Scanning for classes to check...");
       if (!classesDirectory.exists()) {
         throw new ExitException(EXIT_ERR_OTHER, "Directory with class files does not exist: " + classesDirectory);
       }
@@ -281,13 +253,13 @@ public final class CliMain {
       try {
         final String[] bundledSignatures = cmd.getOptionValues(bundledsignaturesOpt.getLongOpt());
         if (bundledSignatures != null) for (String bs : bundledSignatures) {
-          logInfo("Reading bundled API signatures: " + bs);
+          LOG.info("Reading bundled API signatures: " + bs);
           checker.parseBundledSignatures(bs, null);
         }
         final String[] signaturesFiles = cmd.getOptionValues(signaturesfileOpt.getLongOpt());
         if (signaturesFiles != null) for (String sf : signaturesFiles) {
           final File f = new File(sf).getAbsoluteFile();
-          logInfo("Reading API signatures: " + f);
+          LOG.info("Reading API signatures: " + f);
           checker.parseSignaturesFile(new FileInputStream(f));
         }
       } catch (IOException ioe) {
@@ -303,7 +275,7 @@ public final class CliMain {
         ));
       }
 
-      logInfo("Loading classes to check...");
+      LOG.info("Loading classes to check...");
       try {
         for (String f : files) {
           checker.addClassToCheck(new FileInputStream(new File(classesDirectory, f)));
@@ -312,7 +284,7 @@ public final class CliMain {
         throw new ExitException(EXIT_ERR_OTHER, "Failed to load one of the given class files: " + ioe);
       }
 
-      logInfo("Scanning for API signatures and dependencies...");
+      LOG.info("Scanning for API signatures and dependencies...");
       try {
         checker.run();
       } catch (ForbiddenApiException fae) {
