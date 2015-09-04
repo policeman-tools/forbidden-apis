@@ -333,11 +333,12 @@ public final class Checker implements RelatedClassLookup {
     if (!name.matches("[A-Za-z0-9\\-\\.]+")) {
       throw new ParseException("Invalid bundled signature reference: " + name);
     }
-    InputStream in = this.getClass().getResourceAsStream("signatures/" + name + ".txt");
+    // use Checker.class hardcoded (not getClass) so we have a fixed package name:
+    InputStream in = Checker.class.getResourceAsStream("signatures/" + name + ".txt");
     // automatically expand the compiler version in here (for jdk-* signatures without version):
     if (in == null && jdkTargetVersion != null && name.startsWith("jdk-") && !name.matches(".*?\\-\\d\\.\\d")) {
       name = name + "-" + jdkTargetVersion;
-      in = this.getClass().getResourceAsStream("signatures/" + name + ".txt");
+      in = Checker.class.getResourceAsStream("signatures/" + name + ".txt");
     }
     if (in == null) {
       throw new FileNotFoundException("Bundled signatures resource not found: " + name);
