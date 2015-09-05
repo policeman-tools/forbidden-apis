@@ -188,9 +188,9 @@ public class GradleTask extends DefaultTask {
   @Input
   public List<String> suppressAnnotations;
 
-  private String getTargetVersion() {
+  private JavaVersion getTargetVersion() {
     return (targetVersion != null) ?
-        targetVersion.toString() : getProject().property("targetCompatibility").toString();
+        targetVersion : (JavaVersion) getProject().property("targetCompatibility");
   }
 
   @TaskAction
@@ -283,8 +283,7 @@ public class GradleTask extends DefaultTask {
           checker.parseSignaturesString(sb.toString());
         }
         if (bundledSignatures != null) {
-          String targetVersion = getTargetVersion();
-          if ("".equals(targetVersion)) targetVersion = null;
+          JavaVersion targetVersion = getTargetVersion();
           if (targetVersion == null) {
             log.warn("The 'targetVersion' parameter or '${maven.compiler.target}' property is missing. " +
               "Trying to read bundled JDK signatures without compiler target. " +
@@ -292,7 +291,7 @@ public class GradleTask extends DefaultTask {
           }
           for (String bs : bundledSignatures) {
             log.info("Reading bundled API signatures: " + bs);
-            checker.parseBundledSignatures(bs, targetVersion);
+            checker.parseBundledSignatures(bs, targetVersion == null ? null : targetVersion.toString());
           }
         }
         if (signaturesFiles != null) for (final File f : signaturesFiles) {
