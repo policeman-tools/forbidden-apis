@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.gradle.api.DefaultTask;
+import org.gradle.api.JavaVersion;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
@@ -108,7 +109,7 @@ public class GradleTask extends DefaultTask {
    */
   @Optional
   @Input
-  public String targetVersion = null;
+  public JavaVersion targetVersion = null;
 
   /**
    * List of patterns matching all class files to be parsed from the classesDirectory.
@@ -156,7 +157,8 @@ public class GradleTask extends DefaultTask {
   }
 
   private String getTargetVersion() {
-    return (targetVersion != null) ? targetVersion : getProject().property("targetCompatibility").toString();
+    return (targetVersion != null) ?
+        targetVersion.toString() : getProject().property("targetCompatibility").toString();
   }
 
   @TaskAction
