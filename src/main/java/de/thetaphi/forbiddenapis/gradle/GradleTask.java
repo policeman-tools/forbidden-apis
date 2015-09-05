@@ -40,13 +40,13 @@ public class GradleTask extends DefaultTask {
    * If the code changed, then it needs to be re-run.
    */
   @InputDirectory
-  public File javaClassesDir;
+  public File classesDir;
 
   /**
-   * The {@link Configuration}(s) used to configure the classpath.
+   * The {@link FileCollection}(s) used to configure the classpath.
    */
   @InputFiles
-  public List<FileCollection> javaClasspath = new ArrayList<FileCollection>();
+  public List<FileCollection> classpath = new ArrayList<FileCollection>();
 
   /**
    * Lists all files, which contain signatures and comments for forbidden API calls.
@@ -119,6 +119,8 @@ public class GradleTask extends DefaultTask {
    * The default compiler target version used to expand references to bundled JDK signatures.
    * E.g., if you use "jdk-deprecated", it will expand to this version.
    * This setting should be identical to the target version used in the compiler plugin.
+   * <p>
+   * If undefined, it is taken from the project property {@code targetCompatibility}.
    * @since 1.0
    */
   @Optional
@@ -159,13 +161,6 @@ public class GradleTask extends DefaultTask {
   @Input
   public List<String> suppressAnnotations;
 
-  /**
-   * Skip entire check. Most useful on the command line via "-Dforbiddenapis.skip=true".
-   * @since 1.6
-   */
-  @Input
-  public boolean skip = false;
-  
   public GradleTask() {
     includes.add("**/*.class");
   }
