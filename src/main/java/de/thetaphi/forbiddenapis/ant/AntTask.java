@@ -54,7 +54,7 @@ import java.util.Locale;
  * In contrast to other ANT tasks, this tool does only visit the given classpath
  * and the system classloader, not ANT's class loader.
  */
-public final class AntTask extends Task {
+public class AntTask extends Task {
 
   private final Resources classFiles = new Resources();
   private final Resources apiSignatures = new Resources();

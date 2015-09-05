@@ -29,7 +29,6 @@ import de.thetaphi.forbiddenapis.Checker;
 import de.thetaphi.forbiddenapis.ForbiddenApiException;
 import de.thetaphi.forbiddenapis.Logger;
 import de.thetaphi.forbiddenapis.ParseException;
-import de.thetaphi.forbiddenapis.Checker.Option;
 
 import java.io.Closeable;
 import java.io.File;
