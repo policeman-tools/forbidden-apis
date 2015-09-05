@@ -30,6 +30,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
@@ -62,34 +63,35 @@ public class GradleTask extends DefaultTask {
   private static final String[] EMPTY_STRING_ARRAY = new String[0];
 
   /**
-   * If the code changed, then it needs to be re-run.
+   * Directory with the class files to check.
    */
   @InputDirectory
   public File classesDir;
 
   /**
-   * The {@link FileCollection}(s) used to configure the classpath.
+   * A {@link FileCollection} used to configure the classpath.
    */
   @InputFiles
   public FileCollection classpath;
 
   /**
-   * Lists all files, which contain signatures and comments for forbidden API calls.
+   * {@link FileCollection} containing all files, which contain signatures and comments for forbidden API calls.
    * The signatures are resolved against the compile classpath.
    * @since 1.0
    */
   @Optional
   @InputFiles
-  public List<File> signaturesFiles;
+  public FileCollection signaturesFiles;
 
   /**
-   * Gives a multiline list of signatures, inline in the pom.xml. Use an XML CDATA section to do that!
+   * Gives multiple API signatures that are joined with newlines and
+   * parsed like a single {@link #signaturesFiles}.
    * The signatures are resolved against the compile classpath.
    * @since 1.0
    */
   @Optional
   @Input
-  public String signatures;
+  public List<String> signatures;
 
   /**
    * Specifies <a href="bundled-signatures.html">built-in signatures</a> files (e.g., deprecated APIs for specific Java versions,
@@ -160,7 +162,7 @@ public class GradleTask extends DefaultTask {
    * @since 1.0
    */
   @Input
-  public List<String> includes = new ArrayList<String>();
+  public List<String> includes = new ArrayList<String>(Arrays.asList("**/*.class"));
 
   /**
    * List of patterns matching class files to be excluded from checking.
@@ -185,10 +187,6 @@ public class GradleTask extends DefaultTask {
   @Optional
   @Input
   public List<String> suppressAnnotations;
-
-  public GradleTask() {
-    includes.add("**/*.class");
-  }
 
   private String getTargetVersion() {
     return (targetVersion != null) ?
@@ -262,8 +260,8 @@ public class GradleTask extends DefaultTask {
       final DirectoryScanner ds = new DirectoryScanner();
       ds.setBasedir(classesDir);
       ds.setCaseSensitive(true);
-      ds.setIncludes(includes.toArray(EMPTY_STRING_ARRAY));
-      ds.setExcludes(excludes.toArray(EMPTY_STRING_ARRAY));
+      ds.setIncludes(includes == null ? null : includes.toArray(EMPTY_STRING_ARRAY));
+      ds.setExcludes(excludes == null ? null : excludes.toArray(EMPTY_STRING_ARRAY));
       ds.addDefaultExcludes();
       ds.scan();
       final String[] files = ds.getIncludedFiles();
@@ -275,10 +273,13 @@ public class GradleTask extends DefaultTask {
       }
       
       try {
-        final String sig = (signatures != null) ? signatures.trim() : null;
-        if (sig != null && sig.length() != 0) {
+        if (signatures != null && !signatures.isEmpty()) {
           log.info("Reading inline API signatures...");
-          checker.parseSignaturesString(sig);
+          final StringBuilder sb = new StringBuilder();
+          for (String line : signatures) {
+            sb.append(line).append('\n');
+          }
+          checker.parseSignaturesString(sb.toString());
         }
         if (bundledSignatures != null) {
           String targetVersion = getTargetVersion();
