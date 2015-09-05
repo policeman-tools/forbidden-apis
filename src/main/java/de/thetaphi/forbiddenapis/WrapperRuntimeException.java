@@ -17,7 +17,7 @@ package de.thetaphi.forbiddenapis;
  */
 
 @SuppressWarnings("serial")
-public final class WrapperRuntimeException extends RuntimeException {
+final class WrapperRuntimeException extends RuntimeException {
 
   public WrapperRuntimeException(Exception e) {
     super(e);

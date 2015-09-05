@@ -1,4 +1,4 @@
-package de.thetaphi.forbiddenapis;
+package de.thetaphi.forbiddenapis.ant;
 
 /*
  * (C) Copyright Uwe Schindler (Generics Policeman) and others.
@@ -18,16 +18,16 @@ package de.thetaphi.forbiddenapis;
 
 import org.apache.tools.ant.ProjectComponent;
 
-public final class BundledSignaturesType extends ProjectComponent {
+public final class SuppressAnnotationType extends ProjectComponent {
 
-  private String name = null;
+  private String classname = null;
   
-  public void setName(String name) {
-    this.name = name;
+  public void setClassname(String classname) {
+    this.classname = classname;
   }
   
-  public String getName() {
-    return name;
+  public String getClassname() {
+    return classname;
   }
 
 }

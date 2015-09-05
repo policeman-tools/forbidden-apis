@@ -1,4 +1,4 @@
-package de.thetaphi.forbiddenapis;
+package de.thetaphi.forbiddenapis.maven;
 
 /*
  * (C) Copyright Uwe Schindler (Generics Policeman) and others.
@@ -24,6 +24,11 @@ import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.codehaus.plexus.util.DirectoryScanner;
+
+import de.thetaphi.forbiddenapis.Checker;
+import de.thetaphi.forbiddenapis.ForbiddenApiException;
+import de.thetaphi.forbiddenapis.Logger;
+import de.thetaphi.forbiddenapis.ParseException;
 
 import java.io.Closeable;
 import java.io.File;

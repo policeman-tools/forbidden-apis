@@ -14,6 +14,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 -->
-<antlib>
-  <taskdef name="forbiddenapis" classname="de.thetaphi.forbiddenapis.ant.AntTask"/>
-</antlib>
+<project xmlns:au="antlib:org.apache.ant.antunit">
+
+  <taskdef name="forbiddenapis-deprecated" classname="de.thetaphi.forbiddenapis.AntTask" classpath="${jar-file}"/>
+
+  <target name="testMySelf">
+    <forbiddenapis-deprecated internalRuntimeForbidden="true" classpathref="path.all">
+      <fileset dir="${antunit.main.classes}"/>
+      <bundledsignatures name="jdk-unsafe-${jdk.version}"/>
+      <bundledsignatures name="jdk-deprecated-${jdk.version}"/>
+    </forbiddenapis-deprecated>
+    <au:assertLogContains level="info" text=" 0 error(s)."/> 
+    <au:assertLogContains level="warn" text="DEPRECATED-WARNING"/> 
+  </target>
+    
+</project>

@@ -1,4 +1,4 @@
-package de.thetaphi.forbiddenapis;
+package de.thetaphi.forbiddenapis.cli;
 
 /*
  * (C) Copyright Uwe Schindler (Generics Policeman) and others.
@@ -39,8 +39,14 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionGroup;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.PosixParser;
-
 import org.codehaus.plexus.util.DirectoryScanner;
+
+import de.thetaphi.forbiddenapis.Checker;
+import de.thetaphi.forbiddenapis.ForbiddenApiException;
+import de.thetaphi.forbiddenapis.Logger;
+import de.thetaphi.forbiddenapis.ParseException;
+import de.thetaphi.forbiddenapis.StdIoLogger;
+import de.thetaphi.forbiddenapis.SuppressForbidden;
 
 /**
  * CLI class with a static main() method
@@ -300,20 +306,6 @@ public final class CliMain {
     }
   }
   
-  @SuppressWarnings("serial")
-  public static final class ExitException extends Exception {
-    public final int exitCode;
-    
-    public ExitException(int exitCode) {
-      this(exitCode, null);
-    }
-    
-    public ExitException(int exitCode, String message) {
-      super(message);
-      this.exitCode = exitCode;
-    }
-  }
-
   @SuppressForbidden
   public static void main(String... args) {
     try {

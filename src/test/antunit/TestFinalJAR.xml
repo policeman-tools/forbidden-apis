@@ -16,7 +16,7 @@
 -->
 <project xmlns:au="antlib:org.apache.ant.antunit">
 
-  <taskdef name="forbiddenapis-jar" classname="de.thetaphi.forbiddenapis.AntTask" classpath="${jar-file}"/>
+  <taskdef name="forbiddenapis-jar" classname="de.thetaphi.forbiddenapis.ant.AntTask" classpath="${jar-file}"/>
 
   <target name="testMySelfWithFinalJAR1">
     <forbiddenapis-jar internalRuntimeForbidden="true" classpathref="path.all">
