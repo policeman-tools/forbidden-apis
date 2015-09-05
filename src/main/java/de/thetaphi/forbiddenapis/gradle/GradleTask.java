@@ -208,17 +208,18 @@ public class GradleTask extends DefaultTask {
         getLogger().info(msg);
       }
     };
-    final URL[] urls;
+    
+    final Collection<File> cpElements = classpath.getFiles();
+    final URL[] urls = new URL[cpElements.size() + 1];
     try {
-      final Collection<File> elements = classpath.getFiles();
-      urls = new URL[elements.size()];
       int i = 0;
-      for (final File cpElement : elements) {
+      for (final File cpElement : cpElements) {
         urls[i++] = cpElement.toURI().toURL();
       }
+      urls[i++] = classesDir.toURI().toURL();
       assert i == urls.length;
-    } catch (MalformedURLException e) {
-      throw new InvalidUserDataException("Failed to build classpath URLs.", e);
+    } catch (MalformedURLException mfue) {
+      throw new InvalidUserDataException("Failed to build classpath URLs.", mfue);
     }
 
     URLClassLoader urlLoader = null;

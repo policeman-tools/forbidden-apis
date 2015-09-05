@@ -195,10 +195,9 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
     // set default param:
     if (includes == null) includes = new String[] {"**/*.class"};
     
-    final URL[] urls;
+    final List<String> cp = getClassPathElements();
+    final URL[] urls = new URL[cp.size()];
     try {
-      final List<String> cp = getClassPathElements();
-      urls = new URL[cp.size()];
       int i = 0;
       for (final String cpElement : cp) {
         urls[i++] = new File(cpElement).toURI().toURL();
