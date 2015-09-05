@@ -285,7 +285,7 @@ public class GradleTask extends DefaultTask {
         if (bundledSignatures != null) {
           JavaVersion targetVersion = getTargetVersion();
           if (targetVersion == null) {
-            log.warn("The 'targetVersion' parameter or '${maven.compiler.target}' property is missing. " +
+            log.warn("The 'targetVersion' parameter or 'targetCompatibility' project property is missing. " +
               "Trying to read bundled JDK signatures without compiler target. " +
               "You have to explicitely specify the version in the resource name.");
           }
