@@ -23,7 +23,9 @@ import java.util.List;
 
 import org.gradle.api.DefaultTask;
 import org.gradle.api.JavaVersion;
+import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.Input;
+import org.gradle.api.tasks.InputDirectory;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.TaskAction;
@@ -33,6 +35,18 @@ import org.gradle.api.tasks.TaskAction;
  * @since 1.9
  */
 public class GradleTask extends DefaultTask {
+
+  /**
+   * If the code changed, then it needs to be re-run.
+   */
+  @InputDirectory
+  public File javaClassesDir;
+
+  /**
+   * The {@link Configuration}(s) used to configure the classpath.
+   */
+  @InputFiles
+  public List<FileCollection> javaClasspath;
 
   /**
    * Lists all files, which contain signatures and comments for forbidden API calls.
