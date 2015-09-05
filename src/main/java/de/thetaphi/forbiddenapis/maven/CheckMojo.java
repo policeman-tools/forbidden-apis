@@ -1,4 +1,4 @@
-package de.thetaphi.forbiddenapis;
+package de.thetaphi.forbiddenapis.maven;
 
 /*
  * (C) Copyright Uwe Schindler (Generics Policeman) and others.

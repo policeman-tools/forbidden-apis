@@ -1,4 +1,4 @@
-package de.thetaphi.forbiddenapis;
+package de.thetaphi.forbiddenapis.ant;
 
 /*
  * (C) Copyright Uwe Schindler (Generics Policeman) and others.
@@ -34,6 +34,11 @@ import org.apache.tools.ant.types.ResourceCollection;
 import org.apache.tools.ant.types.resources.FileResource;
 import org.apache.tools.ant.types.resources.Resources;
 import org.apache.tools.ant.types.resources.StringResource;
+
+import de.thetaphi.forbiddenapis.Checker;
+import de.thetaphi.forbiddenapis.ForbiddenApiException;
+import de.thetaphi.forbiddenapis.Logger;
+import de.thetaphi.forbiddenapis.ParseException;
 
 import java.io.IOException;
 import java.io.File;

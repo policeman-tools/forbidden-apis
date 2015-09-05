@@ -97,7 +97,7 @@
   <property name="documentation-dir" location="build/docs"/>
   <property name="test-results-dir" location="build/test-results"/>
   
-  <property name="cli-classname" value="de.thetaphi.forbiddenapis.CliMain"/>
+  <property name="cli-classname" value="de.thetaphi.forbiddenapis.cli.CliMain"/>
 
   <!-- define Maven coordinates -->
   <property name="groupId" value="de.thetaphi" />
@@ -333,7 +333,7 @@
           <zips><fileset refid="fileset.bundle"/></zips>
         </archives>
       </restrict>
-      <keep pattern="de.thetaphi.forbiddenapis.*"/>
+      <keep pattern="de.thetaphi.forbiddenapis.**"/>
       <rule pattern="org.objectweb.asm.**" result="de.thetaphi.forbiddenapis.asm.@1"/>
       <rule pattern="org.apache.commons.**" result="de.thetaphi.forbiddenapis.commons.@1"/>
       <rule pattern="org.codehaus.plexus.**" result="de.thetaphi.forbiddenapis.plexus.@1"/>
@@ -424,7 +424,7 @@
     description="Checks bundled signatures file corresponding to the current JVM. Run after every update!"/>
     
   <target name="-install-forbiddenapi-task" depends="compile" unless="installed.forbiddenapi-task">
-    <taskdef name="forbiddenapis" classname="de.thetaphi.forbiddenapis.AntTask" classpathref="path.main-run"/>
+    <taskdef name="forbiddenapis" classname="de.thetaphi.forbiddenapis.ant.AntTask" classpathref="path.main-run"/>
     <property name="installed.forbiddenapi-task" value="true"/>
   </target>
   

@@ -15,5 +15,5 @@
  * limitations under the License.
 -->
 <antlib>
-  <taskdef name="forbiddenapis" classname="de.thetaphi.forbiddenapis.AntTask"/>
+  <taskdef name="forbiddenapis" classname="de.thetaphi.forbiddenapis.ant.AntTask"/>
 </antlib>
