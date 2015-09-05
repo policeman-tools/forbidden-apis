@@ -23,6 +23,7 @@ import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.ConfigurationContainer;
+import org.gradle.api.plugins.PluginInstantiationException;
 import org.gradle.api.tasks.TaskContainer;
 
 /**
@@ -35,27 +36,39 @@ public class GradlePlugin implements Plugin<Project> {
   static final String TEST_FORBIDDEN_APIS_TASK_NAME = "testForbiddenApis";
   
   public void apply(final Project project) {
+    if (project.getPlugins().findPlugin("java") == null) {
+      throw new PluginInstantiationException("forbiddenapis only works in projects using the 'java' plugin.");
+    }
+    
     final ConfigurationContainer configurations = project.getConfigurations();
     final TaskContainer tasks = project.getTasks();
     
-    // TODO: How to import the JavaPlugin and its tasks from Maven!?
+    // Get the tasks we depend on or the other one should depends on us (to insert us into the chain):
     final Task classesJavaTask = tasks.getByName("classes"),
-        testClassesJavaTask = tasks.getByName("testClasses");
+        testClassesJavaTask = tasks.getByName("testClasses"),
+        jarJavaTask = tasks.getByName("jar"),
+        testJavaTask = tasks.getByName("test"),
+        checkJavaTask = tasks.getByName("check");
     
     // Create the tasks of the plugin:
-    tasks.create(FORBIDDEN_APIS_TASK_NAME, GradleTask.class, new Action<GradleTask>() {
+    final Task forbiddenTask = tasks.create(FORBIDDEN_APIS_TASK_NAME, GradleTask.class, new Action<GradleTask>() {
       public void execute(GradleTask task) {
         task.classesDir = (File) project.property("sourceSets.main.output.classesDir");
         task.classpath = configurations.getByName("compile");
         task.dependsOn(classesJavaTask);
       }
     });
-    tasks.create(TEST_FORBIDDEN_APIS_TASK_NAME, GradleTask.class, new Action<GradleTask>() {
+    final Task testForbiddenTask = tasks.create(TEST_FORBIDDEN_APIS_TASK_NAME, GradleTask.class, new Action<GradleTask>() {
       public void execute(GradleTask task) {
         task.classesDir = (File) project.property("sourceSets.test.output.classesDir");
         task.classpath = configurations.getByName("testCompile");
         task.dependsOn(testClassesJavaTask);
       }
     });
+    
+    // Add dependencies
+    jarJavaTask.dependsOn(forbiddenTask);
+    testJavaTask.dependsOn(forbiddenTask, testForbiddenTask);
+    checkJavaTask.dependsOn(forbiddenTask, testForbiddenTask);
   }
 }
