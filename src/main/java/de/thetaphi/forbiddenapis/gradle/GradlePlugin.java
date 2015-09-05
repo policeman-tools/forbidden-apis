@@ -31,43 +31,31 @@ import org.gradle.api.tasks.TaskContainer;
  */
 public class GradlePlugin implements Plugin<Project> {
   
-  static final String FORBIDDEN_APIS_CONFIGURATION_NAME = "forbiddenApis";
   static final String FORBIDDEN_APIS_TASK_NAME = "forbiddenApis";
-  static final String TEST_FORBIDDEN_APIS_CONFIGURATION_NAME = "testForbiddenApis";
   static final String TEST_FORBIDDEN_APIS_TASK_NAME = "testForbiddenApis";
   
   public void apply(final Project project) {
     final ConfigurationContainer configurations = project.getConfigurations();
-    configurations.create(FORBIDDEN_APIS_CONFIGURATION_NAME);
-    configurations.create(TEST_FORBIDDEN_APIS_CONFIGURATION_NAME);
-    
     final TaskContainer tasks = project.getTasks();
     
     // TODO: How to import the JavaPlugin and its tasks from Maven!?
     final Task classesJavaTask = tasks.getByName("classes"),
-        testClassesJavaTask = tasks.getByName("testClasses"),
-        jarJavaTask = tasks.getByName("jar"),
-        testJavaTask = tasks.getByName("test");
+        testClassesJavaTask = tasks.getByName("testClasses");
     
     // Create the tasks of the plugin:
-    final Task forbiddenTask = tasks.create(FORBIDDEN_APIS_TASK_NAME, GradleTask.class, new Action<GradleTask>() {
+    tasks.create(FORBIDDEN_APIS_TASK_NAME, GradleTask.class, new Action<GradleTask>() {
       public void execute(GradleTask task) {
         task.javaClassesDir = (File) project.property("sourceSets.main.output.classesDir");
         task.javaClasspath.add(configurations.getByName("compile"));
         task.dependsOn(classesJavaTask);
       }
     });
-    final Task testForbiddenTask = tasks.create(TEST_FORBIDDEN_APIS_TASK_NAME, GradleTask.class, new Action<GradleTask>() {
+    tasks.create(TEST_FORBIDDEN_APIS_TASK_NAME, GradleTask.class, new Action<GradleTask>() {
       public void execute(GradleTask task) {
         task.javaClassesDir = (File) project.property("sourceSets.test.output.classesDir");
         task.javaClasspath.add(configurations.getByName("testCompile"));
         task.dependsOn(testClassesJavaTask);
       }
     });
-    
-    // make the jar task dependent upon it so that code cannot be bundled without checking if it's forbidden:
-    jarJavaTask.dependsOn(forbiddenTask);
-    // the same goes for the test task, but this is so that it fails before wasting time with tests:
-    testJavaTask.dependsOn(forbiddenTask, testForbiddenTask);
   }
 }

@@ -46,7 +46,7 @@ public class GradleTask extends DefaultTask {
    * The {@link Configuration}(s) used to configure the classpath.
    */
   @InputFiles
-  public List<FileCollection> javaClasspath;
+  public List<FileCollection> javaClasspath = new ArrayList<FileCollection>();
 
   /**
    * Lists all files, which contain signatures and comments for forbidden API calls.
