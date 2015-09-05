@@ -46,14 +46,14 @@ public class GradlePlugin implements Plugin<Project> {
     tasks.create(FORBIDDEN_APIS_TASK_NAME, GradleTask.class, new Action<GradleTask>() {
       public void execute(GradleTask task) {
         task.classesDir = (File) project.property("sourceSets.main.output.classesDir");
-        task.classpath.add(configurations.getByName("compile"));
+        task.classpath = configurations.getByName("compile");
         task.dependsOn(classesJavaTask);
       }
     });
     tasks.create(TEST_FORBIDDEN_APIS_TASK_NAME, GradleTask.class, new Action<GradleTask>() {
       public void execute(GradleTask task) {
         task.classesDir = (File) project.property("sourceSets.test.output.classesDir");
-        task.classpath.add(configurations.getByName("testCompile"));
+        task.classpath = configurations.getByName("testCompile");
         task.dependsOn(testClassesJavaTask);
       }
     });
