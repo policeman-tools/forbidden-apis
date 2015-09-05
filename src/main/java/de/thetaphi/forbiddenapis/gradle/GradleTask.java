@@ -117,8 +117,8 @@ public class GradleTask extends DefaultTask {
   
   /**
    * Fail the build, if a class referenced in the scanned code is missing. This requires
-   * that you pass the whole classpath including all dependencies to this Mojo
-   * (Maven does this by default).
+   * that you pass the whole classpath including all dependencies to this task
+   * (Gradle does this by default).
    * @since 1.0
    */
   @Input
@@ -238,7 +238,7 @@ public class GradleTask extends DefaultTask {
       
       if (!checker.isSupportedJDK) {
         final String msg = String.format(Locale.ENGLISH, 
-          "Your Java runtime (%s %s) is not supported by the forbiddenapis MOJO. Please run the checks with a supported JDK!",
+          "Your Java runtime (%s %s) is not supported by the forbiddenapis plugin. Please run the checks with a supported JDK!",
           System.getProperty("java.runtime.name"), System.getProperty("java.runtime.version"));
         if (failOnUnsupportedJava) {
           throw new GradleException(msg);
