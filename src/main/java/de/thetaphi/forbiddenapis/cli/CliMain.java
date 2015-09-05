@@ -306,20 +306,6 @@ public final class CliMain {
     }
   }
   
-  @SuppressWarnings("serial")
-  public static final class ExitException extends Exception {
-    public final int exitCode;
-    
-    public ExitException(int exitCode) {
-      this(exitCode, null);
-    }
-    
-    public ExitException(int exitCode, String message) {
-      super(message);
-      this.exitCode = exitCode;
-    }
-  }
-
   @SuppressForbidden
   public static void main(String... args) {
     try {
