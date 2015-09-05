@@ -16,25 +16,50 @@ package de.thetaphi.forbiddenapis.gradle;
  * limitations under the License.
  */
 
-import java.io.File;
-import java.lang.annotation.RetentionPolicy;
-import java.util.ArrayList;
-import java.util.List;
+import static de.thetaphi.forbiddenapis.Checker.Option.FAIL_ON_MISSING_CLASSES;
+import static de.thetaphi.forbiddenapis.Checker.Option.FAIL_ON_UNRESOLVABLE_SIGNATURES;
+import static de.thetaphi.forbiddenapis.Checker.Option.FAIL_ON_VIOLATION;
+import static de.thetaphi.forbiddenapis.Checker.Option.INTERNAL_RUNTIME_FORBIDDEN;
 
+import java.io.Closeable;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.lang.annotation.RetentionPolicy;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Locale;
+
+import org.codehaus.plexus.util.DirectoryScanner;
 import org.gradle.api.DefaultTask;
+import org.gradle.api.GradleException;
+import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.JavaVersion;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.resources.ResourceException;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputDirectory;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.TaskAction;
 
+import de.thetaphi.forbiddenapis.Checker;
+import de.thetaphi.forbiddenapis.ForbiddenApiException;
+import de.thetaphi.forbiddenapis.Logger;
+import de.thetaphi.forbiddenapis.ParseException;
+
 /**
  * Forbiddenapis Gradle Task
  * @since 1.9
  */
 public class GradleTask extends DefaultTask {
+  
+  private static final String[] EMPTY_STRING_ARRAY = new String[0];
 
   /**
    * If the code changed, then it needs to be re-run.
@@ -46,7 +71,7 @@ public class GradleTask extends DefaultTask {
    * The {@link FileCollection}(s) used to configure the classpath.
    */
   @InputFiles
-  public List<FileCollection> classpath = new ArrayList<FileCollection>();
+  public FileCollection classpath;
 
   /**
    * Lists all files, which contain signatures and comments for forbidden API calls.
@@ -172,7 +197,144 @@ public class GradleTask extends DefaultTask {
 
   @TaskAction
   public void checkForbidden() {
-    // TODO
+    final Logger log = new Logger() {
+      public void error(String msg) {
+        getLogger().error(msg);
+      }
+      
+      public void warn(String msg) {
+        getLogger().warn(msg);
+      }
+      
+      public void info(String msg) {
+        getLogger().info(msg);
+      }
+    };
+    final URL[] urls;
+    try {
+      final Collection<File> elements = classpath.getFiles();
+      urls = new URL[elements.size()];
+      int i = 0;
+      for (final File cpElement : elements) {
+        urls[i++] = cpElement.toURI().toURL();
+      }
+      assert i == urls.length;
+    } catch (MalformedURLException e) {
+      throw new InvalidUserDataException("Failed to build classpath URLs.", e);
+    }
+
+    URLClassLoader urlLoader = null;
+    final ClassLoader loader = (urls.length > 0) ?
+      (urlLoader = URLClassLoader.newInstance(urls, ClassLoader.getSystemClassLoader())) :
+      ClassLoader.getSystemClassLoader();
+    
+    try {
+      final EnumSet<Checker.Option> options = EnumSet.noneOf(Checker.Option.class);
+      if (internalRuntimeForbidden) options.add(INTERNAL_RUNTIME_FORBIDDEN);
+      if (failOnMissingClasses) options.add(FAIL_ON_MISSING_CLASSES);
+      if (failOnViolation) options.add(FAIL_ON_VIOLATION);
+      if (failOnUnresolvableSignatures) options.add(FAIL_ON_UNRESOLVABLE_SIGNATURES);
+      final Checker checker = new Checker(log, loader, options);
+      
+      if (!checker.isSupportedJDK) {
+        final String msg = String.format(Locale.ENGLISH, 
+          "Your Java runtime (%s %s) is not supported by the forbiddenapis MOJO. Please run the checks with a supported JDK!",
+          System.getProperty("java.runtime.name"), System.getProperty("java.runtime.version"));
+        if (failOnUnsupportedJava) {
+          throw new GradleException(msg);
+        } else {
+          log.warn(msg);
+          return;
+        }
+      }
+      
+      if (suppressAnnotations != null) {
+        for (String a : suppressAnnotations) {
+          checker.addSuppressAnnotation(a);
+        }
+      }
+      
+      log.info("Scanning for classes to check...");
+      if (!classesDir.exists()) {
+        log.warn("Classes directory does not exist, forbiddenapis check skipped: " + classesDir);
+        return;
+      }
+      final DirectoryScanner ds = new DirectoryScanner();
+      ds.setBasedir(classesDir);
+      ds.setCaseSensitive(true);
+      ds.setIncludes(includes.toArray(EMPTY_STRING_ARRAY));
+      ds.setExcludes(excludes.toArray(EMPTY_STRING_ARRAY));
+      ds.addDefaultExcludes();
+      ds.scan();
+      final String[] files = ds.getIncludedFiles();
+      if (files.length == 0) {
+        log.warn(String.format(Locale.ENGLISH,
+          "No classes found in '%s' (includes=%s, excludes=%s), forbiddenapis check skipped.",
+          classesDir, includes, excludes));
+        return;
+      }
+      
+      try {
+        final String sig = (signatures != null) ? signatures.trim() : null;
+        if (sig != null && sig.length() != 0) {
+          log.info("Reading inline API signatures...");
+          checker.parseSignaturesString(sig);
+        }
+        if (bundledSignatures != null) {
+          String targetVersion = getTargetVersion();
+          if ("".equals(targetVersion)) targetVersion = null;
+          if (targetVersion == null) {
+            log.warn("The 'targetVersion' parameter or '${maven.compiler.target}' property is missing. " +
+              "Trying to read bundled JDK signatures without compiler target. " +
+              "You have to explicitely specify the version in the resource name.");
+          }
+          for (String bs : bundledSignatures) {
+            log.info("Reading bundled API signatures: " + bs);
+            checker.parseBundledSignatures(bs, targetVersion);
+          }
+        }
+        if (signaturesFiles != null) for (final File f : signaturesFiles) {
+          log.info("Reading API signatures: " + f);
+          checker.parseSignaturesFile(new FileInputStream(f));
+        }
+      } catch (IOException ioe) {
+        throw new ResourceException("IO problem while reading files with API signatures.", ioe);
+      } catch (ParseException pe) {
+        throw new InvalidUserDataException("Parsing signatures failed: " + pe.getMessage());
+      }
+
+      if (checker.hasNoSignatures()) {
+        if (failOnUnresolvableSignatures) {
+          throw new InvalidUserDataException("No API signatures found; use parameters 'signatures', 'bundledSignatures', and/or 'signaturesFiles' to define those!");
+        } else {
+          log.info("Skipping execution because no API signatures are available.");
+          return;
+        }
+      }
+
+      log.info("Loading classes to check...");
+      try {
+        for (String f : files) {
+          checker.addClassToCheck(new FileInputStream(new File(classesDir, f)));
+        }
+      } catch (IOException ioe) {
+        throw new ResourceException("Failed to load one of the given class files.", ioe);
+      }
+
+      log.info("Scanning for API signatures and dependencies...");
+      try {
+        checker.run();
+      } catch (ForbiddenApiException fae) {
+        throw new GradleForbiddenApiException(fae.getMessage());
+      }
+    } finally {
+      // Java 7 supports closing URLClassLoader, so check for Closeable interface:
+      if (urlLoader instanceof Closeable) try {
+        ((Closeable) urlLoader).close();
+      } catch (IOException ioe) {
+        // ignore
+      }
+    }
   }
   
 }
