@@ -143,18 +143,6 @@ public class GradleTask extends DefaultTask {
   public boolean failOnViolation = true;
 
   /**
-   * The default compiler target version used to expand references to bundled JDK signatures.
-   * E.g., if you use "jdk-deprecated", it will expand to this version.
-   * This setting should be identical to the target version used in the compiler plugin.
-   * <p>
-   * If undefined, it is taken from the project property {@code targetCompatibility}.
-   * @since 1.0
-   */
-  @Optional
-  @Input
-  public JavaVersion targetVersion = null;
-
-  /**
    * List of patterns matching all class files to be parsed from the classesDirectory.
    * Can be changed to e.g. exclude several files (using excludes).
    * The default is a single include with pattern '**&#47;*.class'
@@ -188,13 +176,12 @@ public class GradleTask extends DefaultTask {
   @Input
   public List<String> suppressAnnotations;
 
-  private JavaVersion getTargetVersion() {
-    return (targetVersion != null) ?
-        targetVersion : (JavaVersion) getProject().property("targetCompatibility");
-  }
-
   @TaskAction
   public void checkForbidden() {
+    if (classesDir == null || classpath == null) {
+      throw new InvalidUserDataException("Missing 'classesDir' or 'classpath' property.");
+    }
+    
     final Logger log = new Logger() {
       public void error(String msg) {
         getLogger().error(msg);
@@ -283,9 +270,9 @@ public class GradleTask extends DefaultTask {
           checker.parseSignaturesString(sb.toString());
         }
         if (bundledSignatures != null) {
-          JavaVersion targetVersion = getTargetVersion();
+          final JavaVersion targetVersion = (JavaVersion) getProject().property("targetCompatibility");
           if (targetVersion == null) {
-            log.warn("The 'targetVersion' parameter or 'targetCompatibility' project property is missing. " +
+            log.warn("The 'targetCompatibility' project property is missing. " +
               "Trying to read bundled JDK signatures without compiler target. " +
               "You have to explicitely specify the version in the resource name.");
           }
