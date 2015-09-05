@@ -1,8 +1,5 @@
 package de.thetaphi.forbiddenapis;
 
-import org.apache.tools.ant.BuildException;
-import org.apache.tools.ant.Project;
-
 /*
  * (C) Copyright Uwe Schindler (Generics Policeman) and others.
  * Parts of this work are licensed to the Apache Software Foundation (ASF)
@@ -21,6 +18,11 @@ import org.apache.tools.ant.Project;
  * limitations under the License.
  */
 
+import java.util.Locale;
+
+import org.apache.tools.ant.BuildException;
+import org.apache.tools.ant.Project;
+
 /**
  * {@inheritDoc}
  * @deprecated Use {@link de.thetaphi.forbiddenapis.ant.AntTask} instead.
@@ -30,7 +32,8 @@ public final class AntTask extends de.thetaphi.forbiddenapis.ant.AntTask {
   
   @Override
   public void execute() throws BuildException {
-    log("DEPRECATED-WARNING: Please change your build.xml to use new task class de.thetaphi.forbiddenapis.ant.AntTask", Project.MSG_WARN);
+    log(String.format(Locale.ENGLISH, "DEPRECATED-WARNING: Please change your build.xml to use new task class '%s'",
+        getClass().getSuperclass().getName()), Project.MSG_WARN);
     super.execute();
   }
   
