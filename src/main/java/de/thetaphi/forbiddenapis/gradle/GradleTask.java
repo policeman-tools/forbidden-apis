@@ -21,6 +21,8 @@ import static de.thetaphi.forbiddenapis.Checker.Option.FAIL_ON_UNRESOLVABLE_SIGN
 import static de.thetaphi.forbiddenapis.Checker.Option.FAIL_ON_VIOLATION;
 import static de.thetaphi.forbiddenapis.Checker.Option.INTERNAL_RUNTIME_FORBIDDEN;
 
+import groovy.lang.Closure;
+
 import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
@@ -29,27 +31,29 @@ import java.lang.annotation.RetentionPolicy;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
-import org.codehaus.plexus.util.DirectoryScanner;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.GradleException;
 import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.JavaVersion;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.file.FileTree;
+import org.gradle.api.file.FileTreeElement;
 import org.gradle.api.resources.ResourceException;
+import org.gradle.api.specs.Spec;
 import org.gradle.api.tasks.Input;
-import org.gradle.api.tasks.InputDirectory;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.SkipWhenEmpty;
 import org.gradle.api.tasks.TaskAction;
+import org.gradle.api.tasks.util.PatternFilterable;
+import org.gradle.api.tasks.util.PatternSet;
 
 import de.thetaphi.forbiddenapis.Checker;
 import de.thetaphi.forbiddenapis.ForbiddenApiException;
@@ -60,19 +64,16 @@ import de.thetaphi.forbiddenapis.ParseException;
  * Forbiddenapis Gradle Task
  * @since 1.9
  */
-public class GradleTask extends DefaultTask {
-  
-  private static final String[] EMPTY_STRING_ARRAY = new String[0];
+public class GradleTask extends DefaultTask implements PatternFilterable {
   
   private File classesDir;
   private FileCollection classpath, signaturesFiles;
   private List<String> signatures;
   private List<String> bundledSignatures, suppressAnnotations;
-  private final EnumSet<Checker.Option> options = EnumSet.of(FAIL_ON_MISSING_CLASSES, FAIL_ON_UNRESOLVABLE_SIGNATURES, FAIL_ON_VIOLATION);
   private boolean failOnUnsupportedJava = false;
   
-  private List<String> includes = new ArrayList<String>(Arrays.asList("**/*.class")),
-      excludes = new ArrayList<String>();
+  private final EnumSet<Checker.Option> options = EnumSet.of(FAIL_ON_MISSING_CLASSES, FAIL_ON_UNRESOLVABLE_SIGNATURES, FAIL_ON_VIOLATION);
+  private final PatternFilterable patternSet = new PatternSet().include("**/*.class");
   
   private void setOption(Checker.Option opt, boolean value) {
     options.remove(opt);
@@ -82,8 +83,7 @@ public class GradleTask extends DefaultTask {
   /**
    * Directory with the class files to check.
    */
-  @InputDirectory
-  @SkipWhenEmpty
+  @OutputDirectory
   public File getClassesDir() {
     return classesDir;
   }
@@ -231,38 +231,6 @@ public class GradleTask extends DefaultTask {
   }
 
   /**
-   * List of patterns matching all class files to be parsed from the classesDirectory.
-   * Can be changed to e.g. exclude several files (using excludes).
-   * The default is a single include with pattern '**&#47;*.class'
-   * @see #excludes
-   * @since 1.0
-   */
-  @Input
-  public List<String> getIncludes() {
-    return includes;
-  }
-
-  /** @see #getFailOnViolation */
-  public void getIncludes(List<String> includes) {
-    this.includes = includes;
-  }
-
-  /**
-   * List of patterns matching class files to be excluded from checking.
-   * @see #includes
-   * @since 1.0
-   */
-  @Input
-  public List<String> getExcludes() {
-    return excludes;
-  }
-
-  /** @see #getExcludes */
-  public void setExcludes(List<String> excludes) {
-    this.excludes = excludes;
-  }
-
-  /**
    * List of a custom Java annotations (full class names) that are used in the checked
    * code to suppress errors. Those annotations must have at least
    * {@link RetentionPolicy#CLASS}. They can be applied to classes, their methods,
@@ -284,12 +252,87 @@ public class GradleTask extends DefaultTask {
     this.suppressAnnotations = suppressAnnotations;
   }
 
-  /** Returns the classes dir as output, although we don't change anything
-   * @see #getClassesDir()
+  // PatternFilterable implementation:
+  
+  /**
+   * {@inheritDoc}
+   * <p>
+   * Set of patterns matching all class files to be parsed from the classesDirectory.
+   * Can be changed to e.g. exclude several files (using excludes).
+   * The default is a single include with pattern '**&#47;*.class'
+   * @since 1.0
    */
-  @OutputDirectory
-  public File getOutputDir() {
-    return classesDir;
+  @Input
+  public Set<String> getIncludes() {
+    return patternSet.getIncludes();
+  }
+
+  public GradleTask setIncludes(Iterable<String> includes) {
+    patternSet.setIncludes(includes);
+    return this;
+  }
+
+  /**
+   * {@inheritDoc}
+   * <p>
+   * Set of patterns matching class files to be excluded from checking.
+   * @since 1.0
+   */
+  @Input
+  public Set<String> getExcludes() {
+    return patternSet.getExcludes();
+  }
+
+  public GradleTask setExcludes(Iterable<String> excludes) {
+    patternSet.setExcludes(excludes);
+    return this;
+  }
+
+  public GradleTask exclude(String... arg0) {
+    patternSet.exclude(arg0);
+    return this;
+  }
+
+  public GradleTask exclude(Iterable<String> arg0) {
+    patternSet.exclude(arg0);
+    return this;
+  }
+
+  public GradleTask exclude(Spec<FileTreeElement> arg0) {
+    patternSet.exclude(arg0);
+    return this;
+  }
+
+  public GradleTask exclude(@SuppressWarnings("rawtypes") Closure arg0) {
+    patternSet.exclude(arg0);
+    return this;
+  }
+
+  public GradleTask include(String... arg0) {
+    patternSet.include(arg0);
+    return this;
+  }
+
+  public GradleTask include(Iterable<String> arg0) {
+    patternSet.include(arg0);
+    return this;
+  }
+
+  public GradleTask include(Spec<FileTreeElement> arg0) {
+    patternSet.include(arg0);
+    return this;
+  }
+
+  public GradleTask include(@SuppressWarnings("rawtypes") Closure arg0) {
+    patternSet.include(arg0);
+    return this;
+  }
+
+  /** Returns the classes to check. */
+  @InputFiles
+  @SkipWhenEmpty
+  public FileTree getClassFiles() {
+    return getProject().files(classesDir).getAsFileTree().matching(patternSet);
   }
 
   @TaskAction
@@ -351,26 +394,6 @@ public class GradleTask extends DefaultTask {
         }
       }
       
-      log.info("Scanning for classes to check...");
-      if (!classesDir.exists()) {
-        log.warn("Classes directory does not exist, forbiddenapis check skipped: " + classesDir);
-        return;
-      }
-      final DirectoryScanner ds = new DirectoryScanner();
-      ds.setBasedir(classesDir);
-      ds.setCaseSensitive(true);
-      ds.setIncludes(includes == null ? null : includes.toArray(EMPTY_STRING_ARRAY));
-      ds.setExcludes(excludes == null ? null : excludes.toArray(EMPTY_STRING_ARRAY));
-      ds.addDefaultExcludes();
-      ds.scan();
-      final String[] files = ds.getIncludedFiles();
-      if (files.length == 0) {
-        log.warn(String.format(Locale.ENGLISH,
-          "No classes found in '%s' (includes=%s, excludes=%s), forbiddenapis check skipped.",
-          classesDir, includes, excludes));
-        return;
-      }
-      
       try {
         if (signatures != null && !signatures.isEmpty()) {
           log.info("Reading inline API signatures...");
@@ -413,8 +436,8 @@ public class GradleTask extends DefaultTask {
 
       log.info("Loading classes to check...");
       try {
-        for (String f : files) {
-          checker.addClassToCheck(new FileInputStream(new File(classesDir, f)));
+        for (File f : getClassFiles()) {
+          checker.addClassToCheck(new FileInputStream(f));
         }
       } catch (IOException ioe) {
         throw new ResourceException("Failed to load one of the given class files.", ioe);
