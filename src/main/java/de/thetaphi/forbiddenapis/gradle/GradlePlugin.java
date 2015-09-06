@@ -47,9 +47,8 @@ public class GradlePlugin implements Plugin<Project> {
     // Get the tasks we depend on or the other one should depends on us (to insert us into the chain):
     final Task classesTask = tasks.getByName("classes"),
         testClassesTask = tasks.getByName("testClasses"),
-        jarTask = tasks.getByName("jar"),
-        testTask = tasks.getByName("test"),
-        checkTask = tasks.getByName("check");
+        compileJavaTask = tasks.getByName("compileJava"),
+        compileTestJavaTask = tasks.getByName("compileTestJava");
     
     // Get classes directories for main and test
     final File mainClassesDir = getClassesDirByName(project, "main"),
@@ -60,21 +59,20 @@ public class GradlePlugin implements Plugin<Project> {
       public void execute(GradleTask task) {
         task.classesDir = mainClassesDir;
         task.classpath = configurations.getByName("compile");
-        task.dependsOn(classesTask);
+        task.dependsOn(compileJavaTask);
       }
     });
     final Task testForbiddenTask = tasks.create(TEST_FORBIDDEN_APIS_TASK_NAME, GradleTask.class, new Action<GradleTask>() {
       public void execute(GradleTask task) {
         task.classesDir = testClassesDir;
         task.classpath = configurations.getByName("testCompile").plus(project.files(mainClassesDir));
-        task.dependsOn(testClassesTask);
+        task.dependsOn(compileTestJavaTask);
       }
     });
     
     // Add our tasks as dependencies to chain
-    jarTask.dependsOn(forbiddenTask);
-    testTask.dependsOn(forbiddenTask, testForbiddenTask);
-    checkTask.dependsOn(forbiddenTask, testForbiddenTask);
+    classesTask.dependsOn(forbiddenTask);
+    testClassesTask.dependsOn(testForbiddenTask);
   }
   
   private File getClassesDirByName(Project project, String sourceSetName) {
