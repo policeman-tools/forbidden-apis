@@ -57,7 +57,7 @@ public class ForbiddenApisPlugin implements Plugin<Project> {
         in.close();
       }
     } catch (IOException ioe) {
-      throw new PluginInstantiationException("Cannot execute plugin init script.", ioe);
+      throw new PluginInstantiationException("Cannot execute " + PLUGIN_INIT_SCRIPT + " script.", ioe);
     }    
   }
   
