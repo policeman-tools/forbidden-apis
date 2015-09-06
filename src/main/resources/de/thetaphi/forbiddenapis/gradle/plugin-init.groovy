@@ -16,7 +16,7 @@ def forbiddenTasks = project.sourceSets.collect { sourceSet ->
   tasks.create(sourceSet.getTaskName(FORBIDDEN_APIS_TASK_NAME, null), CheckForbiddenApis.class) { task ->
     task.classesDir = sourceSet.output.classesDir;
     task.classpath = sourceSet.compileClasspath;
-    task.description = "Runs forbidden-apis checks on '" + sourceSet.name + "' classes.";
+    task.description = "Runs forbidden-apis checks on '${sourceSet.name}' classes.";
     task.dependsOn(sourceSet.output);
   }
 }
