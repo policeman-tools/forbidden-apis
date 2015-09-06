@@ -32,7 +32,6 @@ import de.thetaphi.forbiddenapis.ParseException;
 
 import java.io.Closeable;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.lang.annotation.RetentionPolicy;
 import java.net.URLClassLoader;
@@ -293,7 +292,7 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
         }
         if (signaturesFiles != null) for (final File f : signaturesFiles) {
           log.info("Reading API signatures: " + f);
-          checker.parseSignaturesFile(new FileInputStream(f));
+          checker.parseSignaturesFile(f);
         }
       } catch (IOException ioe) {
         throw new MojoExecutionException("IO problem while reading files with API signatures: " + ioe);
@@ -313,7 +312,7 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
       log.info("Loading classes to check...");
       try {
         for (String f : files) {
-          checker.addClassToCheck(new FileInputStream(new File(classesDirectory, f)));
+          checker.addClassToCheck(new File(classesDirectory, f));
         }
       } catch (IOException ioe) {
         throw new MojoExecutionException("Failed to load one of the given class files: " + ioe);

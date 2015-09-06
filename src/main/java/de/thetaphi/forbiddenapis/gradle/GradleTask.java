@@ -25,7 +25,6 @@ import groovy.lang.Closure;
 
 import java.io.Closeable;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.lang.annotation.RetentionPolicy;
 import java.net.MalformedURLException;
@@ -417,7 +416,7 @@ public class GradleTask extends DefaultTask implements PatternFilterable {
         }
         if (signaturesFiles != null) for (final File f : signaturesFiles) {
           log.info("Reading API signatures: " + f);
-          checker.parseSignaturesFile(new FileInputStream(f));
+          checker.parseSignaturesFile(f);
         }
       } catch (IOException ioe) {
         throw new ResourceException("IO problem while reading files with API signatures.", ioe);
@@ -437,7 +436,7 @@ public class GradleTask extends DefaultTask implements PatternFilterable {
       log.info("Loading classes to check...");
       try {
         for (File f : getClassFiles()) {
-          checker.addClassToCheck(new FileInputStream(f));
+          checker.addClassToCheck(f);
         }
       } catch (IOException ioe) {
         throw new ResourceException("Failed to load one of the given class files.", ioe);

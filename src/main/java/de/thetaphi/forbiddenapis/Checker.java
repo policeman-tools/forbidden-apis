@@ -23,6 +23,7 @@ import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.Method;
 
 import java.io.BufferedReader;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -351,6 +352,11 @@ public final class Checker implements RelatedClassLookup {
     parseSignaturesFile(in, false);
   }
   
+  /** Reads a list of API signatures from the given file. */
+  public final void parseSignaturesFile(File f) throws IOException,ParseException {
+    parseSignaturesFile(new FileInputStream(f));
+  }
+  
   /** Reads a list of API signatures from a String. */
   public final void parseSignaturesString(String signatures) throws IOException,ParseException {
     parseSignaturesFile(new StringReader(signatures), false);
@@ -405,6 +411,11 @@ public final class Checker implements RelatedClassLookup {
     classesToCheck.put(reader.getClassName(), new ClassSignature(reader, false, true));
   }
   
+  /** Parses and adds a class from the given file to the list of classes to check. */
+  public final void addClassToCheck(File f) throws IOException {
+    addClassToCheck(new FileInputStream(f));
+  }
+
   public final boolean hasNoSignatures() {
     return forbiddenMethods.isEmpty() && forbiddenFields.isEmpty() && forbiddenClasses.isEmpty() && forbiddenClassPatterns.isEmpty() && (!options.contains(Option.INTERNAL_RUNTIME_FORBIDDEN));
   }
