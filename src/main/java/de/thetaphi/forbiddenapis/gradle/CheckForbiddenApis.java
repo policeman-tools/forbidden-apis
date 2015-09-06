@@ -63,7 +63,7 @@ import de.thetaphi.forbiddenapis.ParseException;
  * Forbiddenapis Gradle Task
  * @since 1.9
  */
-public class GradleTask extends DefaultTask implements PatternFilterable {
+public class CheckForbiddenApis extends DefaultTask implements PatternFilterable {
   
   private File classesDir;
   private FileCollection classpath, signaturesFiles;
@@ -266,7 +266,7 @@ public class GradleTask extends DefaultTask implements PatternFilterable {
     return patternSet.getIncludes();
   }
 
-  public GradleTask setIncludes(Iterable<String> includes) {
+  public CheckForbiddenApis setIncludes(Iterable<String> includes) {
     patternSet.setIncludes(includes);
     return this;
   }
@@ -282,47 +282,47 @@ public class GradleTask extends DefaultTask implements PatternFilterable {
     return patternSet.getExcludes();
   }
 
-  public GradleTask setExcludes(Iterable<String> excludes) {
+  public CheckForbiddenApis setExcludes(Iterable<String> excludes) {
     patternSet.setExcludes(excludes);
     return this;
   }
 
-  public GradleTask exclude(String... arg0) {
+  public CheckForbiddenApis exclude(String... arg0) {
     patternSet.exclude(arg0);
     return this;
   }
 
-  public GradleTask exclude(Iterable<String> arg0) {
+  public CheckForbiddenApis exclude(Iterable<String> arg0) {
     patternSet.exclude(arg0);
     return this;
   }
 
-  public GradleTask exclude(Spec<FileTreeElement> arg0) {
+  public CheckForbiddenApis exclude(Spec<FileTreeElement> arg0) {
     patternSet.exclude(arg0);
     return this;
   }
 
-  public GradleTask exclude(@SuppressWarnings("rawtypes") Closure arg0) {
+  public CheckForbiddenApis exclude(@SuppressWarnings("rawtypes") Closure arg0) {
     patternSet.exclude(arg0);
     return this;
   }
 
-  public GradleTask include(String... arg0) {
+  public CheckForbiddenApis include(String... arg0) {
     patternSet.include(arg0);
     return this;
   }
 
-  public GradleTask include(Iterable<String> arg0) {
+  public CheckForbiddenApis include(Iterable<String> arg0) {
     patternSet.include(arg0);
     return this;
   }
 
-  public GradleTask include(Spec<FileTreeElement> arg0) {
+  public CheckForbiddenApis include(Spec<FileTreeElement> arg0) {
     patternSet.include(arg0);
     return this;
   }
 
-  public GradleTask include(@SuppressWarnings("rawtypes") Closure arg0) {
+  public CheckForbiddenApis include(@SuppressWarnings("rawtypes") Closure arg0) {
     patternSet.include(arg0);
     return this;
   }
@@ -335,7 +335,7 @@ public class GradleTask extends DefaultTask implements PatternFilterable {
   }
 
   @TaskAction
-  public void checkForbidden() {
+  public void checkForbidden() throws ForbiddenApiException {
     if (classesDir == null || classpath == null) {
       throw new InvalidUserDataException("Missing 'classesDir' or 'classpath' property.");
     }
@@ -443,11 +443,7 @@ public class GradleTask extends DefaultTask implements PatternFilterable {
       }
 
       log.info("Scanning for API signatures and dependencies...");
-      try {
-        checker.run();
-      } catch (ForbiddenApiException fae) {
-        throw new GradleForbiddenApiException(fae.getMessage());
-      }
+      checker.run();
     } finally {
       // Java 7 supports closing URLClassLoader, so check for Closeable interface:
       if (urlLoader instanceof Closeable) try {

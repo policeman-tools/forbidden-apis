@@ -31,7 +31,7 @@ import org.gradle.api.tasks.TaskContainer;
  * Forbiddenapis Gradle Plugin
  * @since 1.9
  */
-public class GradlePlugin implements Plugin<Project> {
+public class ForbiddenApisPlugin implements Plugin<Project> {
   
   public static final String FORBIDDEN_APIS_TASK_NAME = "forbiddenApis";
   public static final String TEST_FORBIDDEN_APIS_TASK_NAME = "testForbiddenApis";
@@ -49,15 +49,15 @@ public class GradlePlugin implements Plugin<Project> {
         testClassesDir = getClassesDirByName(project, "test");
     
     // Create the tasks of the plugin:
-    final Task forbiddenTask = tasks.create(FORBIDDEN_APIS_TASK_NAME, GradleTask.class, new Action<GradleTask>() {
-      public void execute(GradleTask task) {
+    final Task forbiddenTask = tasks.create(FORBIDDEN_APIS_TASK_NAME, CheckForbiddenApis.class, new Action<CheckForbiddenApis>() {
+      public void execute(CheckForbiddenApis task) {
         task.setClassesDir(mainClassesDir);
         task.setClasspath(configurations.getByName("compile"));
         task.dependsOn(tasks.getByName("compileJava"));
       }
     });
-    final Task testForbiddenTask = tasks.create(TEST_FORBIDDEN_APIS_TASK_NAME, GradleTask.class, new Action<GradleTask>() {
-      public void execute(GradleTask task) {
+    final Task testForbiddenTask = tasks.create(TEST_FORBIDDEN_APIS_TASK_NAME, CheckForbiddenApis.class, new Action<CheckForbiddenApis>() {
+      public void execute(CheckForbiddenApis task) {
         task.setClassesDir(testClassesDir);
         task.setClasspath(configurations.getByName("testCompile").plus(project.files(mainClassesDir)));
         task.dependsOn(tasks.getByName("compileTestJava"));
