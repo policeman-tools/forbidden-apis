@@ -18,10 +18,12 @@ package de.thetaphi.forbiddenapis.gradle;
 
 import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
+import groovy.util.DelegatingScript;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.Collections;
 
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.control.customizers.ImportCustomizer;
@@ -35,23 +37,23 @@ import org.gradle.api.plugins.PluginInstantiationException;
  */
 public class ForbiddenApisPlugin implements Plugin<Project> {
   
-  private static final String PLUGIN_INIT_SCRIPT = "plugin-init.groovy";
-  
-  public static final String FORBIDDEN_APIS_TASK_NAME_VERB = "forbiddenApis";
+  public static final String PLUGIN_INIT_SCRIPT = "plugin-init.groovy";
+  public static final String FORBIDDEN_APIS_TASK_NAME_PREFIX = "forbiddenApis";
   
   public void apply(final Project project) {
     try {
       final InputStream in = ForbiddenApisPlugin.class.getResourceAsStream(PLUGIN_INIT_SCRIPT);
       if (in == null) {
-        throw new PluginInstantiationException("Cannot find resource with plugin init script.");
+        throw new PluginInstantiationException("Cannot find resource with " + PLUGIN_INIT_SCRIPT + " script.");
       }
       try {
         final ImportCustomizer importCustomizer = new ImportCustomizer().addStarImports(ForbiddenApisPlugin.class.getPackage().getName());
         final CompilerConfiguration configuration = new CompilerConfiguration().addCompilationCustomizers(importCustomizer);
-        final Binding binding = new Binding();
-        binding.setVariable("plugin", this);
-        binding.setVariable("project", project);
-        new GroovyShell(ForbiddenApisPlugin.class.getClassLoader(), binding, configuration).evaluate(new InputStreamReader(in, "UTF-8"), PLUGIN_INIT_SCRIPT);
+        configuration.setScriptBaseClass(DelegatingScript.class.getName());
+        final GroovyShell shell = new GroovyShell(ForbiddenApisPlugin.class.getClassLoader(), new Binding(Collections.singletonMap("project", project)), configuration);
+        final DelegatingScript script = (DelegatingScript) shell.parse(new InputStreamReader(in, "UTF-8"), PLUGIN_INIT_SCRIPT);
+        script.setDelegate(this);
+        script.run();
       } finally {
         in.close();
       }
