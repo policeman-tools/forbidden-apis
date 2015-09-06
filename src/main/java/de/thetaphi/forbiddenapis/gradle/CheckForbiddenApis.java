@@ -51,6 +51,7 @@ import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.SkipWhenEmpty;
 import org.gradle.api.tasks.TaskAction;
+import org.gradle.api.tasks.VerificationTask;
 import org.gradle.api.tasks.util.PatternFilterable;
 import org.gradle.api.tasks.util.PatternSet;
 
@@ -63,7 +64,7 @@ import de.thetaphi.forbiddenapis.ParseException;
  * Forbiddenapis Gradle Task
  * @since 1.9
  */
-public class CheckForbiddenApis extends DefaultTask implements PatternFilterable {
+public class CheckForbiddenApis extends DefaultTask implements PatternFilterable,VerificationTask {
   
   private File classesDir;
   private FileCollection classpath, signaturesFiles;
@@ -227,6 +228,21 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
   /** @see #getFailOnViolation */
   public void setFailOnViolation(boolean failOnViolation) {
     setOption(FAIL_ON_VIOLATION, failOnViolation);
+  }
+
+  /**
+   * @{inheritDoc}
+   * <p>
+   * This setting is to conform with {@link VerificationTask} interface.
+   * It is the negation of {@link #getFailOnViolation}.
+   * @see #getFailOnViolation
+   */
+  public boolean getIgnoreFailures() {
+    return !getFailOnViolation();
+  }
+
+  public void setIgnoreFailures(boolean ignore) {
+    setFailOnViolation(!ignore);
   }
 
   /**
