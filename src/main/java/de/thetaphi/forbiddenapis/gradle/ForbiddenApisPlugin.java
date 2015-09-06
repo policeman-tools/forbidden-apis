@@ -37,9 +37,13 @@ import org.gradle.api.plugins.PluginInstantiationException;
  */
 public class ForbiddenApisPlugin implements Plugin<Project> {
   
+  /** Resource with Groovy script that initializes the plugin. */
   public static final String PLUGIN_INIT_SCRIPT = "plugin-init.groovy";
+  
+  /** Name of the base task that depends on one for every SourceSet */
   public static final String FORBIDDEN_APIS_TASK_NAME = "forbiddenApis";
   
+  // Not before Java 6: @Override
   public void apply(final Project project) {
     try {
       final InputStream in = ForbiddenApisPlugin.class.getResourceAsStream(PLUGIN_INIT_SCRIPT);
