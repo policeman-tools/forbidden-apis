@@ -38,7 +38,7 @@ import org.gradle.api.plugins.PluginInstantiationException;
 public class ForbiddenApisPlugin implements Plugin<Project> {
   
   public static final String PLUGIN_INIT_SCRIPT = "plugin-init.groovy";
-  public static final String FORBIDDEN_APIS_TASK_NAME_PREFIX = "forbiddenApis";
+  public static final String FORBIDDEN_APIS_TASK_NAME = "forbiddenApis";
   
   public void apply(final Project project) {
     try {
