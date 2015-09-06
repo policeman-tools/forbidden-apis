@@ -37,8 +37,7 @@ public class ForbiddenApisPlugin implements Plugin<Project> {
   
   private static final String PLUGIN_INIT_SCRIPT = "plugin-init.groovy";
   
-  public static final String FORBIDDEN_APIS_TASK_NAME = "forbiddenApis";
-  public static final String TEST_FORBIDDEN_APIS_TASK_NAME = "testForbiddenApis";
+  public static final String FORBIDDEN_APIS_TASK_NAME_VERB = "forbiddenApis";
   
   public void apply(final Project project) {
     try {
