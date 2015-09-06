@@ -47,6 +47,8 @@ import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputDirectory;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
+import org.gradle.api.tasks.OutputDirectory;
+import org.gradle.api.tasks.SkipWhenEmpty;
 import org.gradle.api.tasks.TaskAction;
 
 import de.thetaphi.forbiddenapis.Checker;
@@ -61,27 +63,64 @@ import de.thetaphi.forbiddenapis.ParseException;
 public class GradleTask extends DefaultTask {
   
   private static final String[] EMPTY_STRING_ARRAY = new String[0];
+  
+  private File classesDir;
+  private FileCollection classpath, signaturesFiles;
+  private List<String> signatures;
+  private List<String> bundledSignatures, suppressAnnotations;
+  private final EnumSet<Checker.Option> options = EnumSet.of(FAIL_ON_MISSING_CLASSES, FAIL_ON_UNRESOLVABLE_SIGNATURES, FAIL_ON_VIOLATION);
+  private boolean failOnUnsupportedJava = false;
+  
+  private List<String> includes = new ArrayList<String>(Arrays.asList("**/*.class")),
+      excludes = new ArrayList<String>();
+  
+  private void setOption(Checker.Option opt, boolean value) {
+    options.remove(opt);
+    if (value) options.add(opt);
+  }
 
   /**
    * Directory with the class files to check.
    */
   @InputDirectory
-  public File classesDir;
+  @SkipWhenEmpty
+  public File getClassesDir() {
+    return classesDir;
+  }
+
+  /** @see #getClassesDir */
+  public void setClassesDir(File classesDir) {
+    this.classesDir = classesDir;
+  }
+
+  /**
+   * A {@link FileCollection} containing all files, which contain signatures and comments for forbidden API calls.
+   * The signatures are resolved against the compile classpath.
+   * @since 1.0
+   */
+  @InputFiles
+  public FileCollection getClasspath() {
+    return classpath;
+  }
+
+  /** @see #getClasspath */
+  public void setClasspath(FileCollection classpath) {
+    this.classpath = classpath;
+  }
 
   /**
    * A {@link FileCollection} used to configure the classpath.
    */
   @InputFiles
-  public FileCollection classpath;
-
-  /**
-   * {@link FileCollection} containing all files, which contain signatures and comments for forbidden API calls.
-   * The signatures are resolved against the compile classpath.
-   * @since 1.0
-   */
   @Optional
-  @InputFiles
-  public FileCollection signaturesFiles;
+  public FileCollection getSignaturesFiles() {
+    return signaturesFiles;
+  }
+
+  /** @see #getSignaturesFiles */
+  public void setSignaturesFiles(FileCollection signaturesFiles) {
+    this.signaturesFiles = signaturesFiles;
+  }
 
   /**
    * Gives multiple API signatures that are joined with newlines and
@@ -89,25 +128,46 @@ public class GradleTask extends DefaultTask {
    * The signatures are resolved against the compile classpath.
    * @since 1.0
    */
-  @Optional
   @Input
-  public List<String> signatures;
+  @Optional
+  public List<String> getSignatures() {
+    return signatures;
+  }
+
+  /** @see #getSignatures */
+  public void setSignatures(List<String> signatures) {
+    this.signatures = signatures;
+  }
 
   /**
    * Specifies <a href="bundled-signatures.html">built-in signatures</a> files (e.g., deprecated APIs for specific Java versions,
    * unsafe method calls using default locale, default charset,...)
    * @since 1.0
    */
-  @Optional
   @Input
-  public List<String> bundledSignatures;
+  @Optional
+  public List<String> getBundledSignatures() {
+    return bundledSignatures;
+  }
+
+  /** @see #getBundledSignatures */
+  public void setBundledSignatures(List<String> bundledSignatures) {
+    this.bundledSignatures = bundledSignatures;
+  }
 
   /**
    * Forbids calls to classes from the internal java runtime (like sun.misc.Unsafe)
    * @since 1.0
    */
   @Input
-  public boolean internalRuntimeForbidden = false;
+  public boolean getInternalRuntimeForbidden() {
+    return options.contains(INTERNAL_RUNTIME_FORBIDDEN);
+  }
+
+  /** @see #getInternalRuntimeForbidden */
+  public void setInternalRuntimeForbidden(boolean internalRuntimeForbidden) {
+    setOption(INTERNAL_RUNTIME_FORBIDDEN, internalRuntimeForbidden);
+  }
 
   /**
    * Fail the build, if the bundled ASM library cannot read the class file format
@@ -115,8 +175,15 @@ public class GradleTask extends DefaultTask {
    * @since 1.0
    */
   @Input
-  public boolean failOnUnsupportedJava = false;
-  
+  public boolean getFailOnUnsupportedJava() {
+    return failOnUnsupportedJava;
+  }
+
+  /** @see #getFailOnUnsupportedJava */
+  public void setFailOnUnsupportedJava(boolean failOnUnsupportedJava) {
+    this.failOnUnsupportedJava = failOnUnsupportedJava;
+  }
+
   /**
    * Fail the build, if a class referenced in the scanned code is missing. This requires
    * that you pass the whole classpath including all dependencies to this task
@@ -124,8 +191,15 @@ public class GradleTask extends DefaultTask {
    * @since 1.0
    */
   @Input
-  public boolean failOnMissingClasses = true;
-  
+  public boolean getFailOnMissingClasses() {
+    return options.contains(FAIL_ON_MISSING_CLASSES);
+  }
+
+  /** @see #getFailOnMissingClasses */
+  public void setFailOnMissingClasses(boolean failOnMissingClasses) {
+    setOption(FAIL_ON_MISSING_CLASSES, failOnMissingClasses);
+  }
+
   /**
    * Fail the build if a signature is not resolving. If this parameter is set to
    * to false, then such signatures are silently ignored. This is useful in multi-module Maven
@@ -133,14 +207,28 @@ public class GradleTask extends DefaultTask {
    * @since 1.4
    */
   @Input
-  public boolean failOnUnresolvableSignatures = true;
+  public boolean getFailOnUnresolvableSignatures() {
+    return options.contains(FAIL_ON_UNRESOLVABLE_SIGNATURES);
+  }
+
+  /** @see #getFailOnUnresolvableSignatures */
+  public void setFailOnUnresolvableSignatures(boolean failOnUnresolvableSignatures) {
+    setOption(FAIL_ON_UNRESOLVABLE_SIGNATURES, failOnUnresolvableSignatures);
+  }
 
   /**
    * Fail the build if violations have been found. Defaults to {@code true}.
    * @since 1.9
    */
   @Input
-  public boolean failOnViolation = true;
+  public boolean getFailOnViolation() {
+    return options.contains(FAIL_ON_VIOLATION);
+  }
+
+  /** @see #getFailOnViolation */
+  public void setFailOnViolation(boolean failOnViolation) {
+    setOption(FAIL_ON_VIOLATION, failOnViolation);
+  }
 
   /**
    * List of patterns matching all class files to be parsed from the classesDirectory.
@@ -150,16 +238,29 @@ public class GradleTask extends DefaultTask {
    * @since 1.0
    */
   @Input
-  public List<String> includes = new ArrayList<String>(Arrays.asList("**/*.class"));
+  public List<String> getIncludes() {
+    return includes;
+  }
+
+  /** @see #getFailOnViolation */
+  public void getIncludes(List<String> includes) {
+    this.includes = includes;
+  }
 
   /**
    * List of patterns matching class files to be excluded from checking.
    * @see #includes
    * @since 1.0
    */
-  @Optional
   @Input
-  public List<String> excludes = new ArrayList<String>();
+  public List<String> getExcludes() {
+    return excludes;
+  }
+
+  /** @see #getExcludes */
+  public void setExcludes(List<String> excludes) {
+    this.excludes = excludes;
+  }
 
   /**
    * List of a custom Java annotations (full class names) that are used in the checked
@@ -172,9 +273,24 @@ public class GradleTask extends DefaultTask {
    * {@code **.SuppressForbidden}).
    * @since 1.8
    */
-  @Optional
   @Input
-  public List<String> suppressAnnotations;
+  @Optional
+  public List<String> getSuppressAnnotations() {
+    return suppressAnnotations;
+  }
+
+  /** @see #getSuppressAnnotations */
+  public void setSuppressAnnotations(List<String> suppressAnnotations) {
+    this.suppressAnnotations = suppressAnnotations;
+  }
+
+  /** Returns the classes dir as output, although we don't change anything
+   * @see #getClassesDir()
+   */
+  @OutputDirectory
+  public File getOutputDir() {
+    return classesDir;
+  }
 
   @TaskAction
   public void checkForbidden() {
@@ -215,11 +331,6 @@ public class GradleTask extends DefaultTask {
       ClassLoader.getSystemClassLoader();
     
     try {
-      final EnumSet<Checker.Option> options = EnumSet.noneOf(Checker.Option.class);
-      if (internalRuntimeForbidden) options.add(INTERNAL_RUNTIME_FORBIDDEN);
-      if (failOnMissingClasses) options.add(FAIL_ON_MISSING_CLASSES);
-      if (failOnViolation) options.add(FAIL_ON_VIOLATION);
-      if (failOnUnresolvableSignatures) options.add(FAIL_ON_UNRESOLVABLE_SIGNATURES);
       final Checker checker = new Checker(log, loader, options);
       
       if (!checker.isSupportedJDK) {
@@ -292,7 +403,7 @@ public class GradleTask extends DefaultTask {
       }
 
       if (checker.hasNoSignatures()) {
-        if (failOnUnresolvableSignatures) {
+        if (options.contains(FAIL_ON_UNRESOLVABLE_SIGNATURES)) {
           throw new InvalidUserDataException("No API signatures found; use parameters 'signatures', 'bundledSignatures', and/or 'signaturesFiles' to define those!");
         } else {
           log.info("Skipping execution because no API signatures are available.");
