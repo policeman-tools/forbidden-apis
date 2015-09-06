@@ -16,16 +16,18 @@ package de.thetaphi.forbiddenapis.gradle;
  * limitations under the License.
  */
 
-import java.io.File;
+import groovy.lang.Binding;
+import groovy.lang.GroovyShell;
 
-import org.gradle.api.Action;
-import org.gradle.api.NamedDomainObjectCollection;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+
+import org.codehaus.groovy.control.CompilerConfiguration;
+import org.codehaus.groovy.control.customizers.ImportCustomizer;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
-import org.gradle.api.Task;
-import org.gradle.api.artifacts.ConfigurationContainer;
 import org.gradle.api.plugins.PluginInstantiationException;
-import org.gradle.api.tasks.TaskContainer;
 
 /**
  * Forbiddenapis Gradle Plugin
@@ -33,50 +35,30 @@ import org.gradle.api.tasks.TaskContainer;
  */
 public class ForbiddenApisPlugin implements Plugin<Project> {
   
+  private static final String PLUGIN_INIT_SCRIPT = "plugin-init.groovy";
+  
   public static final String FORBIDDEN_APIS_TASK_NAME = "forbiddenApis";
   public static final String TEST_FORBIDDEN_APIS_TASK_NAME = "testForbiddenApis";
   
   public void apply(final Project project) {
-    if (project.getPlugins().findPlugin("java") == null) {
-      throw new PluginInstantiationException("Forbiddenapis only works in projects using the 'java' plugin.");
-    }
-    
-    final ConfigurationContainer configurations = project.getConfigurations();
-    final TaskContainer tasks = project.getTasks();
-    
-    // Get classes directories for main and test
-    final File mainClassesDir = getClassesDirByName(project, "main"),
-        testClassesDir = getClassesDirByName(project, "test");
-    
-    // Create the tasks of the plugin:
-    final Task forbiddenTask = tasks.create(FORBIDDEN_APIS_TASK_NAME, CheckForbiddenApis.class, new Action<CheckForbiddenApis>() {
-      public void execute(CheckForbiddenApis task) {
-        task.setClassesDir(mainClassesDir);
-        task.setClasspath(configurations.getByName("compile"));
-        task.dependsOn(tasks.getByName("compileJava"));
-      }
-    });
-    final Task testForbiddenTask = tasks.create(TEST_FORBIDDEN_APIS_TASK_NAME, CheckForbiddenApis.class, new Action<CheckForbiddenApis>() {
-      public void execute(CheckForbiddenApis task) {
-        task.setClassesDir(testClassesDir);
-        task.setClasspath(configurations.getByName("testCompile").plus(project.files(mainClassesDir)));
-        task.dependsOn(tasks.getByName("compileTestJava"));
-      }
-    });
-    
-    // Add our tasks as dependencies to chain
-    tasks.getByName("classes").dependsOn(forbiddenTask);
-    tasks.getByName("testClasses").dependsOn(testForbiddenTask);
-  }
-  
-  private File getClassesDirByName(Project project, String sourceSetName) {
-    final Object sourceSet = ((NamedDomainObjectCollection<?>) project.property("sourceSets")).getByName(sourceSetName);
     try {
-      final Object output = sourceSet.getClass().getMethod("getOutput").invoke(sourceSet);
-      return (File) output.getClass().getMethod("getClassesDir").invoke(output);
-    } catch (Exception e) {
-      throw new PluginInstantiationException("Forbiddenapis was not able to initialize classesDir.", e);
-    }
+      final InputStream in = ForbiddenApisPlugin.class.getResourceAsStream(PLUGIN_INIT_SCRIPT);
+      if (in == null) {
+        throw new PluginInstantiationException("Cannot find resource with plugin init script.");
+      }
+      try {
+        final ImportCustomizer importCustomizer = new ImportCustomizer().addStarImports(ForbiddenApisPlugin.class.getPackage().getName());
+        final CompilerConfiguration configuration = new CompilerConfiguration().addCompilationCustomizers(importCustomizer);
+        final Binding binding = new Binding();
+        binding.setVariable("plugin", this);
+        binding.setVariable("project", project);
+        new GroovyShell(ForbiddenApisPlugin.class.getClassLoader(), binding, configuration).evaluate(new InputStreamReader(in, "UTF-8"), PLUGIN_INIT_SCRIPT);
+      } finally {
+        in.close();
+      }
+    } catch (IOException ioe) {
+      throw new PluginInstantiationException("Cannot execute plugin init script.", ioe);
+    }    
   }
   
 }
