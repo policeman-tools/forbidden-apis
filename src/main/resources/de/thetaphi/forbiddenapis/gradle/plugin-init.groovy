@@ -23,15 +23,18 @@ if (project.plugins.withType(JavaBasePlugin.class).isEmpty()) {
   throw new PluginInstantiationException('Forbidden-apis only works in projects using the java plugin.');
 }
 
-def tasks = project.getTasks();
+def tasks = project.tasks;
+
+// create Extension for defaults:
+def extension = project.extensions.create(FORBIDDEN_APIS_TASK_NAME, CheckForbiddenApisExtension.class);
 
 // Define our tasks (one for each SourceSet):
 def forbiddenTasks = project.sourceSets.collect { sourceSet ->
   tasks.create(sourceSet.getTaskName(FORBIDDEN_APIS_TASK_NAME, null), CheckForbiddenApis.class) {
     description = "Runs forbidden-apis checks on '${sourceSet.name}' classes.";
-    // We don't use conventions for delayed configuration, because this is internal feature.
-    // We use closure that executes after the project was completely evaulated and then sets
-    // classesDir and classpath if not specified by user otherwise.
+    CheckForbiddenApisExtension.PROPS.each { key ->
+      conventionMapping.map(key, { extension[key] });
+    }
     project.afterEvaluate {
       if (classesDir == null) {
         classesDir = sourceSet.output.classesDir;

@@ -53,7 +53,6 @@ import org.gradle.api.tasks.SkipWhenEmpty;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.VerificationTask;
 import org.gradle.api.tasks.util.PatternFilterable;
-import org.gradle.api.tasks.util.PatternSet;
 
 import de.thetaphi.forbiddenapis.Checker;
 import de.thetaphi.forbiddenapis.ForbiddenApiException;
@@ -61,24 +60,14 @@ import de.thetaphi.forbiddenapis.Logger;
 import de.thetaphi.forbiddenapis.ParseException;
 
 /**
- * Forbiddenapis Gradle Task
+ * ForbiddenApis Gradle Task
  * @since 1.9
  */
 public class CheckForbiddenApis extends DefaultTask implements PatternFilterable,VerificationTask {
   
+  private final CheckForbiddenApisExtension data = new CheckForbiddenApisExtension();
   private File classesDir;
-  private FileCollection classpath, signaturesFiles;
-  private List<String> signatures;
-  private List<String> bundledSignatures, suppressAnnotations;
-  private boolean failOnUnsupportedJava = false;
-  
-  private final EnumSet<Checker.Option> options = EnumSet.of(FAIL_ON_MISSING_CLASSES, FAIL_ON_UNRESOLVABLE_SIGNATURES, FAIL_ON_VIOLATION);
-  private final PatternFilterable patternSet = new PatternSet().include("**/*.class");
-  
-  private void setOption(Checker.Option opt, boolean value) {
-    options.remove(opt);
-    if (value) options.add(opt);
-  }
+  private FileCollection classpath;
 
   /**
    * Directory with the class files to check.
@@ -114,12 +103,12 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
   @InputFiles
   @Optional
   public FileCollection getSignaturesFiles() {
-    return signaturesFiles;
+    return data.signaturesFiles;
   }
 
   /** @see #getSignaturesFiles */
   public void setSignaturesFiles(FileCollection signaturesFiles) {
-    this.signaturesFiles = signaturesFiles;
+    data.signaturesFiles = signaturesFiles;
   }
 
   /**
@@ -131,12 +120,12 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
   @Input
   @Optional
   public List<String> getSignatures() {
-    return signatures;
+    return data.signatures;
   }
 
   /** @see #getSignatures */
   public void setSignatures(List<String> signatures) {
-    this.signatures = signatures;
+    data.signatures = signatures;
   }
 
   /**
@@ -147,12 +136,12 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
   @Input
   @Optional
   public List<String> getBundledSignatures() {
-    return bundledSignatures;
+    return data.bundledSignatures;
   }
 
   /** @see #getBundledSignatures */
   public void setBundledSignatures(List<String> bundledSignatures) {
-    this.bundledSignatures = bundledSignatures;
+    data.bundledSignatures = bundledSignatures;
   }
 
   /**
@@ -161,12 +150,12 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
    */
   @Input
   public boolean getInternalRuntimeForbidden() {
-    return options.contains(INTERNAL_RUNTIME_FORBIDDEN);
+    return data.internalRuntimeForbidden;
   }
 
   /** @see #getInternalRuntimeForbidden */
   public void setInternalRuntimeForbidden(boolean internalRuntimeForbidden) {
-    setOption(INTERNAL_RUNTIME_FORBIDDEN, internalRuntimeForbidden);
+    data.internalRuntimeForbidden = internalRuntimeForbidden;
   }
 
   /**
@@ -176,12 +165,12 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
    */
   @Input
   public boolean getFailOnUnsupportedJava() {
-    return failOnUnsupportedJava;
+    return data.failOnUnsupportedJava;
   }
 
   /** @see #getFailOnUnsupportedJava */
   public void setFailOnUnsupportedJava(boolean failOnUnsupportedJava) {
-    this.failOnUnsupportedJava = failOnUnsupportedJava;
+    data.failOnUnsupportedJava = failOnUnsupportedJava;
   }
 
   /**
@@ -192,12 +181,12 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
    */
   @Input
   public boolean getFailOnMissingClasses() {
-    return options.contains(FAIL_ON_MISSING_CLASSES);
+    return data.failOnMissingClasses;
   }
 
   /** @see #getFailOnMissingClasses */
   public void setFailOnMissingClasses(boolean failOnMissingClasses) {
-    setOption(FAIL_ON_MISSING_CLASSES, failOnMissingClasses);
+    data.failOnMissingClasses = failOnMissingClasses;
   }
 
   /**
@@ -208,41 +197,27 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
    */
   @Input
   public boolean getFailOnUnresolvableSignatures() {
-    return options.contains(FAIL_ON_UNRESOLVABLE_SIGNATURES);
+    return data.failOnUnresolvableSignatures;
   }
 
   /** @see #getFailOnUnresolvableSignatures */
   public void setFailOnUnresolvableSignatures(boolean failOnUnresolvableSignatures) {
-    setOption(FAIL_ON_UNRESOLVABLE_SIGNATURES, failOnUnresolvableSignatures);
-  }
-
-  /**
-   * Fail the build if violations have been found. Defaults to {@code true}.
-   * @since 1.9
-   */
-  @Input
-  public boolean getFailOnViolation() {
-    return options.contains(FAIL_ON_VIOLATION);
-  }
-
-  /** @see #getFailOnViolation */
-  public void setFailOnViolation(boolean failOnViolation) {
-    setOption(FAIL_ON_VIOLATION, failOnViolation);
+    data.failOnUnresolvableSignatures = failOnUnresolvableSignatures;
   }
 
   /**
    * @{inheritDoc}
    * <p>
    * This setting is to conform with {@link VerificationTask} interface.
-   * It is the negation of {@link #getFailOnViolation}.
-   * @see #getFailOnViolation
+   * Other ForbiddenApis implementations use another name: {@code failOnViolation}
+   * Default is {@code false}.
    */
   public boolean getIgnoreFailures() {
-    return !getFailOnViolation();
+    return data.ignoreFailures;
   }
 
-  public void setIgnoreFailures(boolean ignore) {
-    setFailOnViolation(!ignore);
+  public void setIgnoreFailures(boolean ignoreFailures) {
+    data.ignoreFailures = ignoreFailures;
   }
 
   /**
@@ -259,12 +234,12 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
   @Input
   @Optional
   public List<String> getSuppressAnnotations() {
-    return suppressAnnotations;
+    return data.suppressAnnotations;
   }
 
   /** @see #getSuppressAnnotations */
   public void setSuppressAnnotations(List<String> suppressAnnotations) {
-    this.suppressAnnotations = suppressAnnotations;
+    data.suppressAnnotations = suppressAnnotations;
   }
 
   // PatternFilterable implementation:
@@ -279,11 +254,11 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
    */
   @Input
   public Set<String> getIncludes() {
-    return patternSet.getIncludes();
+    return data.getIncludes();
   }
 
   public CheckForbiddenApis setIncludes(Iterable<String> includes) {
-    patternSet.setIncludes(includes);
+    data.setIncludes(includes);
     return this;
   }
 
@@ -295,51 +270,51 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
    */
   @Input
   public Set<String> getExcludes() {
-    return patternSet.getExcludes();
+    return data.getExcludes();
   }
 
   public CheckForbiddenApis setExcludes(Iterable<String> excludes) {
-    patternSet.setExcludes(excludes);
+    data.setExcludes(excludes);
     return this;
   }
 
   public CheckForbiddenApis exclude(String... arg0) {
-    patternSet.exclude(arg0);
+    data.exclude(arg0);
     return this;
   }
 
   public CheckForbiddenApis exclude(Iterable<String> arg0) {
-    patternSet.exclude(arg0);
+    data.exclude(arg0);
     return this;
   }
 
   public CheckForbiddenApis exclude(Spec<FileTreeElement> arg0) {
-    patternSet.exclude(arg0);
+    data.exclude(arg0);
     return this;
   }
 
   public CheckForbiddenApis exclude(@SuppressWarnings("rawtypes") Closure arg0) {
-    patternSet.exclude(arg0);
+    data.exclude(arg0);
     return this;
   }
 
   public CheckForbiddenApis include(String... arg0) {
-    patternSet.include(arg0);
+    data.include(arg0);
     return this;
   }
 
   public CheckForbiddenApis include(Iterable<String> arg0) {
-    patternSet.include(arg0);
+    data.include(arg0);
     return this;
   }
 
   public CheckForbiddenApis include(Spec<FileTreeElement> arg0) {
-    patternSet.include(arg0);
+    data.include(arg0);
     return this;
   }
 
   public CheckForbiddenApis include(@SuppressWarnings("rawtypes") Closure arg0) {
-    patternSet.include(arg0);
+    data.include(arg0);
     return this;
   }
 
@@ -347,11 +322,13 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
   @InputFiles
   @SkipWhenEmpty
   public FileTree getClassFiles() {
-    return getProject().files(classesDir).getAsFileTree().matching(patternSet);
+    return getProject().files(getClassesDir()).getAsFileTree().matching(data);
   }
 
   @TaskAction
   public void checkForbidden() throws ForbiddenApiException {
+    final File classesDir = getClassesDir();
+    final FileCollection classpath = getClasspath();
     if (classesDir == null || classpath == null) {
       throw new InvalidUserDataException("Missing 'classesDir' or 'classpath' property.");
     }
@@ -389,13 +366,18 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
       ClassLoader.getSystemClassLoader();
     
     try {
+      final EnumSet<Checker.Option> options = EnumSet.noneOf(Checker.Option.class);
+      if (getInternalRuntimeForbidden()) options.add(INTERNAL_RUNTIME_FORBIDDEN);
+      if (getFailOnMissingClasses()) options.add(FAIL_ON_MISSING_CLASSES);
+      if (!getIgnoreFailures()) options.add(FAIL_ON_VIOLATION);
+      if (getFailOnUnresolvableSignatures()) options.add(FAIL_ON_UNRESOLVABLE_SIGNATURES);
       final Checker checker = new Checker(log, loader, options);
       
       if (!checker.isSupportedJDK) {
         final String msg = String.format(Locale.ENGLISH, 
           "Your Java runtime (%s %s) is not supported by the forbiddenapis plugin. Please run the checks with a supported JDK!",
           System.getProperty("java.runtime.name"), System.getProperty("java.runtime.version"));
-        if (failOnUnsupportedJava) {
+        if (getFailOnUnsupportedJava()) {
           throw new GradleException(msg);
         } else {
           log.warn(msg);
@@ -403,6 +385,7 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
         }
       }
       
+      final List<String> suppressAnnotations = getSuppressAnnotations();
       if (suppressAnnotations != null) {
         for (String a : suppressAnnotations) {
           checker.addSuppressAnnotation(a);
@@ -410,6 +393,7 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
       }
       
       try {
+        final List<String> signatures = getSignatures();
         if (signatures != null && !signatures.isEmpty()) {
           log.info("Reading inline API signatures...");
           final StringBuilder sb = new StringBuilder();
@@ -418,6 +402,7 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
           }
           checker.parseSignaturesString(sb.toString());
         }
+        final List<String> bundledSignatures = getBundledSignatures();
         if (bundledSignatures != null) {
           final JavaVersion targetVersion = (JavaVersion) getProject().property("targetCompatibility");
           if (targetVersion == null) {
@@ -430,6 +415,7 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
             checker.parseBundledSignatures(bs, targetVersion == null ? null : targetVersion.toString());
           }
         }
+        final FileCollection signaturesFiles = getSignaturesFiles();
         if (signaturesFiles != null) for (final File f : signaturesFiles) {
           log.info("Reading API signatures: " + f);
           checker.parseSignaturesFile(f);
