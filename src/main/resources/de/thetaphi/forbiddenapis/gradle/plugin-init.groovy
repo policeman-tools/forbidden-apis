@@ -30,16 +30,17 @@ def extension = project.extensions.create(FORBIDDEN_APIS_EXTENSION_NAME, CheckFo
 def forbiddenTasks = project.sourceSets.collect { sourceSet ->
   project.tasks.create(sourceSet.getTaskName(FORBIDDEN_APIS_TASK_NAME, null), CheckForbiddenApis.class) {
     description = "Runs forbidden-apis checks on '${sourceSet.name}' classes.";
-    CheckForbiddenApisExtension.PROPS.each { key ->
-      conventionMapping.map(key, { extension[key] });
-    }
-    project.afterEvaluate {
-      if (classesDir == null) {
-        classesDir = sourceSet.output.classesDir;
-        dependsOn(sourceSet.output);
+    conventionMapping.with {
+      CheckForbiddenApisExtension.PROPS.each { key ->
+        map(key, { extension[key] });
       }
-      if (classpath == null) {
-        classpath = sourceSet.compileClasspath;
+      classesDir = { sourceSet.output.classesDir }
+      classpath = { sourceSet.compileClasspath }
+    }
+    // add dependency to compile task after evaluation, if the classesDir is from our SourceSet:
+    project.afterEvaluate {
+      if (classesDir == sourceSet.output.classesDir) {
+        dependsOn(sourceSet.output);
       }
     }
   }
