@@ -31,15 +31,18 @@ public class CheckForbiddenApisExtension extends PatternSet {
   
   /** Fields used for the convention mapping, keep up-to-date with class members! */
   static final List<String> PROPS = Arrays.asList(
-      "signaturesFiles",
-      "signatures",
-      "bundledSignatures",
-      "suppressAnnotations",
-      "internalRuntimeForbidden",
-      "failOnUnsupportedJava",
-      "failOnMissingClasses",
-      "failOnUnresolvableSignatures",
-      "ignoreFailures"
+    "signaturesFiles",
+    "signatures",
+    "bundledSignatures",
+    "suppressAnnotations",
+    "internalRuntimeForbidden",
+    "failOnUnsupportedJava",
+    "failOnMissingClasses",
+    "failOnUnresolvableSignatures",
+    "ignoreFailures",
+    // patterns
+    "includes",
+    "excludes"
   );
   
   public CheckForbiddenApisExtension() {
@@ -47,11 +50,13 @@ public class CheckForbiddenApisExtension extends PatternSet {
   }
   
   public FileCollection signaturesFiles;
-  public List<String> signatures, bundledSignatures, suppressAnnotations;
+  public List<String> signatures,
+    bundledSignatures,
+    suppressAnnotations;
   public boolean internalRuntimeForbidden = false,
-      failOnUnsupportedJava = false,
-      failOnMissingClasses = true,
-      failOnUnresolvableSignatures = true,
-      ignoreFailures = false;
+    failOnUnsupportedJava = false,
+    failOnMissingClasses = true,
+    failOnUnresolvableSignatures = true,
+    ignoreFailures = false;
   
 }

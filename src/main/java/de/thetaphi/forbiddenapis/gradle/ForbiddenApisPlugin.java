@@ -21,12 +21,12 @@ import groovy.lang.GroovyShell;
 import groovy.util.DelegatingScript;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.net.URL;
 import java.util.Collections;
 
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.control.customizers.ImportCustomizer;
+import org.codehaus.groovy.runtime.ResourceGroovyMethods;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.plugins.PluginInstantiationException;
@@ -48,25 +48,23 @@ public class ForbiddenApisPlugin implements Plugin<Project> {
   
   // Not before Java 6: @Override
   public void apply(final Project project) {
+    final String scriptText;
     try {
-      final InputStream in = ForbiddenApisPlugin.class.getResourceAsStream(PLUGIN_INIT_SCRIPT);
-      if (in == null) {
+      final URL scriptUrl = ForbiddenApisPlugin.class.getResource(PLUGIN_INIT_SCRIPT);
+      if (scriptUrl == null) {
         throw new PluginInstantiationException("Cannot find resource with " + PLUGIN_INIT_SCRIPT + " script.");
       }
-      try {
-        final ImportCustomizer importCustomizer = new ImportCustomizer().addStarImports(ForbiddenApisPlugin.class.getPackage().getName());
-        final CompilerConfiguration configuration = new CompilerConfiguration().addCompilationCustomizers(importCustomizer);
-        configuration.setScriptBaseClass(DelegatingScript.class.getName());
-        final GroovyShell shell = new GroovyShell(ForbiddenApisPlugin.class.getClassLoader(), new Binding(Collections.singletonMap("project", project)), configuration);
-        final DelegatingScript script = (DelegatingScript) shell.parse(new InputStreamReader(in, "UTF-8"), PLUGIN_INIT_SCRIPT);
-        script.setDelegate(this);
-        script.run();
-      } finally {
-        in.close();
-      }
+      scriptText = ResourceGroovyMethods.getText(scriptUrl, "UTF-8");
     } catch (IOException ioe) {
       throw new PluginInstantiationException("Cannot execute " + PLUGIN_INIT_SCRIPT + " script.", ioe);
     }    
+    final ImportCustomizer importCustomizer = new ImportCustomizer().addStarImports(ForbiddenApisPlugin.class.getPackage().getName());
+    final CompilerConfiguration configuration = new CompilerConfiguration().addCompilationCustomizers(importCustomizer);
+    configuration.setScriptBaseClass(DelegatingScript.class.getName());
+    final GroovyShell shell = new GroovyShell(ForbiddenApisPlugin.class.getClassLoader(), new Binding(Collections.singletonMap("project", project)), configuration);
+    final DelegatingScript script = (DelegatingScript) shell.parse(scriptText, PLUGIN_INIT_SCRIPT);
+    script.setDelegate(this);
+    script.run();
   }
   
 }
