@@ -43,6 +43,9 @@ public class ForbiddenApisPlugin implements Plugin<Project> {
   /** Name of the base task that depends on one for every SourceSet */
   public static final String FORBIDDEN_APIS_TASK_NAME = "forbiddenApis";
   
+  /** Name of the base task that depends on one for every SourceSet */
+  public static final String FORBIDDEN_APIS_EXTENSION_NAME = "forbiddenApis";
+  
   // Not before Java 6: @Override
   public void apply(final Project project) {
     try {

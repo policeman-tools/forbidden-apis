@@ -23,14 +23,12 @@ if (project.plugins.withType(JavaBasePlugin.class).isEmpty()) {
   throw new PluginInstantiationException('Forbidden-apis only works in projects using the java plugin.');
 }
 
-def tasks = project.tasks;
-
 // create Extension for defaults:
-def extension = project.extensions.create(FORBIDDEN_APIS_TASK_NAME, CheckForbiddenApisExtension.class);
+def extension = project.extensions.create(FORBIDDEN_APIS_EXTENSION_NAME, CheckForbiddenApisExtension.class);
 
 // Define our tasks (one for each SourceSet):
 def forbiddenTasks = project.sourceSets.collect { sourceSet ->
-  tasks.create(sourceSet.getTaskName(FORBIDDEN_APIS_TASK_NAME, null), CheckForbiddenApis.class) {
+  project.tasks.create(sourceSet.getTaskName(FORBIDDEN_APIS_TASK_NAME, null), CheckForbiddenApis.class) {
     description = "Runs forbidden-apis checks on '${sourceSet.name}' classes.";
     CheckForbiddenApisExtension.PROPS.each { key ->
       conventionMapping.map(key, { extension[key] });
@@ -48,11 +46,11 @@ def forbiddenTasks = project.sourceSets.collect { sourceSet ->
 }
 
 // Create a task for all checks
-def forbiddenTask = tasks.create(FORBIDDEN_APIS_TASK_NAME) {
+def forbiddenTask = project.tasks.create(FORBIDDEN_APIS_TASK_NAME) {
   description = "Runs forbidden-apis checks.";
   group = JavaBasePlugin.VERIFICATION_GROUP;
   dependsOn(forbiddenTasks);
 }
 
 // Add our task as dependency to chain
-tasks.getByName(JavaBasePlugin.CHECK_TASK_NAME).dependsOn(forbiddenTask);
+project.tasks[JavaBasePlugin.CHECK_TASK_NAME].dependsOn(forbiddenTask);

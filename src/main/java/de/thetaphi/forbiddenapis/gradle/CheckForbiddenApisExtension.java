@@ -29,11 +29,8 @@ import org.gradle.api.tasks.util.PatternSet;
  */
 public class CheckForbiddenApisExtension extends PatternSet {
   
-  public CheckForbiddenApisExtension() {
-    include("**/*.class");
-  }
-  
-  public static final List<String> PROPS = Arrays.asList(
+  /** Fields used for the convention mapping, keep up-to-date with class members! */
+  static final List<String> PROPS = Arrays.asList(
       "signaturesFiles",
       "signatures",
       "bundledSignatures",
@@ -44,6 +41,10 @@ public class CheckForbiddenApisExtension extends PatternSet {
       "failOnUnresolvableSignatures",
       "ignoreFailures"
   );
+  
+  public CheckForbiddenApisExtension() {
+    include("**/*.class");
+  }
   
   public FileCollection signaturesFiles;
   public List<String> signatures, bundledSignatures, suppressAnnotations;
