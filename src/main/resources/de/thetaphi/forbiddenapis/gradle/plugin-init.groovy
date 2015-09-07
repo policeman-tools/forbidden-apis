@@ -28,10 +28,19 @@ def tasks = project.getTasks();
 // Define our tasks (one for each SourceSet):
 def forbiddenTasks = project.sourceSets.collect { sourceSet ->
   tasks.create(sourceSet.getTaskName(FORBIDDEN_APIS_TASK_NAME, null), CheckForbiddenApis.class) {
-    classesDir = sourceSet.output.classesDir;
-    classpath = sourceSet.compileClasspath;
     description = "Runs forbidden-apis checks on '${sourceSet.name}' classes.";
-    dependsOn(sourceSet.output);
+    // We don't use conventions for delayed configuration, because this is internal feature.
+    // We use closure that executes after the project was completely evaulated and then sets
+    // classesDir and classpath if not specified by user otherwise.
+    project.afterEvaluate {
+      if (classesDir == null) {
+        classesDir = sourceSet.output.classesDir;
+        dependsOn(sourceSet.output);
+      }
+      if (classpath == null) {
+        classpath = sourceSet.compileClasspath;
+      }
+    }
   }
 }
 
