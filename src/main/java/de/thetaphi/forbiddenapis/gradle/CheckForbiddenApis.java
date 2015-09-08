@@ -53,6 +53,7 @@ import org.gradle.api.tasks.SkipWhenEmpty;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.VerificationTask;
 import org.gradle.api.tasks.util.PatternFilterable;
+import org.gradle.api.tasks.util.PatternSet;
 
 import de.thetaphi.forbiddenapis.Checker;
 import de.thetaphi.forbiddenapis.ForbiddenApiException;
@@ -241,7 +242,7 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
   public void setSuppressAnnotations(List<String> suppressAnnotations) {
     data.suppressAnnotations = suppressAnnotations;
   }
-
+  
   // PatternFilterable implementation:
   
   /**
@@ -318,11 +319,19 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
     return this;
   }
 
+  public PatternSet getPatternSet() {
+    return data.patternSet;
+  }
+  
+  public void setPatternSet(PatternSet patternSet) {
+    data.patternSet = patternSet;
+  }
+
   /** Returns the classes to check. */
   @InputFiles
   @SkipWhenEmpty
   public FileTree getClassFiles() {
-    return getProject().files(getClassesDir()).getAsFileTree().matching(data);
+    return getProject().files(getClassesDir()).getAsFileTree().matching(getPatternSet());
   }
 
   @TaskAction
