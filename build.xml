@@ -25,9 +25,9 @@
     </condition>
   </fail>
 
-  <fail message="Minimum supported Java version is 1.5.">
+  <fail message="Minimum supported Java version is 1.6.">
     <condition>
-      <not><available classname="java.lang.StringBuilder"/></not>
+      <not><hasmethod classname="java.lang.String" method="isEmpty"/></not>
     </condition>
   </fail>
 
@@ -53,7 +53,6 @@
    -->
   <condition property="build.java.runtime" value="${-cleaned.specification.version}" else="unknown">
     <or>
-      <equals arg1="${-cleaned.specification.version}" arg2="1.5"/>
       <equals arg1="${-cleaned.specification.version}" arg2="1.6"/>
       <equals arg1="${-cleaned.specification.version}" arg2="1.7"/>
       <equals arg1="${-cleaned.specification.version}" arg2="1.8"/>
@@ -81,7 +80,7 @@
   <property file="${user.home}/build.properties" />
   <property file="build.properties" />
 
-  <property name="jdk.version" value="1.5"/>
+  <property name="jdk.version" value="1.6"/>
   <property name="maven.version" value="2.2.1"/>
   <property name="maven-plugin-plugin.version" value="3.3"/>
   
@@ -124,7 +123,6 @@
 
   <condition property="tests.supported">
     <or>
-      <equals arg1="${build.java.runtime}" arg2="1.5"/>
       <equals arg1="${build.java.runtime}" arg2="1.6"/>
       <equals arg1="${build.java.runtime}" arg2="1.7"/>
       <equals arg1="${build.java.runtime}" arg2="1.8"/>
@@ -194,7 +192,7 @@
 
   <target name="-install-tasks" depends="-init" unless="installed.tasks">
     <ivy:cachepath pathid="path.tasks" conf="buildtools" log="${ivy.logging}"/>
-    <taskdef name="jarjar" classname="com.tonicsystems.jarjar.JarJarTask" classpathref="path.tasks"/>
+    <taskdef name="jarjar" classname="org.pantsbuild.jarjar.JarJarTask" classpathref="path.tasks"/>
     <taskdef uri="antlib:org.apache.maven.artifact.ant" classpathref="path.tasks"/>
     <taskdef name="groovy" classname="org.codehaus.groovy.ant.Groovy" classpathref="path.tasks"/>
     <property name="installed.tasks" value="true"/>
@@ -529,17 +527,17 @@
     <echo level="info" message="Generating test classes using sun.misc internal APIs (needs Oracle Java):"/>
     <delete dir="src/test/antunit" includes="Oracle*.class"/>
     <javac includeantruntime="false" srcdir="src/test/antunit" destdir="src/test/antunit" includes="Oracle*.java"
-      nowarn="true" source="1.5" target="1.5" debug="true" deprecation="false" encoding="${build.encoding}">
+      nowarn="true" source="1.6" target="1.6" debug="true" deprecation="false" encoding="${build.encoding}">
       <!-- This disables the symbol file used to detect internal APIs while compiling: -->
       <compilerarg value="-XDignore.symbol.file=true"/>
     </javac>
   </target>
   
-  <target name="-generate-test-classes-jdk5">
-    <echo level="info" message="Generating test classes for Java 5:"/>
+  <target name="-generate-test-classes-jdk6">
+    <echo level="info" message="Generating test classes for Java 6:"/>
     <delete dir="src/test/antunit" includes="Java5*.class"/>
     <javac includeantruntime="false" srcdir="src/test/antunit" destdir="src/test/antunit" includes="Java5*.java"
-      nowarn="true" source="1.5" target="1.5" debug="true" deprecation="false" encoding="${build.encoding}"/>
+      nowarn="true" source="1.6" target="1.6" debug="true" deprecation="false" encoding="${build.encoding}"/>
   </target>
   
   <target name="-generate-test-classes-jdk8" if="-gen.jdk8">
@@ -549,7 +547,7 @@
       nowarn="true" source="1.8" target="1.8" debug="true" deprecation="false" encoding="${build.encoding}"/>
   </target>
   
-  <target name="generate-test-classes" depends="-generate-test-classes-init,-generate-test-classes-sunmisc,-generate-test-classes-jdk5,-generate-test-classes-jdk8" description="Regenerates .class files used by tests if the current JDK version supports it"/>
+  <target name="generate-test-classes" depends="-generate-test-classes-init,-generate-test-classes-sunmisc,-generate-test-classes-jdk6,-generate-test-classes-jdk8" description="Regenerates .class files used by tests if the current JDK version supports it"/>
   
   <target name="show-help-mojo" depends="install-maven-artifacts" description="Shows help about mojo usage">
     <artifact:mvn mavenVersion="${maven.version}" failonerror="true" fork="true" taskname="help">

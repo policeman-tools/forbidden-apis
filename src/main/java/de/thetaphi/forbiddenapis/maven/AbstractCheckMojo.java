@@ -175,7 +175,7 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
     return targetVersion;
   }
 
-  // Not in Java 5: @Override
+  @Override
   public void execute() throws MojoExecutionException, MojoFailureException {
     final Log log = getLog();
     
@@ -219,14 +219,17 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
       if (failOnViolation) options.add(FAIL_ON_VIOLATION);
       if (failOnUnresolvableSignatures) options.add(FAIL_ON_UNRESOLVABLE_SIGNATURES);
       final Checker checker = new Checker(new Logger() {
+        @Override
         public void error(String msg) {
           log.error(msg);
         }
         
+        @Override
         public void warn(String msg) {
           log.warn(msg);
         }
         
+        @Override
         public void info(String msg) {
           log.info(msg);
         }

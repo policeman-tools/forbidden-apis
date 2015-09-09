@@ -65,7 +65,7 @@ public final class ForbiddenViolation implements Comparable<ForbiddenViolation> 
     return sb.toString();
   }
 
-  // not before Java 6: @Override
+  @Override
   public int compareTo(ForbiddenViolation other) {
     if (this.groupId == other.groupId) {
       return Long.signum((long) this.lineNo - (long) other.lineNo);
