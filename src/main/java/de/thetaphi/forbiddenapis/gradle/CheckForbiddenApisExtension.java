@@ -26,6 +26,7 @@ import org.gradle.api.file.FileCollection;
  * Extension for the ForbiddenApis Gradle Task to store defaults.
  * For description of the properties refer to the {@link CheckForbiddenApis}
  * task documentation.
+ * @since 2.0
  */
 public class CheckForbiddenApisExtension {
   
