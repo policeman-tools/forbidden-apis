@@ -30,7 +30,7 @@ import java.util.List;
  * At least one signature must be given, using any of the corresponding optional parameters.
  * @since 1.2
  */
-@Mojo(name = "testCheck", threadSafe = true, requiresProject = true, requiresDependencyResolution = ResolutionScope.TEST, defaultPhase = LifecyclePhase.PROCESS_TEST_CLASSES)
+@Mojo(name = "testCheck", threadSafe = true, requiresProject = true, requiresDependencyResolution = ResolutionScope.TEST, defaultPhase = LifecyclePhase.VERIFY)
 public final class TestCheckMojo extends AbstractCheckMojo {
 
   /**

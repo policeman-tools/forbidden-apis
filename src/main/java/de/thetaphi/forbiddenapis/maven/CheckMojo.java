@@ -33,7 +33,7 @@ import java.util.List;
  * <em>In most cases its enough to rename the goal on update, the older v1.0 properties are still available.</em>
  * @since 1.2
  */
-@Mojo(name = "check", threadSafe = true, requiresProject = true, requiresDependencyResolution = ResolutionScope.COMPILE, defaultPhase = LifecyclePhase.PROCESS_CLASSES)
+@Mojo(name = "check", threadSafe = true, requiresProject = true, requiresDependencyResolution = ResolutionScope.COMPILE, defaultPhase = LifecyclePhase.VERIFY)
 public final class CheckMojo extends AbstractCheckMojo {
 
   /**
