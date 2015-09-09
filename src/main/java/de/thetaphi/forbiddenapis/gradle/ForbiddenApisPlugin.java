@@ -56,7 +56,7 @@ public class ForbiddenApisPlugin implements Plugin<Project> {
       }
       scriptText = ResourceGroovyMethods.getText(scriptUrl, "UTF-8");
     } catch (IOException ioe) {
-      throw new PluginInstantiationException("Cannot execute " + PLUGIN_INIT_SCRIPT + " script.", ioe);
+      throw new PluginInstantiationException("Cannot load " + PLUGIN_INIT_SCRIPT + " script.", ioe);
     }    
     final ImportCustomizer importCustomizer = new ImportCustomizer().addStarImports(ForbiddenApisPlugin.class.getPackage().getName());
     final CompilerConfiguration configuration = new CompilerConfiguration().addCompilationCustomizers(importCustomizer);

@@ -20,7 +20,6 @@ import static de.thetaphi.forbiddenapis.Checker.Option.FAIL_ON_MISSING_CLASSES;
 import static de.thetaphi.forbiddenapis.Checker.Option.FAIL_ON_UNRESOLVABLE_SIGNATURES;
 import static de.thetaphi.forbiddenapis.Checker.Option.FAIL_ON_VIOLATION;
 import static de.thetaphi.forbiddenapis.Checker.Option.INTERNAL_RUNTIME_FORBIDDEN;
-
 import groovy.lang.Closure;
 
 import java.io.Closeable;
@@ -67,9 +66,10 @@ import de.thetaphi.forbiddenapis.ParseException;
 public class CheckForbiddenApis extends DefaultTask implements PatternFilterable,VerificationTask {
   
   private final CheckForbiddenApisExtension data = new CheckForbiddenApisExtension();
+  private final PatternSet patternSet = new PatternSet().include("**/*.class");
   private File classesDir;
   private FileCollection classpath;
-
+  
   /**
    * Directory with the class files to check.
    */
@@ -126,7 +126,8 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
 
   /** @see #getSignatures */
   public void setSignatures(List<String> signatures) {
-    data.signatures = signatures;
+    data.signatures.clear();
+    data.signatures.addAll(signatures);
   }
 
   /**
@@ -142,7 +143,8 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
 
   /** @see #getBundledSignatures */
   public void setBundledSignatures(List<String> bundledSignatures) {
-    data.bundledSignatures = bundledSignatures;
+    data.bundledSignatures.clear();
+    data.bundledSignatures.addAll(bundledSignatures);
   }
 
   /**
@@ -240,7 +242,8 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
 
   /** @see #getSuppressAnnotations */
   public void setSuppressAnnotations(List<String> suppressAnnotations) {
-    data.suppressAnnotations = suppressAnnotations;
+    data.suppressAnnotations.clear();
+    data.suppressAnnotations.addAll(suppressAnnotations);
   }
   
   // PatternFilterable implementation:
@@ -255,11 +258,11 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
    */
   @Input
   public Set<String> getIncludes() {
-    return data.getIncludes();
+    return getPatternSet().getIncludes();
   }
 
   public CheckForbiddenApis setIncludes(Iterable<String> includes) {
-    data.setIncludes(includes);
+    getPatternSet().setIncludes(includes);
     return this;
   }
 
@@ -271,60 +274,60 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
    */
   @Input
   public Set<String> getExcludes() {
-    return data.getExcludes();
+    return getPatternSet().getExcludes();
   }
 
   public CheckForbiddenApis setExcludes(Iterable<String> excludes) {
-    data.setExcludes(excludes);
+    getPatternSet().setExcludes(excludes);
     return this;
   }
 
   public CheckForbiddenApis exclude(String... arg0) {
-    data.exclude(arg0);
+    getPatternSet().exclude(arg0);
     return this;
   }
 
   public CheckForbiddenApis exclude(Iterable<String> arg0) {
-    data.exclude(arg0);
+    getPatternSet().exclude(arg0);
     return this;
   }
 
   public CheckForbiddenApis exclude(Spec<FileTreeElement> arg0) {
-    data.exclude(arg0);
+    getPatternSet().exclude(arg0);
     return this;
   }
 
   public CheckForbiddenApis exclude(@SuppressWarnings("rawtypes") Closure arg0) {
-    data.exclude(arg0);
+    getPatternSet().exclude(arg0);
     return this;
   }
 
   public CheckForbiddenApis include(String... arg0) {
-    data.include(arg0);
+    getPatternSet().include(arg0);
     return this;
   }
 
   public CheckForbiddenApis include(Iterable<String> arg0) {
-    data.include(arg0);
+    getPatternSet().include(arg0);
     return this;
   }
 
   public CheckForbiddenApis include(Spec<FileTreeElement> arg0) {
-    data.include(arg0);
+    getPatternSet().include(arg0);
     return this;
   }
 
   public CheckForbiddenApis include(@SuppressWarnings("rawtypes") Closure arg0) {
-    data.include(arg0);
+    getPatternSet().include(arg0);
     return this;
   }
 
   public PatternSet getPatternSet() {
-    return data.patternSet;
+    return patternSet;
   }
   
   public void setPatternSet(PatternSet patternSet) {
-    data.patternSet = patternSet;
+    patternSet.copyFrom(patternSet);
   }
 
   /** Returns the classes to check. */
