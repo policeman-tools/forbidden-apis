@@ -535,8 +535,8 @@
   
   <target name="-generate-test-classes-jdk6">
     <echo level="info" message="Generating test classes for Java 6:"/>
-    <delete dir="src/test/antunit" includes="Java5*.class"/>
-    <javac includeantruntime="false" srcdir="src/test/antunit" destdir="src/test/antunit" includes="Java5*.java"
+    <delete dir="src/test/antunit" includes="Java6*.class"/>
+    <javac includeantruntime="false" srcdir="src/test/antunit" destdir="src/test/antunit" includes="Java6*.java"
       nowarn="true" source="1.6" target="1.6" debug="true" deprecation="false" encoding="${build.encoding}"/>
   </target>
   
