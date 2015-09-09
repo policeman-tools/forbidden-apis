@@ -192,7 +192,7 @@
 
   <target name="-install-tasks" depends="-init" unless="installed.tasks">
     <ivy:cachepath pathid="path.tasks" conf="buildtools" log="${ivy.logging}"/>
-    <taskdef name="jarjar" classname="org.pantsbuild.jarjar.JarJarTask" classpathref="path.tasks"/>
+    <taskdef name="jarjar" classname="com.tonicsystems.jarjar.JarJarTask" classpathref="path.tasks"/>
     <taskdef uri="antlib:org.apache.maven.artifact.ant" classpathref="path.tasks"/>
     <taskdef name="groovy" classname="org.codehaus.groovy.ant.Groovy" classpathref="path.tasks"/>
     <property name="installed.tasks" value="true"/>
