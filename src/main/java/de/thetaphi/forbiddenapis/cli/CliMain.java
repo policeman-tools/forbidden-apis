@@ -20,7 +20,6 @@ import static de.thetaphi.forbiddenapis.Checker.Option.*;
 
 import java.io.Closeable;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.EnumSet;
@@ -266,7 +265,7 @@ public final class CliMain {
         if (signaturesFiles != null) for (String sf : signaturesFiles) {
           final File f = new File(sf).getAbsoluteFile();
           LOG.info("Reading API signatures: " + f);
-          checker.parseSignaturesFile(new FileInputStream(f));
+          checker.parseSignaturesFile(f);
         }
       } catch (IOException ioe) {
         throw new ExitException(EXIT_ERR_OTHER, "IO problem while reading files with API signatures: " + ioe);
@@ -284,7 +283,7 @@ public final class CliMain {
       LOG.info("Loading classes to check...");
       try {
         for (String f : files) {
-          checker.addClassToCheck(new FileInputStream(new File(classesDirectory, f)));
+          checker.addClassToCheck(new File(classesDirectory, f));
         }
       } catch (IOException ioe) {
         throw new ExitException(EXIT_ERR_OTHER, "Failed to load one of the given class files: " + ioe);

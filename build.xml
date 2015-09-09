@@ -153,6 +153,7 @@
   <target name="-init" depends="-install.ivy">
     <echo level="info" message="Detected Java runtime major version: ${build.java.runtime}"/>
     <echo level="info" message="Java runtime: ${build.java.info}"/>
+    <ivy:configure file="ivy-settings.xml"/>
     <ivy:resolve log="${ivy.logging}"/>
     <local name="ivy.version-message"/>
     <condition property="ivy.version-message"
