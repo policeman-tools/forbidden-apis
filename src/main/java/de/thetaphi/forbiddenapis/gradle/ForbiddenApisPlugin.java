@@ -32,8 +32,8 @@ import org.gradle.api.Project;
 import org.gradle.api.plugins.PluginInstantiationException;
 
 /**
- * Forbiddenapis Gradle Plugin
- * @since 1.9
+ * Forbiddenapis Gradle Plugin (requires at least Gradle 2.3)
+ * @since 2.0
  */
 public class ForbiddenApisPlugin implements Plugin<Project> {
   

@@ -48,6 +48,7 @@ import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
+import org.gradle.api.tasks.ParallelizableTask;
 import org.gradle.api.tasks.SkipWhenEmpty;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.VerificationTask;
@@ -60,9 +61,10 @@ import de.thetaphi.forbiddenapis.Logger;
 import de.thetaphi.forbiddenapis.ParseException;
 
 /**
- * ForbiddenApis Gradle Task
- * @since 1.9
+ * ForbiddenApis Gradle Task (requires at least Gradle 2.3)
+ * @since 2.0
  */
+@ParallelizableTask
 public class CheckForbiddenApis extends DefaultTask implements PatternFilterable,VerificationTask {
   
   private final CheckForbiddenApisExtension data = new CheckForbiddenApisExtension();
