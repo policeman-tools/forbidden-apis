@@ -17,22 +17,11 @@
 /* The binary class file is packaged together with the source distribution.
  */
 
-import java.util.*;
-
-class Java5ClassReferences {
-  static Integer[][] test() {
-    Integer.class.getName();
-    System.out.println(Integer[].class);
-    Integer[] arr = new Integer[1];
-    arr[0] = new Integer(0);
-    return new Integer[1][1];
+class Java6DeprecatedAnnotation {
+  
+  /** @deprecated **/
+  public Java6DeprecatedAnnotation() {
+    new StringBuilder();
   }
   
-  private Integer field1;
-  private final Integer[] field2 = null;
-  
-  // we forbid the superclass or interface, but concrete instance is used:
-  public List<?> list1;
-  public ArrayList<?> list2;
-  public HashSet<?> set1;
 }

@@ -215,10 +215,12 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
    * Other ForbiddenApis implementations use another name: {@code failOnViolation}
    * Default is {@code false}.
    */
+  @Override
   public boolean getIgnoreFailures() {
     return data.ignoreFailures;
   }
 
+  @Override
   public void setIgnoreFailures(boolean ignoreFailures) {
     data.ignoreFailures = ignoreFailures;
   }
@@ -256,11 +258,13 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
    * The default is a single include with pattern '**&#47;*.class'
    * @since 1.0
    */
+  @Override
   @Input
   public Set<String> getIncludes() {
     return getPatternSet().getIncludes();
   }
 
+  @Override
   public CheckForbiddenApis setIncludes(Iterable<String> includes) {
     getPatternSet().setIncludes(includes);
     return this;
@@ -272,51 +276,61 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
    * Set of patterns matching class files to be excluded from checking.
    * @since 1.0
    */
+  @Override
   @Input
   public Set<String> getExcludes() {
     return getPatternSet().getExcludes();
   }
 
+  @Override
   public CheckForbiddenApis setExcludes(Iterable<String> excludes) {
     getPatternSet().setExcludes(excludes);
     return this;
   }
 
+  @Override
   public CheckForbiddenApis exclude(String... arg0) {
     getPatternSet().exclude(arg0);
     return this;
   }
 
+  @Override
   public CheckForbiddenApis exclude(Iterable<String> arg0) {
     getPatternSet().exclude(arg0);
     return this;
   }
 
+  @Override
   public CheckForbiddenApis exclude(Spec<FileTreeElement> arg0) {
     getPatternSet().exclude(arg0);
     return this;
   }
 
+  @Override
   public CheckForbiddenApis exclude(@SuppressWarnings("rawtypes") Closure arg0) {
     getPatternSet().exclude(arg0);
     return this;
   }
 
+  @Override
   public CheckForbiddenApis include(String... arg0) {
     getPatternSet().include(arg0);
     return this;
   }
 
+  @Override
   public CheckForbiddenApis include(Iterable<String> arg0) {
     getPatternSet().include(arg0);
     return this;
   }
 
+  @Override
   public CheckForbiddenApis include(Spec<FileTreeElement> arg0) {
     getPatternSet().include(arg0);
     return this;
   }
 
+  @Override
   public CheckForbiddenApis include(@SuppressWarnings("rawtypes") Closure arg0) {
     getPatternSet().include(arg0);
     return this;
@@ -346,14 +360,17 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
     }
     
     final Logger log = new Logger() {
+      @Override
       public void error(String msg) {
         getLogger().error(msg);
       }
       
+      @Override
       public void warn(String msg) {
         getLogger().warn(msg);
       }
       
+      @Override
       public void info(String msg) {
         getLogger().info(msg);
       }

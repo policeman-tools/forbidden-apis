@@ -91,15 +91,18 @@ public class AntTask extends Task {
       if (failOnViolation) options.add(FAIL_ON_VIOLATION);
       if (failOnUnresolvableSignatures) options.add(FAIL_ON_UNRESOLVABLE_SIGNATURES);
       final Checker checker = new Checker(new Logger() {
+        @Override
         public void error(String msg) {
           log(msg, Project.MSG_ERR);
         }
         
+        @Override
         public void warn(String msg) {
           // ANT has no real log levels printed, so prefix with "WARNING":
           log("WARNING: " + msg, Project.MSG_WARN);
         }
         
+        @Override
         public void info(String msg) {
           log(msg, Project.MSG_INFO);
         }

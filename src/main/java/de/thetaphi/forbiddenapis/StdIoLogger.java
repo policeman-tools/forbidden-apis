@@ -23,14 +23,17 @@ public final class StdIoLogger implements Logger {
   
   private StdIoLogger() {}
   
+  @Override
   public void error(String msg) {
     System.err.println("ERROR: " + msg);
   }
   
+  @Override
   public void warn(String msg) {
     System.err.println("WARNING: " + msg);
   }
   
+  @Override
   public void info(String msg) {
     System.out.println(msg);
   }

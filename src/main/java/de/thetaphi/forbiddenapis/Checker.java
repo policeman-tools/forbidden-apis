@@ -214,7 +214,7 @@ public final class Checker implements RelatedClassLookup {
     return c;
   }
   
-  // not before Java 6: @Override
+  @Override
   public ClassSignature lookupRelatedClass(String internalName) {
     final Type type = Type.getObjectType(internalName);
     if (type.getSort() != Type.OBJECT) {
