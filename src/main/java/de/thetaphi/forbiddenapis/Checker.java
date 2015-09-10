@@ -75,6 +75,7 @@ public final class Checker implements RelatedClassLookup {
   final Set<File> bootClassPathJars;
   final Set<String> bootClassPathDirs;
   final ClassLoader loader;
+  final java.lang.reflect.Method method_Class_getModule, method_Module_getResourceAsStream;
   final EnumSet<Option> options;
   
   // key is the internal name (slashed):
@@ -109,36 +110,53 @@ public final class Checker implements RelatedClassLookup {
     boolean isSupportedJDK = false;
     final Set<File> bootClassPathJars = new LinkedHashSet<File>();
     final Set<String> bootClassPathDirs = new LinkedHashSet<String>();
+    
+    // first try Java 9 JIGSAW
+    java.lang.reflect.Method method_Class_getModule, method_Module_getResourceAsStream;
     try {
-      final URL objectClassURL = loader.getResource("java/lang/Object.class");
-      if (objectClassURL != null && "jrt".equalsIgnoreCase(objectClassURL.getProtocol())) {
-        // this is Java 9 with modules!
-        isSupportedJDK = true;
-      } else {
-        final RuntimeMXBean rb = ManagementFactory.getRuntimeMXBean();
-        if (rb.isBootClassPathSupported()) {
-          final String cp = rb.getBootClassPath();
-          final StringTokenizer st = new StringTokenizer(cp, File.pathSeparator);
-          while (st.hasMoreTokens()) {
-            final File f = new File(st.nextToken());
-            if (f.isFile()) {
-              bootClassPathJars.add(f.getCanonicalFile());
-            } else if (f.isDirectory()) {
-              String fp = f.getCanonicalPath();
-              if (!fp.endsWith(File.separator)) {
-                fp += File.separator;
+      method_Class_getModule = Class.class.getMethod("getModule");
+      method_Module_getResourceAsStream = method_Class_getModule
+          .getReturnType().getMethod("getResourceAsStream", String.class);
+      isSupportedJDK = true;
+    } catch (NoSuchMethodException e) {
+      method_Class_getModule = method_Module_getResourceAsStream = null;
+    }
+    this.method_Class_getModule = method_Class_getModule;
+    this.method_Module_getResourceAsStream = method_Module_getResourceAsStream;
+    
+    if (!isSupportedJDK) {
+      // fall back to legacy behavior:
+      try {
+        final URL objectClassURL = loader.getResource("java/lang/Object.class");
+        if (objectClassURL != null && "jrt".equalsIgnoreCase(objectClassURL.getProtocol())) {
+          // this is Java 9 with modules!
+          isSupportedJDK = true;
+        } else {
+          final RuntimeMXBean rb = ManagementFactory.getRuntimeMXBean();
+          if (rb.isBootClassPathSupported()) {
+            final String cp = rb.getBootClassPath();
+            final StringTokenizer st = new StringTokenizer(cp, File.pathSeparator);
+            while (st.hasMoreTokens()) {
+              final File f = new File(st.nextToken());
+              if (f.isFile()) {
+                bootClassPathJars.add(f.getCanonicalFile());
+              } else if (f.isDirectory()) {
+                String fp = f.getCanonicalPath();
+                if (!fp.endsWith(File.separator)) {
+                  fp += File.separator;
+                }
+                bootClassPathDirs.add(fp);
               }
-              bootClassPathDirs.add(fp);
             }
           }
+          isSupportedJDK = !(bootClassPathJars.isEmpty() && bootClassPathDirs.isEmpty());
+          // logInfo("JARs in boot-classpath: " + bootClassPathJars + "; dirs in boot-classpath: " + bootClassPathDirs);
         }
-        isSupportedJDK = !(bootClassPathJars.isEmpty() && bootClassPathDirs.isEmpty());
-        // logInfo("JARs in boot-classpath: " + bootClassPathJars + "; dirs in boot-classpath: " + bootClassPathDirs);
+      } catch (IOException ioe) {
+        isSupportedJDK = false;
+        bootClassPathJars.clear();
+        bootClassPathDirs.clear();
       }
-    } catch (IOException ioe) {
-      isSupportedJDK = false;
-      bootClassPathJars.clear();
-      bootClassPathDirs.clear();
     }
     this.bootClassPathJars = Collections.unmodifiableSet(bootClassPathJars);
     this.bootClassPathDirs = Collections.unmodifiableSet(bootClassPathDirs);
@@ -159,6 +177,19 @@ public final class Checker implements RelatedClassLookup {
     this.isSupportedJDK = isSupportedJDK;
   }
   
+  private InputStream getJava9ClassBytecode(String classname) {
+    if (method_Class_getModule == null || method_Module_getResourceAsStream == null) {
+      return null; // not Java 9 JIGSAW
+    }
+    try {
+      final Class<?> clazz = Class.forName(classname, false, loader);
+      final Object module = method_Class_getModule.invoke(clazz);
+      return (InputStream) method_Module_getResourceAsStream.invoke(module, AsmUtils.binaryToInternal(classname) + ".class");
+    } catch (Exception e) {
+      return null; // not found
+    }
+  }
+  
   /** Reads a class (binary name) from the given {@link ClassLoader}. */
   private ClassSignature getClassFromClassLoader(final String clazz) throws ClassNotFoundException {
     final ClassSignature c;
@@ -167,10 +198,23 @@ public final class Checker implements RelatedClassLookup {
       if (c == null) {
         throw new ClassNotFoundException("Class '" + clazz + "' not found on classpath");
       }
+      return c;
     } else {
       try {
         final URL url = loader.getResource(AsmUtils.binaryToInternal(clazz) + ".class");
         if (url == null) {
+          // we now try to find the class bytecode from Java 9 module system:
+          final InputStream in = getJava9ClassBytecode(clazz);
+          if (in != null) {
+            try {
+              // we mark it as runtime class because it was derived from the module system:
+              classpathClassCache.put(clazz, c = new ClassSignature(new ClassReader(in), true, false));
+            } finally {
+              in.close();
+            }
+            return c;
+          }
+          // all failed => the class does not exist!
           classpathClassCache.put(clazz, null);
           throw new ClassNotFoundException("Class '" + clazz + "' not found on classpath");
         }
@@ -206,12 +250,12 @@ public final class Checker implements RelatedClassLookup {
         } finally {
           in.close();
         }
+        return c;
       } catch (IOException ioe) {
         classpathClassCache.put(clazz, null);
         throw new ClassNotFoundException("I/O error while loading of class '" + clazz + "'", ioe);
       }
     }
-    return c;
   }
   
   @Override
