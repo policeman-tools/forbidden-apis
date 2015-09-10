@@ -31,6 +31,9 @@ import java.util.List;
  * <p>
  * This Mojo exists since version 1.2, replacing the old <code>forbiddenapis:forbiddenapis</code> goal.
  * <em>In most cases its enough to rename the goal on update, the older v1.0 properties are still available.</em>
+ * <p>
+ * Since version 2.0 this Mojo defaults to run in the {@code 'verify'} lifecycle phase, before it was done in
+ * {@code 'process-classes'} phase, which caused problems for some users (especially debugging tests).
  * @since 1.2
  */
 @Mojo(name = "check", threadSafe = true, requiresProject = true, requiresDependencyResolution = ResolutionScope.COMPILE, defaultPhase = LifecyclePhase.VERIFY)
