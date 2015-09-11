@@ -75,6 +75,7 @@ public final class Checker implements RelatedClassLookup {
   final Set<File> bootClassPathJars;
   final Set<String> bootClassPathDirs;
   final ClassLoader loader;
+  final java.lang.reflect.Method method_Class_getModule, method_Module_getResourceAsStream;
   final EnumSet<Option> options;
   
   // key is the internal name (slashed):
@@ -107,38 +108,57 @@ public final class Checker implements RelatedClassLookup {
     addSuppressAnnotation(SuppressForbidden.class);
     
     boolean isSupportedJDK = false;
+    
+    // first try Java 9 mdoule system (Jigsaw)
+    // Please note: This code is not guaranteed to work with final Java 9 version. This is just for testing!
+    java.lang.reflect.Method method_Class_getModule, method_Module_getResourceAsStream;
+    try {
+      method_Class_getModule = Class.class.getMethod("getModule");
+      method_Module_getResourceAsStream = method_Class_getModule
+          .getReturnType().getMethod("getResourceAsStream", String.class);
+      isSupportedJDK = true;
+    } catch (NoSuchMethodException e) {
+      method_Class_getModule = method_Module_getResourceAsStream = null;
+    }
+    this.method_Class_getModule = method_Class_getModule;
+    this.method_Module_getResourceAsStream = method_Module_getResourceAsStream;
+    
     final Set<File> bootClassPathJars = new LinkedHashSet<File>();
     final Set<String> bootClassPathDirs = new LinkedHashSet<String>();
-    try {
-      final URL objectClassURL = loader.getResource("java/lang/Object.class");
-      if (objectClassURL != null && "jrt".equalsIgnoreCase(objectClassURL.getProtocol())) {
-        // this is Java 9 with modules!
-        isSupportedJDK = true;
-      } else {
-        final RuntimeMXBean rb = ManagementFactory.getRuntimeMXBean();
-        if (rb.isBootClassPathSupported()) {
-          final String cp = rb.getBootClassPath();
-          final StringTokenizer st = new StringTokenizer(cp, File.pathSeparator);
-          while (st.hasMoreTokens()) {
-            final File f = new File(st.nextToken());
-            if (f.isFile()) {
-              bootClassPathJars.add(f.getCanonicalFile());
-            } else if (f.isDirectory()) {
-              String fp = f.getCanonicalPath();
-              if (!fp.endsWith(File.separator)) {
-                fp += File.separator;
+    
+    // fall back to legacy behavior:
+    if (!isSupportedJDK) {
+      try {
+        final URL objectClassURL = loader.getResource("java/lang/Object.class");
+        if (objectClassURL != null && "jrt".equalsIgnoreCase(objectClassURL.getProtocol())) {
+          // this is Java 9 with modules!
+          isSupportedJDK = true;
+        } else {
+          final RuntimeMXBean rb = ManagementFactory.getRuntimeMXBean();
+          if (rb.isBootClassPathSupported()) {
+            final String cp = rb.getBootClassPath();
+            final StringTokenizer st = new StringTokenizer(cp, File.pathSeparator);
+            while (st.hasMoreTokens()) {
+              final File f = new File(st.nextToken());
+              if (f.isFile()) {
+                bootClassPathJars.add(f.getCanonicalFile());
+              } else if (f.isDirectory()) {
+                String fp = f.getCanonicalPath();
+                if (!fp.endsWith(File.separator)) {
+                  fp += File.separator;
+                }
+                bootClassPathDirs.add(fp);
               }
-              bootClassPathDirs.add(fp);
             }
           }
+          isSupportedJDK = !(bootClassPathJars.isEmpty() && bootClassPathDirs.isEmpty());
+          // logInfo("JARs in boot-classpath: " + bootClassPathJars + "; dirs in boot-classpath: " + bootClassPathDirs);
         }
-        isSupportedJDK = !(bootClassPathJars.isEmpty() && bootClassPathDirs.isEmpty());
-        // logInfo("JARs in boot-classpath: " + bootClassPathJars + "; dirs in boot-classpath: " + bootClassPathDirs);
+      } catch (IOException ioe) {
+        isSupportedJDK = false;
+        bootClassPathJars.clear();
+        bootClassPathDirs.clear();
       }
-    } catch (IOException ioe) {
-      isSupportedJDK = false;
-      bootClassPathJars.clear();
-      bootClassPathDirs.clear();
     }
     this.bootClassPathJars = Collections.unmodifiableSet(bootClassPathJars);
     this.bootClassPathDirs = Collections.unmodifiableSet(bootClassPathDirs);
@@ -159,6 +179,54 @@ public final class Checker implements RelatedClassLookup {
     this.isSupportedJDK = isSupportedJDK;
   }
   
+  /** Loads the bytecode from Java9's module system.
+   * <p>
+   * This code is not guaranteed to work with final Java 9 version.
+   * This is just for testing!
+   **/
+  private InputStream getBytecodeFromJigsaw(String classname) {
+    if (method_Class_getModule == null || method_Module_getResourceAsStream == null) {
+      return null; // not Java 9 JIGSAW
+    }
+    try {
+      final Class<?> clazz = Class.forName(classname, false, loader);
+      final Object module = method_Class_getModule.invoke(clazz);
+      return (InputStream) method_Module_getResourceAsStream.invoke(module, AsmUtils.binaryToInternal(classname) + ".class");
+    } catch (Exception e) {
+      return null; // not found
+    }
+  }
+  
+  private boolean isRuntimeClass(URLConnection conn) throws IOException {
+    final URL url = conn.getURL();
+    if ("file".equalsIgnoreCase(url.getProtocol())) {
+      try {
+        final String path = new File(url.toURI()).getCanonicalPath();
+        for (final String bcpDir : bootClassPathDirs) {
+          if (path.startsWith(bcpDir)) {
+            return true;
+          }
+        }
+      } catch (URISyntaxException use) {
+        // ignore (should not happen, but if it's happening, it's definitely not a runtime class)
+      }
+    } else if ("jar".equalsIgnoreCase(url.getProtocol()) && conn instanceof JarURLConnection) {
+      final URL jarUrl = ((JarURLConnection) conn).getJarFileURL();
+      if ("file".equalsIgnoreCase(jarUrl.getProtocol())) try {
+        final File jarFile = new File(jarUrl.toURI()).getCanonicalFile();
+        return bootClassPathJars.contains(jarFile);
+      } catch (URISyntaxException use) {
+        // ignore (should not happen, but if it's happening, it's definitely not a runtime class)
+      }
+    } else if ("jrt".equalsIgnoreCase(url.getProtocol())) {
+      // all 'jrt:' URLs refer to a module in the Java 9+ runtime (see http://openjdk.java.net/jeps/220)
+      // This may still be different with module system. We support both variants for now.
+      // Please note: This code is not guaranteed to work with final Java 9 version. This is just for testing!
+      return true;
+    }
+    return false;
+  }
+  
   /** Reads a class (binary name) from the given {@link ClassLoader}. */
   private ClassSignature getClassFromClassLoader(final String clazz) throws ClassNotFoundException {
     final ClassSignature c;
@@ -167,51 +235,40 @@ public final class Checker implements RelatedClassLookup {
       if (c == null) {
         throw new ClassNotFoundException("Class '" + clazz + "' not found on classpath");
       }
+      return c;
     } else {
       try {
         final URL url = loader.getResource(AsmUtils.binaryToInternal(clazz) + ".class");
-        if (url == null) {
+        if (url != null) {
+          final URLConnection conn = url.openConnection();
+          final boolean isRuntimeClass = isRuntimeClass(conn);
+          final InputStream in = conn.getInputStream();
+          try {
+            classpathClassCache.put(clazz, c = new ClassSignature(new ClassReader(in), isRuntimeClass, false));
+          } finally {
+            in.close();
+          }
+          return c;
+        } else {
+          final InputStream in = getBytecodeFromJigsaw(clazz);
+          if (in != null) {
+            try {
+              // we mark it as runtime class because it was derived from the module system:
+              classpathClassCache.put(clazz, c = new ClassSignature(new ClassReader(in), true, false));
+            } finally {
+              in.close();
+            }
+            return c;
+          }
+          // all failed => the class does not exist!
           classpathClassCache.put(clazz, null);
           throw new ClassNotFoundException("Class '" + clazz + "' not found on classpath");
-        }
-        boolean isRuntimeClass = false;
-        final URLConnection conn = url.openConnection();
-        if ("file".equalsIgnoreCase(url.getProtocol())) {
-          try {
-            final String path = new File(url.toURI()).getCanonicalPath();
-            for (final String bcpDir : bootClassPathDirs) {
-              if (path.startsWith(bcpDir)) {
-                isRuntimeClass = true;
-                break;
-              }
-            }
-          } catch (URISyntaxException use) {
-            // ignore (should not happen, but if it's happening, it's definitely not a runtime class)
-          }
-        } else if ("jar".equalsIgnoreCase(url.getProtocol()) && conn instanceof JarURLConnection) {
-          final URL jarUrl = ((JarURLConnection) conn).getJarFileURL();
-          if ("file".equalsIgnoreCase(jarUrl.getProtocol())) try {
-            final File jarFile = new File(jarUrl.toURI()).getCanonicalFile();
-            isRuntimeClass = bootClassPathJars.contains(jarFile);
-          } catch (URISyntaxException use) {
-            // ignore (should not happen, but if it's happening, it's definitely not a runtime class)
-          }
-        } else if ("jrt".equalsIgnoreCase(url.getProtocol())) {
-          // all 'jrt:' URLs refer to a module in the Java 9+ runtime (see http://openjdk.java.net/jeps/220):
-          isRuntimeClass = true;
-        }
-        final InputStream in = conn.getInputStream();
-        try {
-          classpathClassCache.put(clazz, c = new ClassSignature(new ClassReader(in), isRuntimeClass, false));
-        } finally {
-          in.close();
         }
       } catch (IOException ioe) {
         classpathClassCache.put(clazz, null);
         throw new ClassNotFoundException("I/O error while loading of class '" + clazz + "'", ioe);
       }
     }
-    return c;
   }
   
   @Override
