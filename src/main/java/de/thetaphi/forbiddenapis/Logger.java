@@ -17,7 +17,7 @@ package de.thetaphi.forbiddenapis;
  */
 
 public interface Logger {
-  abstract void error(String msg);
-  abstract void warn(String msg);
-  abstract void info(String msg);
+  void error(String msg);
+  void warn(String msg);
+  void info(String msg);
 }
