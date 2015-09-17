@@ -38,7 +38,6 @@ import java.util.Set;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.GradleException;
 import org.gradle.api.InvalidUserDataException;
-import org.gradle.api.JavaVersion;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.FileTree;
 import org.gradle.api.file.FileTreeElement;
@@ -435,7 +434,7 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
         }
         final List<String> bundledSignatures = getBundledSignatures();
         if (bundledSignatures != null) {
-          final JavaVersion targetVersion = (JavaVersion) getProject().property("targetCompatibility");
+          final Object targetVersion = getProject().property("targetCompatibility");
           if (targetVersion == null) {
             log.warn("The 'targetCompatibility' project property is missing. " +
               "Trying to read bundled JDK signatures without compiler target. " +
