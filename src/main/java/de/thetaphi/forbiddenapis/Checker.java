@@ -294,9 +294,9 @@ public final class Checker implements RelatedClassLookup {
     return c;
   }
   
-  private void reportParseFailed(boolean failOnUnresolvableSignatures, String message, String signature) throws ParseException {
+  private void reportParseFailed(boolean failOnUnresolvableSignatures, String message, Exception e, String signature) throws ParseException {
     if (failOnUnresolvableSignatures) {
-      throw new ParseException(String.format(Locale.ENGLISH, "%s while parsing signature: %s", message, signature));
+      throw new ParseException(String.format(Locale.ENGLISH, "%s while parsing signature: %s", message, signature), e);
     } else {
       logger.warn(String.format(Locale.ENGLISH, "%s while parsing signature: %s [signature ignored]", message, signature));
     }
@@ -353,7 +353,7 @@ public final class Checker implements RelatedClassLookup {
       try {
         c = getClassFromClassLoader(clazz);
       } catch (ClassNotFoundException cnfe) {
-        reportParseFailed(failOnUnresolvableSignatures, cnfe.getMessage(), signature);
+        reportParseFailed(failOnUnresolvableSignatures, cnfe.getMessage(), cnfe, signature);
         return;
       }
       if (method != null) {
@@ -368,13 +368,13 @@ public final class Checker implements RelatedClassLookup {
           }
         }
         if (!found) {
-          reportParseFailed(failOnUnresolvableSignatures, "Method not found", signature);
+          reportParseFailed(failOnUnresolvableSignatures, "Method not found", null, signature);
           return;
         }
       } else if (field != null) {
         assert method == null;
         if (!c.fields.contains(field)) {
-          reportParseFailed(failOnUnresolvableSignatures, "Field not found", signature);
+          reportParseFailed(failOnUnresolvableSignatures, "Field not found", null, signature);
           return;
         }
         forbiddenFields.put(c.className + '\000' + field, printout);

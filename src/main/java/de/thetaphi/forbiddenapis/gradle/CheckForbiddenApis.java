@@ -461,7 +461,7 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
       } catch (IOException ioe) {
         throw new ResourceException("IO problem while reading files with API signatures.", ioe);
       } catch (ParseException pe) {
-        throw new InvalidUserDataException("Parsing signatures failed: " + pe.getMessage());
+        throw new InvalidUserDataException("Parsing signatures failed: " + pe.getMessage(), pe);
       }
 
       if (checker.hasNoSignatures()) {

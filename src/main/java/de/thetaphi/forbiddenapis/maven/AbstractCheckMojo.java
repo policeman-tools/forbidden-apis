@@ -204,7 +204,7 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
       assert i == urls.length;
       if (log.isDebugEnabled()) log.debug("Compile Classpath: " + Arrays.toString(urls));
     } catch (MalformedURLException e) {
-      throw new MojoExecutionException("Failed to build classpath: " + e);
+      throw new MojoExecutionException("Failed to build classpath.", e);
     }
 
     URLClassLoader urlLoader = null;
@@ -298,9 +298,9 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
           checker.parseSignaturesFile(f);
         }
       } catch (IOException ioe) {
-        throw new MojoExecutionException("IO problem while reading files with API signatures: " + ioe);
+        throw new MojoExecutionException("IO problem while reading files with API signatures.", ioe);
       } catch (ParseException pe) {
-        throw new MojoExecutionException("Parsing signatures failed: " + pe.getMessage());
+        throw new MojoExecutionException("Parsing signatures failed: " + pe.getMessage(), pe);
       }
 
       if (checker.hasNoSignatures()) {
@@ -318,7 +318,7 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
           checker.addClassToCheck(new File(classesDirectory, f));
         }
       } catch (IOException ioe) {
-        throw new MojoExecutionException("Failed to load one of the given class files: " + ioe);
+        throw new MojoExecutionException("Failed to load one of the given class files.", ioe);
       }
 
       log.info("Scanning for API signatures and dependencies...");

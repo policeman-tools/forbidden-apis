@@ -150,9 +150,9 @@ public class AntTask extends Task {
           }
         }
       } catch (IOException ioe) {
-        throw new BuildException("IO problem while reading files with API signatures: " + ioe);
+        throw new BuildException("IO problem while reading files with API signatures.", ioe);
       } catch (ParseException pe) {
-        throw new BuildException("Parsing signatures failed: " + pe.getMessage());
+        throw new BuildException("Parsing signatures failed: " + pe.getMessage(), pe);
       }
         
       if (checker.hasNoSignatures()) {
@@ -183,7 +183,7 @@ public class AntTask extends Task {
           }
         }
       } catch (IOException ioe) {
-        throw new BuildException("Failed to load one of the given class files: " + ioe);
+        throw new BuildException("Failed to load one of the given class files.", ioe);
       }
 
       log("Scanning for API signatures and dependencies...", Project.MSG_INFO);
