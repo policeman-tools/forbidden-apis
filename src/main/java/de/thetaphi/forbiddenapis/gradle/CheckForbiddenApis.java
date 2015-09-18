@@ -245,7 +245,8 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
   /**
    * The default compiler target version used to expand references to bundled JDK signatures.
    * E.g., if you use "jdk-deprecated", it will expand to this version.
-   * This setting should be identical to the target version used in the compiler plugin.
+   * This setting should be identical to the target version used in the compiler task.
+   * Defaults to {@code project.targetCompatibility}.
    */
   @Input
   @Optional
