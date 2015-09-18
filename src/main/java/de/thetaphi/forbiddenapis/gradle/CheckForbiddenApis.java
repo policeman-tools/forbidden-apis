@@ -88,7 +88,6 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
   /**
    * A {@link FileCollection} containing all files, which contain signatures and comments for forbidden API calls.
    * The signatures are resolved against the compile classpath.
-   * @since 1.0
    */
   @InputFiles
   public FileCollection getClasspath() {
@@ -118,7 +117,6 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
    * Gives multiple API signatures that are joined with newlines and
    * parsed like a single {@link #signaturesFiles}.
    * The signatures are resolved against the compile classpath.
-   * @since 1.0
    */
   @Input
   @Optional
@@ -135,7 +133,6 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
   /**
    * Specifies <a href="bundled-signatures.html">built-in signatures</a> files (e.g., deprecated APIs for specific Java versions,
    * unsafe method calls using default locale, default charset,...)
-   * @since 1.0
    */
   @Input
   @Optional
@@ -151,7 +148,6 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
 
   /**
    * Forbids calls to classes from the internal java runtime (like sun.misc.Unsafe)
-   * @since 1.0
    */
   @Input
   public boolean getInternalRuntimeForbidden() {
@@ -166,7 +162,6 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
   /**
    * Fail the build, if the bundled ASM library cannot read the class file format
    * of the runtime library or the runtime library cannot be discovered.
-   * @since 1.0
    */
   @Input
   public boolean getFailOnUnsupportedJava() {
@@ -182,7 +177,6 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
    * Fail the build, if a class referenced in the scanned code is missing. This requires
    * that you pass the whole classpath including all dependencies to this task
    * (Gradle does this by default).
-   * @since 1.0
    */
   @Input
   public boolean getFailOnMissingClasses() {
@@ -198,7 +192,6 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
    * Fail the build if a signature is not resolving. If this parameter is set to
    * to false, then such signatures are silently ignored. This is useful in multi-module Maven
    * projects where only some modules have the dependency to which the signature file(s) apply.
-   * @since 1.4
    */
   @Input
   public boolean getFailOnUnresolvableSignatures() {
@@ -236,7 +229,6 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
    * of compiled project, which may not be wanted.
    * Instead of a full class name, a glob pattern may be used (e.g.,
    * {@code **.SuppressForbidden}).
-   * @since 1.8
    */
   @Input
   @Optional
@@ -274,7 +266,6 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
    * Set of patterns matching all class files to be parsed from the classesDirectory.
    * Can be changed to e.g. exclude several files (using excludes).
    * The default is a single include with pattern '**&#47;*.class'
-   * @since 1.0
    */
   @Override
   @Input
@@ -292,7 +283,6 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
    * {@inheritDoc}
    * <p>
    * Set of patterns matching class files to be excluded from checking.
-   * @since 1.0
    */
   @Override
   @Input
