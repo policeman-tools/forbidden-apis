@@ -28,7 +28,7 @@ def extension = project.extensions.create(FORBIDDEN_APIS_EXTENSION_NAME, CheckFo
 
 // Define our tasks (one for each SourceSet):
 def forbiddenTasks = project.sourceSets.collect { sourceSet ->
-  project.tasks.create(sourceSet.getTaskName(FORBIDDEN_APIS_TASK_NAME_PREFIX, null), CheckForbiddenApis.class) {
+  project.tasks.create(sourceSet.getTaskName(FORBIDDEN_APIS_TASK_NAME, null), CheckForbiddenApis.class) {
     description = "Runs forbidden-apis checks on '${sourceSet.name}' classes.";
     conventionMapping.with {
       CheckForbiddenApisExtension.PROPS.each { key ->
@@ -47,5 +47,12 @@ def forbiddenTasks = project.sourceSets.collect { sourceSet ->
   }
 }
 
-// Add our tasks as dependencies to chain
-project.tasks[JavaBasePlugin.CHECK_TASK_NAME].dependsOn(forbiddenTasks);
+// Create a convenience task for all checks (this does not conflict with extension, as it has higher priority in DSL):
+def forbiddenTask = project.tasks.create(FORBIDDEN_APIS_TASK_NAME) {
+  description = "Runs forbidden-apis checks.";
+  group = JavaBasePlugin.VERIFICATION_GROUP;
+  dependsOn(forbiddenTasks);
+}
+
+// Add our task as dependency to chain
+project.tasks[JavaBasePlugin.CHECK_TASK_NAME].dependsOn(forbiddenTask);

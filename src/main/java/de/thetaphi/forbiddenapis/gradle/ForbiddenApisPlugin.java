@@ -40,8 +40,8 @@ public class ForbiddenApisPlugin implements Plugin<Project> {
   /** Resource with Groovy script that initializes the plugin. */
   public static final String PLUGIN_INIT_SCRIPT = "plugin-init.groovy";
   
-  /** For every SourceSet we create a task with this base name. */
-  public static final String FORBIDDEN_APIS_TASK_NAME_PREFIX = "forbiddenApis";
+  /** Name of the base task that depends on one for every SourceSet */
+  public static final String FORBIDDEN_APIS_TASK_NAME = "forbiddenApis";
   
   /** Name of the extension to define defaults for all tasks of this module. */
   public static final String FORBIDDEN_APIS_EXTENSION_NAME = "forbiddenApis";
