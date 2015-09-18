@@ -46,5 +46,5 @@ def forbiddenTasks = project.sourceSets.collect { sourceSet ->
   }
 }
 
-// Add our task as dependency to chain
+// Add our tasks as dependencies to chain
 project.tasks[JavaBasePlugin.CHECK_TASK_NAME].dependsOn(forbiddenTasks);
