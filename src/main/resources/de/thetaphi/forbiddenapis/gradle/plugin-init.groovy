@@ -28,7 +28,7 @@ def extension = project.extensions.create(FORBIDDEN_APIS_EXTENSION_NAME, CheckFo
 
 // Define our tasks (one for each SourceSet):
 def forbiddenTasks = project.sourceSets.collect { sourceSet ->
-  project.tasks.create(sourceSet.getTaskName(FORBIDDEN_APIS_TASK_NAME, null), CheckForbiddenApis.class) {
+  project.tasks.create(sourceSet.getTaskName(FORBIDDEN_APIS_TASK_NAME_PREFIX, null), CheckForbiddenApis.class) {
     description = "Runs forbidden-apis checks on '${sourceSet.name}' classes.";
     conventionMapping.with {
       CheckForbiddenApisExtension.PROPS.each { key ->
