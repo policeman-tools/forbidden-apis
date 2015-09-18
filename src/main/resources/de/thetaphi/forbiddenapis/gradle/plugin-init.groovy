@@ -36,6 +36,7 @@ def forbiddenTasks = project.sourceSets.collect { sourceSet ->
       }
       classesDir = { sourceSet.output.classesDir }
       classpath = { sourceSet.compileClasspath }
+      targetCompatibility = { project.targetCompatibility?.toString() }
     }
     // add dependency to compile task after evaluation, if the classesDir is from our SourceSet:
     project.afterEvaluate {

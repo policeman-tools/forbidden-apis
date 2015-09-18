@@ -451,10 +451,7 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
         }
         final List<String> bundledSignatures = getBundledSignatures();
         if (bundledSignatures != null) {
-          Object bundledSigsJavaVersion = getTargetCompatibility();
-          if (bundledSigsJavaVersion == null) {
-            bundledSigsJavaVersion = getProject().property("targetCompatibility");
-          }
+          final String bundledSigsJavaVersion = getTargetCompatibility();
           if (bundledSigsJavaVersion == null) {
             log.warn("The 'targetCompatibility' project or task property is missing. " +
               "Trying to read bundled JDK signatures without compiler target. " +
@@ -462,7 +459,7 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
           }
           for (String bs : bundledSignatures) {
             log.info("Reading bundled API signatures: " + bs);
-            checker.parseBundledSignatures(bs, bundledSigsJavaVersion == null ? null : bundledSigsJavaVersion.toString());
+            checker.parseBundledSignatures(bs, bundledSigsJavaVersion);
           }
         }
         final FileCollection signaturesFiles = getSignaturesFiles();
