@@ -70,6 +70,7 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
   private final PatternSet patternSet = new PatternSet().include("**/*.class");
   private File classesDir;
   private FileCollection classpath;
+  private String targetCompatibility;
   
   /**
    * Directory with the class files to check.
@@ -247,6 +248,22 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
   public void setSuppressAnnotations(List<String> suppressAnnotations) {
     data.suppressAnnotations.clear();
     data.suppressAnnotations.addAll(suppressAnnotations);
+  }
+  
+  /**
+   * The default compiler target version used to expand references to bundled JDK signatures.
+   * E.g., if you use "jdk-deprecated", it will expand to this version.
+   * This setting should be identical to the target version used in the compiler plugin.
+   */
+  @Input
+  @Optional
+  public String getTargetCompatibility() {
+    return targetCompatibility;
+  }
+
+  /** @see #getTargetCompatibility */
+  public void setTargetCompatibility(String targetCompatibility) {
+    this.targetCompatibility = targetCompatibility;
   }
   
   // PatternFilterable implementation:
@@ -434,15 +451,18 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
         }
         final List<String> bundledSignatures = getBundledSignatures();
         if (bundledSignatures != null) {
-          final Object targetVersion = getProject().property("targetCompatibility");
-          if (targetVersion == null) {
-            log.warn("The 'targetCompatibility' project property is missing. " +
+          Object bundledSigsJavaVersion = getTargetCompatibility();
+          if (bundledSigsJavaVersion == null) {
+            bundledSigsJavaVersion = getProject().property("targetCompatibility");
+          }
+          if (bundledSigsJavaVersion == null) {
+            log.warn("The 'targetCompatibility' project or task property is missing. " +
               "Trying to read bundled JDK signatures without compiler target. " +
               "You have to explicitely specify the version in the resource name.");
           }
           for (String bs : bundledSignatures) {
             log.info("Reading bundled API signatures: " + bs);
-            checker.parseBundledSignatures(bs, targetVersion == null ? null : targetVersion.toString());
+            checker.parseBundledSignatures(bs, bundledSigsJavaVersion == null ? null : bundledSigsJavaVersion.toString());
           }
         }
         final FileCollection signaturesFiles = getSignaturesFiles();
