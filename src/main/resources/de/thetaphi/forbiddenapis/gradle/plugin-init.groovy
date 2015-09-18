@@ -46,12 +46,5 @@ def forbiddenTasks = project.sourceSets.collect { sourceSet ->
   }
 }
 
-// Create a task for all checks
-def forbiddenTask = project.tasks.create(FORBIDDEN_APIS_TASK_NAME) {
-  description = "Runs forbidden-apis checks.";
-  group = JavaBasePlugin.VERIFICATION_GROUP;
-  dependsOn(forbiddenTasks);
-}
-
 // Add our task as dependency to chain
-project.tasks[JavaBasePlugin.CHECK_TASK_NAME].dependsOn(forbiddenTask);
+project.tasks[JavaBasePlugin.CHECK_TASK_NAME].dependsOn(forbiddenTasks);
