@@ -191,7 +191,7 @@ public final class Checker implements RelatedClassLookup {
     try {
       final Class<?> clazz = Class.forName(classname, false, loader);
       final Object module = method_Class_getModule.invoke(clazz);
-      return (InputStream) method_Module_getResourceAsStream.invoke(module, AsmUtils.binaryToInternal(classname) + ".class");
+      return (InputStream) method_Module_getResourceAsStream.invoke(module, AsmUtils.binaryToInternal(classname).concat(".class"));
     } catch (Exception e) {
       return null; // not found
     }
@@ -238,7 +238,7 @@ public final class Checker implements RelatedClassLookup {
       return c;
     } else {
       try {
-        final URL url = loader.getResource(AsmUtils.binaryToInternal(clazz) + ".class");
+        final URL url = loader.getResource(AsmUtils.binaryToInternal(clazz).concat(".class"));
         if (url != null) {
           final URLConnection conn = url.openConnection();
           final boolean isRuntimeClass = isRuntimeClass(conn);
