@@ -40,6 +40,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.PosixParser;
 import org.codehaus.plexus.util.DirectoryScanner;
 
+import de.thetaphi.forbiddenapis.AsmUtils;
 import de.thetaphi.forbiddenapis.Checker;
 import de.thetaphi.forbiddenapis.ForbiddenApiException;
 import de.thetaphi.forbiddenapis.Logger;
@@ -165,9 +166,10 @@ public final class CliMain {
   
   private void printHelp(Options options) {
     final HelpFormatter formatter = new HelpFormatter();
-    String cmdline = "java " + getClass().getName();
+    String clazzName = getClass().getName();
+    String cmdline = "java " + clazzName;
     try {
-      final URLConnection conn = getClass().getResource(getClass().getSimpleName() + ".class").openConnection();
+      final URLConnection conn = getClass().getClassLoader().getResource(AsmUtils.getClassResourceName(clazzName)).openConnection();
       if (conn instanceof JarURLConnection) {
         final URL jarUrl = ((JarURLConnection) conn).getJarFileURL();
         if ("file".equalsIgnoreCase(jarUrl.getProtocol())) {

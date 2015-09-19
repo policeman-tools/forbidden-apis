@@ -129,7 +129,7 @@ public final class Checker implements RelatedClassLookup {
     // fall back to legacy behavior:
     if (!isSupportedJDK) {
       try {
-        final URL objectClassURL = loader.getResource("java/lang/Object.class");
+        final URL objectClassURL = loader.getResource(AsmUtils.getClassResourceName(Object.class.getName()));
         if (objectClassURL != null && "jrt".equalsIgnoreCase(objectClassURL.getProtocol())) {
           // this is Java 9 with modules!
           isSupportedJDK = true;
@@ -191,7 +191,7 @@ public final class Checker implements RelatedClassLookup {
     try {
       final Class<?> clazz = Class.forName(classname, false, loader);
       final Object module = method_Class_getModule.invoke(clazz);
-      return (InputStream) method_Module_getResourceAsStream.invoke(module, AsmUtils.binaryToInternal(classname).concat(".class"));
+      return (InputStream) method_Module_getResourceAsStream.invoke(module, AsmUtils.getClassResourceName(classname));
     } catch (Exception e) {
       return null; // not found
     }
@@ -238,7 +238,7 @@ public final class Checker implements RelatedClassLookup {
       return c;
     } else {
       try {
-        final URL url = loader.getResource(AsmUtils.binaryToInternal(clazz).concat(".class"));
+        final URL url = loader.getResource(AsmUtils.getClassResourceName(clazz));
         if (url != null) {
           final URLConnection conn = url.openConnection();
           final boolean isRuntimeClass = isRuntimeClass(conn);

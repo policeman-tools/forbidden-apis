@@ -54,6 +54,11 @@ public final class AsmUtils {
     return clazz.replace('.', '/');
   }
   
+  /** Converts a binary class name to a &quot;{@code .class}&quot; file resource name. */
+  public static String getClassResourceName(String clazz) {
+    return binaryToInternal(clazz).concat(".class");
+  }
+  
   /** Returns true is a string is a glob pattern */
   public static boolean isGlob(String s) {
     return s.indexOf('*') >= 0 || s.indexOf('?') >= 0;
