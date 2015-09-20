@@ -51,11 +51,7 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
 
 /**
- * Task to check if a set of class files contains calls to forbidden APIs
- * from a given classpath and list of API signatures (either inline or as pointer to files).
- * In contrast to other ANT tasks, this tool does only visit the given classpath
- * and the system classloader. It uses the local classpath in preference to the system classpath
- * (which violates the spec).
+ * Forbidden APIs checker class.
  */
 public final class Checker implements RelatedClassLookup {
   
@@ -164,13 +160,16 @@ public final class Checker implements RelatedClassLookup {
     this.bootClassPathDirs = Collections.unmodifiableSet(bootClassPathDirs);
     
     if (isSupportedJDK) {
-      // check if we can load runtime classes (e.g. java.lang.Object).
-      // If this fails, we have a newer Java version than ASM supports:
       try {
         isSupportedJDK = getClassFromClassLoader(Object.class.getName()).isRuntimeClass;
       } catch (IllegalArgumentException iae) {
+        logger.warn("Bundled version of ASM cannot parse bytecode of java.lang.Object class; marking runtime as not suppported.");
         isSupportedJDK = false;
       } catch (ClassNotFoundException cnfe) {
+        logger.warn("Bytecode of java.lang.Object not found; marking runtime as not suppported.");
+        isSupportedJDK = false;
+      } catch (IOException ioe) {
+        logger.warn("IOException while loading java.lang.Object class from classloader; marking runtime as not suppported: " + ioe);
         isSupportedJDK = false;
       }
     }
@@ -228,46 +227,41 @@ public final class Checker implements RelatedClassLookup {
   }
   
   /** Reads a class (binary name) from the given {@link ClassLoader}. */
-  private ClassSignature getClassFromClassLoader(final String clazz) throws ClassNotFoundException {
+  private ClassSignature getClassFromClassLoader(final String clazz) throws ClassNotFoundException,IOException {
     final ClassSignature c;
     if (classpathClassCache.containsKey(clazz)) {
       c = classpathClassCache.get(clazz);
       if (c == null) {
-        throw new ClassNotFoundException("Class '" + clazz + "' not found on classpath");
+        throw new ClassNotFoundException(clazz);
       }
       return c;
     } else {
-      try {
-        final URL url = loader.getResource(AsmUtils.getClassResourceName(clazz));
-        if (url != null) {
-          final URLConnection conn = url.openConnection();
-          final boolean isRuntimeClass = isRuntimeClass(conn);
-          final InputStream in = conn.getInputStream();
+      final URL url = loader.getResource(AsmUtils.getClassResourceName(clazz));
+      if (url != null) {
+        final URLConnection conn = url.openConnection();
+        final boolean isRuntimeClass = isRuntimeClass(conn);
+        final InputStream in = conn.getInputStream();
+        try {
+          classpathClassCache.put(clazz, c = new ClassSignature(new ClassReader(in), isRuntimeClass, false));
+        } finally {
+          in.close();
+        }
+        return c;
+      } else {
+        final InputStream in = getBytecodeFromJigsaw(clazz);
+        if (in != null) {
           try {
-            classpathClassCache.put(clazz, c = new ClassSignature(new ClassReader(in), isRuntimeClass, false));
+            // we mark it as runtime class because it was derived from the module system:
+            classpathClassCache.put(clazz, c = new ClassSignature(new ClassReader(in), true, false));
           } finally {
             in.close();
           }
           return c;
-        } else {
-          final InputStream in = getBytecodeFromJigsaw(clazz);
-          if (in != null) {
-            try {
-              // we mark it as runtime class because it was derived from the module system:
-              classpathClassCache.put(clazz, c = new ClassSignature(new ClassReader(in), true, false));
-            } finally {
-              in.close();
-            }
-            return c;
-          }
-          // all failed => the class does not exist!
-          classpathClassCache.put(clazz, null);
-          throw new ClassNotFoundException("Class '" + clazz + "' not found on classpath");
         }
-      } catch (IOException ioe) {
-        classpathClassCache.put(clazz, null);
-        throw new ClassNotFoundException("I/O error while loading of class '" + clazz + "'", ioe);
       }
+      // all failed => the class does not exist!
+      classpathClassCache.put(clazz, null);
+      throw new ClassNotFoundException(clazz);
     }
   }
   
@@ -290,20 +284,22 @@ public final class Checker implements RelatedClassLookup {
           type.getClassName()
         ));
       }
+    } catch (IOException ioe) {
+      throw new WrapperRuntimeException(ioe);
     }
     return c;
   }
   
-  private void reportParseFailed(boolean failOnUnresolvableSignatures, String message, Exception e, String signature) throws ParseException {
+  private void reportParseFailed(boolean failOnUnresolvableSignatures, String message, String signature) throws ParseException {
     if (failOnUnresolvableSignatures) {
-      throw new ParseException(String.format(Locale.ENGLISH, "%s while parsing signature: %s", message, signature), e);
+      throw new ParseException(String.format(Locale.ENGLISH, "%s while parsing signature: %s", message, signature));
     } else {
       logger.warn(String.format(Locale.ENGLISH, "%s while parsing signature: %s [signature ignored]", message, signature));
     }
   }
  
   /** Adds the method signature to the list of disallowed methods. The Signature is checked against the given ClassLoader. */
-  private void addSignature(final String line, final String defaultMessage, final boolean failOnUnresolvableSignatures) throws ParseException {
+  private void addSignature(final String line, final String defaultMessage, final boolean failOnUnresolvableSignatures) throws ParseException,IOException {
     final String clazz, field, signature, message;
     final Method method;
     int p = line.indexOf('@');
@@ -353,7 +349,7 @@ public final class Checker implements RelatedClassLookup {
       try {
         c = getClassFromClassLoader(clazz);
       } catch (ClassNotFoundException cnfe) {
-        reportParseFailed(failOnUnresolvableSignatures, cnfe.getMessage(), cnfe, signature);
+        reportParseFailed(failOnUnresolvableSignatures, String.format(Locale.ENGLISH, "Class '%s' not found on classpath", cnfe.getMessage()), signature);
         return;
       }
       if (method != null) {
@@ -368,13 +364,13 @@ public final class Checker implements RelatedClassLookup {
           }
         }
         if (!found) {
-          reportParseFailed(failOnUnresolvableSignatures, "Method not found", null, signature);
+          reportParseFailed(failOnUnresolvableSignatures, "Method not found", signature);
           return;
         }
       } else if (field != null) {
         assert method == null;
         if (!c.fields.contains(field)) {
-          reportParseFailed(failOnUnresolvableSignatures, "Field not found", null, signature);
+          reportParseFailed(failOnUnresolvableSignatures, "Field not found", signature);
           return;
         }
         forbiddenFields.put(c.className + '\000' + field, printout);
@@ -510,8 +506,7 @@ public final class Checker implements RelatedClassLookup {
         errors += checkClass(c.getReader(), suppressAnnotationsPattern);
       }
     } catch (WrapperRuntimeException wre) {
-      Throwable cause = wre.getCause();
-      throw new ForbiddenApiException("Check for forbidden API calls failed: " + cause.toString());
+      throw new ForbiddenApiException("Check for forbidden API calls failed.", wre.getCause());
     }
     
     final String message = String.format(Locale.ENGLISH, 

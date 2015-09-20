@@ -23,7 +23,7 @@ public final class ParseException extends Exception {
     super(msg);
   }
   
-  public ParseException(String msg, Exception cause) {
+  public ParseException(String msg, Throwable cause) {
     super(msg, cause);
   }
   

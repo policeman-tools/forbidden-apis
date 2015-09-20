@@ -23,4 +23,8 @@ public final class ForbiddenApiException extends Exception {
     super(msg);
   }
   
+  public ForbiddenApiException(String msg, Throwable cause) {
+    super(msg, cause);
+  }
+  
 }
