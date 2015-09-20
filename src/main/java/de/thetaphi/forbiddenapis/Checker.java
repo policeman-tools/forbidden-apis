@@ -506,7 +506,12 @@ public final class Checker implements RelatedClassLookup {
         errors += checkClass(c.getReader(), suppressAnnotationsPattern);
       }
     } catch (WrapperRuntimeException wre) {
-      throw new ForbiddenApiException("Check for forbidden API calls failed.", wre.getCause());
+      final Throwable cause = wre.getCause();
+      if (cause != null) {
+        throw new ForbiddenApiException("Check for forbidden API calls failed: " + cause.toString(), cause);
+      } else {
+        throw new ForbiddenApiException("Check for forbidden API calls failed.");
+      }
     }
     
     final String message = String.format(Locale.ENGLISH, 
