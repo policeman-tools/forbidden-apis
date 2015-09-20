@@ -69,6 +69,7 @@ public class AntTask extends Task {
   private boolean failOnUnresolvableSignatures = true;
   private boolean failOnViolation = true;
   private boolean ignoreEmptyFileset = false;
+  private boolean disableClassloadingCache = false;
     
   @Override
   public void execute() throws BuildException {
@@ -90,6 +91,7 @@ public class AntTask extends Task {
       if (failOnMissingClasses) options.add(FAIL_ON_MISSING_CLASSES);
       if (failOnViolation) options.add(FAIL_ON_VIOLATION);
       if (failOnUnresolvableSignatures) options.add(FAIL_ON_UNRESOLVABLE_SIGNATURES);
+      if (disableClassloadingCache) options.add(DISABLE_CLASSLOADING_CACHE);
       final Checker checker = new Checker(new Logger() {
         @Override
         public void error(String msg) {
@@ -346,5 +348,17 @@ public class AntTask extends Task {
    */
   public void setFailOnViolation(boolean failOnViolation) {
     this.failOnViolation = failOnViolation;
+  }
+  
+  /**
+   * Disable the internal JVM classloading cache when getting bytecode from
+   * the classpath. This setting slows down checks, but <em>may</em> work around
+   * issues with other tasks, that do not close their class loaders.
+   * If you get {@code FileNotFoundException}s related to non-existent JAR entries
+   * you can try to work around using this setting.
+   * The default is {@code false}.
+   */
+  public void setDisableClassloadingCache(boolean disableClassloadingCache) {
+    this.disableClassloadingCache = disableClassloadingCache;
   }
 }

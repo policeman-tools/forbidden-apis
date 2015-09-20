@@ -88,6 +88,13 @@ and the system classloader, not ANT's class loader.</p>
 </tr>
 
 <tr>
+  <td>disableClassloadingCache</td>
+  <td><code>boolean</code></td>
+  <td><code>false</code></td>
+  <td>Disable the internal JVM classloading cache when getting bytecode from the classpath. This setting slows down checks, but <em>may</em> work around issues with other Mojos, that do not close their class loaders. If you get <code>FileNotFoundException</code>s related to non-existent JAR entries you can try to work around using this setting.</td>
+</tr>
+
+<tr>
   <td>failOnUnsupportedJava</td>
   <td><code>boolean</code></td>
   <td><code>false</code></td>

@@ -40,7 +40,8 @@ public class CheckForbiddenApisExtension {
     "failOnUnsupportedJava",
     "failOnMissingClasses",
     "failOnUnresolvableSignatures",
-    "ignoreFailures"
+    "ignoreFailures",
+    "disableClassloadingCache"
   );
   
   public FileCollection signaturesFiles;
@@ -51,6 +52,7 @@ public class CheckForbiddenApisExtension {
     failOnUnsupportedJava = false,
     failOnMissingClasses = true,
     failOnUnresolvableSignatures = true,
-    ignoreFailures = false;
+    ignoreFailures = false,
+    disableClassloadingCache = false;
   
 }

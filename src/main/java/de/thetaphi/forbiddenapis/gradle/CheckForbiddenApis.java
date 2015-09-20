@@ -16,10 +16,7 @@ package de.thetaphi.forbiddenapis.gradle;
  * limitations under the License.
  */
 
-import static de.thetaphi.forbiddenapis.Checker.Option.FAIL_ON_MISSING_CLASSES;
-import static de.thetaphi.forbiddenapis.Checker.Option.FAIL_ON_UNRESOLVABLE_SIGNATURES;
-import static de.thetaphi.forbiddenapis.Checker.Option.FAIL_ON_VIOLATION;
-import static de.thetaphi.forbiddenapis.Checker.Option.INTERNAL_RUNTIME_FORBIDDEN;
+import static de.thetaphi.forbiddenapis.Checker.Option.*;
 import groovy.lang.Closure;
 
 import java.io.Closeable;
@@ -221,6 +218,24 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
   }
 
   /**
+   * Disable the internal JVM classloading cache when getting bytecode from
+   * the classpath. This setting slows down checks, but <em>may</em> work around
+   * issues with other plugin, that do not close their class loaders.
+   * If you get {@code FileNotFoundException}s related to non-existent JAR entries
+   * you can try to work around using this setting.
+   * The default is {@code false}.
+   */
+  @Input
+  public boolean getDisableClassloadingCache() {
+    return data.disableClassloadingCache;
+  }
+
+  /** @see #getDisableClassloadingCache */
+  public void setDisableClassloadingCache(boolean disableClassloadingCache) {
+    data.disableClassloadingCache = disableClassloadingCache;
+  }
+
+  /**
    * List of a custom Java annotations (full class names) that are used in the checked
    * code to suppress errors. Those annotations must have at least
    * {@link RetentionPolicy#CLASS}. They can be applied to classes, their methods,
@@ -409,6 +424,7 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
       if (getFailOnMissingClasses()) options.add(FAIL_ON_MISSING_CLASSES);
       if (!getIgnoreFailures()) options.add(FAIL_ON_VIOLATION);
       if (getFailOnUnresolvableSignatures()) options.add(FAIL_ON_UNRESOLVABLE_SIGNATURES);
+      if (getDisableClassloadingCache()) options.add(DISABLE_CLASSLOADING_CACHE);
       final Checker checker = new Checker(log, loader, options);
       
       if (!checker.isSupportedJDK) {
