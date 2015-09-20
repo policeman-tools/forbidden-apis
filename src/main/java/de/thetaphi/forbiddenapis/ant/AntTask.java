@@ -190,7 +190,7 @@ public class AntTask extends Task {
       try {
         checker.run();
       } catch (ForbiddenApiException fae) {
-        throw new BuildException(fae.getMessage());
+        throw new BuildException(fae.getMessage(), fae.getCause());
       }
     } finally {
       if (antLoader != null) antLoader.cleanup();

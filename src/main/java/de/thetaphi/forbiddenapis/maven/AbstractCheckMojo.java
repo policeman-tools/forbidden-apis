@@ -20,7 +20,6 @@ import static de.thetaphi.forbiddenapis.Checker.Option.*;
 
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.codehaus.plexus.util.DirectoryScanner;
@@ -176,7 +175,7 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
   }
 
   @Override
-  public void execute() throws MojoExecutionException, MojoFailureException {
+  public void execute() throws MojoExecutionException {
     final Log log = getLog();
     
     if (skip) {
@@ -325,7 +324,7 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
       try {
         checker.run();
       } catch (ForbiddenApiException fae) {
-        throw new MojoFailureException(fae.getMessage());
+        throw new MojoExecutionException(fae.getMessage(), fae.getCause());
       }
     } finally {
       // Java 7 supports closing URLClassLoader, so check for Closeable interface:
