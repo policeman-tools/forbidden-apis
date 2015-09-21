@@ -16,10 +16,7 @@ package de.thetaphi.forbiddenapis.gradle;
  * limitations under the License.
  */
 
-import static de.thetaphi.forbiddenapis.Checker.Option.FAIL_ON_MISSING_CLASSES;
-import static de.thetaphi.forbiddenapis.Checker.Option.FAIL_ON_UNRESOLVABLE_SIGNATURES;
-import static de.thetaphi.forbiddenapis.Checker.Option.FAIL_ON_VIOLATION;
-import static de.thetaphi.forbiddenapis.Checker.Option.INTERNAL_RUNTIME_FORBIDDEN;
+import static de.thetaphi.forbiddenapis.Checker.Option.*;
 import groovy.lang.Closure;
 
 import java.io.Closeable;
@@ -115,7 +112,7 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
 
   /**
    * Gives multiple API signatures that are joined with newlines and
-   * parsed like a single {@link #signaturesFiles}.
+   * parsed like a single {@link #getSignaturesFiles()}.
    * The signatures are resolved against the compile classpath.
    */
   @Input
@@ -204,7 +201,7 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
   }
 
   /**
-   * @{inheritDoc}
+   * {@inheritDoc}
    * <p>
    * This setting is to conform with {@link VerificationTask} interface.
    * Other ForbiddenApis implementations use another name: {@code failOnViolation}

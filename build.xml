@@ -103,7 +103,7 @@
   <property name="artifactId" value="forbiddenapis" />
   <property name="version" value="2.0-SNAPSHOT"/>
   
-  <property name="description" value="Allows to parse Java byte code to find invocations of method/class/field signatures and fail build (Apache Ant, Apache Maven, or CLI)"/>
+  <property name="description" value="Allows to parse Java byte code to find invocations of method/class/field signatures and fail build (Apache Ant, Apache Maven, Gradle, or CLI)"/>
 
   <!-- define artifacts' name, which follows the convention of Maven -->
   <property name="pom-file" location="dist/${artifactId}-${version}.pom" />
@@ -312,6 +312,27 @@
     <xslt basedir="${maven-build-dir}/generated-site/xdoc" includes="*.xml" destdir="${documentation-dir}" style="src/main/docs/xdoc2html.xsl" force="false">
       <mapper type="glob" from="*.xml" to="*.html"/>
     </xslt>
+    <mkdir dir="${documentation-dir}/tmp"/>
+    <javadoc destdir="${documentation-dir}/tmp" locale="en_US" encoding="UTF-8" access="public" classpathref="path.all" group="false" nodeprecatedlist="true"
+      use="false" notree="true" noindex="true" nohelp="true" nonavbar="true" charset="UTF-8" docencoding="UTF-8" source="${jdk.version}">
+      <fileset dir="src/main/java" includes="de/thetaphi/forbiddenapis/gradle/CheckForbiddenApis*.java"/>
+    </javadoc>
+    <copy todir="${documentation-dir}">
+      <fileset dir="${documentation-dir}/tmp/de/thetaphi/forbiddenapis/gradle" includes="CheckForbiddenApis*.html" />
+      <mapper type="glob" from="CheckForbiddenApis*" to="gradleApi*"/>
+      <filterchain>
+        <tokenfilter>
+          <filetokenizer/>
+          <replaceregex pattern="\Q..\E.*?\Q/de/thetaphi/forbiddenapis/gradle/\E" replace="" flags="gi"/>
+          <replaceregex pattern="CheckForbiddenApis(\w*?\.html)" replace="gradleApi\1" flags="gi"/>
+          <replaceregex pattern="&lt;(img|link)\s.*?&gt;" replace="" flags="gi"/>
+          <replaceregex pattern="&lt;(no|)script.*?\/(no|)script&gt;" replace="" flags="gis"/>
+          <!-- Java 7+ style workaround: -->
+          <replaceregex pattern="\Q&lt;/head&gt;\E" replace="&lt;link rel=&quot;stylesheet&quot; href=&quot;classic-stylesheet.css&quot;&gt;\0" flags="i"/>
+        </tokenfilter>
+      </filterchain>
+    </copy>
+    <delete dir="${documentation-dir}/tmp"/>
     <xslt in="build/main/META-INF/maven/${groupId}/${artifactId}/plugin-help.xml" out="${documentation-dir}/index.html" style="src/main/docs/docindex.xsl" force="false">
       <param name="clihelp" expression="${cli-help}"/>
     </xslt>
