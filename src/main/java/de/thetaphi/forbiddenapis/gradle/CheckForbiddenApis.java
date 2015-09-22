@@ -71,6 +71,7 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
   
   /**
    * Directory with the class files to check.
+   * Defaults to current sourseSet's output directory.
    */
   @OutputDirectory
   public File getClassesDir() {
@@ -83,8 +84,8 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
   }
 
   /**
-   * A {@link FileCollection} containing all files, which contain signatures and comments for forbidden API calls.
-   * The signatures are resolved against the compile classpath.
+   * A {@link FileCollection} used to configure the classpath.
+   * Defaults to current sourseSet's compile classpath.
    */
   @InputFiles
   public FileCollection getClasspath() {
@@ -97,7 +98,8 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
   }
 
   /**
-   * A {@link FileCollection} used to configure the classpath.
+   * A {@link FileCollection} containing all files, which contain signatures and comments for forbidden API calls.
+   * The signatures are resolved against {link #getClasspath()}.
    */
   @InputFiles
   @Optional
@@ -113,7 +115,7 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
   /**
    * Gives multiple API signatures that are joined with newlines and
    * parsed like a single {@link #getSignaturesFiles()}.
-   * The signatures are resolved against the compile classpath.
+   * The signatures are resolved against {link #getClasspath()}.
    */
   @Input
   @Optional
@@ -145,6 +147,7 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
 
   /**
    * Forbids calls to classes from the internal java runtime (like sun.misc.Unsafe)
+   * Defaults to {@code false}.
    */
   @Input
   public boolean getInternalRuntimeForbidden() {
@@ -159,6 +162,7 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
   /**
    * Fail the build, if the bundled ASM library cannot read the class file format
    * of the runtime library or the runtime library cannot be discovered.
+   * Defaults to {@code false}.
    */
   @Input
   public boolean getFailOnUnsupportedJava() {
@@ -174,6 +178,7 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
    * Fail the build, if a class referenced in the scanned code is missing. This requires
    * that you pass the whole classpath including all dependencies to this task
    * (Gradle does this by default).
+   * Defaults to {@code true}.
    */
   @Input
   public boolean getFailOnMissingClasses() {
@@ -189,6 +194,7 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
    * Fail the build if a signature is not resolving. If this parameter is set to
    * to false, then such signatures are silently ignored. This is useful in multi-module Maven
    * projects where only some modules have the dependency to which the signature file(s) apply.
+   * Defaults to {@code true}.
    */
   @Input
   public boolean getFailOnUnresolvableSignatures() {
@@ -342,10 +348,12 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
     return this;
   }
 
+  /** Returns the pattern set to match against class files in {@link #getClassesDir()}. */
   public PatternSet getPatternSet() {
     return patternSet;
   }
   
+  /** @see #getPatternSet() */
   public void setPatternSet(PatternSet patternSet) {
     patternSet.copyFrom(patternSet);
   }
@@ -357,6 +365,7 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
     return getProject().files(getClassesDir()).getAsFileTree().matching(getPatternSet());
   }
 
+  /** Executes the forbidden apis task. */
   @TaskAction
   public void checkForbidden() throws ForbiddenApiException {
     final File classesDir = getClassesDir();
