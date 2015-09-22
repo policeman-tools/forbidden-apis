@@ -53,10 +53,7 @@
           <xsl:apply-templates select="mojos/mojo"/>
         </ul>
         <h2>Gradle</h2>
-        <ul>
-        <li><a href="gradleApi.html">Gradle Task API</a></li>
-        <li><a href="gradleApiExtension.html">Gradle Extension/Convention API</a></li>
-        </ul>
+        <p><a href="gradleApi.html">Gradle Task Documentation (Javadocs)</a></p>
         <h2>Command Line Interface</h2>
         <p>
           <xsl:text>The JAR file can be called as command line tool using </xsl:text>

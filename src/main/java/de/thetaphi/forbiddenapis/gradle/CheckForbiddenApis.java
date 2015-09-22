@@ -57,7 +57,48 @@ import de.thetaphi.forbiddenapis.Logger;
 import de.thetaphi.forbiddenapis.ParseException;
 
 /**
- * ForbiddenApis Gradle Task (requires at least Gradle 2.3)
+ * <h3>ForbiddenApis Gradle Task (requires at least Gradle v2.3)</h3>
+ * <p>
+ * The plugin registers a separate task for each defined {@code sourceSet} using
+ * the default task naming convention. For default Java projects, two tasks are created:
+ * {@code forbiddenApisMain} and {@code forbiddenApisTest}. Additional source sets
+ * will produce a task with similar names ({@code 'forbiddenApis' + nameOfSourceSet}).
+ * All tasks are added as dependencies to the {@code check} default Gradle task.
+ * For convenience, the plugin also defines an additional task {@code forbiddenApis}
+ * that runs checks on all source sets.
+ * <p>
+ * Installation can be done from your {@code build.gradle} file:
+ * <pre>
+ * buildscript {
+ *  repositories {
+ *   mavenCentral()
+ *  }
+ *  dependencies {
+ *   classpath 'de.thetaphi:forbiddenapis:' + FORBIDDEN_APIS_VERSION
+ *  }
+ * }
+ * 
+ * apply plugin: 'java'
+ * apply plugin: 'de.thetaphi.forbiddenapis'
+ * </pre>
+ * After that you can add the following task configuration closures:
+ * <pre>
+ * forbiddenApisMain {
+ *  bundledSignatures += 'jdk-system-out'
+ * }
+ * </pre>
+ * <em>(using the {@code '+='} notation, you can add additional bundled signatures to the defaults).</em>
+ * <p>
+ * To define those defaults, which are used by all source sets, you can use the
+ * extension / convention mapping provided by {@link CheckForbiddenApisExtension}:
+ * <pre>
+ * forbiddenApis {
+ *  bundledSignatures = [ 'jdk-unsafe', 'jdk-deprecated' ]
+ *  signaturesFiles = files('path/to/my/signatures.txt')
+ *  ignoreFailures = false
+ * }
+ * </pre>
+ * 
  * @since 2.0
  */
 @ParallelizableTask
