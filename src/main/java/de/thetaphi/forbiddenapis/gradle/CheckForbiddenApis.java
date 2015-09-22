@@ -83,6 +83,16 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
     this.classesDir = classesDir;
   }
 
+  /** Returns the pattern set to match against class files in {@link #getClassesDir()}. */
+  public PatternSet getPatternSet() {
+    return patternSet;
+  }
+  
+  /** @see #getPatternSet() */
+  public void setPatternSet(PatternSet patternSet) {
+    patternSet.copyFrom(patternSet);
+  }
+
   /**
    * A {@link FileCollection} used to configure the classpath.
    * Defaults to current sourseSet's compile classpath.
@@ -99,7 +109,7 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
 
   /**
    * A {@link FileCollection} containing all files, which contain signatures and comments for forbidden API calls.
-   * The signatures are resolved against {link #getClasspath()}.
+   * The signatures are resolved against {@link #getClasspath()}.
    */
   @InputFiles
   @Optional
@@ -115,7 +125,7 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
   /**
    * Gives multiple API signatures that are joined with newlines and
    * parsed like a single {@link #getSignaturesFiles()}.
-   * The signatures are resolved against {link #getClasspath()}.
+   * The signatures are resolved against {@link #getClasspath()}.
    */
   @Input
   @Optional
@@ -346,16 +356,6 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
   public CheckForbiddenApis include(@SuppressWarnings("rawtypes") Closure arg0) {
     getPatternSet().include(arg0);
     return this;
-  }
-
-  /** Returns the pattern set to match against class files in {@link #getClassesDir()}. */
-  public PatternSet getPatternSet() {
-    return patternSet;
-  }
-  
-  /** @see #getPatternSet() */
-  public void setPatternSet(PatternSet patternSet) {
-    patternSet.copyFrom(patternSet);
   }
 
   /** Returns the classes to check. */
