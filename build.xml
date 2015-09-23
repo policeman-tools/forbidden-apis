@@ -547,7 +547,7 @@
         <globmapper from="gradle.*" to="*"/>
       </propertyset>
     </echoproperties>
-    <exec executable="${gradle.exe}" dir="${gradle-build-dir}" searchpath="true" vmlauncher="false" taskname="gradle">
+    <exec executable="${gradle.exe}" dir="${gradle-build-dir}" searchpath="true" vmlauncher="false" failonerror="true" failifexecutionfails="true" taskname="gradle">
       <arg value="--rerun-tasks"/>
       <arg value="--info"/>
       <arg value="--no-daemon"/>
