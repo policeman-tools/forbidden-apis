@@ -92,6 +92,7 @@
 
   <property name="signatures.dir" location="src/main/resources/de/thetaphi/forbiddenapis/signatures"/>
   <property name="groovy-tools.dir" location="src/tools/groovy"/>
+  <property name="gradle-build-dir" location="build/gradle"/>
   <property name="maven-build-dir" location="build/maven"/>
   <property name="documentation-dir" location="build/docs"/>
   <property name="test-results-dir" location="build/test-results"/>
@@ -128,6 +129,10 @@
       <equals arg1="${build.java.runtime}" arg2="1.8"/>
       <equals arg1="${build.java.runtime}" arg2="1.9"/>
     </or>
+  </condition>
+
+  <condition property="gradle.supported">
+    <isset property="gradle.exe"/>
   </condition>
 
   <condition property="isSnapshot">
@@ -438,7 +443,7 @@
     </artifact:deploy>
   </target>
 
-  <target name="test" depends="-check-myself,-check-bundled-signatures,-junit,-antunit,-runtime-unsupported" description="Run tests"/>
+  <target name="test" depends="-check-myself,-check-bundled-signatures,test-junit,-test-antunit,test-gradle,-runtime-unsupported" description="Run tests"/>
 
   <target name="check-bundled-signatures" depends="-check-bundled-signatures,-runtime-unsupported"
     description="Checks bundled signatures file corresponding to the current JVM. Run after every update!"/>
@@ -487,7 +492,9 @@
     <property name="antunit.fake-pom" location="build/test-maven/fake-pom.xml"/>
   </target>
 
-  <target name="-antunit" depends="install-maven-artifacts,-install-forbiddenapi-task,-install-antunit,-antunit-fake-pom" if="tests.supported">
+  <target name="test-antunit" depends="-test-antunit,-runtime-unsupported" description="Runs Antunit tests"/>
+  
+  <target name="-test-antunit" depends="install-maven-artifacts,-install-forbiddenapi-task,-install-antunit,-antunit-fake-pom" if="tests.supported">
     <mkdir dir="${test-results-dir}"/>
     <property name="antunit.main.classes" location="build/main"/>
     <property name="antunit.tools.classes" location="build/tools"/>
@@ -510,7 +517,7 @@
     </au:antunit>
   </target>
   
-  <target name="-junit" depends="compile-test">
+  <target name="test-junit" depends="compile-test" description="Runs Junit tests">
     <mkdir dir="${test-results-dir}"/>
     <junit haltonfailure="yes" fork="yes" forkmode="once">
       <classpath refid="path.junit-run"/>
@@ -523,6 +530,33 @@
         <fileset dir="src/test/java" includes="**/*Test.java"/>
       </batchtest>
     </junit>
+  </target>
+  
+  <target name="test-gradle" depends="compile,compile-test,jar,-gradle-unsupported" if="gradle.supported" description="Runs a basic Gradle project to check ourselves">
+    <mkdir dir="${gradle-build-dir}"/>
+    <copy todir="${gradle-build-dir}">
+      <fileset dir="src/test/gradle"/>
+    </copy>
+    <pathconvert property="gradle.forbiddenClasspath" refid="path.main-build"/>
+    <pathconvert property="gradle.forbiddenTestClasspath" refid="path.junit-build"/>
+    <property name="gradle.forbiddenRootDir" location="."/>
+    <property name="gradle.forbiddenSourceCompatibility" value="${jdk.version}"/>
+    <echoproperties destfile="${gradle-build-dir}/gradle.properties" failonerror="true">
+      <propertyset>
+        <propertyref prefix="gradle."/>
+        <globmapper from="gradle.*" to="*"/>
+      </propertyset>
+    </echoproperties>
+    <exec executable="${gradle.exe}" dir="${gradle-build-dir}" searchpath="true" vmlauncher="false" taskname="gradle">
+      <arg value="--rerun-tasks"/>
+      <arg value="--info"/>
+      <arg value="--no-daemon"/>
+      <arg value="forbiddenApis"/>
+    </exec>
+  </target>
+  
+  <target name="-gradle-unsupported" unless="gradle.supported">
+    <echo level="warn" message="Cannot run Gradle test project because runtime is unsupported or 'gradle.exe' property undefined."/>
   </target>
   
   <target name="-runtime-unsupported" unless="tests.supported">
