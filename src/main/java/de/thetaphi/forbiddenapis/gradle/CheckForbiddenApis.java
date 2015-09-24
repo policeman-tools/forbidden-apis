@@ -181,8 +181,7 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
 
   /** @see #getSignaturesURLs */
   public void setSignaturesURLs(List<URL> signaturesURLs) {
-    data.signaturesURLs.clear();
-    data.signaturesURLs.addAll(signaturesURLs);
+    data.signaturesURLs = signaturesURLs;
   }
 
   /**
@@ -198,8 +197,7 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
 
   /** @see #getSignatures */
   public void setSignatures(List<String> signatures) {
-    data.signatures.clear();
-    data.signatures.addAll(signatures);
+    data.signatures = signatures;
   }
 
   /**
@@ -214,8 +212,7 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
 
   /** @see #getBundledSignatures */
   public void setBundledSignatures(List<String> bundledSignatures) {
-    data.bundledSignatures.clear();
-    data.bundledSignatures.addAll(bundledSignatures);
+    data.bundledSignatures = bundledSignatures;
   }
 
   /**
@@ -314,8 +311,7 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
 
   /** @see #getSuppressAnnotations */
   public void setSuppressAnnotations(List<String> suppressAnnotations) {
-    data.suppressAnnotations.clear();
-    data.suppressAnnotations.addAll(suppressAnnotations);
+    data.suppressAnnotations = suppressAnnotations;
   }
   
   /**
