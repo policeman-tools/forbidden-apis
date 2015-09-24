@@ -405,6 +405,11 @@ public final class Checker implements RelatedClassLookup {
     parseSignaturesFile(in, false);
   }
   
+  /** Reads a list of API signatures from the given URL. */
+  public final void parseSignaturesFile(URL url) throws IOException,ParseException {
+    parseSignaturesFile(url.openStream());
+  }
+  
   /** Reads a list of API signatures from the given file. */
   public final void parseSignaturesFile(File f) throws IOException,ParseException {
     parseSignaturesFile(new FileInputStream(f));
