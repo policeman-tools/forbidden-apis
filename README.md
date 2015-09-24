@@ -8,7 +8,7 @@ signatures and fail build (Apache Ant, Apache Maven, or Gradle).
 Please refer to the Github
 [Wiki & Documentation](https://github.com/policeman-tools/forbidden-apis/wiki).
 
-The checker is available as Apache Ant Task or as Apache Maven Mojo.
+The checker is available as Apache Ant Task, Apache Maven Mojo, and Gradle plugin.
 In addition there is a command line tool (CLI):
 
   * [Apache Ant](https://github.com/policeman-tools/forbidden-apis/wiki/AntUsage)
