@@ -1,7 +1,7 @@
 # Policeman's Forbidden API Checker #
 
 Allows to parse Java byte code to find invocations of method/class/field
-signatures and fail build (Apache Ant or Apache Maven).
+signatures and fail build (Apache Ant, Apache Maven, or Gradle).
 
 ## Documentation ##
 
@@ -13,6 +13,7 @@ In addition there is a command line tool (CLI):
 
   * [Apache Ant](https://github.com/policeman-tools/forbidden-apis/wiki/AntUsage)
   * [Apache Maven](https://github.com/policeman-tools/forbidden-apis/wiki/MavenUsage)
+  * [Gradle](https://github.com/policeman-tools/forbidden-apis/wiki/GradleUsage)
   * [Command Line](https://github.com/policeman-tools/forbidden-apis/wiki/CliUsage)
 
 This project uses Apache Ant (and Apache Ivy) to build. The minimum
