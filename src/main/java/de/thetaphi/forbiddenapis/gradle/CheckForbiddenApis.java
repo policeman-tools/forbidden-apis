@@ -181,7 +181,8 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
 
   /** @see #getSignaturesURLs */
   public void setSignaturesURLs(List<URL> signaturesURLs) {
-    data.signaturesURLs = signaturesURLs;
+    data.signaturesURLs.clear();
+    data.signaturesURLs.addAll(signaturesURLs);
   }
 
   /**
