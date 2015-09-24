@@ -332,6 +332,7 @@
           <replaceregex pattern="CheckForbiddenApis(\w*?\.html)" replace="gradleApi\1" flags="gi"/>
           <replaceregex pattern="&lt;(img|link)\s.*?&gt;" replace="" flags="gi"/>
           <replaceregex pattern="&lt;(no|)script.*?\/(no|)script&gt;" replace="" flags="gis"/>
+          <replaceregex pattern="&lt;hr&gt;\s*&lt;hr&gt;" replace="" flags="gis"/>
           <!-- Java 7+ style workaround: -->
           <replaceregex pattern="\Q&lt;/head&gt;\E" replace="&lt;link rel=&quot;stylesheet&quot; href=&quot;classic-stylesheet.css&quot;&gt;\0" flags="i"/>
         </tokenfilter>
