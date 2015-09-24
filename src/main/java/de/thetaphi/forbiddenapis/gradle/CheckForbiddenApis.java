@@ -34,6 +34,7 @@ import java.util.Set;
 
 import org.gradle.api.DefaultTask;
 import org.gradle.api.GradleException;
+import org.gradle.api.Incubating;
 import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.FileTree;
@@ -173,6 +174,7 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
    */
   @Input
   @Optional
+  @Incubating
   public List<URL> getSignaturesURLs() {
     return data.signaturesURLs;
   }
