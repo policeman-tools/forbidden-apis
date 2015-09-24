@@ -164,6 +164,25 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
   }
 
   /**
+   * A list of references to URLs, which contain signatures and comments for forbidden API calls.
+   * The signatures are resolved against {@link #getClasspath()}.
+   * <p>
+   * This property is useful to refer to resources in plugin classpath, e.g., using
+   * {@link Class#getResource(String)}. It is not useful for general gradle builds. Especially,
+   * don't use it to refer to resources on foreign servers!
+   */
+  @Input
+  @Optional
+  public List<URL> getSignaturesURLs() {
+    return data.signaturesURLs;
+  }
+
+  /** @see #getSignaturesFiles */
+  public void setSignaturesURLs(List<URL> signaturesURLs) {
+    data.signaturesURLs = signaturesURLs;
+  }
+
+  /**
    * Gives multiple API signatures that are joined with newlines and
    * parsed like a single {@link #getSignaturesFiles()}.
    * The signatures are resolved against {@link #getClasspath()}.
@@ -504,6 +523,11 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
         if (signaturesFiles != null) for (final File f : signaturesFiles) {
           log.info("Reading API signatures: " + f);
           checker.parseSignaturesFile(f);
+        }
+        final List<URL> signaturesURLs = getSignaturesURLs();
+        if (signaturesURLs != null) for (final URL url : signaturesURLs) {
+          log.info("Reading API signatures: " + url);
+          checker.parseSignaturesFile(url);
         }
       } catch (IOException ioe) {
         throw new ResourceException("IO problem while reading files with API signatures.", ioe);
