@@ -308,16 +308,12 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
         }
       }
 
-      log.info("Loading classes to check...");
       try {
-        for (String f : files) {
-          checker.addClassToCheck(new File(classesDirectory, f));
-        }
+        checker.addClassesToCheck(classesDirectory, files);
       } catch (IOException ioe) {
         throw new MojoExecutionException("Failed to load one of the given class files.", ioe);
       }
 
-      log.info("Scanning for API signatures and dependencies...");
       try {
         checker.run();
       } catch (ForbiddenApiException fae) {

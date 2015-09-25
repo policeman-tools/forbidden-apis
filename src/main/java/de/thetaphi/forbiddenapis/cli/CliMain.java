@@ -280,16 +280,12 @@ public final class CliMain {
         ));
       }
 
-      LOG.info("Loading classes to check...");
       try {
-        for (String f : files) {
-          checker.addClassToCheck(new File(classesDirectory, f));
-        }
+        checker.addClassesToCheck(classesDirectory, files);
       } catch (IOException ioe) {
         throw new ExitException(EXIT_ERR_OTHER, "Failed to load one of the given class files: " + ioe);
       }
 
-      LOG.info("Scanning for API signatures and dependencies...");
       try {
         checker.run();
       } catch (ForbiddenApiException fae) {

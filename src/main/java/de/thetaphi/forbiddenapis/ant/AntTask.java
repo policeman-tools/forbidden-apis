@@ -183,7 +183,6 @@ public class AntTask extends Task {
         throw new BuildException("Failed to load one of the given class files.", ioe);
       }
 
-      log("Scanning for API signatures and dependencies...", Project.MSG_INFO);
       try {
         checker.run();
       } catch (ForbiddenApiException fae) {

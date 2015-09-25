@@ -539,16 +539,12 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
         }
       }
 
-      log.info("Loading classes to check...");
       try {
-        for (File f : getClassFiles()) {
-          checker.addClassToCheck(f);
-        }
+        checker.addClassesToCheck(getClassFiles());
       } catch (IOException ioe) {
         throw new ResourceException("Failed to load one of the given class files.", ioe);
       }
 
-      log.info("Scanning for API signatures and dependencies...");
       checker.run();
     } finally {
       // Java 7 supports closing URLClassLoader, so check for Closeable interface:

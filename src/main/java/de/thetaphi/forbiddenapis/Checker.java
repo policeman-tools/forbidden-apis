@@ -461,7 +461,7 @@ public final class Checker implements RelatedClassLookup {
     }
   }
   
-  /** Parses and adds a class from the given stream to the list of classes to check. Closes the stream when parsed (on Exception, too)! */
+  /** Parses and adds a class from the given stream to the list of classes to check. Closes the stream when parsed (on Exception, too)! Does not log anything. */
   public void addClassToCheck(final InputStream in) throws IOException {
     final ClassReader reader;
     try {
@@ -472,9 +472,35 @@ public final class Checker implements RelatedClassLookup {
     classesToCheck.put(reader.getClassName(), new ClassSignature(reader, false, true));
   }
   
-  /** Parses and adds a class from the given file to the list of classes to check. */
+  /** Parses and adds a class from the given file to the list of classes to check. Does not log anything. */
   public void addClassToCheck(File f) throws IOException {
     addClassToCheck(new FileInputStream(f));
+  }
+
+  /** Parses and adds a multiple class files. */
+  public void addClassesToCheck(Iterable<File> files) throws IOException {
+    logger.info("Loading classes to check...");
+    for (final File f : files) {
+      addClassToCheck(f);
+    }
+  }
+
+  /** Parses and adds a multiple class files. */
+  public void addClassesToCheck(File... files) throws IOException {
+    addClassesToCheck(Arrays.asList(files));
+  }
+
+  /** Parses and adds a multiple class files. */
+  public void addClassesToCheck(File basedir, Iterable<String> relativeNames) throws IOException {
+    logger.info("Loading classes to check...");
+    for (final String f : relativeNames) {
+      addClassToCheck(new File(basedir, f));
+    }
+  }
+
+  /** Parses and adds a multiple class files. */
+  public void addClassesToCheck(File basedir, String... relativeNames) throws IOException {
+    addClassesToCheck(basedir, Arrays.asList(relativeNames));
   }
 
   public boolean hasNoSignatures() {
@@ -507,6 +533,7 @@ public final class Checker implements RelatedClassLookup {
   }
   
   public void run() throws ForbiddenApiException {
+    logger.info("Scanning classes for violations...");
     int errors = 0;
     final Pattern suppressAnnotationsPattern = AsmUtils.glob2Pattern(suppressAnnotations.toArray(new String[suppressAnnotations.size()]));
     try {
