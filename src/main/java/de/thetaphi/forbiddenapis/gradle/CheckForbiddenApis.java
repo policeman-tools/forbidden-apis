@@ -26,9 +26,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.Collection;
 import java.util.EnumSet;
-import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
@@ -176,12 +174,12 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
   @Input
   @Optional
   @Incubating
-  public List<URL> getSignaturesURLs() {
+  public Set<URL> getSignaturesURLs() {
     return data.signaturesURLs;
   }
 
   /** @see #getSignaturesURLs */
-  public void setSignaturesURLs(List<URL> signaturesURLs) {
+  public void setSignaturesURLs(Set<URL> signaturesURLs) {
     data.signaturesURLs = signaturesURLs;
   }
 
@@ -192,12 +190,12 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
    */
   @Input
   @Optional
-  public List<String> getSignatures() {
+  public Set<String> getSignatures() {
     return data.signatures;
   }
 
   /** @see #getSignatures */
-  public void setSignatures(List<String> signatures) {
+  public void setSignatures(Set<String> signatures) {
     data.signatures = signatures;
   }
 
@@ -207,12 +205,12 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
    */
   @Input
   @Optional
-  public List<String> getBundledSignatures() {
+  public Set<String> getBundledSignatures() {
     return data.bundledSignatures;
   }
 
   /** @see #getBundledSignatures */
-  public void setBundledSignatures(List<String> bundledSignatures) {
+  public void setBundledSignatures(Set<String> bundledSignatures) {
     data.bundledSignatures = bundledSignatures;
   }
 
@@ -307,12 +305,12 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
    */
   @Input
   @Optional
-  public List<String> getSuppressAnnotations() {
+  public Set<String> getSuppressAnnotations() {
     return data.suppressAnnotations;
   }
 
   /** @see #getSuppressAnnotations */
-  public void setSuppressAnnotations(List<String> suppressAnnotations) {
+  public void setSuppressAnnotations(Set<String> suppressAnnotations) {
     data.suppressAnnotations = suppressAnnotations;
   }
   
@@ -452,7 +450,7 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
       }
     };
     
-    final Collection<File> cpElements = classpath.getFiles();
+    final Set<File> cpElements = classpath.getFiles();
     final URL[] urls = new URL[cpElements.size() + 1];
     try {
       int i = 0;
@@ -490,7 +488,7 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
         }
       }
       
-      final List<String> suppressAnnotations = getSuppressAnnotations();
+      final Set<String> suppressAnnotations = getSuppressAnnotations();
       if (suppressAnnotations != null) {
         for (String a : suppressAnnotations) {
           checker.addSuppressAnnotation(a);
@@ -498,7 +496,7 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
       }
       
       try {
-        final List<String> signatures = getSignatures();
+        final Set<String> signatures = getSignatures();
         if (signatures != null && !signatures.isEmpty()) {
           final StringBuilder sb = new StringBuilder();
           for (String line : signatures) {
@@ -506,7 +504,7 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
           }
           checker.parseSignaturesString(sb.toString());
         }
-        final List<String> bundledSignatures = getBundledSignatures();
+        final Set<String> bundledSignatures = getBundledSignatures();
         if (bundledSignatures != null) {
           final String bundledSigsJavaVersion = getTargetCompatibility();
           if (bundledSigsJavaVersion == null) {
@@ -522,7 +520,7 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
         if (signaturesFiles != null) for (final File f : signaturesFiles) {
           checker.parseSignaturesFile(f);
         }
-        final List<URL> signaturesURLs = getSignaturesURLs();
+        final Set<URL> signaturesURLs = getSignaturesURLs();
         if (signaturesURLs != null) for (final URL url : signaturesURLs) {
           checker.parseSignaturesFile(url);
         }

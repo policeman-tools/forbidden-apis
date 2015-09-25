@@ -38,6 +38,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.EnumSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 
@@ -286,11 +287,11 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
               "Trying to read bundled JDK signatures without compiler target. " +
               "You have to explicitely specify the version in the resource name.");
           }
-          for (String bs : bundledSignatures) {
+          for (String bs : new LinkedHashSet<String>(Arrays.asList(bundledSignatures))) {
             checker.parseBundledSignatures(bs, targetVersion);
           }
         }
-        if (signaturesFiles != null) for (final File f : signaturesFiles) {
+        if (signaturesFiles != null) for (final File f : new LinkedHashSet<File>(Arrays.asList(signaturesFiles))) {
           checker.parseSignaturesFile(f);
         }
       } catch (IOException ioe) {

@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.EnumSet;
+import java.util.LinkedHashSet;
 import java.util.Locale;
 import java.net.JarURLConnection;
 import java.net.URLConnection;
@@ -259,11 +260,11 @@ public final class CliMain {
       
       try {
         final String[] bundledSignatures = cmd.getOptionValues(bundledsignaturesOpt.getLongOpt());
-        if (bundledSignatures != null) for (String bs : bundledSignatures) {
+        if (bundledSignatures != null) for (String bs : new LinkedHashSet<String>(Arrays.asList(bundledSignatures))) {
           checker.parseBundledSignatures(bs, null);
         }
         final String[] signaturesFiles = cmd.getOptionValues(signaturesfileOpt.getLongOpt());
-        if (signaturesFiles != null) for (String sf : signaturesFiles) {
+        if (signaturesFiles != null) for (String sf : new LinkedHashSet<String>(Arrays.asList(signaturesFiles))) {
           final File f = new File(sf).getAbsoluteFile();
           checker.parseSignaturesFile(f);
         }
