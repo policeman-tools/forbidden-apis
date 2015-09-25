@@ -238,7 +238,7 @@ public class AntTask extends Task {
   }
   
   /** Creates a collection of arbitrary Ant resources */
-  public Resources createSignaturesResources() {
+  public Resources createSignatures() {
     return addSignaturesResource(new Resources());
   }
 

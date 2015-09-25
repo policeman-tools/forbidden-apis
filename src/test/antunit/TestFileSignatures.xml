@@ -61,10 +61,10 @@
     <au:expectfailure expectedMessage="Check for forbidden API calls failed, see log">
       <forbiddenapis classpathref="path.all">
         <fileset refid="main.classes"/>
-        <signaturesResources>
+        <signatures>
           <file file="signatures1.txt"/>
           <string>java.util.Locale#ENGLISH @ We are speaking chinese here!</string>
-        </signaturesResources>
+        </signatures>
       </forbiddenapis>
     </au:expectfailure>
     <au:assertLogContains level="error" text="java.lang.String#substring(int,int) [You are crazy that you disallow substrings]"/> 
