@@ -32,7 +32,6 @@ import org.apache.tools.ant.types.Reference;
 import org.apache.tools.ant.types.Resource;
 import org.apache.tools.ant.types.ResourceCollection;
 import org.apache.tools.ant.types.resources.FileResource;
-import org.apache.tools.ant.types.resources.Resources;
 import org.apache.tools.ant.types.resources.StringResource;
 import org.apache.tools.ant.types.resources.Union;
 
@@ -232,9 +231,9 @@ public class AntTask extends Task {
     return addSignaturesResource(new FileResource());
   }
 
-  /** Creates a collection of arbitrary Ant resources */
-  public Resources createSignatures() {
-    return addSignaturesResource(new Resources());
+  /** Collection of arbitrary Ant resources or {@code <bundled/>} elements. */
+  public SignaturesResources createSignatures() {
+    return addSignaturesResource(new SignaturesResources(this));
   }
 
   /** A file with API signatures signaturesFile= attribute */
