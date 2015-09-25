@@ -232,16 +232,16 @@ public class AntTask extends Task {
     return addSignaturesResource(new FileResource());
   }
 
-  /** A file with API signatures signaturesFile= attribute */
-  public void setSignaturesFile(File file) {
-    createSignaturesFile().setFile(file);
-  }
-  
   /** Creates a collection of arbitrary Ant resources */
   public Resources createSignatures() {
     return addSignaturesResource(new Resources());
   }
 
+  /** A file with API signatures signaturesFile= attribute */
+  public void setSignaturesFile(File file) {
+    createSignaturesFile().setFile(file);
+  }
+  
   /** Support for API signatures list as nested text */
   public void addText(String text) {
     addSignaturesResource(new StringResource(text));
