@@ -72,6 +72,24 @@ public class AntTask extends Task {
     
   @Override
   public void execute() throws BuildException {
+    final Logger log = new Logger() {
+      @Override
+      public void error(String msg) {
+        log(msg, Project.MSG_ERR);
+      }
+      
+      @Override
+      public void warn(String msg) {
+        // ANT has no real log levels printed, so prefix with "WARNING":
+        log("WARNING: " + msg, Project.MSG_WARN);
+      }
+      
+      @Override
+      public void info(String msg) {
+        log(msg, Project.MSG_INFO);
+      }
+    };
+    
     AntClassLoader antLoader = null;
     try {
       final ClassLoader loader;
@@ -90,23 +108,7 @@ public class AntTask extends Task {
       if (failOnMissingClasses) options.add(FAIL_ON_MISSING_CLASSES);
       if (failOnViolation) options.add(FAIL_ON_VIOLATION);
       if (failOnUnresolvableSignatures) options.add(FAIL_ON_UNRESOLVABLE_SIGNATURES);
-      final Checker checker = new Checker(new Logger() {
-        @Override
-        public void error(String msg) {
-          log(msg, Project.MSG_ERR);
-        }
-        
-        @Override
-        public void warn(String msg) {
-          // ANT has no real log levels printed, so prefix with "WARNING":
-          log("WARNING: " + msg, Project.MSG_WARN);
-        }
-        
-        @Override
-        public void info(String msg) {
-          log(msg, Project.MSG_INFO);
-        }
-      }, loader, options);
+      final Checker checker = new Checker(log, loader, options);
       
       if (!checker.isSupportedJDK) {
         final String msg = String.format(Locale.ENGLISH, 
@@ -115,7 +117,7 @@ public class AntTask extends Task {
         if (failOnUnsupportedJava) {
           throw new BuildException(msg);
         } else {
-          log("WARNING: " + msg, Project.MSG_WARN);
+          log.warn(msg);
           return;
         }
       }
@@ -156,7 +158,7 @@ public class AntTask extends Task {
         throw new BuildException("No API signatures found; use signaturesFile=, <signaturesFileSet/>, <bundledSignatures/> or inner text to define those!");
       }
 
-      log("Loading classes to check...", Project.MSG_INFO);
+      log.info("Loading classes to check...");
       try {
         @SuppressWarnings("unchecked")
         final Iterator<Resource> iter = classFiles.iterator();
@@ -172,8 +174,8 @@ public class AntTask extends Task {
         }
         if (!foundClass) {
           if (ignoreEmptyFileset) {
-            log("There is no <fileset/> or other resource collection given, or the collection does not contain any class files to check.", Project.MSG_WARN);
-            log("Scanned 0 class files.", Project.MSG_INFO);
+            log.warn("There is no <fileset/> or other resource collection given, or the collection does not contain any class files to check.");
+            log.info("Scanned 0 class files.");
             return;
           } else {
             throw new BuildException("There is no <fileset/> or other resource collection given, or the collection does not contain any class files to check.");
