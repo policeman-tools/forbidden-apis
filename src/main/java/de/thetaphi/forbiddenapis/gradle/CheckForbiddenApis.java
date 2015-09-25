@@ -116,6 +116,7 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
    * Defaults to current sourseSet's output directory.
    */
   @OutputDirectory
+  // no @InputDirectory, we use separate getter for a list of all input files
   public File getClassesDir() {
     return classesDir;
   }
@@ -284,6 +285,7 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
    * Default is {@code false}.
    */
   @Override
+  @Input
   public boolean getIgnoreFailures() {
     return data.ignoreFailures;
   }
