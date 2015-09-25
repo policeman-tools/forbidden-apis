@@ -154,14 +154,14 @@ and the system classloader, not ANT's class loader.</p>
 
 <h2>Parameters specified as nested elements</h2>
 
-<p>This task supports all resource collections Ant provides (<code>fileset</code>, <code>filelist</code>,
-<code>file</code>, <code>tarfileset</code>, <code>zipfileset</code>,...)
+<p>This task supports all <a href="https://ant.apache.org/manual/Types/resources.html">Ant resource</a> types
+(<code>fileset</code>, <code>filelist</code>, <code>file</code>, <code>tarfileset</code>, <code>zipfileset</code>,...)
 and uses all class files from them. It automatically adds an implcit filter to file names ending in <code>'.class'</code>,
 so you don't need to add this as include attribute to those collections.</p>
 
 <p>You can also pass one or multiple <code>classpath</code> elements to form a classpath. Ideally use the same configuration like the <code>javac</code> task.</p>
 
-<p>To pass in signatures, you have 3 possibilities:</p>
+<p>To pass in signatures, you have several possibilities:</p>
 
 <ul>
   <li>Use <code>bundledSignatures</code> element to pass a <a href="bundled-signatures.html">built-in signatures</a> file, e.g. <code>&lt;bundledsignatures name=&quot;jdk-unsafe-1.7&quot;/&gt;</code></li>
