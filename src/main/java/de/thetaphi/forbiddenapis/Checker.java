@@ -383,7 +383,7 @@ public final class Checker implements RelatedClassLookup {
   }
 
   /** Reads a list of bundled API signatures from classpath. */
-  public final void parseBundledSignatures(String name, String jdkTargetVersion) throws IOException,ParseException {
+  public void parseBundledSignatures(String name, String jdkTargetVersion) throws IOException,ParseException {
     if (!name.matches("[A-Za-z0-9\\-\\.]+")) {
       throw new ParseException("Invalid bundled signature reference: " + name);
     }
@@ -401,22 +401,22 @@ public final class Checker implements RelatedClassLookup {
   }
   
   /** Reads a list of API signatures. Closes the Reader when done (on Exception, too)! */
-  public final void parseSignaturesFile(InputStream in) throws IOException,ParseException {
+  public void parseSignaturesFile(InputStream in) throws IOException,ParseException {
     parseSignaturesFile(in, false);
   }
   
   /** Reads a list of API signatures from the given URL. */
-  public final void parseSignaturesFile(URL url) throws IOException,ParseException {
+  public void parseSignaturesFile(URL url) throws IOException,ParseException {
     parseSignaturesFile(url.openStream());
   }
   
   /** Reads a list of API signatures from the given file. */
-  public final void parseSignaturesFile(File f) throws IOException,ParseException {
+  public void parseSignaturesFile(File f) throws IOException,ParseException {
     parseSignaturesFile(new FileInputStream(f));
   }
   
   /** Reads a list of API signatures from a String. */
-  public final void parseSignaturesString(String signatures) throws IOException,ParseException {
+  public void parseSignaturesString(String signatures) throws IOException,ParseException {
     parseSignaturesFile(new StringReader(signatures), false);
   }
   
@@ -459,7 +459,7 @@ public final class Checker implements RelatedClassLookup {
   }
   
   /** Parses and adds a class from the given stream to the list of classes to check. Closes the stream when parsed (on Exception, too)! */
-  public final void addClassToCheck(final InputStream in) throws IOException {
+  public void addClassToCheck(final InputStream in) throws IOException {
     final ClassReader reader;
     try {
       reader = new ClassReader(in);
@@ -470,21 +470,21 @@ public final class Checker implements RelatedClassLookup {
   }
   
   /** Parses and adds a class from the given file to the list of classes to check. */
-  public final void addClassToCheck(File f) throws IOException {
+  public void addClassToCheck(File f) throws IOException {
     addClassToCheck(new FileInputStream(f));
   }
 
-  public final boolean hasNoSignatures() {
+  public boolean hasNoSignatures() {
     return forbiddenMethods.isEmpty() && forbiddenFields.isEmpty() && forbiddenClasses.isEmpty() && forbiddenClassPatterns.isEmpty() && (!options.contains(Option.INTERNAL_RUNTIME_FORBIDDEN));
   }
   
   /** Adds the given annotation class for suppressing errors. */
-  public final void addSuppressAnnotation(Class<? extends Annotation> anno) {
+  public void addSuppressAnnotation(Class<? extends Annotation> anno) {
     suppressAnnotations.add(anno.getName());
   }
   
   /** Adds suppressing annotation name in binary form (dotted). It may also be a glob pattern. The class name is not checked for existence. */
-  public final void addSuppressAnnotation(String annoName) {
+  public void addSuppressAnnotation(String annoName) {
     suppressAnnotations.add(annoName);
   }
   
@@ -503,7 +503,7 @@ public final class Checker implements RelatedClassLookup {
     return violations.size();
   }
   
-  public final void run() throws ForbiddenApiException {
+  public void run() throws ForbiddenApiException {
     int errors = 0;
     final Pattern suppressAnnotationsPattern = AsmUtils.glob2Pattern(suppressAnnotations.toArray(new String[suppressAnnotations.size()]));
     try {
