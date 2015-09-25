@@ -260,13 +260,11 @@ public final class CliMain {
       try {
         final String[] bundledSignatures = cmd.getOptionValues(bundledsignaturesOpt.getLongOpt());
         if (bundledSignatures != null) for (String bs : bundledSignatures) {
-          LOG.info("Reading bundled API signatures: " + bs);
           checker.parseBundledSignatures(bs, null);
         }
         final String[] signaturesFiles = cmd.getOptionValues(signaturesfileOpt.getLongOpt());
         if (signaturesFiles != null) for (String sf : signaturesFiles) {
           final File f = new File(sf).getAbsoluteFile();
-          LOG.info("Reading API signatures: " + f);
           checker.parseSignaturesFile(f);
         }
       } catch (IOException ioe) {

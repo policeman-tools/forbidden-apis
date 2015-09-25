@@ -397,26 +397,29 @@ public final class Checker implements RelatedClassLookup {
     if (in == null) {
       throw new FileNotFoundException("Bundled signatures resource not found: " + name);
     }
+    logger.info("Reading bundled API signatures: " + name);
     parseSignaturesFile(in, true);
   }
   
   /** Reads a list of API signatures. Closes the Reader when done (on Exception, too)! */
-  public void parseSignaturesFile(InputStream in) throws IOException,ParseException {
+  public void parseSignaturesFile(InputStream in, String name) throws IOException,ParseException {
+    logger.info("Reading API signatures: " + name);
     parseSignaturesFile(in, false);
   }
   
   /** Reads a list of API signatures from the given URL. */
   public void parseSignaturesFile(URL url) throws IOException,ParseException {
-    parseSignaturesFile(url.openStream());
+    parseSignaturesFile(url.openStream(), url.toString());
   }
   
   /** Reads a list of API signatures from the given file. */
   public void parseSignaturesFile(File f) throws IOException,ParseException {
-    parseSignaturesFile(new FileInputStream(f));
+    parseSignaturesFile(new FileInputStream(f), f.toString());
   }
   
   /** Reads a list of API signatures from a String. */
   public void parseSignaturesString(String signatures) throws IOException,ParseException {
+    logger.info("Reading inline API signatures...");
     parseSignaturesFile(new StringReader(signatures), false);
   }
   

@@ -130,7 +130,6 @@ public class AntTask extends Task {
           if (name == null) {
             throw new BuildException("<bundledSignatures/> must have the mandatory attribute 'name' referring to a bundled signatures file.");
           }
-          log("Reading bundled API signatures: " + name, Project.MSG_INFO);
           checker.parseBundledSignatures(name, null);
         }
         
@@ -141,12 +140,10 @@ public class AntTask extends Task {
           if (r instanceof StringResource) {
             final String s = ((StringResource) r).getValue();
             if (s != null && s.trim().length() > 0) {
-              log("Reading inline API signatures...", Project.MSG_INFO);
               checker.parseSignaturesString(s);
             }
           } else {
-            log("Reading API signatures: " + r, Project.MSG_INFO);
-            checker.parseSignaturesFile(r.getInputStream());
+            checker.parseSignaturesFile(r.getInputStream(), r.toString());
           }
         }
       } catch (IOException ioe) {

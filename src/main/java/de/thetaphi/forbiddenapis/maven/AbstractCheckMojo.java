@@ -276,7 +276,6 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
       try {
         final String sig = (signatures != null) ? signatures.trim() : null;
         if (sig != null && sig.length() != 0) {
-          log.info("Reading inline API signatures...");
           checker.parseSignaturesString(sig);
         }
         if (bundledSignatures != null) {
@@ -288,12 +287,10 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
               "You have to explicitely specify the version in the resource name.");
           }
           for (String bs : bundledSignatures) {
-            log.info("Reading bundled API signatures: " + bs);
             checker.parseBundledSignatures(bs, targetVersion);
           }
         }
         if (signaturesFiles != null) for (final File f : signaturesFiles) {
-          log.info("Reading API signatures: " + f);
           checker.parseSignaturesFile(f);
         }
       } catch (IOException ioe) {

@@ -498,7 +498,6 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
       try {
         final List<String> signatures = getSignatures();
         if (signatures != null && !signatures.isEmpty()) {
-          log.info("Reading inline API signatures...");
           final StringBuilder sb = new StringBuilder();
           for (String line : signatures) {
             sb.append(line).append('\n');
@@ -514,18 +513,15 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
               "You have to explicitely specify the version in the resource name.");
           }
           for (String bs : bundledSignatures) {
-            log.info("Reading bundled API signatures: " + bs);
             checker.parseBundledSignatures(bs, bundledSigsJavaVersion);
           }
         }
         final FileCollection signaturesFiles = getSignaturesFiles();
         if (signaturesFiles != null) for (final File f : signaturesFiles) {
-          log.info("Reading API signatures: " + f);
           checker.parseSignaturesFile(f);
         }
         final List<URL> signaturesURLs = getSignaturesURLs();
         if (signaturesURLs != null) for (final URL url : signaturesURLs) {
-          log.info("Reading API signatures: " + url);
           checker.parseSignaturesFile(url);
         }
       } catch (IOException ioe) {
