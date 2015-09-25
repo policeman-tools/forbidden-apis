@@ -34,6 +34,7 @@ import org.apache.tools.ant.types.ResourceCollection;
 import org.apache.tools.ant.types.resources.FileResource;
 import org.apache.tools.ant.types.resources.Resources;
 import org.apache.tools.ant.types.resources.StringResource;
+import org.apache.tools.ant.types.resources.Union;
 
 import de.thetaphi.forbiddenapis.Checker;
 import de.thetaphi.forbiddenapis.ForbiddenApiException;
@@ -42,10 +43,10 @@ import de.thetaphi.forbiddenapis.ParseException;
 
 import java.io.IOException;
 import java.io.File;
-import java.util.ArrayList;
+import java.util.Collection;
 import java.util.EnumSet;
 import java.util.Iterator;
-import java.util.List;
+import java.util.LinkedHashSet;
 import java.util.Locale;
 
 /**
@@ -56,10 +57,10 @@ import java.util.Locale;
  */
 public class AntTask extends Task {
 
-  private final Resources classFiles = new Resources();
-  private final Resources apiSignatures = new Resources();
-  private final List<BundledSignaturesType> bundledSignatures = new ArrayList<BundledSignaturesType>();
-  private final List<SuppressAnnotationType> suppressAnnotations = new ArrayList<SuppressAnnotationType>();
+  private final Union classFiles = new Union();
+  private final Union apiSignatures = new Union();
+  private final Collection<BundledSignaturesType> bundledSignatures = new LinkedHashSet<BundledSignaturesType>();
+  private final Collection<SuppressAnnotationType> suppressAnnotations = new LinkedHashSet<SuppressAnnotationType>();
   private Path classpath = null;
   
   private boolean failOnUnsupportedJava = false;
@@ -155,7 +156,7 @@ public class AntTask extends Task {
       }
         
       if (checker.hasNoSignatures()) {
-        throw new BuildException("No API signatures found; use signaturesFile=, <signaturesFileSet/>, <bundledSignatures/> or inner text to define those!");
+        throw new BuildException("No API signatures found; use signaturesFile=, <signatures*/>, <bundledSignatures/> or inner text to define those!");
       }
 
       log.info("Loading classes to check...");
@@ -210,8 +211,8 @@ public class AntTask extends Task {
     classFiles.add(fs);
   }
   
-  private <T extends ResourceCollection> T addSignaturesResource(T res) {
-    ((ProjectComponent) res).setProject(getProject());
+  private <T extends ProjectComponent & ResourceCollection> T addSignaturesResource(T res) {
+    res.setProject(getProject());
     apiSignatures.add(res);
     return res;
   }
@@ -236,6 +237,11 @@ public class AntTask extends Task {
     createSignaturesFile().setFile(file);
   }
   
+  /** Creates a collection of arbitrary Ant resources */
+  public Resources createSignaturesResources() {
+    return addSignaturesResource(new Resources());
+  }
+
   /** Support for API signatures list as nested text */
   public void addText(String text) {
     addSignaturesResource(new StringResource(text));
