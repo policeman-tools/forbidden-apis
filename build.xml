@@ -85,6 +85,9 @@
   <property name="maven.version" value="2.2.1"/>
   <property name="maven-plugin-plugin.version" value="3.3"/>
   
+  <!-- with fork=false this somehow takes endless to download the internet, so let's fork - and slow down in an other way (startup) -->
+  <property name="maven.fork" value="true"/>
+  
   <property name="compile.debug" value="true"/>
   <property name="compile.deprecation" value="true"/>
   <property name="build.encoding" value="UTF-8"/>
@@ -275,8 +278,7 @@
   </target>
 
   <target name="maven-descriptor" depends="compile,-maven-setup,-install-tasks,-maven-uptodate" unless="maven-descriptor.uptodate" description="Creates the Maven Plugin Descriptor">
-    <!-- with fork=false this somehow takes endless to download the internet, so let's fork - and slow down in an other way (startup) -->
-    <artifact:mvn pom="${maven-build-dir}/pom-build.xml" mavenVersion="${maven.version}" failonerror="true" fork="true">
+    <artifact:mvn pom="${maven-build-dir}/pom-build.xml" mavenVersion="${maven.version}" failonerror="true" fork="${maven.fork}">
       <arg value="plugin:helpmojo"/>
       <arg value="plugin:descriptor"/>
       <arg value="plugin:xdoc"/>
@@ -513,6 +515,7 @@
         <propertyref name="groupId"/>
         <propertyref name="artifactId"/>
         <propertyref name="ivy.logging"/>
+        <propertyref name="maven.fork"/>
       </propertyset>
       <referenceset>
         <reference regex="path\..*"/>
@@ -636,7 +639,7 @@
   <target name="generate-test-classes" depends="-generate-test-classes-init,-generate-test-classes-sunmisc,-generate-test-classes-jdk6,-generate-test-classes-jdk8" description="Regenerates .class files used by tests if the current JDK version supports it"/>
   
   <target name="show-help-mojo" depends="install-maven-artifacts" description="Shows help about mojo usage">
-    <artifact:mvn mavenVersion="${maven.version}" failonerror="true" fork="true" taskname="help">
+    <artifact:mvn mavenVersion="${maven.version}" failonerror="true" fork="${maven.fork}" taskname="help">
       <arg value="${groupId}:${artifactId}:${version}:help"/>
       <sysproperty key="detail" value="true"/>
     </artifact:mvn>
