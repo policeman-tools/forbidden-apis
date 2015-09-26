@@ -559,13 +559,31 @@
   </target>
   
   <target name="rat-sources" depends="-install-tasks" description="Checks licenses of all source files">
-    <rat:report addDefaultLicenseMatchers="true">
+    <mkdir dir="build"/>
+    <tempfile property="rat.sources.logfile" prefix="rat" destdir="build"/>
+    <rat:report reportFile="${rat.sources.logfile}" addDefaultLicenseMatchers="true">
       <fileset dir=".">
-        <include name="*.xml"/>
+        <include name="*"/>
         <include name="src/**"/>
+        <exclude name="README.md"/>
         <exclude name="**/jdk-deprecated-*.txt"/>
       </fileset>
     </rat:report>
+    <!-- now print the output, for review -->
+    <loadfile property="rat.output" srcFile="${rat.sources.logfile}"/>
+    <echo taskname="rat">${rat.output}</echo>
+    <delete>
+      <fileset file="${rat.sources.logfile}">
+        <and>
+          <containsregexp expression="^0 Unknown Licenses"/>
+          <not><containsregexp expression="^\s+!"/></not>
+        </and>
+      </fileset>
+    </delete>
+    <!-- fail if we didnt find the pattern -->
+    <fail message="Rat problems were found!">
+      <condition><available file="${rat.sources.logfile}"/></condition>
+    </fail>
   </target>
 
   <target name="-gradle-unsupported" unless="gradle.supported">
