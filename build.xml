@@ -18,6 +18,7 @@
   xmlns:artifact="antlib:org.apache.maven.artifact.ant"
   xmlns:ivy="antlib:org.apache.ivy.ant"
   xmlns:au="antlib:org.apache.ant.antunit"
+  xmlns:rat="antlib:org.apache.rat.anttasks"
 >
   <fail message="Minimum supported ANT version is 1.8.0. Yours: ${ant.version}">
     <condition>
@@ -200,6 +201,7 @@
     <taskdef name="jarjar" classname="com.tonicsystems.jarjar.JarJarTask" classpathref="path.tasks"/>
     <taskdef uri="antlib:org.apache.maven.artifact.ant" classpathref="path.tasks"/>
     <taskdef name="groovy" classname="org.codehaus.groovy.ant.Groovy" classpathref="path.tasks"/>
+    <typedef uri="antlib:org.apache.rat.anttasks" classpathref="path.tasks"/>
     <property name="installed.tasks" value="true"/>
   </target>
 
@@ -388,7 +390,7 @@
     </artifact:install>
   </target>
 
-  <target name="dist" depends="install-maven-artifacts" description="Create the distribution">
+  <target name="dist" depends="rat-sources,install-maven-artifacts" description="Create the distribution">
     <copy file="${maven.deploy.pom}" tofile="${pom-file}"/>
   </target>
 
@@ -556,6 +558,14 @@
     </exec>
   </target>
   
+  <target name="rat-sources" depends="-install-tasks" description="Checks licenses of all source files">
+    <rat:report addDefaultLicenseMatchers="true">
+      <fileset dir="src">
+        <exclude name="**/jdk-deprecated-*.txt"/>
+      </fileset>
+    </rat:report>
+  </target>
+
   <target name="-gradle-unsupported" unless="gradle.supported">
     <echo level="warn" message="Cannot run Gradle test project because runtime is unsupported or 'gradle.exe' property undefined."/>
   </target>

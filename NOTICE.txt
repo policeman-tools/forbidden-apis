@@ -34,3 +34,8 @@ This product bundles software (jarjar'ed to new package name) developed by:
   http://commons.apache.org/cli/
 
 (see the "bundled-licenses/" folder for full license information)
+
+
+The documentation package contains a CSS file "Classic Javadoc
+StyleSheet", developed by S.Ishigaki under the MIT License.
+http://junk-box.appspot.com/stylesheet/classic-javadoc-stylesheet/index.html
