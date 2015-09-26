@@ -27,6 +27,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
@@ -190,12 +191,12 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
    */
   @Input
   @Optional
-  public Set<String> getSignatures() {
+  public List<String> getSignatures() {
     return data.signatures;
   }
 
   /** @see #getSignatures */
-  public void setSignatures(Set<String> signatures) {
+  public void setSignatures(List<String> signatures) {
     data.signatures = signatures;
   }
 
@@ -496,7 +497,7 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
       }
       
       try {
-        final Set<String> signatures = getSignatures();
+        final List<String> signatures = getSignatures();
         if (signatures != null && !signatures.isEmpty()) {
           final StringBuilder sb = new StringBuilder();
           for (String line : signatures) {

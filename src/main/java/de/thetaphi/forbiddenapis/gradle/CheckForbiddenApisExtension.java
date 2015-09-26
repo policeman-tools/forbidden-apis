@@ -17,6 +17,7 @@ package de.thetaphi.forbiddenapis.gradle;
  */
 
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Set;
 import java.util.LinkedHashSet;
@@ -48,8 +49,8 @@ public class CheckForbiddenApisExtension {
   
   public FileCollection signaturesFiles;
   public Set<URL> signaturesURLs = new LinkedHashSet<URL>();
-  public Set<String> signatures = new LinkedHashSet<String>(),
-    bundledSignatures = new LinkedHashSet<String>(),
+  public List<String> signatures = new ArrayList<String>();
+  public Set<String> bundledSignatures = new LinkedHashSet<String>(),
     suppressAnnotations = new LinkedHashSet<String>();
   public boolean internalRuntimeForbidden = false,
     failOnUnsupportedJava = false,
