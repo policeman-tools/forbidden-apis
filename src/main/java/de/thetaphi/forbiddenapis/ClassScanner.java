@@ -201,7 +201,7 @@ final class ClassScanner extends ClassVisitor {
             final StringBuilder sb = new StringBuilder();
             boolean nl = false;
             for (final String v : violations) {
-              if (nl) sb.append('\n');
+              if (nl) sb.append(ForbiddenViolation.SEPARATOR);
               sb.append(v);
               nl = true;
             }

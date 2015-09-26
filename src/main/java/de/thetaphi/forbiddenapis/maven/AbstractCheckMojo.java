@@ -275,10 +275,6 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
       }
       
       try {
-        final String sig = (signatures != null) ? signatures.trim() : null;
-        if (sig != null && sig.length() != 0) {
-          checker.parseSignaturesString(sig);
-        }
         if (bundledSignatures != null) {
           String targetVersion = getTargetVersion();
           if ("".equals(targetVersion)) targetVersion = null;
@@ -293,6 +289,10 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
         }
         if (signaturesFiles != null) for (final File f : new LinkedHashSet<File>(Arrays.asList(signaturesFiles))) {
           checker.parseSignaturesFile(f);
+        }
+        final String sig = (signatures != null) ? signatures.trim() : null;
+        if (sig != null && sig.length() != 0) {
+          checker.parseSignaturesString(sig);
         }
       } catch (IOException ioe) {
         throw new MojoExecutionException("IO problem while reading files with API signatures.", ioe);

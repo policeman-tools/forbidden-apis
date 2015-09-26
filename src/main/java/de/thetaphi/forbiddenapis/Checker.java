@@ -523,7 +523,7 @@ public final class Checker implements RelatedClassLookup {
     final ClassScanner scanner = new ClassScanner(this, forbiddenClasses, forbiddenClassPatterns, forbiddenMethods, forbiddenFields, suppressAnnotationsPattern, options.contains(Option.INTERNAL_RUNTIME_FORBIDDEN)); 
     reader.accept(scanner, ClassReader.SKIP_FRAMES);
     final List<ForbiddenViolation> violations = scanner.getSortedViolations();
-    final Pattern splitter = Pattern.compile(Pattern.quote("\n"));
+    final Pattern splitter = Pattern.compile(Pattern.quote(ForbiddenViolation.SEPARATOR));
     for (final ForbiddenViolation v : violations) {
       for (final String line : splitter.split(v.format(className, scanner.getSourceFile()))) {
         logger.error(line);

@@ -104,6 +104,8 @@ import de.thetaphi.forbiddenapis.ParseException;
 @ParallelizableTask
 public class CheckForbiddenApis extends DefaultTask implements PatternFilterable,VerificationTask {
   
+  private static final String NL = System.getProperty("line.separator", "\n");
+  
   private final CheckForbiddenApisExtension data = new CheckForbiddenApisExtension();
   private final PatternSet patternSet = new PatternSet().include("**/*.class");
   private File classesDir;
@@ -497,14 +499,6 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
       }
       
       try {
-        final List<String> signatures = getSignatures();
-        if (signatures != null && !signatures.isEmpty()) {
-          final StringBuilder sb = new StringBuilder();
-          for (String line : signatures) {
-            sb.append(line).append('\n');
-          }
-          checker.parseSignaturesString(sb.toString());
-        }
         final Set<String> bundledSignatures = getBundledSignatures();
         if (bundledSignatures != null) {
           final String bundledSigsJavaVersion = getTargetCompatibility();
@@ -524,6 +518,14 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
         final Set<URL> signaturesURLs = getSignaturesURLs();
         if (signaturesURLs != null) for (final URL url : signaturesURLs) {
           checker.parseSignaturesFile(url);
+        }
+        final List<String> signatures = getSignatures();
+        if (signatures != null && !signatures.isEmpty()) {
+          final StringBuilder sb = new StringBuilder();
+          for (String line : signatures) {
+            sb.append(line).append(NL);
+          }
+          checker.parseSignaturesString(sb.toString());
         }
       } catch (IOException ioe) {
         throw new ResourceException("IO problem while reading files with API signatures.", ioe);
