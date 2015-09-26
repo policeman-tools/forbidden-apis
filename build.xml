@@ -560,7 +560,9 @@
   
   <target name="rat-sources" depends="-install-tasks" description="Checks licenses of all source files">
     <rat:report addDefaultLicenseMatchers="true">
-      <fileset dir="src">
+      <fileset dir=".">
+        <include name="*.xml"/>
+        <include name="src/**"/>
         <exclude name="**/jdk-deprecated-*.txt"/>
       </fileset>
     </rat:report>
