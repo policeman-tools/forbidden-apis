@@ -16,8 +16,11 @@ package de.thetaphi.forbiddenapis.gradle;
  * limitations under the License.
  */
 
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Set;
+import java.util.LinkedHashSet;
 import java.util.List;
 
 import org.gradle.api.file.FileCollection;
@@ -33,6 +36,7 @@ public class CheckForbiddenApisExtension {
   /** Fields used for the convention mapping, keep up-to-date with class members! */
   static final List<String> PROPS = Arrays.asList(
     "signaturesFiles",
+    "signaturesURLs",
     "signatures",
     "bundledSignatures",
     "suppressAnnotations",
@@ -45,9 +49,10 @@ public class CheckForbiddenApisExtension {
   );
   
   public FileCollection signaturesFiles;
-  public List<String> signatures = new ArrayList<String>(),
-    bundledSignatures = new ArrayList<String>(),
-    suppressAnnotations = new ArrayList<String>();
+  public Set<URL> signaturesURLs = new LinkedHashSet<URL>();
+  public List<String> signatures = new ArrayList<String>();
+  public Set<String> bundledSignatures = new LinkedHashSet<String>(),
+    suppressAnnotations = new LinkedHashSet<String>();
   public boolean internalRuntimeForbidden = false,
     failOnUnsupportedJava = false,
     failOnMissingClasses = true,

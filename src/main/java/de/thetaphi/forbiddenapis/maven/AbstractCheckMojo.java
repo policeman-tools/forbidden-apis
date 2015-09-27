@@ -38,6 +38,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.EnumSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 
@@ -286,11 +287,6 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
       }
       
       try {
-        final String sig = (signatures != null) ? signatures.trim() : null;
-        if (sig != null && sig.length() != 0) {
-          log.info("Reading inline API signatures...");
-          checker.parseSignaturesString(sig);
-        }
         if (bundledSignatures != null) {
           String targetVersion = getTargetVersion();
           if ("".equals(targetVersion)) targetVersion = null;
@@ -299,14 +295,16 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
               "Trying to read bundled JDK signatures without compiler target. " +
               "You have to explicitely specify the version in the resource name.");
           }
-          for (String bs : bundledSignatures) {
-            log.info("Reading bundled API signatures: " + bs);
+          for (String bs : new LinkedHashSet<String>(Arrays.asList(bundledSignatures))) {
             checker.parseBundledSignatures(bs, targetVersion);
           }
         }
-        if (signaturesFiles != null) for (final File f : signaturesFiles) {
-          log.info("Reading API signatures: " + f);
+        if (signaturesFiles != null) for (final File f : new LinkedHashSet<File>(Arrays.asList(signaturesFiles))) {
           checker.parseSignaturesFile(f);
+        }
+        final String sig = (signatures != null) ? signatures.trim() : null;
+        if (sig != null && sig.length() != 0) {
+          checker.parseSignaturesString(sig);
         }
       } catch (IOException ioe) {
         throw new MojoExecutionException("IO problem while reading files with API signatures.", ioe);
@@ -323,16 +321,12 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
         }
       }
 
-      log.info("Loading classes to check...");
       try {
-        for (String f : files) {
-          checker.addClassToCheck(new File(classesDirectory, f));
-        }
+        checker.addClassesToCheck(classesDirectory, files);
       } catch (IOException ioe) {
         throw new MojoExecutionException("Failed to load one of the given class files.", ioe);
       }
 
-      log.info("Scanning for API signatures and dependencies...");
       try {
         checker.run();
       } catch (ForbiddenApiException fae) {

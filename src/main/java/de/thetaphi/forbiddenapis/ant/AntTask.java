@@ -32,8 +32,8 @@ import org.apache.tools.ant.types.Reference;
 import org.apache.tools.ant.types.Resource;
 import org.apache.tools.ant.types.ResourceCollection;
 import org.apache.tools.ant.types.resources.FileResource;
-import org.apache.tools.ant.types.resources.Resources;
 import org.apache.tools.ant.types.resources.StringResource;
+import org.apache.tools.ant.types.resources.Union;
 
 import de.thetaphi.forbiddenapis.Checker;
 import de.thetaphi.forbiddenapis.ForbiddenApiException;
@@ -42,10 +42,10 @@ import de.thetaphi.forbiddenapis.ParseException;
 
 import java.io.IOException;
 import java.io.File;
-import java.util.ArrayList;
+import java.util.Collection;
 import java.util.EnumSet;
 import java.util.Iterator;
-import java.util.List;
+import java.util.LinkedHashSet;
 import java.util.Locale;
 
 /**
@@ -56,10 +56,10 @@ import java.util.Locale;
  */
 public class AntTask extends Task {
 
-  private final Resources classFiles = new Resources();
-  private final Resources apiSignatures = new Resources();
-  private final List<BundledSignaturesType> bundledSignatures = new ArrayList<BundledSignaturesType>();
-  private final List<SuppressAnnotationType> suppressAnnotations = new ArrayList<SuppressAnnotationType>();
+  private final Union classFiles = new Union();
+  private final Union apiSignatures = new Union();
+  private final Collection<BundledSignaturesType> bundledSignatures = new LinkedHashSet<BundledSignaturesType>();
+  private final Collection<SuppressAnnotationType> suppressAnnotations = new LinkedHashSet<SuppressAnnotationType>();
   private Path classpath = null;
   
   private boolean failOnUnsupportedJava = false;
@@ -73,6 +73,24 @@ public class AntTask extends Task {
     
   @Override
   public void execute() throws BuildException {
+    final Logger log = new Logger() {
+      @Override
+      public void error(String msg) {
+        log(msg, Project.MSG_ERR);
+      }
+      
+      @Override
+      public void warn(String msg) {
+        // ANT has no real log levels printed, so prefix with "WARNING":
+        log("WARNING: " + msg, Project.MSG_WARN);
+      }
+      
+      @Override
+      public void info(String msg) {
+        log(msg, Project.MSG_INFO);
+      }
+    };
+    
     AntClassLoader antLoader = null;
     try {
       final ClassLoader loader;
@@ -92,23 +110,7 @@ public class AntTask extends Task {
       if (failOnViolation) options.add(FAIL_ON_VIOLATION);
       if (failOnUnresolvableSignatures) options.add(FAIL_ON_UNRESOLVABLE_SIGNATURES);
       if (disableClassloadingCache) options.add(DISABLE_CLASSLOADING_CACHE);
-      final Checker checker = new Checker(new Logger() {
-        @Override
-        public void error(String msg) {
-          log(msg, Project.MSG_ERR);
-        }
-        
-        @Override
-        public void warn(String msg) {
-          // ANT has no real log levels printed, so prefix with "WARNING":
-          log("WARNING: " + msg, Project.MSG_WARN);
-        }
-        
-        @Override
-        public void info(String msg) {
-          log(msg, Project.MSG_INFO);
-        }
-      }, loader, options);
+      final Checker checker = new Checker(log, loader, options);
       
       if (!checker.isSupportedJDK) {
         final String msg = String.format(Locale.ENGLISH, 
@@ -117,7 +119,7 @@ public class AntTask extends Task {
         if (failOnUnsupportedJava) {
           throw new BuildException(msg);
         } else {
-          log("WARNING: " + msg, Project.MSG_WARN);
+          log.warn(msg);
           return;
         }
       }
@@ -132,7 +134,6 @@ public class AntTask extends Task {
           if (name == null) {
             throw new BuildException("<bundledSignatures/> must have the mandatory attribute 'name' referring to a bundled signatures file.");
           }
-          log("Reading bundled API signatures: " + name, Project.MSG_INFO);
           checker.parseBundledSignatures(name, null);
         }
         
@@ -143,12 +144,10 @@ public class AntTask extends Task {
           if (r instanceof StringResource) {
             final String s = ((StringResource) r).getValue();
             if (s != null && s.trim().length() > 0) {
-              log("Reading inline API signatures...", Project.MSG_INFO);
               checker.parseSignaturesString(s);
             }
           } else {
-            log("Reading API signatures: " + r, Project.MSG_INFO);
-            checker.parseSignaturesFile(r.getInputStream());
+            checker.parseSignaturesFile(r.getInputStream(), r.toString());
           }
         }
       } catch (IOException ioe) {
@@ -158,10 +157,10 @@ public class AntTask extends Task {
       }
         
       if (checker.hasNoSignatures()) {
-        throw new BuildException("No API signatures found; use signaturesFile=, <signaturesFileSet/>, <bundledSignatures/> or inner text to define those!");
+        throw new BuildException("No API signatures found; use signaturesFile=, <signatures*/>, <bundledSignatures/> or inner text to define those!");
       }
 
-      log("Loading classes to check...", Project.MSG_INFO);
+      log.info("Loading classes to check...");
       try {
         @SuppressWarnings("unchecked")
         final Iterator<Resource> iter = classFiles.iterator();
@@ -177,8 +176,8 @@ public class AntTask extends Task {
         }
         if (!foundClass) {
           if (ignoreEmptyFileset) {
-            log("There is no <fileset/> or other resource collection given, or the collection does not contain any class files to check.", Project.MSG_WARN);
-            log("Scanned 0 class files.", Project.MSG_INFO);
+            log.warn("There is no <fileset/> or other resource collection given, or the collection does not contain any class files to check.");
+            log.info("Scanned 0 class files.");
             return;
           } else {
             throw new BuildException("There is no <fileset/> or other resource collection given, or the collection does not contain any class files to check.");
@@ -188,7 +187,6 @@ public class AntTask extends Task {
         throw new BuildException("Failed to load one of the given class files.", ioe);
       }
 
-      log("Scanning for API signatures and dependencies...", Project.MSG_INFO);
       try {
         checker.run();
       } catch (ForbiddenApiException fae) {
@@ -214,8 +212,8 @@ public class AntTask extends Task {
     classFiles.add(fs);
   }
   
-  private <T extends ResourceCollection> T addSignaturesResource(T res) {
-    ((ProjectComponent) res).setProject(getProject());
+  private <T extends ProjectComponent & ResourceCollection> T addSignaturesResource(T res) {
+    res.setProject(getProject());
     apiSignatures.add(res);
     return res;
   }
@@ -233,6 +231,11 @@ public class AntTask extends Task {
   /** Single file with API signatures as <signaturesFile/> nested element */
   public FileResource createSignaturesFile() {
     return addSignaturesResource(new FileResource());
+  }
+
+  /** Collection of arbitrary Ant resources or {@code <bundled/>} elements. */
+  public SignaturesResources createSignatures() {
+    return addSignaturesResource(new SignaturesResources(this));
   }
 
   /** A file with API signatures signaturesFile= attribute */

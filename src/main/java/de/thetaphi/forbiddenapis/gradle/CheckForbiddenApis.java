@@ -26,7 +26,6 @@ import java.lang.annotation.RetentionPolicy;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Locale;
@@ -34,6 +33,7 @@ import java.util.Set;
 
 import org.gradle.api.DefaultTask;
 import org.gradle.api.GradleException;
+import org.gradle.api.Incubating;
 import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.FileTree;
@@ -57,11 +57,54 @@ import de.thetaphi.forbiddenapis.Logger;
 import de.thetaphi.forbiddenapis.ParseException;
 
 /**
- * ForbiddenApis Gradle Task (requires at least Gradle 2.3)
+ * <h3>ForbiddenApis Gradle Task (requires at least Gradle v2.3)</h3>
+ * <p>
+ * The plugin registers a separate task for each defined {@code sourceSet} using
+ * the default task naming convention. For default Java projects, two tasks are created:
+ * {@code forbiddenApisMain} and {@code forbiddenApisTest}. Additional source sets
+ * will produce a task with similar names ({@code 'forbiddenApis' + nameOfSourceSet}).
+ * All tasks are added as dependencies to the {@code check} default Gradle task.
+ * For convenience, the plugin also defines an additional task {@code forbiddenApis}
+ * that runs checks on all source sets.
+ * <p>
+ * Installation can be done from your {@code build.gradle} file:
+ * <pre>
+ * buildscript {
+ *  repositories {
+ *   mavenCentral()
+ *  }
+ *  dependencies {
+ *   classpath 'de.thetaphi:forbiddenapis:' + FORBIDDEN_APIS_VERSION
+ *  }
+ * }
+ * 
+ * apply plugin: 'java'
+ * apply plugin: 'de.thetaphi.forbiddenapis'
+ * </pre>
+ * After that you can add the following task configuration closures:
+ * <pre>
+ * forbiddenApisMain {
+ *  bundledSignatures += 'jdk-system-out'
+ * }
+ * </pre>
+ * <em>(using the {@code '+='} notation, you can add additional bundled signatures to the defaults).</em>
+ * <p>
+ * To define those defaults, which are used by all source sets, you can use the
+ * extension / convention mapping provided by {@link CheckForbiddenApisExtension}:
+ * <pre>
+ * forbiddenApis {
+ *  bundledSignatures = [ 'jdk-unsafe', 'jdk-deprecated' ]
+ *  signaturesFiles = files('path/to/my/signatures.txt')
+ *  ignoreFailures = false
+ * }
+ * </pre>
+ * 
  * @since 2.0
  */
 @ParallelizableTask
 public class CheckForbiddenApis extends DefaultTask implements PatternFilterable,VerificationTask {
+  
+  private static final String NL = System.getProperty("line.separator", "\n");
   
   private final CheckForbiddenApisExtension data = new CheckForbiddenApisExtension();
   private final PatternSet patternSet = new PatternSet().include("**/*.class");
@@ -71,8 +114,10 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
   
   /**
    * Directory with the class files to check.
+   * Defaults to current sourseSet's output directory.
    */
   @OutputDirectory
+  // no @InputDirectory, we use separate getter for a list of all input files
   public File getClassesDir() {
     return classesDir;
   }
@@ -82,9 +127,19 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
     this.classesDir = classesDir;
   }
 
+  /** Returns the pattern set to match against class files in {@link #getClassesDir()}. */
+  public PatternSet getPatternSet() {
+    return patternSet;
+  }
+  
+  /** @see #getPatternSet() */
+  public void setPatternSet(PatternSet patternSet) {
+    patternSet.copyFrom(patternSet);
+  }
+
   /**
-   * A {@link FileCollection} containing all files, which contain signatures and comments for forbidden API calls.
-   * The signatures are resolved against the compile classpath.
+   * A {@link FileCollection} used to configure the classpath.
+   * Defaults to current sourseSet's compile classpath.
    */
   @InputFiles
   public FileCollection getClasspath() {
@@ -97,7 +152,8 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
   }
 
   /**
-   * A {@link FileCollection} used to configure the classpath.
+   * A {@link FileCollection} containing all files, which contain signatures and comments for forbidden API calls.
+   * The signatures are resolved against {@link #getClasspath()}.
    */
   @InputFiles
   @Optional
@@ -111,9 +167,29 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
   }
 
   /**
+   * A list of references to URLs, which contain signatures and comments for forbidden API calls.
+   * The signatures are resolved against {@link #getClasspath()}.
+   * <p>
+   * This property is useful to refer to resources in plugin classpath, e.g., using
+   * {@link Class#getResource(String)}. It is not useful for general gradle builds. Especially,
+   * don't use it to refer to resources on foreign servers!
+   */
+  @Input
+  @Optional
+  @Incubating
+  public Set<URL> getSignaturesURLs() {
+    return data.signaturesURLs;
+  }
+
+  /** @see #getSignaturesURLs */
+  public void setSignaturesURLs(Set<URL> signaturesURLs) {
+    data.signaturesURLs = signaturesURLs;
+  }
+
+  /**
    * Gives multiple API signatures that are joined with newlines and
-   * parsed like a single {@link #signaturesFiles}.
-   * The signatures are resolved against the compile classpath.
+   * parsed like a single {@link #getSignaturesFiles()}.
+   * The signatures are resolved against {@link #getClasspath()}.
    */
   @Input
   @Optional
@@ -123,8 +199,7 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
 
   /** @see #getSignatures */
   public void setSignatures(List<String> signatures) {
-    data.signatures.clear();
-    data.signatures.addAll(signatures);
+    data.signatures = signatures;
   }
 
   /**
@@ -133,18 +208,18 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
    */
   @Input
   @Optional
-  public List<String> getBundledSignatures() {
+  public Set<String> getBundledSignatures() {
     return data.bundledSignatures;
   }
 
   /** @see #getBundledSignatures */
-  public void setBundledSignatures(List<String> bundledSignatures) {
-    data.bundledSignatures.clear();
-    data.bundledSignatures.addAll(bundledSignatures);
+  public void setBundledSignatures(Set<String> bundledSignatures) {
+    data.bundledSignatures = bundledSignatures;
   }
 
   /**
    * Forbids calls to classes from the internal java runtime (like sun.misc.Unsafe)
+   * Defaults to {@code false}.
    */
   @Input
   public boolean getInternalRuntimeForbidden() {
@@ -159,6 +234,7 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
   /**
    * Fail the build, if the bundled ASM library cannot read the class file format
    * of the runtime library or the runtime library cannot be discovered.
+   * Defaults to {@code false}.
    */
   @Input
   public boolean getFailOnUnsupportedJava() {
@@ -174,6 +250,7 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
    * Fail the build, if a class referenced in the scanned code is missing. This requires
    * that you pass the whole classpath including all dependencies to this task
    * (Gradle does this by default).
+   * Defaults to {@code true}.
    */
   @Input
   public boolean getFailOnMissingClasses() {
@@ -189,6 +266,7 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
    * Fail the build if a signature is not resolving. If this parameter is set to
    * to false, then such signatures are silently ignored. This is useful in multi-module Maven
    * projects where only some modules have the dependency to which the signature file(s) apply.
+   * Defaults to {@code true}.
    */
   @Input
   public boolean getFailOnUnresolvableSignatures() {
@@ -201,13 +279,14 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
   }
 
   /**
-   * @{inheritDoc}
+   * {@inheritDoc}
    * <p>
    * This setting is to conform with {@link VerificationTask} interface.
    * Other ForbiddenApis implementations use another name: {@code failOnViolation}
    * Default is {@code false}.
    */
   @Override
+  @Input
   public boolean getIgnoreFailures() {
     return data.ignoreFailures;
   }
@@ -247,14 +326,13 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
    */
   @Input
   @Optional
-  public List<String> getSuppressAnnotations() {
+  public Set<String> getSuppressAnnotations() {
     return data.suppressAnnotations;
   }
 
   /** @see #getSuppressAnnotations */
-  public void setSuppressAnnotations(List<String> suppressAnnotations) {
-    data.suppressAnnotations.clear();
-    data.suppressAnnotations.addAll(suppressAnnotations);
+  public void setSuppressAnnotations(Set<String> suppressAnnotations) {
+    data.suppressAnnotations = suppressAnnotations;
   }
   
   /**
@@ -360,14 +438,6 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
     return this;
   }
 
-  public PatternSet getPatternSet() {
-    return patternSet;
-  }
-  
-  public void setPatternSet(PatternSet patternSet) {
-    patternSet.copyFrom(patternSet);
-  }
-
   /** Returns the classes to check. */
   @InputFiles
   @SkipWhenEmpty
@@ -375,6 +445,7 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
     return getProject().files(getClassesDir()).getAsFileTree().matching(getPatternSet());
   }
 
+  /** Executes the forbidden apis task. */
   @TaskAction
   public void checkForbidden() throws ForbiddenApiException {
     final File classesDir = getClassesDir();
@@ -400,7 +471,7 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
       }
     };
     
-    final Collection<File> cpElements = classpath.getFiles();
+    final Set<File> cpElements = classpath.getFiles();
     final URL[] urls = new URL[cpElements.size() + 1];
     try {
       int i = 0;
@@ -439,7 +510,7 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
         }
       }
       
-      final List<String> suppressAnnotations = getSuppressAnnotations();
+      final Set<String> suppressAnnotations = getSuppressAnnotations();
       if (suppressAnnotations != null) {
         for (String a : suppressAnnotations) {
           checker.addSuppressAnnotation(a);
@@ -447,16 +518,7 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
       }
       
       try {
-        final List<String> signatures = getSignatures();
-        if (signatures != null && !signatures.isEmpty()) {
-          log.info("Reading inline API signatures...");
-          final StringBuilder sb = new StringBuilder();
-          for (String line : signatures) {
-            sb.append(line).append('\n');
-          }
-          checker.parseSignaturesString(sb.toString());
-        }
-        final List<String> bundledSignatures = getBundledSignatures();
+        final Set<String> bundledSignatures = getBundledSignatures();
         if (bundledSignatures != null) {
           final String bundledSigsJavaVersion = getTargetCompatibility();
           if (bundledSigsJavaVersion == null) {
@@ -465,14 +527,24 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
               "You have to explicitely specify the version in the resource name.");
           }
           for (String bs : bundledSignatures) {
-            log.info("Reading bundled API signatures: " + bs);
             checker.parseBundledSignatures(bs, bundledSigsJavaVersion);
           }
         }
         final FileCollection signaturesFiles = getSignaturesFiles();
         if (signaturesFiles != null) for (final File f : signaturesFiles) {
-          log.info("Reading API signatures: " + f);
           checker.parseSignaturesFile(f);
+        }
+        final Set<URL> signaturesURLs = getSignaturesURLs();
+        if (signaturesURLs != null) for (final URL url : signaturesURLs) {
+          checker.parseSignaturesFile(url);
+        }
+        final List<String> signatures = getSignatures();
+        if (signatures != null && !signatures.isEmpty()) {
+          final StringBuilder sb = new StringBuilder();
+          for (String line : signatures) {
+            sb.append(line).append(NL);
+          }
+          checker.parseSignaturesString(sb.toString());
         }
       } catch (IOException ioe) {
         throw new ResourceException("IO problem while reading files with API signatures.", ioe);
@@ -482,23 +554,19 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
 
       if (checker.hasNoSignatures()) {
         if (options.contains(FAIL_ON_UNRESOLVABLE_SIGNATURES)) {
-          throw new InvalidUserDataException("No API signatures found; use parameters 'signatures', 'bundledSignatures', and/or 'signaturesFiles' to define those!");
+          throw new InvalidUserDataException("No API signatures found; use properties 'signatures', 'bundledSignatures', 'signaturesURLs', and/or 'signaturesFiles' to define those!");
         } else {
           log.info("Skipping execution because no API signatures are available.");
           return;
         }
       }
 
-      log.info("Loading classes to check...");
       try {
-        for (File f : getClassFiles()) {
-          checker.addClassToCheck(f);
-        }
+        checker.addClassesToCheck(getClassFiles());
       } catch (IOException ioe) {
         throw new ResourceException("Failed to load one of the given class files.", ioe);
       }
 
-      log.info("Scanning for API signatures and dependencies...");
       checker.run();
     } finally {
       // Java 7 supports closing URLClassLoader, so check for Closeable interface:

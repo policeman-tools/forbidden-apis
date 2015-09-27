@@ -18,6 +18,7 @@
   xmlns:artifact="antlib:org.apache.maven.artifact.ant"
   xmlns:ivy="antlib:org.apache.ivy.ant"
   xmlns:au="antlib:org.apache.ant.antunit"
+  xmlns:rat="antlib:org.apache.rat.anttasks"
 >
   <fail message="Minimum supported ANT version is 1.8.0. Yours: ${ant.version}">
     <condition>
@@ -84,6 +85,9 @@
   <property name="maven.version" value="2.2.1"/>
   <property name="maven-plugin-plugin.version" value="3.3"/>
   
+  <!-- with fork=false this somehow takes endless to download the internet, so let's fork - and slow down in an other way (startup) -->
+  <property name="maven.fork" value="true"/>
+  
   <property name="compile.debug" value="true"/>
   <property name="compile.deprecation" value="true"/>
   <property name="build.encoding" value="UTF-8"/>
@@ -92,6 +96,7 @@
 
   <property name="signatures.dir" location="src/main/resources/de/thetaphi/forbiddenapis/signatures"/>
   <property name="groovy-tools.dir" location="src/tools/groovy"/>
+  <property name="gradle-build-dir" location="build/gradle"/>
   <property name="maven-build-dir" location="build/maven"/>
   <property name="documentation-dir" location="build/docs"/>
   <property name="test-results-dir" location="build/test-results"/>
@@ -103,7 +108,7 @@
   <property name="artifactId" value="forbiddenapis" />
   <property name="version" value="2.0-SNAPSHOT"/>
   
-  <property name="description" value="Allows to parse Java byte code to find invocations of method/class/field signatures and fail build (Apache Ant, Apache Maven, or CLI)"/>
+  <property name="description" value="Allows to parse Java byte code to find invocations of method/class/field signatures and fail build (Apache Ant, Apache Maven, Gradle, or CLI)"/>
 
   <!-- define artifacts' name, which follows the convention of Maven -->
   <property name="pom-file" location="dist/${artifactId}-${version}.pom" />
@@ -128,6 +133,10 @@
       <equals arg1="${build.java.runtime}" arg2="1.8"/>
       <equals arg1="${build.java.runtime}" arg2="1.9"/>
     </or>
+  </condition>
+
+  <condition property="gradle.supported">
+    <isset property="gradle.exe"/>
   </condition>
 
   <condition property="isSnapshot">
@@ -195,6 +204,7 @@
     <taskdef name="jarjar" classname="com.tonicsystems.jarjar.JarJarTask" classpathref="path.tasks"/>
     <taskdef uri="antlib:org.apache.maven.artifact.ant" classpathref="path.tasks"/>
     <taskdef name="groovy" classname="org.codehaus.groovy.ant.Groovy" classpathref="path.tasks"/>
+    <typedef uri="antlib:org.apache.rat.anttasks" classpathref="path.tasks"/>
     <property name="installed.tasks" value="true"/>
   </target>
 
@@ -268,8 +278,7 @@
   </target>
 
   <target name="maven-descriptor" depends="compile,-maven-setup,-install-tasks,-maven-uptodate" unless="maven-descriptor.uptodate" description="Creates the Maven Plugin Descriptor">
-    <!-- with fork=false this somehow takes endless to download the internet, so let's fork - and slow down in an other way (startup) -->
-    <artifact:mvn pom="${maven-build-dir}/pom-build.xml" mavenVersion="${maven.version}" failonerror="true" fork="true">
+    <artifact:mvn pom="${maven-build-dir}/pom-build.xml" mavenVersion="${maven.version}" failonerror="true" fork="${maven.fork}">
       <arg value="plugin:helpmojo"/>
       <arg value="plugin:descriptor"/>
       <arg value="plugin:xdoc"/>
@@ -312,6 +321,28 @@
     <xslt basedir="${maven-build-dir}/generated-site/xdoc" includes="*.xml" destdir="${documentation-dir}" style="src/main/docs/xdoc2html.xsl" force="false">
       <mapper type="glob" from="*.xml" to="*.html"/>
     </xslt>
+    <mkdir dir="${documentation-dir}/tmp"/>
+    <javadoc destdir="${documentation-dir}/tmp" locale="en_US" encoding="UTF-8" access="public" classpathref="path.all" group="false" nodeprecatedlist="true"
+      use="false" notree="true" noindex="true" nohelp="true" nonavbar="true" charset="UTF-8" docencoding="UTF-8" source="${jdk.version}">
+      <fileset dir="src/main/java" includes="de/thetaphi/forbiddenapis/gradle/CheckForbiddenApis*.java"/>
+    </javadoc>
+    <copy todir="${documentation-dir}">
+      <fileset dir="${documentation-dir}/tmp/de/thetaphi/forbiddenapis/gradle" includes="CheckForbiddenApis*.html" />
+      <mapper type="glob" from="CheckForbiddenApis*" to="gradleApi*"/>
+      <filterchain>
+        <tokenfilter>
+          <filetokenizer/>
+          <replaceregex pattern="\Q..\E.*?\Q/de/thetaphi/forbiddenapis/gradle/\E" replace="" flags="gi"/>
+          <replaceregex pattern="CheckForbiddenApis(\w*?\.html)" replace="gradleApi\1" flags="gi"/>
+          <replaceregex pattern="&lt;(img|link)\s.*?&gt;" replace="" flags="gi"/>
+          <replaceregex pattern="&lt;(no|)script.*?\/(no|)script&gt;" replace="" flags="gis"/>
+          <replaceregex pattern="&lt;hr&gt;\s*&lt;hr&gt;" replace="" flags="gis"/>
+          <!-- Java 7+ style workaround: -->
+          <replaceregex pattern="\Q&lt;/head&gt;\E" replace="&lt;link rel=&quot;stylesheet&quot; href=&quot;classic-stylesheet.css&quot;&gt;\0" flags="i"/>
+        </tokenfilter>
+      </filterchain>
+    </copy>
+    <delete dir="${documentation-dir}/tmp"/>
     <xslt in="build/main/META-INF/maven/${groupId}/${artifactId}/plugin-help.xml" out="${documentation-dir}/index.html" style="src/main/docs/docindex.xsl" force="false">
       <param name="clihelp" expression="${cli-help}"/>
     </xslt>
@@ -361,7 +392,7 @@
     </artifact:install>
   </target>
 
-  <target name="dist" depends="install-maven-artifacts" description="Create the distribution">
+  <target name="dist" depends="rat-sources,install-maven-artifacts" description="Create the distribution">
     <copy file="${maven.deploy.pom}" tofile="${pom-file}"/>
   </target>
 
@@ -417,7 +448,7 @@
     </artifact:deploy>
   </target>
 
-  <target name="test" depends="-check-myself,-check-bundled-signatures,-junit,-antunit,-runtime-unsupported" description="Run tests"/>
+  <target name="test" depends="-check-myself,-check-bundled-signatures,test-junit,-test-antunit,test-gradle,-runtime-unsupported" description="Run tests"/>
 
   <target name="check-bundled-signatures" depends="-check-bundled-signatures,-runtime-unsupported"
     description="Checks bundled signatures file corresponding to the current JVM. Run after every update!"/>
@@ -466,7 +497,9 @@
     <property name="antunit.fake-pom" location="build/test-maven/fake-pom.xml"/>
   </target>
 
-  <target name="-antunit" depends="install-maven-artifacts,-install-forbiddenapi-task,-install-antunit,-antunit-fake-pom" if="tests.supported">
+  <target name="test-antunit" depends="-test-antunit,-runtime-unsupported" description="Runs Antunit tests"/>
+  
+  <target name="-test-antunit" depends="compile,compile-tools,compile-test,install-maven-artifacts,-install-forbiddenapi-task,-install-antunit,-antunit-fake-pom" if="tests.supported">
     <mkdir dir="${test-results-dir}"/>
     <property name="antunit.main.classes" location="build/main"/>
     <property name="antunit.tools.classes" location="build/tools"/>
@@ -482,6 +515,7 @@
         <propertyref name="groupId"/>
         <propertyref name="artifactId"/>
         <propertyref name="ivy.logging"/>
+        <propertyref name="maven.fork"/>
       </propertyset>
       <referenceset>
         <reference regex="path\..*"/>
@@ -489,7 +523,7 @@
     </au:antunit>
   </target>
   
-  <target name="-junit" depends="compile-test">
+  <target name="test-junit" depends="compile-test" description="Runs Junit tests">
     <mkdir dir="${test-results-dir}"/>
     <junit haltonfailure="yes" fork="yes" forkmode="once">
       <classpath refid="path.junit-run"/>
@@ -502,6 +536,61 @@
         <fileset dir="src/test/java" includes="**/*Test.java"/>
       </batchtest>
     </junit>
+  </target>
+  
+  <target name="test-gradle" depends="compile,compile-test,jar,-gradle-unsupported" if="gradle.supported" description="Runs a basic Gradle project to check ourselves">
+    <mkdir dir="${gradle-build-dir}"/>
+    <copy todir="${gradle-build-dir}">
+      <fileset dir="src/test/gradle"/>
+    </copy>
+    <pathconvert property="gradle.forbiddenClasspath" refid="path.main-build"/>
+    <pathconvert property="gradle.forbiddenTestClasspath" refid="path.junit-build"/>
+    <property name="gradle.forbiddenRootDir" location="."/>
+    <property name="gradle.forbiddenSourceCompatibility" value="${jdk.version}"/>
+    <echoproperties destfile="${gradle-build-dir}/gradle.properties" failonerror="true">
+      <propertyset>
+        <propertyref prefix="gradle."/>
+        <globmapper from="gradle.*" to="*"/>
+      </propertyset>
+    </echoproperties>
+    <exec executable="${gradle.exe}" dir="${gradle-build-dir}" searchpath="true" vmlauncher="false" failonerror="true" failifexecutionfails="true" taskname="gradle">
+      <arg value="--rerun-tasks"/>
+      <arg value="--info"/>
+      <arg value="--no-daemon"/>
+      <arg value="forbiddenApis"/>
+    </exec>
+  </target>
+  
+  <target name="rat-sources" depends="-install-tasks" description="Checks licenses of all source files">
+    <mkdir dir="build"/>
+    <tempfile property="rat.sources.logfile" prefix="rat" destdir="build"/>
+    <rat:report reportFile="${rat.sources.logfile}" addDefaultLicenseMatchers="true">
+      <fileset dir=".">
+        <include name="*"/>
+        <include name="src/**"/>
+        <exclude name="README.md"/>
+        <exclude name="**/jdk-deprecated-*.txt"/>
+      </fileset>
+    </rat:report>
+    <!-- now print the output, for review -->
+    <loadfile property="rat.output" srcFile="${rat.sources.logfile}"/>
+    <echo taskname="rat">${rat.output}</echo>
+    <delete>
+      <fileset file="${rat.sources.logfile}">
+        <and>
+          <containsregexp expression="^0 Unknown Licenses"/>
+          <not><containsregexp expression="^\s+!"/></not>
+        </and>
+      </fileset>
+    </delete>
+    <!-- fail if we didnt find the pattern -->
+    <fail message="Rat problems were found!">
+      <condition><available file="${rat.sources.logfile}"/></condition>
+    </fail>
+  </target>
+
+  <target name="-gradle-unsupported" unless="gradle.supported">
+    <echo level="warn" message="Cannot run Gradle test project because runtime is unsupported or 'gradle.exe' property undefined."/>
   </target>
   
   <target name="-runtime-unsupported" unless="tests.supported">
@@ -550,7 +639,7 @@
   <target name="generate-test-classes" depends="-generate-test-classes-init,-generate-test-classes-sunmisc,-generate-test-classes-jdk6,-generate-test-classes-jdk8" description="Regenerates .class files used by tests if the current JDK version supports it"/>
   
   <target name="show-help-mojo" depends="install-maven-artifacts" description="Shows help about mojo usage">
-    <artifact:mvn mavenVersion="${maven.version}" failonerror="true" fork="true" taskname="help">
+    <artifact:mvn mavenVersion="${maven.version}" failonerror="true" fork="${maven.fork}" taskname="help">
       <arg value="${groupId}:${artifactId}:${version}:help"/>
       <sysproperty key="detail" value="true"/>
     </artifact:mvn>

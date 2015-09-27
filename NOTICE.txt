@@ -1,6 +1,6 @@
 "Policeman's Forbidden API Checker"
 Allows to parse Java byte code to find invocations of method/class/field
-signatures and fail build (Apache Ant or Apache Maven)
+signatures and fail build (Apache Ant, Apache Maven, Gradle, CLI)
 
 
 Copyright © Uwe Schindler (Generics Policeman) and others.
@@ -8,9 +8,11 @@ Parts of this work are licensed to the Apache Software Foundation (ASF)
 under one or more contributor license agreements.
 
 This product was forked from the Apache Lucene Project and improved and
-extended by adding Apache Maven and CLI support.
+extended by adding Apache Maven, Gradle, and CLI support.
 
 Apache Ant and Apache Maven are trademarks of The Apache Software Foundation.
+Gradle is an open source build system, developed under the Apache 2.0
+License.
 
 
 This product bundles software (jarjar'ed to new package name) developed by:
@@ -32,3 +34,8 @@ This product bundles software (jarjar'ed to new package name) developed by:
   http://commons.apache.org/cli/
 
 (see the "bundled-licenses/" folder for full license information)
+
+
+The documentation package contains a CSS file "Classic Javadoc
+StyleSheet", developed by S.Ishigaki under the MIT License.
+http://junk-box.appspot.com/stylesheet/classic-javadoc-stylesheet/index.html

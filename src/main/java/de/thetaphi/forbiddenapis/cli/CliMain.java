@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.EnumSet;
+import java.util.LinkedHashSet;
 import java.util.Locale;
 import java.net.JarURLConnection;
 import java.net.URLConnection;
@@ -259,14 +260,12 @@ public final class CliMain {
       
       try {
         final String[] bundledSignatures = cmd.getOptionValues(bundledsignaturesOpt.getLongOpt());
-        if (bundledSignatures != null) for (String bs : bundledSignatures) {
-          LOG.info("Reading bundled API signatures: " + bs);
+        if (bundledSignatures != null) for (String bs : new LinkedHashSet<String>(Arrays.asList(bundledSignatures))) {
           checker.parseBundledSignatures(bs, null);
         }
         final String[] signaturesFiles = cmd.getOptionValues(signaturesfileOpt.getLongOpt());
-        if (signaturesFiles != null) for (String sf : signaturesFiles) {
+        if (signaturesFiles != null) for (String sf : new LinkedHashSet<String>(Arrays.asList(signaturesFiles))) {
           final File f = new File(sf).getAbsoluteFile();
-          LOG.info("Reading API signatures: " + f);
           checker.parseSignaturesFile(f);
         }
       } catch (IOException ioe) {
@@ -282,16 +281,12 @@ public final class CliMain {
         ));
       }
 
-      LOG.info("Loading classes to check...");
       try {
-        for (String f : files) {
-          checker.addClassToCheck(new File(classesDirectory, f));
-        }
+        checker.addClassesToCheck(classesDirectory, files);
       } catch (IOException ioe) {
         throw new ExitException(EXIT_ERR_OTHER, "Failed to load one of the given class files: " + ioe);
       }
 
-      LOG.info("Scanning for API signatures and dependencies...");
       try {
         checker.run();
       } catch (ForbiddenApiException fae) {
