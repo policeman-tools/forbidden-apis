@@ -25,6 +25,9 @@ if (project.plugins.withType(JavaBasePlugin.class).isEmpty()) {
 
 // create Extension for defaults:
 def extension = project.extensions.create(FORBIDDEN_APIS_EXTENSION_NAME, CheckForbiddenApisExtension.class);
+extension.with {
+  signaturesFiles = project.files()
+}
 
 // Define our tasks (one for each SourceSet):
 def forbiddenTasks = project.sourceSets.collect { sourceSet ->

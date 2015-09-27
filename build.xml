@@ -556,6 +556,7 @@
     <exec executable="${gradle.exe}" dir="${gradle-build-dir}" searchpath="true" vmlauncher="false" failonerror="true" failifexecutionfails="true" taskname="gradle">
       <arg value="--rerun-tasks"/>
       <arg value="--info"/>
+      <arg value="--stacktrace"/>
       <arg value="--no-daemon"/>
       <arg value="forbiddenApis"/>
     </exec>
