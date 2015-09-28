@@ -384,6 +384,10 @@ public final class Checker implements RelatedClassLookup {
 
   /** Reads a list of bundled API signatures from classpath. */
   public void parseBundledSignatures(String name, String jdkTargetVersion) throws IOException,ParseException {
+    parseBundledSignatures(name, jdkTargetVersion, true);
+  }
+  
+  private void parseBundledSignatures(String name, String jdkTargetVersion, boolean logging) throws IOException,ParseException {
     if (!name.matches("[A-Za-z0-9\\-\\.]+")) {
       throw new ParseException("Invalid bundled signature reference: " + name);
     }
@@ -397,7 +401,7 @@ public final class Checker implements RelatedClassLookup {
     if (in == null) {
       throw new FileNotFoundException("Bundled signatures resource not found: " + name);
     }
-    logger.info("Reading bundled API signatures: " + name);
+    if (logging) logger.info("Reading bundled API signatures: " + name);
     parseSignaturesFile(in, true);
   }
   
@@ -443,7 +447,7 @@ public final class Checker implements RelatedClassLookup {
         if (line.startsWith("@")) {
           if (allowBundled && line.startsWith(BUNDLED_PREFIX)) {
             final String name = line.substring(BUNDLED_PREFIX.length()).trim();
-            parseBundledSignatures(name, null);
+            parseBundledSignatures(name, null, false);
           } else if (line.startsWith(DEFAULT_MESSAGE_PREFIX)) {
             defaultMessage = line.substring(DEFAULT_MESSAGE_PREFIX.length()).trim();
             if (defaultMessage.length() == 0) defaultMessage = null;
