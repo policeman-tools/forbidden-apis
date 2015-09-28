@@ -40,6 +40,8 @@ import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.lang.annotation.RetentionPolicy;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URLClassLoader;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -208,6 +210,15 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
     artifactResolver.resolve(artifact, this.remoteRepositories, this.localRepository);
     return artifact.getFile();
   }
+  
+  private String encodeUrlPath(String path) {
+    try {
+      // hack to encode the URL path by misusing URI class:
+      return new URI(null, path, null).toASCIIString();
+    } catch (URISyntaxException e) {
+      throw new IllegalArgumentException(e.getMessage());
+    }
+  }
 
   @Override
   public void execute() throws MojoExecutionException {
@@ -331,8 +342,8 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
             final File f = resolveSignaturesArtifact(artifact);
             if (artifact.path != null) {
               final URL fileUrl = f.toURI().toURL();
-              final URL jarUrl = new URL("jar", "", -1, fileUrl.toExternalForm() + "!/");
-              sigUrls.add(new URL(jarUrl, artifact.path));
+              final URL jarBaseUrl = new URL("jar", null, fileUrl.toExternalForm() + "!/");
+              sigUrls.add(new URL(jarBaseUrl, encodeUrlPath(artifact.path)));
             } else {
               sigFiles.add(f);
             }
