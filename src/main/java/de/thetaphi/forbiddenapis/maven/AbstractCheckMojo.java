@@ -18,9 +18,16 @@ package de.thetaphi.forbiddenapis.maven;
 
 import static de.thetaphi.forbiddenapis.Checker.Option.*;
 
+import org.apache.maven.artifact.Artifact;
+import org.apache.maven.artifact.factory.ArtifactFactory;
+import org.apache.maven.artifact.repository.ArtifactRepository;
+import org.apache.maven.artifact.resolver.ArtifactNotFoundException;
+import org.apache.maven.artifact.resolver.ArtifactResolutionException;
+import org.apache.maven.artifact.resolver.ArtifactResolver;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.Log;
+import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.codehaus.plexus.util.DirectoryScanner;
 
@@ -41,6 +48,7 @@ import java.util.EnumSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
 /**
  * Base class for forbiddenapis Mojos.
@@ -55,6 +63,14 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
    */
   @Parameter(required = false)
   private File[] signaturesFiles;
+
+  /**
+   * Lists all Maven artifacts, which contain signatures and comments for forbidden API calls.
+   * The signatures are resolved against the compile classpath.
+   * @since 2.0
+   */
+  @Parameter(required = false)
+  private SignaturesArtifact[] signaturesArtifacts;
 
   /**
    * Gives a multiline list of signatures, inline in the pom.xml. Use an XML CDATA section to do that!
@@ -163,6 +179,18 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
   /** The project packaging (pom, jar, etc.). */
   @Parameter(defaultValue = "${project.packaging}", readonly = true, required = true)
   private String packaging;
+  
+  @Component
+  private ArtifactFactory artifactFactory;
+
+  @Component
+  private ArtifactResolver artifactResolver;
+  
+  @Parameter(defaultValue = "${project.remoteArtifactRepositories}", readonly = true, required = true)
+  private List<ArtifactRepository> remoteRepositories;
+
+  @Parameter(defaultValue = "${localRepository}", readonly = true, required = true)
+  private ArtifactRepository localRepository;
 
   /** provided by the concrete Mojos for compile and test classes processing */
   protected abstract List<String> getClassPathElements();
@@ -173,6 +201,12 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
   /** gets overridden for test, because it uses testTargetVersion as optional name to override */
   protected String getTargetVersion() {
     return targetVersion;
+  }
+  
+  private File resolveSignaturesArtifact(SignaturesArtifact signatureArtifact) throws ArtifactResolutionException, ArtifactNotFoundException {
+    final Artifact artifact = this.artifactFactory.createArtifact(signatureArtifact.groupId, signatureArtifact.artifactId, signatureArtifact.version, "", signatureArtifact.type);
+    artifactResolver.resolve(artifact, this.remoteRepositories, this.localRepository);
+    return artifact.getFile();
   }
 
   @Override
@@ -287,7 +321,16 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
             checker.parseBundledSignatures(bs, targetVersion);
           }
         }
-        if (signaturesFiles != null) for (final File f : new LinkedHashSet<File>(Arrays.asList(signaturesFiles))) {
+        final Set<File> sfiles = new LinkedHashSet<File>();
+        if (signaturesFiles != null) {
+          sfiles.addAll(Arrays.asList(signaturesFiles));
+        }
+        if (signaturesArtifacts != null) {
+          for (final SignaturesArtifact sa : signaturesArtifacts) {
+            sfiles.add(resolveSignaturesArtifact(sa));
+          }
+        }
+        for (final File f : sfiles) {
           checker.parseSignaturesFile(f);
         }
         final String sig = (signatures != null) ? signatures.trim() : null;
@@ -298,6 +341,10 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
         throw new MojoExecutionException("IO problem while reading files with API signatures.", ioe);
       } catch (ParseException pe) {
         throw new MojoExecutionException("Parsing signatures failed: " + pe.getMessage(), pe);
+      } catch (ArtifactResolutionException e) {
+        throw new MojoExecutionException("Problem while resolving signatures Maven artifact.", e);
+      } catch (ArtifactNotFoundException e) {
+        throw new MojoExecutionException("Signatures Maven artifact does not exist.", e);
       }
 
       if (checker.hasNoSignatures()) {
