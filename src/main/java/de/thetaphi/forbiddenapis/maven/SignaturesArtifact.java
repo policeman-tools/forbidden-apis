@@ -21,5 +21,5 @@ package de.thetaphi.forbiddenapis.maven;
  * @since 2.0
  */
 public final class SignaturesArtifact {
-  String groupId, artifactId, version, type;
+  public String groupId, artifactId, version, type, classifier;
 }

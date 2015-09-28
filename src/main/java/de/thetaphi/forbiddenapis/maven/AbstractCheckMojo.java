@@ -203,8 +203,10 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
     return targetVersion;
   }
   
-  private File resolveSignaturesArtifact(SignaturesArtifact signatureArtifact) throws ArtifactResolutionException, ArtifactNotFoundException {
-    final Artifact artifact = this.artifactFactory.createArtifact(signatureArtifact.groupId, signatureArtifact.artifactId, signatureArtifact.version, "", signatureArtifact.type);
+  private File resolveSignaturesArtifact(SignaturesArtifact signaturesArtifact) throws ArtifactResolutionException, ArtifactNotFoundException {
+    final Artifact artifact = (signaturesArtifact.classifier != null) ? 
+        this.artifactFactory.createArtifactWithClassifier(signaturesArtifact.groupId, signaturesArtifact.artifactId, signaturesArtifact.version, signaturesArtifact.type, signaturesArtifact.classifier) :
+        this.artifactFactory.createArtifact(signaturesArtifact.groupId, signaturesArtifact.artifactId, signaturesArtifact.version, null/*scope*/, signaturesArtifact.type);
     artifactResolver.resolve(artifact, this.remoteRepositories, this.localRepository);
     return artifact.getFile();
   }
