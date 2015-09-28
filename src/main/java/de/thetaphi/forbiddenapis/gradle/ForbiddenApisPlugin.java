@@ -38,7 +38,7 @@ import org.gradle.api.plugins.PluginInstantiationException;
 public class ForbiddenApisPlugin implements Plugin<Project> {
   
   /** Resource with Groovy script that initializes the plugin. */
-  public static final String PLUGIN_INIT_SCRIPT = "plugin-init.groovy";
+  private static final String PLUGIN_INIT_SCRIPT = "plugin-init.groovy";
   
   /** Name of the base task that depends on one for every SourceSet */
   public static final String FORBIDDEN_APIS_TASK_NAME = "forbiddenApis";
@@ -52,7 +52,8 @@ public class ForbiddenApisPlugin implements Plugin<Project> {
     final CompilerConfiguration configuration = new CompilerConfiguration().addCompilationCustomizers(importCustomizer);
     configuration.setScriptBaseClass(DelegatingScript.class.getName());
     configuration.setSourceEncoding("UTF-8");
-    final GroovyShell shell = new GroovyShell(ForbiddenApisPlugin.class.getClassLoader(), new Binding(Collections.singletonMap("project", project)), configuration);
+    final Binding binding = new Binding(Collections.singletonMap("project", project));
+    final GroovyShell shell = new GroovyShell(ForbiddenApisPlugin.class.getClassLoader(), binding, configuration);
     final URL scriptUrl = ForbiddenApisPlugin.class.getResource(PLUGIN_INIT_SCRIPT);
     if (scriptUrl == null) {
       throw new PluginInstantiationException("Cannot find resource with script: " + PLUGIN_INIT_SCRIPT);
