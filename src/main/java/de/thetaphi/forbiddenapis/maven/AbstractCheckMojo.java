@@ -204,9 +204,7 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
   }
   
   private File resolveSignaturesArtifact(SignaturesArtifact signaturesArtifact) throws ArtifactResolutionException, ArtifactNotFoundException {
-    final Artifact artifact = (signaturesArtifact.classifier != null) ? 
-        this.artifactFactory.createArtifactWithClassifier(signaturesArtifact.groupId, signaturesArtifact.artifactId, signaturesArtifact.version, signaturesArtifact.type, signaturesArtifact.classifier) :
-        this.artifactFactory.createArtifact(signaturesArtifact.groupId, signaturesArtifact.artifactId, signaturesArtifact.version, null/*scope*/, signaturesArtifact.type);
+    final Artifact artifact = signaturesArtifact.createArtifact(artifactFactory);
     artifactResolver.resolve(artifact, this.remoteRepositories, this.localRepository);
     return artifact.getFile();
   }
@@ -323,17 +321,28 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
             checker.parseBundledSignatures(bs, targetVersion);
           }
         }
-        final Set<File> sfiles = new LinkedHashSet<File>();
+        final Set<File> sigFiles = new LinkedHashSet<File>();
+        final Set<URL> sigUrls = new LinkedHashSet<URL>();
         if (signaturesFiles != null) {
-          sfiles.addAll(Arrays.asList(signaturesFiles));
+          sigFiles.addAll(Arrays.asList(signaturesFiles));
         }
         if (signaturesArtifacts != null) {
-          for (final SignaturesArtifact sa : signaturesArtifacts) {
-            sfiles.add(resolveSignaturesArtifact(sa));
+          for (final SignaturesArtifact artifact : signaturesArtifacts) {
+            final File f = resolveSignaturesArtifact(artifact);
+            if (artifact.path != null) {
+              final URL fileUrl = f.toURI().toURL();
+              final URL jarUrl = new URL("jar", "", -1, fileUrl.toExternalForm() + "!/");
+              sigUrls.add(new URL(jarUrl, artifact.path));
+            } else {
+              sigFiles.add(f);
+            }
           }
         }
-        for (final File f : sfiles) {
+        for (final File f : sigFiles) {
           checker.parseSignaturesFile(f);
+        }
+        for (final URL u : sigUrls) {
+          checker.parseSignaturesFile(u);
         }
         final String sig = (signatures != null) ? signatures.trim() : null;
         if (sig != null && sig.length() != 0) {
