@@ -18,9 +18,15 @@ package de.thetaphi.forbiddenapis.maven;
 
 import static de.thetaphi.forbiddenapis.Checker.Option.*;
 
+import org.apache.maven.artifact.Artifact;
+import org.apache.maven.artifact.factory.ArtifactFactory;
+import org.apache.maven.artifact.repository.ArtifactRepository;
+import org.apache.maven.artifact.resolver.ArtifactNotFoundException;
+import org.apache.maven.artifact.resolver.ArtifactResolutionException;
+import org.apache.maven.artifact.resolver.ArtifactResolver;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugin.logging.Log;
+import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.codehaus.plexus.util.DirectoryScanner;
 
@@ -33,6 +39,8 @@ import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.lang.annotation.RetentionPolicy;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URLClassLoader;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -41,6 +49,7 @@ import java.util.EnumSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
 /**
  * Base class for forbiddenapis Mojos.
@@ -55,6 +64,36 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
    */
   @Parameter(required = false)
   private File[] signaturesFiles;
+
+  /**
+   * Lists all Maven artifacts, which contain signatures and comments for forbidden API calls.
+   * The artifact needs to be specified like a Maven dependency. Resolution is not transitive.
+   * You can refer to plain text Maven artifacts ({@code type="txt"}, e.g., with a separate {@code classifier}):
+   * <pre>
+   * &lt;signaturesArtifact&gt;
+   *   &lt;groupId&gt;org.apache.foobar&lt;/groupId&gt;
+   *   &lt;artifactId&gt;example&lt;/artifactId&gt;
+   *   &lt;version&gt;1.0&lt;/version&gt;
+   *   &lt;classifier&gt;signatures&lt;/classifier&gt;
+   *   &lt;type&gt;txt&lt;/type&gt;
+   * &lt;/signaturesArtifact&gt;
+   * </pre>
+   * Alternatively,  refer to signatures files inside JAR artifacts. In that case, the additional
+   * parameter {@code path} has to be given:
+   * <pre>
+   * &lt;signaturesArtifact&gt;
+   *   &lt;groupId&gt;org.apache.foobar&lt;/groupId&gt;
+   *   &lt;artifactId&gt;example&lt;/artifactId&gt;
+   *   &lt;version&gt;1.0&lt;/version&gt;
+   *   &lt;type&gt;jar&lt;/type&gt;
+   *   &lt;path&gt;path/inside/jar/file/signatures.txt&lt;/path&gt;
+   * &lt;/signaturesArtifact&gt;
+   * </pre>
+   * <p>The signatures are resolved against the compile classpath.
+   * @since 2.0
+   */
+  @Parameter(required = false)
+  private SignaturesArtifact[] signaturesArtifacts;
 
   /**
    * Gives a multiline list of signatures, inline in the pom.xml. Use an XML CDATA section to do that!
@@ -163,6 +202,18 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
   /** The project packaging (pom, jar, etc.). */
   @Parameter(defaultValue = "${project.packaging}", readonly = true, required = true)
   private String packaging;
+  
+  @Component
+  private ArtifactFactory artifactFactory;
+
+  @Component
+  private ArtifactResolver artifactResolver;
+  
+  @Parameter(defaultValue = "${project.remoteArtifactRepositories}", readonly = true, required = true)
+  private List<ArtifactRepository> remoteRepositories;
+
+  @Parameter(defaultValue = "${localRepository}", readonly = true, required = true)
+  private ArtifactRepository localRepository;
 
   /** provided by the concrete Mojos for compile and test classes processing */
   protected abstract List<String> getClassPathElements();
@@ -174,10 +225,46 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
   protected String getTargetVersion() {
     return targetVersion;
   }
+  
+  private File resolveSignaturesArtifact(SignaturesArtifact signaturesArtifact) throws ArtifactResolutionException, ArtifactNotFoundException {
+    final Artifact artifact = signaturesArtifact.createArtifact(artifactFactory);
+    artifactResolver.resolve(artifact, this.remoteRepositories, this.localRepository);
+    return artifact.getFile();
+  }
+  
+  private String encodeUrlPath(String path) {
+    try {
+      // hack to encode the URL path by misusing URI class:
+      return new URI(null, path, null).toASCIIString();
+    } catch (URISyntaxException e) {
+      throw new IllegalArgumentException(e.getMessage());
+    }
+  }
+  
+  private URL createJarUrl(File f, String jarPath) throws MalformedURLException {
+    final URL fileUrl = f.toURI().toURL();
+    final URL jarBaseUrl = new URL("jar", null, fileUrl.toExternalForm() + "!/");
+    return new URL(jarBaseUrl, encodeUrlPath(jarPath));
+  }
 
   @Override
   public void execute() throws MojoExecutionException {
-    final Log log = getLog();
+    final Logger log = new Logger() {
+      @Override
+      public void error(String msg) {
+        getLog().error(msg);
+      }
+      
+      @Override
+      public void warn(String msg) {
+        getLog().warn(msg);
+      }
+      
+      @Override
+      public void info(String msg) {
+        getLog().info(msg);
+      }
+    };
     
     if (skip) {
       log.info("Skipping forbidden-apis checks.");
@@ -202,7 +289,6 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
         urls[i++] = new File(cpElement).toURI().toURL();
       }
       assert i == urls.length;
-      if (log.isDebugEnabled()) log.debug("Compile Classpath: " + Arrays.toString(urls));
     } catch (MalformedURLException e) {
       throw new MojoExecutionException("Failed to build classpath.", e);
     }
@@ -218,22 +304,7 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
       if (failOnMissingClasses) options.add(FAIL_ON_MISSING_CLASSES);
       if (failOnViolation) options.add(FAIL_ON_VIOLATION);
       if (failOnUnresolvableSignatures) options.add(FAIL_ON_UNRESOLVABLE_SIGNATURES);
-      final Checker checker = new Checker(new Logger() {
-        @Override
-        public void error(String msg) {
-          log.error(msg);
-        }
-        
-        @Override
-        public void warn(String msg) {
-          log.warn(msg);
-        }
-        
-        @Override
-        public void info(String msg) {
-          log.info(msg);
-        }
-      }, loader, options);
+      final Checker checker = new Checker(log, loader, options);
       
       if (!checker.isSupportedJDK) {
         final String msg = String.format(Locale.ENGLISH, 
@@ -287,8 +358,26 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
             checker.parseBundledSignatures(bs, targetVersion);
           }
         }
-        if (signaturesFiles != null) for (final File f : new LinkedHashSet<File>(Arrays.asList(signaturesFiles))) {
+        final Set<File> sigFiles = new LinkedHashSet<File>();
+        final Set<URL> sigUrls = new LinkedHashSet<URL>();
+        if (signaturesFiles != null) {
+          sigFiles.addAll(Arrays.asList(signaturesFiles));
+        }
+        if (signaturesArtifacts != null) {
+          for (final SignaturesArtifact artifact : signaturesArtifacts) {
+            final File f = resolveSignaturesArtifact(artifact);
+            if (artifact.path != null) {
+              sigUrls.add(createJarUrl(f, artifact.path));
+            } else {
+              sigFiles.add(f);
+            }
+          }
+        }
+        for (final File f : sigFiles) {
           checker.parseSignaturesFile(f);
+        }
+        for (final URL u : sigUrls) {
+          checker.parseSignaturesFile(u);
         }
         final String sig = (signatures != null) ? signatures.trim() : null;
         if (sig != null && sig.length() != 0) {
@@ -298,11 +387,15 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
         throw new MojoExecutionException("IO problem while reading files with API signatures.", ioe);
       } catch (ParseException pe) {
         throw new MojoExecutionException("Parsing signatures failed: " + pe.getMessage(), pe);
+      } catch (ArtifactResolutionException e) {
+        throw new MojoExecutionException("Problem while resolving Maven artifact.", e);
+      } catch (ArtifactNotFoundException e) {
+        throw new MojoExecutionException("Maven artifact does not exist.", e);
       }
 
       if (checker.hasNoSignatures()) {
         if (failOnUnresolvableSignatures) {
-          throw new MojoExecutionException("No API signatures found; use parameters 'signatures', 'bundledSignatures', and/or 'signaturesFiles' to define those!");
+          throw new MojoExecutionException("No API signatures found; use parameters 'signatures', 'bundledSignatures', 'signaturesFiles',  and/or 'signaturesArtifacts' to define those!");
         } else {
           log.info("Skipping execution because no API signatures are available.");
           return;
