@@ -17,6 +17,7 @@ package de.thetaphi.forbiddenapis.gradle;
  */
 
 import groovy.lang.Binding;
+import groovy.lang.GroovyCodeSource;
 import groovy.lang.GroovyShell;
 import groovy.util.DelegatingScript;
 
@@ -26,7 +27,6 @@ import java.util.Collections;
 
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.control.customizers.ImportCustomizer;
-import org.codehaus.groovy.runtime.ResourceGroovyMethods;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.plugins.PluginInstantiationException;
@@ -38,7 +38,7 @@ import org.gradle.api.plugins.PluginInstantiationException;
 public class ForbiddenApisPlugin implements Plugin<Project> {
   
   /** Resource with Groovy script that initializes the plugin. */
-  public static final String PLUGIN_INIT_SCRIPT = "plugin-init.groovy";
+  private static final String PLUGIN_INIT_SCRIPT = "plugin-init.groovy";
   
   /** Name of the base task that depends on one for every SourceSet */
   public static final String FORBIDDEN_APIS_TASK_NAME = "forbiddenApis";
@@ -48,21 +48,23 @@ public class ForbiddenApisPlugin implements Plugin<Project> {
   
   @Override
   public void apply(final Project project) {
-    final String scriptText;
-    try {
-      final URL scriptUrl = ForbiddenApisPlugin.class.getResource(PLUGIN_INIT_SCRIPT);
-      if (scriptUrl == null) {
-        throw new PluginInstantiationException("Cannot find resource with " + PLUGIN_INIT_SCRIPT + " script.");
-      }
-      scriptText = ResourceGroovyMethods.getText(scriptUrl, "UTF-8");
-    } catch (IOException ioe) {
-      throw new PluginInstantiationException("Cannot load " + PLUGIN_INIT_SCRIPT + " script.", ioe);
-    }    
     final ImportCustomizer importCustomizer = new ImportCustomizer().addStarImports(ForbiddenApisPlugin.class.getPackage().getName());
     final CompilerConfiguration configuration = new CompilerConfiguration().addCompilationCustomizers(importCustomizer);
     configuration.setScriptBaseClass(DelegatingScript.class.getName());
-    final GroovyShell shell = new GroovyShell(ForbiddenApisPlugin.class.getClassLoader(), new Binding(Collections.singletonMap("project", project)), configuration);
-    final DelegatingScript script = (DelegatingScript) shell.parse(scriptText, PLUGIN_INIT_SCRIPT);
+    configuration.setSourceEncoding("UTF-8");
+    final Binding binding = new Binding(Collections.singletonMap("project", project));
+    final GroovyShell shell = new GroovyShell(ForbiddenApisPlugin.class.getClassLoader(), binding, configuration);
+    final URL scriptUrl = ForbiddenApisPlugin.class.getResource(PLUGIN_INIT_SCRIPT);
+    if (scriptUrl == null) {
+      throw new PluginInstantiationException("Cannot find resource with script: " + PLUGIN_INIT_SCRIPT);
+    }
+    final GroovyCodeSource csrc;
+    try {
+      csrc = new GroovyCodeSource(scriptUrl);
+    } catch (IOException ioe) {
+      throw new PluginInstantiationException("Cannot load script: " + scriptUrl, ioe);
+    }
+    final DelegatingScript script = (DelegatingScript) shell.parse(csrc);
     script.setDelegate(this);
     script.run();
   }

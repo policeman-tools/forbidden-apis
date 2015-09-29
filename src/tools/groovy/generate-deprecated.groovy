@@ -26,7 +26,7 @@ boolean isOracle = vendor.contains("oracle") || vendor.contains("sun microsystem
 boolean isDetectedJavaVersion = properties['java.version'].startsWith(properties['build.java.runtime']);
 
 if (isOracle && isDetectedJavaVersion && (isJava9 || hasRTJar)) {
-  String script = isJava9 ? "generate-deprecated-java9.groovy" : "generate-deprecated-java5.groovy";
+  String script = isJava9 ? "generate-deprecated-java9.groovy" : "generate-deprecated-java6.groovy";
   evaluate(new File(properties['groovy-tools.dir'], script));
 } else {
   throw new BuildException("Regenerating the deprecated signatures files need stock Oracle/Sun JDK, "+

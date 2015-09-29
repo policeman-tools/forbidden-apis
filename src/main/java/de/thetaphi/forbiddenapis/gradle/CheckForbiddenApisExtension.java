@@ -48,7 +48,7 @@ public class CheckForbiddenApisExtension {
     "disableClassloadingCache"
   );
   
-  public FileCollection signaturesFiles;
+  public FileCollection signaturesFiles; // initialized by plugin-init.groovy
   public Set<URL> signaturesURLs = new LinkedHashSet<URL>();
   public List<String> signatures = new ArrayList<String>();
   public Set<String> bundledSignatures = new LinkedHashSet<String>(),

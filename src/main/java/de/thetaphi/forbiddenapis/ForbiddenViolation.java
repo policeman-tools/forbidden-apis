@@ -32,12 +32,12 @@ public final class ForbiddenViolation implements Comparable<ForbiddenViolation> 
   public final String locationInfo;
   public final int lineNo;
   
-  ForbiddenViolation(int counter, String description, String locationInfo, int lineNo) {
-    this(counter, null, description, locationInfo, lineNo);
+  ForbiddenViolation(int groupId, String description, String locationInfo, int lineNo) {
+    this(groupId, null, description, locationInfo, lineNo);
   }
 
-  ForbiddenViolation(int counter, Method targetMethod, String description, String locationInfo, int lineNo) {
-    this.groupId = counter;
+  ForbiddenViolation(int groupId, Method targetMethod, String description, String locationInfo, int lineNo) {
+    this.groupId = groupId;
     this.targetMethod = targetMethod;
     this.description = description;
     this.locationInfo = locationInfo;
