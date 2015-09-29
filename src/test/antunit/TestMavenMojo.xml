@@ -109,4 +109,22 @@
     <au:assertLogContains text="Reading bundled API signatures: jdk-unsafe"/> 
   </target>
 
+  <target name="testSigArtifacts-Maven2">
+    <artifact:mvn pom="pom-sigArtifacts.xml" mavenVersion="${maven.version}" failonerror="true" fork="${maven.fork}">
+      <syspropertyset refid="injected-properties"/>
+      <arg value="${groupId}:${artifactId}:${version}:check"/>
+    </artifact:mvn>
+    <au:assertLogContains text=" 0 error(s)."/> 
+    <au:assertLogContains text="Reading API signatures: jar:file:"/> 
+  </target>
+  
+  <target name="testSigArtifacts-Maven3">
+    <artifact:mvn pom="pom-sigArtifacts.xml" mavenVersion="${antunit.maven3.version}" failonerror="true" fork="${maven.fork}">
+      <syspropertyset refid="injected-properties"/>
+      <arg value="${groupId}:${artifactId}:${version}:check"/>
+    </artifact:mvn>
+    <au:assertLogContains text=" 0 error(s)."/> 
+    <au:assertLogContains text="Reading API signatures: jar:file:"/> 
+  </target>
+  
 </project>
