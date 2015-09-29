@@ -40,9 +40,19 @@
         <version>${injected.maven-plugin-plugin.version}</version>
         <configuration>
           <extractors>
-            <extractor>java</extractor>
+            <extractor>java-javadoc</extractor>
             <extractor>java-annotations</extractor>
           </extractors>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <!-- hack to disable compilation by providing no source files: -->
+          <excludes>
+            <exclude>**</exclude>
+          </excludes>
         </configuration>
       </plugin>
     </plugins>

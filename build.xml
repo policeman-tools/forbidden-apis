@@ -83,7 +83,7 @@
 
   <property name="jdk.version" value="1.6"/>
   <property name="maven.version" value="2.2.1"/>
-  <property name="maven-plugin-plugin.version" value="3.3"/>
+  <property name="maven-plugin-plugin.version" value="3.4"/>
   
   <!-- with fork=false this somehow takes endless to download the internet, so let's fork - and slow down in an other way (startup) -->
   <property name="maven.fork" value="true"/>
@@ -281,7 +281,9 @@
     <artifact:mvn pom="${maven-build-dir}/pom-build.xml" mavenVersion="${maven.version}" failonerror="true" fork="${maven.fork}">
       <arg value="plugin:helpmojo"/>
       <arg value="plugin:descriptor"/>
-      <arg value="plugin:xdoc"/>
+      <arg value="plugin:report"/>
+      <sysproperty key="user.language" file="en"/>
+      <sysproperty key="user.country" file="US"/>
       <sysproperty key="injected.src.dir" file="src/main/java"/>
       <sysproperty key="injected.output.dir" file="build/main"/>
       <sysproperty key="injected.build.dir" file="${maven-build-dir}"/>
