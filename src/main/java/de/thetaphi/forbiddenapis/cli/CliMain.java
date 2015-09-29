@@ -46,7 +46,6 @@ import de.thetaphi.forbiddenapis.ForbiddenApiException;
 import de.thetaphi.forbiddenapis.Logger;
 import de.thetaphi.forbiddenapis.ParseException;
 import de.thetaphi.forbiddenapis.StdIoLogger;
-import de.thetaphi.forbiddenapis.SuppressForbidden;
 
 /**
  * CLI class with a static main() method
@@ -300,13 +299,12 @@ public final class CliMain {
     }
   }
   
-  @SuppressForbidden
   public static void main(String... args) {
     try {
       new CliMain(args).run();
     } catch (ExitException e) {
       if (e.getMessage() != null) {
-        System.err.println("ERROR: " + e.getMessage());
+        LOG.error(e.getMessage());
       }
       if (e.exitCode != 0) {
         System.exit(e.exitCode);
