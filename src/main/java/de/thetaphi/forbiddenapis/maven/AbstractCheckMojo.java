@@ -395,7 +395,7 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
 
       if (checker.hasNoSignatures()) {
         if (failOnUnresolvableSignatures) {
-          throw new MojoExecutionException("No API signatures found; use parameters 'signatures', 'bundledSignatures', and/or 'signaturesFiles' to define those!");
+          throw new MojoExecutionException("No API signatures found; use parameters 'signatures', 'bundledSignatures', 'signaturesFiles',  and/or 'signaturesArtifacts' to define those!");
         } else {
           log.info("Skipping execution because no API signatures are available.");
           return;
