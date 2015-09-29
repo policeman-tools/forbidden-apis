@@ -67,7 +67,29 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
 
   /**
    * Lists all Maven artifacts, which contain signatures and comments for forbidden API calls.
-   * The signatures are resolved against the compile classpath.
+   * The artifact needs to be specified like a Maven dependency. Resolution is not transitive.
+   * You can refer to plain text Maven artifacts ({@code type="txt"}, e.g., with a separate {@code classifier}):
+   * <pre>
+   * &lt;signaturesArtifact&gt;
+   *   &lt;groupId&gt;org.apache.foobar&lt;/groupId&gt;
+   *   &lt;artifactId&gt;example&lt;/artifactId&gt;
+   *   &lt;version&gt;1.0&lt;/version&gt;
+   *   &lt;classifier&gt;signatures&lt;/classifier&gt;
+   *   &lt;type&gt;txt&lt;/type&gt;
+   * &lt;/signaturesArtifact&gt;
+   * </pre>
+   * Alternatively,  refer to signatures files inside JAR artifacts. In that case, the additional
+   * parameter {@code path} has to be given:
+   * <pre>
+   * &lt;signaturesArtifact&gt;
+   *   &lt;groupId&gt;org.apache.foobar&lt;/groupId&gt;
+   *   &lt;artifactId&gt;example&lt;/artifactId&gt;
+   *   &lt;version&gt;1.0&lt;/version&gt;
+   *   &lt;type&gt;jar&lt;/type&gt;
+   *   &lt;path&gt;path/inside/jar/file/signatures.txt&lt;/path&gt;
+   * &lt;/signaturesArtifact&gt;
+   * </pre>
+   * <p>The signatures are resolved against the compile classpath.
    * @since 2.0
    */
   @Parameter(required = false)
@@ -366,9 +388,9 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
       } catch (ParseException pe) {
         throw new MojoExecutionException("Parsing signatures failed: " + pe.getMessage(), pe);
       } catch (ArtifactResolutionException e) {
-        throw new MojoExecutionException("Problem while resolving signatures Maven artifact.", e);
+        throw new MojoExecutionException("Problem while resolving Maven artifact.", e);
       } catch (ArtifactNotFoundException e) {
-        throw new MojoExecutionException("Signatures Maven artifact does not exist.", e);
+        throw new MojoExecutionException("Maven artifact does not exist.", e);
       }
 
       if (checker.hasNoSignatures()) {

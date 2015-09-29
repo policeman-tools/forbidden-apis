@@ -20,25 +20,41 @@ import org.apache.maven.artifact.factory.ArtifactFactory;
  */
 
 /**
- * TODO
+ * Defines coordinates of a Maven artifact that provides signatures files.
+ * It may be a plain text file ({@link #path} is not given) or alternatively
+ * refer to a text file inside a JAR file. For that, define the resource path
+ * using {@link #path}.
  * @since 2.0
  */
 public final class SignaturesArtifact {
+  
+  /** Artifact's group ID (required) */
   public String groupId;
+  
+  /** Artifact's ID (required) */
   public String artifactId;
+
+  /** Version (required) */
   public String version;
+  
+  /** Classifier (optional) */
   public String classifier;
+  
+  /**
+   * Type (required; {@code txt} or {@code jar}).
+   * If the artifact refers to a JAR file, the {@link #path} should be
+   * given, that identifies the signatures file inside the JAR.
+   * */
   public String type;
   
-  /** Path to resource inside JAR artifacts. */
+  /** Path to resource inside JAR artifacts. If given, the {@link #type} must be {@code "jar"} or {@code "zip"}. */
   public String path;
   
-  public Artifact createArtifact(ArtifactFactory artifactFactory) {
+  /** Used by the mojo to fetch the artifact */
+  Artifact createArtifact(ArtifactFactory artifactFactory) {
     if (groupId == null || artifactId == null || version == null || type == null) {
       throw new NullPointerException("signaturesArtifact is missing some properties. Required are: groupId, artifactId, version, type");
     }
-    return (classifier != null) ? 
-        artifactFactory.createArtifactWithClassifier(groupId, artifactId, version, type, classifier) :
-        artifactFactory.createArtifact(groupId, artifactId, version, null/*scope*/, type);
+    return artifactFactory.createArtifactWithClassifier(groupId, artifactId, version, type, classifier);
   }
 }
