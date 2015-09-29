@@ -26,7 +26,6 @@ import org.apache.maven.artifact.resolver.ArtifactResolutionException;
 import org.apache.maven.artifact.resolver.ArtifactResolver;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.codehaus.plexus.util.DirectoryScanner;
@@ -228,7 +227,22 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
 
   @Override
   public void execute() throws MojoExecutionException {
-    final Log log = getLog();
+    final Logger log = new Logger() {
+      @Override
+      public void error(String msg) {
+        getLog().error(msg);
+      }
+      
+      @Override
+      public void warn(String msg) {
+        getLog().warn(msg);
+      }
+      
+      @Override
+      public void info(String msg) {
+        getLog().info(msg);
+      }
+    };
     
     if (skip) {
       log.info("Skipping forbidden-apis checks.");
@@ -253,7 +267,6 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
         urls[i++] = new File(cpElement).toURI().toURL();
       }
       assert i == urls.length;
-      if (log.isDebugEnabled()) log.debug("Compile Classpath: " + Arrays.toString(urls));
     } catch (MalformedURLException e) {
       throw new MojoExecutionException("Failed to build classpath.", e);
     }
@@ -269,22 +282,7 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
       if (failOnMissingClasses) options.add(FAIL_ON_MISSING_CLASSES);
       if (failOnViolation) options.add(FAIL_ON_VIOLATION);
       if (failOnUnresolvableSignatures) options.add(FAIL_ON_UNRESOLVABLE_SIGNATURES);
-      final Checker checker = new Checker(new Logger() {
-        @Override
-        public void error(String msg) {
-          log.error(msg);
-        }
-        
-        @Override
-        public void warn(String msg) {
-          log.warn(msg);
-        }
-        
-        @Override
-        public void info(String msg) {
-          log.info(msg);
-        }
-      }, loader, options);
+      final Checker checker = new Checker(log, loader, options);
       
       if (!checker.isSupportedJDK) {
         final String msg = String.format(Locale.ENGLISH, 
