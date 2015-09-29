@@ -219,6 +219,12 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
       throw new IllegalArgumentException(e.getMessage());
     }
   }
+  
+  private URL createJarUrl(File f, String jarPath) throws MalformedURLException {
+    final URL fileUrl = f.toURI().toURL();
+    final URL jarBaseUrl = new URL("jar", null, fileUrl.toExternalForm() + "!/");
+    return new URL(jarBaseUrl, encodeUrlPath(jarPath));
+  }
 
   @Override
   public void execute() throws MojoExecutionException {
@@ -341,9 +347,7 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
           for (final SignaturesArtifact artifact : signaturesArtifacts) {
             final File f = resolveSignaturesArtifact(artifact);
             if (artifact.path != null) {
-              final URL fileUrl = f.toURI().toURL();
-              final URL jarBaseUrl = new URL("jar", null, fileUrl.toExternalForm() + "!/");
-              sigUrls.add(new URL(jarBaseUrl, encodeUrlPath(artifact.path)));
+              sigUrls.add(createJarUrl(f, artifact.path));
             } else {
               sigFiles.add(f);
             }
