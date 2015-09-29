@@ -43,7 +43,7 @@
     We use version 1.1, because it's smallest and has DirectoryScanner and no forbidden apis! :-)
     -->
     <dependency org="org.codehaus.plexus" name="plexus-utils" rev="1.1" conf="build,bundle"/>
-    <dependency org="commons-cli" name="commons-cli" rev="1.2" conf="build,bundle"/>
+    <dependency org="commons-cli" name="commons-cli" rev="1.3.1" conf="build,bundle"/>
     <dependency org="org.sonatype.plugins" name="jarjar-maven-plugin" rev="1.9" conf="buildtools"/>
     <dependency org="org.apache.maven" name="maven-ant-tasks" rev="2.1.3" conf="buildtools"/>
     <dependency org="org.apache.rat" name="apache-rat" rev="0.11" conf="buildtools"/>
