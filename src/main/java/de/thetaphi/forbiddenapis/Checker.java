@@ -148,9 +148,12 @@ public final class Checker implements RelatedClassLookup {
             }
           }
           isSupportedJDK = !(bootClassPathJars.isEmpty() && bootClassPathDirs.isEmpty());
-          // logInfo("JARs in boot-classpath: " + bootClassPathJars + "; dirs in boot-classpath: " + bootClassPathDirs);
+          if (!isSupportedJDK) {
+            logger.warn("Boot classpath appears to be empty; marking runtime as not suppported.");
+          }
         }
       } catch (IOException ioe) {
+        logger.warn("Cannot scan boot classpath due to IO exception; marking runtime as not suppported: " + ioe);
         isSupportedJDK = false;
         bootClassPathJars.clear();
         bootClassPathDirs.clear();
@@ -162,6 +165,9 @@ public final class Checker implements RelatedClassLookup {
     if (isSupportedJDK) {
       try {
         isSupportedJDK = getClassFromClassLoader(Object.class.getName()).isRuntimeClass;
+        if (!isSupportedJDK) {
+          logger.warn("Bytecode of java.lang.Object does not seem to come from runtime library; marking runtime as not suppported.");
+        }
       } catch (IllegalArgumentException iae) {
         logger.warn("Bundled version of ASM cannot parse bytecode of java.lang.Object class; marking runtime as not suppported.");
         isSupportedJDK = false;
