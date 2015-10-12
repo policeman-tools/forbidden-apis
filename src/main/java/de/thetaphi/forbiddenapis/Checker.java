@@ -401,6 +401,10 @@ public final class Checker implements RelatedClassLookup {
     InputStream in = Checker.class.getResourceAsStream("signatures/" + name + ".txt");
     // automatically expand the compiler version in here (for jdk-* signatures without version):
     if (in == null && jdkTargetVersion != null && name.startsWith("jdk-") && !name.matches(".*?\\-\\d\\.\\d")) {
+      // convert the "new" version number "major.0" to old-style "1.major" (as this matches our resources):
+      if (!jdkTargetVersion.startsWith("1.") && jdkTargetVersion.matches("\\d\\.0")) {
+        jdkTargetVersion = "1." + jdkTargetVersion.substring(0, 1);
+      }
       name = name + "-" + jdkTargetVersion;
       in = Checker.class.getResourceAsStream("signatures/" + name + ".txt");
     }
