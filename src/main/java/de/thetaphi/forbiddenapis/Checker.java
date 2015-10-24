@@ -90,6 +90,29 @@ public final class Checker implements RelatedClassLookup {
   // descriptors (not internal names) of all annotations that suppress:
   final Set<String> suppressAnnotations = new LinkedHashSet<String>();
     
+  private static enum UnresolvableReporting {
+    FAIL() {
+      @Override
+      public void parseFailed(Logger logger, String message, String signature) throws ParseException {
+        throw new ParseException(String.format(Locale.ENGLISH, "%s while parsing signature: %s", message, signature));
+      }
+    },
+    WARNING() {
+      @Override
+      public void parseFailed(Logger logger, String message, String signature) throws ParseException {
+        logger.warn(String.format(Locale.ENGLISH, "%s while parsing signature: %s [signature ignored]", message, signature));
+      }
+    },
+    SILENT() {
+      @Override
+      public void parseFailed(Logger logger, String message, String signature) throws ParseException {
+        // keep silent
+      }
+    };
+    
+    public abstract void parseFailed(Logger logger, String message, String signature) throws ParseException;
+  }
+
   public Checker(Logger logger, ClassLoader loader, Option... options) {
     this(logger, loader, (options.length == 0) ? EnumSet.noneOf(Option.class) : EnumSet.copyOf(Arrays.asList(options)));
   }
@@ -296,16 +319,8 @@ public final class Checker implements RelatedClassLookup {
     return c;
   }
   
-  private void reportParseFailed(boolean failOnUnresolvableSignatures, String message, String signature) throws ParseException {
-    if (failOnUnresolvableSignatures) {
-      throw new ParseException(String.format(Locale.ENGLISH, "%s while parsing signature: %s", message, signature));
-    } else {
-      logger.warn(String.format(Locale.ENGLISH, "%s while parsing signature: %s [signature ignored]", message, signature));
-    }
-  }
- 
   /** Adds the method signature to the list of disallowed methods. The Signature is checked against the given ClassLoader. */
-  private void addSignature(final String line, final String defaultMessage, final boolean failOnUnresolvableSignatures) throws ParseException,IOException {
+  private void addSignature(final String line, final String defaultMessage, final UnresolvableReporting report) throws ParseException,IOException {
     final String clazz, field, signature, message;
     final Method method;
     int p = line.indexOf('@');
@@ -355,7 +370,7 @@ public final class Checker implements RelatedClassLookup {
       try {
         c = getClassFromClassLoader(clazz);
       } catch (ClassNotFoundException cnfe) {
-        reportParseFailed(failOnUnresolvableSignatures, String.format(Locale.ENGLISH, "Class '%s' not found on classpath", cnfe.getMessage()), signature);
+        report.parseFailed(logger, String.format(Locale.ENGLISH, "Class '%s' not found on classpath", cnfe.getMessage()), signature);
         return;
       }
       if (method != null) {
@@ -370,13 +385,13 @@ public final class Checker implements RelatedClassLookup {
           }
         }
         if (!found) {
-          reportParseFailed(failOnUnresolvableSignatures, "Method not found", signature);
+          report.parseFailed(logger, "Method not found", signature);
           return;
         }
       } else if (field != null) {
         assert method == null;
         if (!c.fields.contains(field)) {
-          reportParseFailed(failOnUnresolvableSignatures, "Field not found", signature);
+          report.parseFailed(logger, "Field not found", signature);
           return;
         }
         forbiddenFields.put(c.className + '\000' + field, printout);
@@ -445,29 +460,29 @@ public final class Checker implements RelatedClassLookup {
   private static final String DEFAULT_MESSAGE_PREFIX = "@defaultMessage ";
   private static final String IGNORE_UNRESOLVABLE_LINE = "@ignoreUnresolvable";
 
-  private void parseSignaturesFile(Reader reader, boolean allowBundled) throws IOException,ParseException {
+  private void parseSignaturesFile(Reader reader, boolean isBundled) throws IOException,ParseException {
     final BufferedReader r = new BufferedReader(reader);
     try {
       String line, defaultMessage = null;
-      boolean failOnUnresolvableSignatures = options.contains(Option.FAIL_ON_UNRESOLVABLE_SIGNATURES);
+      UnresolvableReporting reporter = options.contains(Option.FAIL_ON_UNRESOLVABLE_SIGNATURES) ? UnresolvableReporting.FAIL : UnresolvableReporting.WARNING;
       while ((line = r.readLine()) != null) {
         line = line.trim();
         if (line.length() == 0 || line.startsWith("#"))
           continue;
         if (line.startsWith("@")) {
-          if (allowBundled && line.startsWith(BUNDLED_PREFIX)) {
+          if (isBundled && line.startsWith(BUNDLED_PREFIX)) {
             final String name = line.substring(BUNDLED_PREFIX.length()).trim();
             parseBundledSignatures(name, null, false);
           } else if (line.startsWith(DEFAULT_MESSAGE_PREFIX)) {
             defaultMessage = line.substring(DEFAULT_MESSAGE_PREFIX.length()).trim();
             if (defaultMessage.length() == 0) defaultMessage = null;
           } else if (line.equals(IGNORE_UNRESOLVABLE_LINE)) {
-            failOnUnresolvableSignatures = false;
+            reporter = isBundled ? UnresolvableReporting.SILENT : UnresolvableReporting.WARNING;
           } else {
             throw new ParseException("Invalid line in signature file: " + line);
           }
         } else {
-          addSignature(line, defaultMessage, failOnUnresolvableSignatures);
+          addSignature(line, defaultMessage, reporter);
         }
       }
     } finally {
