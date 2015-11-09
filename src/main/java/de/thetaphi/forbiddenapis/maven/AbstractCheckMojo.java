@@ -229,7 +229,12 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
   private File resolveSignaturesArtifact(SignaturesArtifact signaturesArtifact) throws ArtifactResolutionException, ArtifactNotFoundException {
     final Artifact artifact = signaturesArtifact.createArtifact(artifactFactory);
     artifactResolver.resolve(artifact, this.remoteRepositories, this.localRepository);
-    return artifact.getFile();
+    final File f = artifact.getFile();
+    // Can this ever be false? Be sure. Found the null check also in other Maven code, so be safe!
+    if (f == null) {
+      throw new ArtifactNotFoundException("Artifact does not resolve to a file.", artifact);
+    }
+    return f;
   }
   
   private String encodeUrlPath(String path) {
