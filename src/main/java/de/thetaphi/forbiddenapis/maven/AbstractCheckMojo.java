@@ -247,10 +247,6 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
     return new URL(jarBaseUrl, encodeUrlPath(jarPath));
   }
 
-  private URL createFileUrl(File f, String relativePath) throws MalformedURLException {
-    return new File(f, relativePath).toURI().toURL();
-  }
-
   @Override
   public void execute() throws MojoExecutionException {
     final Logger log = new Logger() {
@@ -373,7 +369,9 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
             final File f = resolveSignaturesArtifact(artifact);
             if (artifact.path != null) {
               if (f.isDirectory()) {
-                sigUrls.add(createFileUrl(f, artifact.path));
+                // if Maven did not yet jarred the artifact, it returns the classes
+                // folder of the foreign Maven project, just use that one:
+                sigFiles.add(new File(f, artifact.path));
               } else {
                 sigUrls.add(createJarUrl(f, artifact.path));
               }
