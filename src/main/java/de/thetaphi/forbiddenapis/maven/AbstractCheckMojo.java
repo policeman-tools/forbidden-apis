@@ -247,6 +247,10 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
     return new URL(jarBaseUrl, encodeUrlPath(jarPath));
   }
 
+  private URL createFileUrl(File f, String relativePath) throws MalformedURLException {
+    return new File(f, relativePath).toURI().toURL();
+  }
+
   @Override
   public void execute() throws MojoExecutionException {
     final Logger log = new Logger() {
@@ -363,11 +367,16 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
         if (signaturesFiles != null) {
           sigFiles.addAll(Arrays.asList(signaturesFiles));
         }
+
         if (signaturesArtifacts != null) {
           for (final SignaturesArtifact artifact : signaturesArtifacts) {
             final File f = resolveSignaturesArtifact(artifact);
             if (artifact.path != null) {
-              sigUrls.add(createJarUrl(f, artifact.path));
+              if (f.isDirectory()) {
+                sigUrls.add(createFileUrl(f, artifact.path));
+              } else {
+                sigUrls.add(createJarUrl(f, artifact.path));
+              }
             } else {
               sigFiles.add(f);
             }
