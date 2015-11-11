@@ -24,8 +24,7 @@
       </forbiddenapis>
     </au:expectfailure>
     <au:assertLogContains level="error" text="java.lang.reflect.AccessibleObject#setAccessible(boolean) [Reflection usage fails with SecurityManagers"/>
-    <au:assertLogContains level="error" text="java.lang.reflect.Method#invoke(java.lang.Object, java.lang.Object[]) [Reflection usage fails with SecurityManagers"/>
-    <au:assertLogContains level="error" text=" 3 error(s)"/> 
+    <au:assertLogContains level="error" text=" 2 error(s)"/> 
   </target>
 
 </project>

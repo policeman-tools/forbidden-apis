@@ -16,4 +16,3 @@
 
 java.lang.reflect.AccessibleObject#setAccessible(java.lang.reflect.AccessibleObject[], boolean) @ Reflection usage fails with SecurityManagers and likely will not work any more in Java 9
 java.lang.reflect.AccessibleObject#setAccessible(boolean) @ Reflection usage fails with SecurityManagers and likely will not work any more in Java 9
-java.lang.reflect.Method#invoke(java.lang.Object, java.lang.Object[]) @ Reflection usage fails with SecurityManagers and likely will not work any more in Java 9
