@@ -21,15 +21,15 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.*;
 
-class OracleReflection {
+class Java6Reflection {
   static Field test() throws Exception {
-    Class c = OracleReflection.class;
+    Class c = Java6Reflection.class;
     Field f = c.getDeclaredField("field1");
     f.setAccessible(true);
     
     Method m = c.getDeclaredMethod("testMethod");
     m.setAccessible(true);
-    m.invoke(new OracleReflection());
+    m.invoke(new Java6Reflection());
     
     return f;
   }
