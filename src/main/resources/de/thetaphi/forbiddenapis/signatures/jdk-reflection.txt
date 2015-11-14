@@ -14,5 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-java.lang.reflect.AccessibleObject#setAccessible(java.lang.reflect.AccessibleObject[], boolean) @ Reflection usage fails with SecurityManagers and likely will not work any more in Java 9
-java.lang.reflect.AccessibleObject#setAccessible(boolean) @ Reflection usage fails with SecurityManagers and likely will not work any more in Java 9
+@defaultMessage Reflection usage to work around access flags fails with SecurityManagers and likely will not work anymore on runtime classes in Java 9
+
+java.lang.reflect.AccessibleObject#setAccessible(java.lang.reflect.AccessibleObject[], boolean)
+java.lang.reflect.AccessibleObject#setAccessible(boolean)
