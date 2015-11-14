@@ -477,6 +477,7 @@
       <bundledsignatures name="jdk-unsafe-${build.java.runtime}"/>
       <bundledsignatures name="jdk-deprecated-${build.java.runtime}"/>
       <bundledsignatures name="jdk-system-out"/>
+      <bundledsignatures name="jdk-reflection"/>
     </forbiddenapis>
   </target>
 
