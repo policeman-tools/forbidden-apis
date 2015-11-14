@@ -466,18 +466,23 @@
       <fileset dir="build/main"/>
       <fileset dir="build/tools"/>
       <fileset dir="build/test"/>
-      <bundledsignatures name="jdk-unsafe-${jdk.version}"/>
-      <bundledsignatures name="jdk-deprecated-${jdk.version}"/>
-      <bundledsignatures name="jdk-system-out"/>
+      <signatures>
+        <bundled name="jdk-unsafe-${jdk.version}"/>
+        <bundled name="jdk-deprecated-${jdk.version}"/>
+        <bundled name="jdk-system-out"/>
+        <bundled name="jdk-reflection"/>
+      </signatures>
     </forbiddenapis>
   </target>
 
   <target name="-check-bundled-signatures" depends="-install-forbiddenapi-task" if="tests.supported">
-    <forbiddenapis failOnUnsupportedJava="true" classpathref="path.tools-run" ignoreEmptyFileset="true">
-      <bundledsignatures name="jdk-unsafe-${build.java.runtime}"/>
-      <bundledsignatures name="jdk-deprecated-${build.java.runtime}"/>
-      <bundledsignatures name="jdk-system-out"/>
-      <bundledsignatures name="jdk-reflection"/>
+    <forbiddenapis failOnUnsupportedJava="true" ignoreEmptyFileset="true">
+      <signatures>
+        <bundled name="jdk-unsafe-${build.java.runtime}"/>
+        <bundled name="jdk-deprecated-${build.java.runtime}"/>
+        <bundled name="jdk-system-out"/>
+        <bundled name="jdk-reflection"/>
+      </signatures>
     </forbiddenapis>
   </target>
 
