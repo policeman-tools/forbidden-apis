@@ -35,10 +35,10 @@ stupid to call those methods, as the results will definitely not what the user w
 methods from the JDK (for Java <tt>*</tt> = 1.6, 1.7, 1.8; Maven / Gradle automatically add the compile Java version).</li>
 
 <li><strong><tt>jdk-system-out</tt>:</strong> On server-side applications or libraries used by other programs, printing to
-<tt>System.out</tt> or <tt>System.err</tt> is discouraged and should be avoided (any java version, no specific version).</li>
+<tt>System.out</tt> or <tt>System.err</tt> is discouraged and should be avoided (any java version, no specific JDK version).</li>
 
 <li><strong><tt>jdk-reflection</tt>:</strong> Reflection usage to work around access flags fails with SecurityManagers
-and likely will not work anymore on runtime classes in Java 9 (any java version, no specific version).</li>
+and likely will not work anymore on runtime classes in Java 9 (any java version, no specific JDK version, <em>since forbiddenapis v2.1</em>).</li>
 
 <li><strong><tt>commons-io-unsafe-*</tt>:</strong> If your application uses the famous <i>Apache Common-IO</i> library,
 this adds signatures of all methods that depend on default charset
