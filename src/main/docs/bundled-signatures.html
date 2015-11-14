@@ -37,6 +37,9 @@ methods from the JDK (for Java <tt>*</tt> = 1.6, 1.7, 1.8; Maven / Gradle automa
 <li><strong><tt>jdk-system-out</tt>:</strong> On server-side applications or libraries used by other programs, printing to
 <tt>System.out</tt> or <tt>System.err</tt> is discouraged and should be avoided (any java version, no specific version).</li>
 
+<li><strong><tt>jdk-reflection</tt>:</strong> Reflection usage to work around access flags fails with SecurityManagers
+and likely will not work anymore on runtime classes in Java 9 (any java version, no specific version).</li>
+
 <li><strong><tt>commons-io-unsafe-*</tt>:</strong> If your application uses the famous <i>Apache Common-IO</i> library,
 this adds signatures of all methods that depend on default charset
 (for versions <tt>*</tt> = 1.0, 1.1, 1.2, 1.3, 1.4, 2.0, 2.1, 2.2, 2.3, 2.4).</li>
