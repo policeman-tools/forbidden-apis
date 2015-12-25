@@ -469,6 +469,7 @@
       <signatures>
         <bundled name="jdk-unsafe-${jdk.version}"/>
         <bundled name="jdk-deprecated-${jdk.version}"/>
+        <bundled name="jdk-internal-${jdk.version}"/>
         <bundled name="jdk-system-out"/>
         <bundled name="jdk-reflection"/>
       </signatures>
@@ -480,6 +481,7 @@
       <signatures>
         <bundled name="jdk-unsafe-${build.java.runtime}"/>
         <bundled name="jdk-deprecated-${build.java.runtime}"/>
+        <bundled name="jdk-internal-${build.java.runtime}"/>
         <bundled name="jdk-system-out"/>
         <bundled name="jdk-reflection"/>
       </signatures>
@@ -579,6 +581,7 @@
         <include name="src/**"/>
         <exclude name="README.md"/>
         <exclude name="**/jdk-deprecated-*.txt"/>
+        <exclude name="**/jdk-internal-*.txt"/>
       </fileset>
     </rat:report>
     <!-- now print the output, for review -->
@@ -610,6 +613,15 @@
     <mkdir dir="${signatures.dir}"/>
     <property name="deprecated.output.file" location="${signatures.dir}/jdk-deprecated-${build.java.runtime}.txt"/>
     <groovy classpathref="path.tools-run" src="${groovy-tools.dir}/generate-deprecated.groovy"/>
+  </target>
+
+  <target name="generate-internal" depends="compile-tools" description="Generates deprecated API signature lists for current JDK">
+    <mkdir dir="${signatures.dir}"/>
+    <property name="internal.output.file" location="${signatures.dir}/jdk-internal-${build.java.runtime}.txt"/>
+    <java classpathref="path.tools-run" classname="de.thetaphi.forbiddenapis.InternalApiGen" fork="false">
+      <arg value="${build.java.runtime}"/>
+      <arg file="${internal.output.file}"/>
+    </java>
   </target>
 
   <target name="-generate-test-classes-init">
