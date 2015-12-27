@@ -36,16 +36,14 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.NoSuchElementException;
+import java.util.NavigableSet;
 import java.util.Set;
-import java.util.SortedSet;
 import java.util.StringTokenizer;
 import java.util.TreeSet;
 import java.util.regex.Pattern;
@@ -71,8 +69,7 @@ public final class Checker implements RelatedClassLookup {
   
   final Logger logger;
   
-  // must be sorted backwards
-  final SortedSet<String> runtimePaths;
+  final NavigableSet<String> runtimePaths;
   
   final ClassLoader loader;
   final java.lang.reflect.Method method_Class_getModule, method_Module_getResourceAsStream;
@@ -146,7 +143,7 @@ public final class Checker implements RelatedClassLookup {
     this.method_Class_getModule = method_Class_getModule;
     this.method_Module_getResourceAsStream = method_Module_getResourceAsStream;
     
-    final SortedSet<String> runtimePaths = new TreeSet<String>(Collections.reverseOrder());
+    final NavigableSet<String> runtimePaths = new TreeSet<String>();
     
     // fall back to legacy behavior:
     if (!isSupportedJDK) {
@@ -195,7 +192,7 @@ public final class Checker implements RelatedClassLookup {
         runtimePaths.clear();
       }
     }
-    this.runtimePaths = Collections.unmodifiableSortedSet(runtimePaths);
+    this.runtimePaths = runtimePaths;
     // logger.info("Runtime paths: " + runtimePaths);
     
     if (isSupportedJDK) {
@@ -244,9 +241,8 @@ public final class Checker implements RelatedClassLookup {
     }
     try {
       final String path = new File(url.toURI()).getCanonicalPath();
-      return path.startsWith(runtimePaths.tailSet(path).first());
-    } catch (NoSuchElementException nse) {
-      return false;
+      final String lookup = runtimePaths.floor(path);
+      return lookup != null && path.startsWith(lookup);
     } catch (URISyntaxException e) {
       // should not happen, but if it's happening, it's definitely not a below our paths
       return false;
