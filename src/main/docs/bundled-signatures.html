@@ -40,6 +40,10 @@ methods from the JDK (for Java <tt>*</tt> = 1.6, 1.7, 1.8; Maven / Gradle automa
 <li><strong><tt>jdk-reflection</tt>:</strong> Reflection usage to work around access flags fails with SecurityManagers
 and likely will not work anymore on runtime classes in Java 9 (any java version, no specific JDK version, <em>since forbiddenapis v2.1</em>).</li>
 
+<li><strong><tt>jdk-internal</tt>:</strong> Lists all internal packages of the JDK as of <code>Security.getProperty(&quot;package.access&quot;)</code>.
+Calling those methods will always trigger security manager and is completely forbidden from Java 9 on
+(for Java <tt>*</tt> = 1.6, 1.7, 1.8; Maven / Gradle automatically add the compile Java version, <em>since forbiddenapis v2.1</em>).</li>
+
 <li><strong><tt>commons-io-unsafe-*</tt>:</strong> If your application uses the famous <i>Apache Common-IO</i> library,
 this adds signatures of all methods that depend on default charset
 (for versions <tt>*</tt> = 1.0, 1.1, 1.2, 1.3, 1.4, 2.0, 2.1, 2.2, 2.3, 2.4).</li>
