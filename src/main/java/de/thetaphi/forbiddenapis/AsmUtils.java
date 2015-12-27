@@ -124,10 +124,13 @@ public final class AsmUtils {
     return Pattern.compile(regex.toString(), 0);
   }
   
-  /** Returns the module name from a {@code jrt:/} URL. */
+  /** Returns the module name from a {@code jrt:/} URL; returns null if no module given or wrong URL type. */
   public static String getModuleName(URL jrtUrl) {
+    if (!"jrt".equalsIgnoreCase(jrtUrl.getProtocol())) {
+      return null;
+    }
     String mod = jrtUrl.getPath();
-    if (mod != null) {
+    if (mod != null && mod.length() >= 1) {
       mod = mod.substring(1);
       int p = mod.indexOf('/');
       if (p >= 0) {
