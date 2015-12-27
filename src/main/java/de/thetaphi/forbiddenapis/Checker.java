@@ -75,7 +75,7 @@ public final class Checker implements RelatedClassLookup {
   final java.lang.reflect.Method method_Class_getModule, method_Module_getResourceAsStream;
   final EnumSet<Option> options;
   
-  // key is the internal name (slashed):
+  // key is the binary name (dotted):
   final Map<String,ClassSignature> classesToCheck = new HashMap<String,ClassSignature>();
   // key is the binary name (dotted):
   final Map<String,ClassSignature> classpathClassCache = new HashMap<String,ClassSignature>();
@@ -265,7 +265,7 @@ public final class Checker implements RelatedClassLookup {
     return false;
   }
   
-  /** Reads a class (binary name) from the given {@link ClassLoader}. */
+  /** Reads a class (binary name) from the given {@link ClassLoader}. If not found there, falls back to the list of classes to be checked. */
   private ClassSignature getClassFromClassLoader(final String clazz) throws ClassNotFoundException,IOException {
     final ClassSignature c;
     if (classpathClassCache.containsKey(clazz)) {
@@ -298,6 +298,12 @@ public final class Checker implements RelatedClassLookup {
           return c;
         }
       }
+      // try to get class from our list of classes we are checking:
+      c = classesToCheck.get(clazz);
+      if (c != null) {
+        classpathClassCache.put(clazz, c);
+        return c;
+      }
       // all failed => the class does not exist!
       classpathClassCache.put(clazz, null);
       throw new ClassNotFoundException(clazz);
@@ -310,10 +316,9 @@ public final class Checker implements RelatedClassLookup {
     if (type.getSort() != Type.OBJECT) {
       return null;
     }
-    ClassSignature c = classesToCheck.get(internalName);
-    if (c == null) try {
+    try {
       // use binary name, so we need to convert:
-      c = getClassFromClassLoader(type.getClassName());
+      return getClassFromClassLoader(type.getClassName());
     } catch (ClassNotFoundException cnfe) {
       if (options.contains(Option.FAIL_ON_MISSING_CLASSES)) {
         throw new WrapperRuntimeException(cnfe);
@@ -322,11 +327,11 @@ public final class Checker implements RelatedClassLookup {
           "The referenced class '%s' cannot be loaded. Please fix the classpath!",
           type.getClassName()
         ));
+        return null;
       }
     } catch (IOException ioe) {
       throw new WrapperRuntimeException(ioe);
     }
-    return c;
   }
   
   /** Adds the method signature to the list of disallowed methods. The Signature is checked against the given ClassLoader. */
@@ -508,7 +513,8 @@ public final class Checker implements RelatedClassLookup {
     } finally {
       in.close();
     }
-    classesToCheck.put(reader.getClassName(), new ClassSignature(reader, false, true));
+    final String binaryName = Type.getObjectType(reader.getClassName()).getClassName();
+    classesToCheck.put(binaryName, new ClassSignature(reader, false, true));
   }
   
   /** Parses and adds a class from the given file to the list of classes to check. Does not log anything. */
@@ -587,6 +593,9 @@ public final class Checker implements RelatedClassLookup {
         throw new ForbiddenApiException("Check for forbidden API calls failed.");
       }
     }
+    
+    // Cleanup cache to get statistics right:
+    classpathClassCache.keySet().removeAll(classesToCheck.keySet());
     
     final String message = String.format(Locale.ENGLISH, 
         "Scanned %d (and %d related) class file(s) for forbidden API invocations (in %.2fs), %d error(s).",
