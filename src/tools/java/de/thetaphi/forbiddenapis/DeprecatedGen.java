@@ -80,7 +80,7 @@ public abstract class DeprecatedGen<Input> implements Opcodes {
     // exclude internal classes like Unsafe,... and non-public classes!
     // Note: reader.getAccess() does no indicate if class is deprecated, as this is a special
     // attribute or annotation (both is handled later), we have to parse the class - this is just early exit!
-    if ((reader.getAccess() & ACC_PUBLIC) == 0 || AsmUtils.isInternalClass(className)) {
+    if ((reader.getAccess() & ACC_PUBLIC) == 0 || !AsmUtils.isPortableRuntimeClass(className)) {
       return;
     }
     reader.accept(new ClassVisitor(ASM5) {

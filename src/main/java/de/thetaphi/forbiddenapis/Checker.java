@@ -72,7 +72,7 @@ public final class Checker implements RelatedClassLookup {
   final NavigableSet<String> runtimePaths;
   
   final ClassLoader loader;
-  final java.lang.reflect.Method method_Class_getModule, method_Module_getResourceAsStream;
+  final java.lang.reflect.Method method_Class_getModule, method_Module_getResourceAsStream, method_Module_getName;
   final EnumSet<Option> options;
   
   // key is the binary name (dotted):
@@ -129,19 +129,22 @@ public final class Checker implements RelatedClassLookup {
     
     boolean isSupportedJDK = false;
     
-    // first try Java 9 mdoule system (Jigsaw)
+    // first try Java 9 module system (Jigsaw)
     // Please note: This code is not guaranteed to work with final Java 9 version. This is just for testing!
-    java.lang.reflect.Method method_Class_getModule, method_Module_getResourceAsStream;
+    java.lang.reflect.Method method_Class_getModule, method_Module_getResourceAsStream, method_Module_getName;
     try {
       method_Class_getModule = Class.class.getMethod("getModule");
       method_Module_getResourceAsStream = method_Class_getModule
           .getReturnType().getMethod("getResourceAsStream", String.class);
+      method_Module_getName = method_Class_getModule
+          .getReturnType().getMethod("getName");
       isSupportedJDK = true;
     } catch (NoSuchMethodException e) {
-      method_Class_getModule = method_Module_getResourceAsStream = null;
+      method_Class_getModule = method_Module_getResourceAsStream = method_Module_getName = null;
     }
     this.method_Class_getModule = method_Class_getModule;
     this.method_Module_getResourceAsStream = method_Module_getResourceAsStream;
+    this.method_Module_getName = method_Module_getName;
     
     final NavigableSet<String> runtimePaths = new TreeSet<String>();
     
@@ -222,16 +225,29 @@ public final class Checker implements RelatedClassLookup {
    * This code is not guaranteed to work with final Java 9 version.
    * This is just for testing!
    **/
-  private InputStream getBytecodeFromJigsaw(String classname) {
-    if (method_Class_getModule == null || method_Module_getResourceAsStream == null) {
+  private ClassSignature loadClassFromJigsaw(String classname) throws IOException {
+    if (method_Class_getModule == null || method_Module_getResourceAsStream == null || method_Module_getName == null) {
       return null; // not Java 9 JIGSAW
     }
+    
+    final InputStream in;
+    final String moduleName;
     try {
       final Class<?> clazz = Class.forName(classname, false, loader);
       final Object module = method_Class_getModule.invoke(clazz);
-      return (InputStream) method_Module_getResourceAsStream.invoke(module, AsmUtils.getClassResourceName(classname));
+      moduleName = (String) method_Module_getName.invoke(module);
+      in = (InputStream) method_Module_getResourceAsStream.invoke(module, AsmUtils.getClassResourceName(classname));
+      if (in == null) {
+        return null;
+      }
     } catch (Exception e) {
       return null; // not found
+    }
+    
+    try {
+      return new ClassSignature(new ClassReader(in), AsmUtils.isRuntimeModule(moduleName), false);
+    } finally {
+      in.close();
     }
   }
   
@@ -260,7 +276,7 @@ public final class Checker implements RelatedClassLookup {
       // all 'jrt:' URLs refer to a module in the Java 9+ runtime (see http://openjdk.java.net/jeps/220)
       // This may still be different with module system. We support both variants for now.
       // Please note: This code is not guaranteed to work with final Java 9 version. This is just for testing!
-      return true;
+      return AsmUtils.isRuntimeModule(AsmUtils.getModuleName(url));
     }
     return false;
   }
@@ -287,14 +303,9 @@ public final class Checker implements RelatedClassLookup {
         }
         return c;
       } else {
-        final InputStream in = getBytecodeFromJigsaw(clazz);
-        if (in != null) {
-          try {
-            // we mark it as runtime class because it was derived from the module system:
-            classpathClassCache.put(clazz, c = new ClassSignature(new ClassReader(in), true, false));
-          } finally {
-            in.close();
-          }
+        final ClassSignature jigsawCl = loadClassFromJigsaw(clazz);
+        if (jigsawCl != null) {
+          classpathClassCache.put(clazz, c = jigsawCl);
           return c;
         }
       }

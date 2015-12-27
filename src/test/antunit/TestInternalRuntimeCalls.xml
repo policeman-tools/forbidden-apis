@@ -22,7 +22,7 @@
         <file file="OracleInternalRuntime.class"/>
       </forbiddenapis>
     </au:expectfailure>
-    <au:assertLogContains level="error" text="sun.misc.BASE64Encoder [non-public internal runtime class]"/> 
+    <au:assertLogContains level="error" text="sun.misc.BASE64Encoder [non-portable or internal runtime class]"/> 
     <au:assertLogContains level="error" text=" 2 error(s)"/> 
   </target>
   
