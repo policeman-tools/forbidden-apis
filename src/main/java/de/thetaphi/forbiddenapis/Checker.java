@@ -36,15 +36,16 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.NavigableSet;
 import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.TreeSet;
 import java.util.regex.Pattern;
 import java.lang.annotation.Annotation;
 import java.lang.management.ManagementFactory;
@@ -68,13 +69,13 @@ public final class Checker implements RelatedClassLookup {
   
   final Logger logger;
   
-  final Set<File> bootClassPathJars;
-  final Set<String> bootClassPathDirs;
+  final NavigableSet<String> runtimePaths;
+  
   final ClassLoader loader;
   final java.lang.reflect.Method method_Class_getModule, method_Module_getResourceAsStream;
   final EnumSet<Option> options;
   
-  // key is the internal name (slashed):
+  // key is the binary name (dotted):
   final Map<String,ClassSignature> classesToCheck = new HashMap<String,ClassSignature>();
   // key is the binary name (dotted):
   final Map<String,ClassSignature> classpathClassCache = new HashMap<String,ClassSignature>();
@@ -142,48 +143,57 @@ public final class Checker implements RelatedClassLookup {
     this.method_Class_getModule = method_Class_getModule;
     this.method_Module_getResourceAsStream = method_Module_getResourceAsStream;
     
-    final Set<File> bootClassPathJars = new LinkedHashSet<File>();
-    final Set<String> bootClassPathDirs = new LinkedHashSet<String>();
+    final NavigableSet<String> runtimePaths = new TreeSet<String>();
     
     // fall back to legacy behavior:
     if (!isSupportedJDK) {
       try {
         final URL objectClassURL = loader.getResource(AsmUtils.getClassResourceName(Object.class.getName()));
         if (objectClassURL != null && "jrt".equalsIgnoreCase(objectClassURL.getProtocol())) {
-          // this is Java 9 with modules!
+          // this is Java 9 without Jigsaw! TODO: Remove this heuristic once final JDK 9 is out!
           isSupportedJDK = true;
         } else {
+          String javaHome = System.getProperty("java.home");
+          if (javaHome != null) {
+            javaHome = new File(javaHome).getCanonicalPath();
+            if (!javaHome.endsWith(File.separator)) {
+              javaHome += File.separator;
+            }
+            runtimePaths.add(javaHome);
+          }
+          // Scan the runtime's bootclasspath, too! This is needed because
+          // Apple's JDK 1.6 has the main rt.jar outside ${java.home}!
           final RuntimeMXBean rb = ManagementFactory.getRuntimeMXBean();
           if (rb.isBootClassPathSupported()) {
             final String cp = rb.getBootClassPath();
             final StringTokenizer st = new StringTokenizer(cp, File.pathSeparator);
             while (st.hasMoreTokens()) {
-              final File f = new File(st.nextToken());
+              File f = new File(st.nextToken().trim());
               if (f.isFile()) {
-                bootClassPathJars.add(f.getCanonicalFile());
-              } else if (f.isDirectory()) {
+                f = f.getParentFile();
+              }
+              if (f.exists()) {
                 String fp = f.getCanonicalPath();
                 if (!fp.endsWith(File.separator)) {
                   fp += File.separator;
                 }
-                bootClassPathDirs.add(fp);
+                runtimePaths.add(fp);
               }
             }
           }
-          isSupportedJDK = !(bootClassPathJars.isEmpty() && bootClassPathDirs.isEmpty());
+          isSupportedJDK = !runtimePaths.isEmpty();
           if (!isSupportedJDK) {
-            logger.warn("Boot classpath appears to be empty; marking runtime as not suppported.");
+            logger.warn("Boot classpath appears to be empty or ${java.home} not defined; marking runtime as not suppported.");
           }
         }
       } catch (IOException ioe) {
-        logger.warn("Cannot scan boot classpath due to IO exception; marking runtime as not suppported: " + ioe);
+        logger.warn("Cannot scan boot classpath and ${java.home} due to IO exception; marking runtime as not suppported: " + ioe);
         isSupportedJDK = false;
-        bootClassPathJars.clear();
-        bootClassPathDirs.clear();
+        runtimePaths.clear();
       }
     }
-    this.bootClassPathJars = Collections.unmodifiableSet(bootClassPathJars);
-    this.bootClassPathDirs = Collections.unmodifiableSet(bootClassPathDirs);
+    this.runtimePaths = runtimePaths;
+    // logger.info("Runtime paths: " + runtimePaths);
     
     if (isSupportedJDK) {
       try {
@@ -225,27 +235,27 @@ public final class Checker implements RelatedClassLookup {
     }
   }
   
+  private boolean isRuntimePath(URL url) throws IOException {
+    if (!"file".equalsIgnoreCase(url.getProtocol())) {
+      return false;
+    }
+    try {
+      final String path = new File(url.toURI()).getCanonicalPath();
+      final String lookup = runtimePaths.floor(path);
+      return lookup != null && path.startsWith(lookup);
+    } catch (URISyntaxException e) {
+      // should not happen, but if it's happening, it's definitely not a below our paths
+      return false;
+    }
+  }
+  
   private boolean isRuntimeClass(URLConnection conn) throws IOException {
     final URL url = conn.getURL();
-    if ("file".equalsIgnoreCase(url.getProtocol())) {
-      try {
-        final String path = new File(url.toURI()).getCanonicalPath();
-        for (final String bcpDir : bootClassPathDirs) {
-          if (path.startsWith(bcpDir)) {
-            return true;
-          }
-        }
-      } catch (URISyntaxException use) {
-        // ignore (should not happen, but if it's happening, it's definitely not a runtime class)
-      }
+    if (isRuntimePath(url)) {
+       return true;
     } else if ("jar".equalsIgnoreCase(url.getProtocol()) && conn instanceof JarURLConnection) {
       final URL jarUrl = ((JarURLConnection) conn).getJarFileURL();
-      if ("file".equalsIgnoreCase(jarUrl.getProtocol())) try {
-        final File jarFile = new File(jarUrl.toURI()).getCanonicalFile();
-        return bootClassPathJars.contains(jarFile);
-      } catch (URISyntaxException use) {
-        // ignore (should not happen, but if it's happening, it's definitely not a runtime class)
-      }
+      return isRuntimePath(jarUrl);
     } else if ("jrt".equalsIgnoreCase(url.getProtocol())) {
       // all 'jrt:' URLs refer to a module in the Java 9+ runtime (see http://openjdk.java.net/jeps/220)
       // This may still be different with module system. We support both variants for now.
@@ -255,7 +265,7 @@ public final class Checker implements RelatedClassLookup {
     return false;
   }
   
-  /** Reads a class (binary name) from the given {@link ClassLoader}. */
+  /** Reads a class (binary name) from the given {@link ClassLoader}. If not found there, falls back to the list of classes to be checked. */
   private ClassSignature getClassFromClassLoader(final String clazz) throws ClassNotFoundException,IOException {
     final ClassSignature c;
     if (classpathClassCache.containsKey(clazz)) {
@@ -288,6 +298,12 @@ public final class Checker implements RelatedClassLookup {
           return c;
         }
       }
+      // try to get class from our list of classes we are checking:
+      c = classesToCheck.get(clazz);
+      if (c != null) {
+        classpathClassCache.put(clazz, c);
+        return c;
+      }
       // all failed => the class does not exist!
       classpathClassCache.put(clazz, null);
       throw new ClassNotFoundException(clazz);
@@ -300,10 +316,9 @@ public final class Checker implements RelatedClassLookup {
     if (type.getSort() != Type.OBJECT) {
       return null;
     }
-    ClassSignature c = classesToCheck.get(internalName);
-    if (c == null) try {
+    try {
       // use binary name, so we need to convert:
-      c = getClassFromClassLoader(type.getClassName());
+      return getClassFromClassLoader(type.getClassName());
     } catch (ClassNotFoundException cnfe) {
       if (options.contains(Option.FAIL_ON_MISSING_CLASSES)) {
         throw new WrapperRuntimeException(cnfe);
@@ -312,11 +327,11 @@ public final class Checker implements RelatedClassLookup {
           "The referenced class '%s' cannot be loaded. Please fix the classpath!",
           type.getClassName()
         ));
+        return null;
       }
     } catch (IOException ioe) {
       throw new WrapperRuntimeException(ioe);
     }
-    return c;
   }
   
   /** Adds the method signature to the list of disallowed methods. The Signature is checked against the given ClassLoader. */
@@ -498,7 +513,8 @@ public final class Checker implements RelatedClassLookup {
     } finally {
       in.close();
     }
-    classesToCheck.put(reader.getClassName(), new ClassSignature(reader, false, true));
+    final String binaryName = Type.getObjectType(reader.getClassName()).getClassName();
+    classesToCheck.put(binaryName, new ClassSignature(reader, false, true));
   }
   
   /** Parses and adds a class from the given file to the list of classes to check. Does not log anything. */
@@ -577,6 +593,9 @@ public final class Checker implements RelatedClassLookup {
         throw new ForbiddenApiException("Check for forbidden API calls failed.");
       }
     }
+    
+    // Cleanup cache to get statistics right:
+    classpathClassCache.keySet().removeAll(classesToCheck.keySet());
     
     final String message = String.format(Locale.ENGLISH, 
         "Scanned %d (and %d related) class file(s) for forbidden API invocations (in %.2fs), %d error(s).",
