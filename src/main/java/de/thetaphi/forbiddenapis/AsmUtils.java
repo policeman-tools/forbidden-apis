@@ -17,7 +17,6 @@ package de.thetaphi.forbiddenapis;
  */
 
 import java.net.URL;
-import java.util.Arrays;
 import java.util.Locale;
 import java.util.regex.Pattern;
 
@@ -43,8 +42,8 @@ public final class AsmUtils {
   private static Pattern makePkgPrefixPattern(String... prefixes) {
     final StringBuilder sb = new StringBuilder();
     boolean first = true;
-    for (final String pkg : Arrays.asList(prefixes)) {
-      sb.append(first ? '(' : '|').append(Pattern.quote(pkg));
+    for (final String p : prefixes) {
+      sb.append(first ? '(' : '|').append(Pattern.quote(p));
       first = false;
     }
     sb.append(")").append(Pattern.quote(".")).append(".*");
