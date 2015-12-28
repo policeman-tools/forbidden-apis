@@ -282,8 +282,9 @@
       <arg value="plugin:helpmojo"/>
       <arg value="plugin:descriptor"/>
       <arg value="plugin:report"/>
-      <sysproperty key="user.language" file="en"/>
-      <sysproperty key="user.country" file="US"/>
+      <sysproperty key="user.language" value="en"/>
+      <sysproperty key="user.country" value="US"/>
+      <sysproperty key="java.awt.headless" value="true"/>
       <sysproperty key="injected.src.dir" file="src/main/java"/>
       <sysproperty key="injected.output.dir" file="build/main"/>
       <sysproperty key="injected.build.dir" file="${maven-build-dir}"/>
@@ -663,6 +664,7 @@
     <artifact:mvn mavenVersion="${maven.version}" failonerror="true" fork="${maven.fork}" taskname="help">
       <arg value="${groupId}:${artifactId}:${version}:help"/>
       <sysproperty key="detail" value="true"/>
+      <sysproperty key="java.awt.headless" value="true"/>
     </artifact:mvn>
   </target>
 
