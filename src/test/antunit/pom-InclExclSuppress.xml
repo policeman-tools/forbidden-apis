@@ -30,7 +30,6 @@
         <version>${version}</version>
         <configuration>
           <classesDirectory>.</classesDirectory>
-          <internalRuntimeForbidden>false</internalRuntimeForbidden>
           <failOnUnresolvableSignatures>true</failOnUnresolvableSignatures>
           <bundledSignatures>
             <bundledSignature>jdk-system-out</bundledSignature>

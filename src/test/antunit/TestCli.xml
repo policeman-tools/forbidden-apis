@@ -25,8 +25,7 @@
       <arg value="-d"/>
       <arg file="${antunit.main.classes}"/>
       <arg value="-b"/>
-      <arg value="jdk-unsafe-${jdk.version},jdk-deprecated-${jdk.version}"/>
-      <arg value="--internalruntimeforbidden"/>
+      <arg value="jdk-unsafe-${jdk.version},jdk-deprecated-${jdk.version},jdk-nonportable"/>
     </java>
     <au:assertLogContains text=" 0 error(s)."/> 
     <au:assertLogContains text="Reading bundled API signatures: jdk-deprecated-${jdk.version}"/> 
