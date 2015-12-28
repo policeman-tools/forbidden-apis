@@ -347,7 +347,8 @@ public final class Checker implements RelatedClassLookup, Constants {
   
   /** Adds the method signature to the list of disallowed methods. The Signature is checked against the given ClassLoader. */
   private void addSignature(final String line, final String defaultMessage, final UnresolvableReporting report) throws ParseException,IOException {
-    final String clazz, field, signature, message;
+    final String clazz, field, signature;
+    String message = null;
     final Method method;
     int p = line.indexOf('@');
     if (p >= 0) {
@@ -382,15 +383,17 @@ public final class Checker implements RelatedClassLookup, Constants {
       method = null;
       field = null;
     }
+    if (message != null && message.isEmpty()) {
+      message = null;
+    }
     // create printout message:
-    final String printout = (message != null && message.length() > 0) ?
-      (signature + " [" + message + "]") : signature;
+    final String printout = (message != null) ? (signature + " [" + message + "]") : signature;
     // check class & method/field signature, if it is really existent (in classpath), but we don't really load the class into JVM:
     if (AsmUtils.isGlob(clazz)) {
       if (method != null || field != null) {
         throw new ParseException(String.format(Locale.ENGLISH, "Class level glob pattern cannot be combined with methods/fields: %s", signature));
       }
-      forbiddenClassPatterns.add(new ClassPatternRule(clazz, printout));
+      forbiddenClassPatterns.add(new ClassPatternRule(clazz, message));
     } else {
       final ClassSignature c;
       try {

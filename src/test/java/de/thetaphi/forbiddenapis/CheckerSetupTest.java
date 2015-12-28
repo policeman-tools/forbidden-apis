@@ -58,7 +58,7 @@ public final class CheckerSetupTest {
   public void testClassPatternSignature() throws Exception {
     checker.parseSignaturesString("java.lang.** @ Foobar");
     assertEquals(Collections.emptyMap(), checker.forbiddenClasses);
-    assertEquals(Collections.singleton(new ClassPatternRule("java.lang.**", "java.lang.** [Foobar]")), checker.forbiddenClassPatterns);
+    assertEquals(Collections.singleton(new ClassPatternRule("java.lang.**", "Foobar")), checker.forbiddenClassPatterns);
     assertEquals(Collections.emptyMap(), checker.forbiddenFields);
     assertEquals(Collections.emptyMap(), checker.forbiddenMethods);
   }

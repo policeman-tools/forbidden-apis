@@ -119,7 +119,7 @@ final class ClassScanner extends ClassVisitor {
     final String binaryClassName = type.getClassName();
     for (final ClassPatternRule r : forbiddenClassPatterns) {
       if (r.matches(binaryClassName)) {
-        return String.format(Locale.ENGLISH, "Forbidden %s use: %s", what, r.printout);
+        return String.format(Locale.ENGLISH, "Forbidden %s use: %s", what, r.getPrintout(binaryClassName));
       }
     }
     if (deep && forbidNonPortableRuntime) {
