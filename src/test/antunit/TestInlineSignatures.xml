@@ -39,6 +39,8 @@
     </au:expectfailure>
     <au:assertLogContains level="error" text="java.util.ArrayList [You are crazy that you disallow all Array*]"/> 
     <au:assertLogContains level="error" text="java.lang.String [You are crazy that you disallow all java.lang]"/> 
+    <au:assertLogContains level="error" text="java.lang.StringBuilder [You are crazy that you disallow all java.lang]"/> 
+    <au:assertLogContains level="error" text="java.lang.Object [You are crazy that you disallow all java.lang]"/> 
   </target>
   
   <target name="testForbiddenClassWithDefaultMessage">
