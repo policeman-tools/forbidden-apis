@@ -112,9 +112,12 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
   private String[] bundledSignatures;
 
   /**
-   * Forbids calls to classes from the internal java runtime (like sun.misc.Unsafe)
+   * Forbids calls to non-portable runtime APIs (like {@code sun.misc.Unsafe}).
+   * <em>Please note:</em> This enables {@code "jdk-nonportable"} bundled signatures for backwards compatibility.
+   * @deprecated Use <a href="bundled-signatures.html">bundled signatures</a> {@code "jdk-nonportable"} or {@code "jdk-internal"} instead.
    * @since 1.0
    */
+  @Deprecated
   @Parameter(required = false, defaultValue = "false")
   private boolean internalRuntimeForbidden;
 

@@ -218,15 +218,21 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
   }
 
   /**
-   * Forbids calls to classes from the internal java runtime (like sun.misc.Unsafe)
-   * Defaults to {@code false}.
+   * Forbids calls to non-portable runtime APIs (like {@code sun.misc.Unsafe}).
+   * <em>Please note:</em> This enables {@code "jdk-nonportable"} bundled signatures for backwards compatibility.
+   * Defaults to {@code false}. 
+   * @deprecated Use <a href="bundled-signatures.html">bundled signatures</a> {@code "jdk-nonportable"} or {@code "jdk-internal"} instead.
    */
+  @Deprecated
   @Input
   public boolean getInternalRuntimeForbidden() {
     return data.internalRuntimeForbidden;
   }
 
-  /** @see #getInternalRuntimeForbidden */
+  /** @see #getInternalRuntimeForbidden
+   * @deprecated Use bundled signatures {@code "jdk-nonportable"} or {@code "jdk-internal"} instead.
+   */
+  @Deprecated
   public void setInternalRuntimeForbidden(boolean internalRuntimeForbidden) {
     data.internalRuntimeForbidden = internalRuntimeForbidden;
   }

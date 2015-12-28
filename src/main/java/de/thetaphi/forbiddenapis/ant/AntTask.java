@@ -63,7 +63,7 @@ public class AntTask extends Task {
   private Path classpath = null;
   
   private boolean failOnUnsupportedJava = false;
-  private boolean internalRuntimeForbidden = false;
+  @Deprecated private boolean internalRuntimeForbidden = false;
   private boolean restrictClassFilename = true;
   private boolean failOnMissingClasses = true;
   private boolean failOnUnresolvableSignatures = true;
@@ -320,9 +320,12 @@ public class AntTask extends Task {
   }
 
   /**
-   * Forbids calls to classes from the internal java runtime (like sun.misc.Unsafe)
+   * Forbids calls to non-portable runtime APIs (like {@code sun.misc.Unsafe}).
+   * <em>Please note:</em> This enables {@code "jdk-nonportable"} bundled signatures for backwards compatibility.
    * Defaults to {@code false}. 
+   * @deprecated Use bundled signatures {@code "jdk-nonportable"} or {@code "jdk-internal"} instead.
    */
+  @Deprecated
   public void setInternalRuntimeForbidden(boolean internalRuntimeForbidden) {
     this.internalRuntimeForbidden = internalRuntimeForbidden;
   }

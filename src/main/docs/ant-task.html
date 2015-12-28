@@ -120,7 +120,8 @@ and the system classloader, not ANT's class loader.</p>
   <td>internalRuntimeForbidden</td>
   <td><code>boolean</code></td>
   <td><code>false</code></td>
-  <td>Forbids calls to classes from the internal java runtime (like <code>sun.misc.Unsafe</code>).</td>
+  <td>Forbids calls to non-portable runtime APIs (like <code>sun.misc.Unsafe</code>). <em>Please note:</em> This enables <code>"jdk-nonportable"</code> bundled signatures for backwards compatibility.<br>
+  <strong>Deprecated.</strong> Use <a href="bundled-signatures.html">bundled signatures</a> <code>"jdk-nonportable"</code> or <code>"jdk-internal"</code> instead.</td>
 </tr>
 
 <tr>
