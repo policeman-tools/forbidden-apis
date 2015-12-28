@@ -36,6 +36,7 @@ import org.apache.tools.ant.types.resources.StringResource;
 import org.apache.tools.ant.types.resources.Union;
 
 import de.thetaphi.forbiddenapis.Checker;
+import de.thetaphi.forbiddenapis.Constants;
 import de.thetaphi.forbiddenapis.ForbiddenApiException;
 import de.thetaphi.forbiddenapis.Logger;
 import de.thetaphi.forbiddenapis.ParseException;
@@ -54,7 +55,7 @@ import java.util.Locale;
  * In contrast to other ANT tasks, this tool does only visit the given classpath
  * and the system classloader, not ANT's class loader.
  */
-public class AntTask extends Task {
+public class AntTask extends Task implements Constants {
 
   private final Union classFiles = new Union();
   private final Union apiSignatures = new Union();
@@ -133,7 +134,10 @@ public class AntTask extends Task {
           }
           checker.addBundledSignatures(name, null);
         }
-        if (internalRuntimeForbidden) checker.addBundledSignatures(Checker.BS_JDK_NONPORTABLE, null);
+        if (internalRuntimeForbidden) {
+          log.warn(DEPRECATED_WARN_INTERNALRUNTIME);
+          checker.addBundledSignatures(BS_JDK_NONPORTABLE, null);
+        }
         
         @SuppressWarnings("unchecked")
         final Iterator<Resource> iter = apiSignatures.iterator();

@@ -52,6 +52,7 @@ import org.gradle.api.tasks.util.PatternFilterable;
 import org.gradle.api.tasks.util.PatternSet;
 
 import de.thetaphi.forbiddenapis.Checker;
+import de.thetaphi.forbiddenapis.Constants;
 import de.thetaphi.forbiddenapis.ForbiddenApiException;
 import de.thetaphi.forbiddenapis.Logger;
 import de.thetaphi.forbiddenapis.ParseException;
@@ -102,7 +103,7 @@ import de.thetaphi.forbiddenapis.ParseException;
  * @since 2.0
  */
 @ParallelizableTask
-public class CheckForbiddenApis extends DefaultTask implements PatternFilterable,VerificationTask {
+public class CheckForbiddenApis extends DefaultTask implements PatternFilterable,VerificationTask,Constants {
   
   private static final String NL = System.getProperty("line.separator", "\n");
   
@@ -516,7 +517,10 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
             checker.addBundledSignatures(bs, bundledSigsJavaVersion);
           }
         }
-        if (getInternalRuntimeForbidden()) checker.addBundledSignatures(Checker.BS_JDK_NONPORTABLE, null);
+        if (getInternalRuntimeForbidden()) {
+          log.warn(DEPRECATED_WARN_INTERNALRUNTIME);
+          checker.addBundledSignatures(BS_JDK_NONPORTABLE, null);
+        }
         
         final FileCollection signaturesFiles = getSignaturesFiles();
         if (signaturesFiles != null) for (final File f : signaturesFiles) {

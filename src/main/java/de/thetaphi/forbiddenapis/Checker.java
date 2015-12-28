@@ -54,7 +54,7 @@ import java.lang.management.RuntimeMXBean;
 /**
  * Forbidden APIs checker class.
  */
-public final class Checker implements RelatedClassLookup {
+public final class Checker implements RelatedClassLookup, Constants {
   
   public static enum Option {
     FAIL_ON_MISSING_CLASSES,
@@ -62,15 +62,12 @@ public final class Checker implements RelatedClassLookup {
     FAIL_ON_UNRESOLVABLE_SIGNATURES
   }
 
-  public static final String BS_JDK_NONPORTABLE = "jdk-nonportable";
-
   public final boolean isSupportedJDK;
   
   private final long start;
-  
+  private final NavigableSet<String> runtimePaths;
+    
   final Logger logger;
-  
-  final NavigableSet<String> runtimePaths;
   
   final ClassLoader loader;
   final java.lang.reflect.Method method_Class_getModule, method_Module_getResourceAsStream, method_Module_getName;
@@ -89,7 +86,7 @@ public final class Checker implements RelatedClassLookup {
   final Map<String,String> forbiddenMethods = new HashMap<String,String>();
   // key is the internal name (slashed):
   final Map<String,String> forbiddenClasses = new HashMap<String,String>();
-  // key is pattern to binary class name:
+  // set of patterns of forbidden classes:
   final Set<ClassPatternRule> forbiddenClassPatterns = new LinkedHashSet<ClassPatternRule>();
   // descriptors (not internal names) of all annotations that suppress:
   final Set<String> suppressAnnotations = new LinkedHashSet<String>();

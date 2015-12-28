@@ -31,6 +31,7 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.codehaus.plexus.util.DirectoryScanner;
 
 import de.thetaphi.forbiddenapis.Checker;
+import de.thetaphi.forbiddenapis.Constants;
 import de.thetaphi.forbiddenapis.ForbiddenApiException;
 import de.thetaphi.forbiddenapis.Logger;
 import de.thetaphi.forbiddenapis.ParseException;
@@ -55,7 +56,7 @@ import java.util.Set;
  * Base class for forbiddenapis Mojos.
  * @since 1.0
  */
-public abstract class AbstractCheckMojo extends AbstractMojo {
+public abstract class AbstractCheckMojo extends AbstractMojo implements Constants {
 
   /**
    * Lists all files, which contain signatures and comments for forbidden API calls.
@@ -365,7 +366,10 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
             checker.addBundledSignatures(bs, targetVersion);
           }
         }
-        if (internalRuntimeForbidden) checker.addBundledSignatures(Checker.BS_JDK_NONPORTABLE, null);
+        if (internalRuntimeForbidden) {
+          log.warn(DEPRECATED_WARN_INTERNALRUNTIME);
+          checker.addBundledSignatures(BS_JDK_NONPORTABLE, null);
+        }
         
         final Set<File> sigFiles = new LinkedHashSet<File>();
         final Set<URL> sigUrls = new LinkedHashSet<URL>();

@@ -42,6 +42,7 @@ import org.codehaus.plexus.util.DirectoryScanner;
 
 import de.thetaphi.forbiddenapis.AsmUtils;
 import de.thetaphi.forbiddenapis.Checker;
+import de.thetaphi.forbiddenapis.Constants;
 import de.thetaphi.forbiddenapis.ForbiddenApiException;
 import de.thetaphi.forbiddenapis.Logger;
 import de.thetaphi.forbiddenapis.ParseException;
@@ -50,7 +51,7 @@ import de.thetaphi.forbiddenapis.StdIoLogger;
 /**
  * CLI class with a static main() method
  */
-public final class CliMain {
+public final class CliMain implements Constants {
 
   private final Option classpathOpt, dirOpt, includesOpt, excludesOpt, signaturesfileOpt, bundledsignaturesOpt, suppressannotationsOpt,
     internalruntimeforbiddenOpt, allowmissingclassesOpt, allowunresolvablesignaturesOpt, versionOpt, helpOpt;
@@ -126,7 +127,7 @@ public final class CliMain {
         .argName("classname")
         .build());
     options.addOption(internalruntimeforbiddenOpt = Option.builder()
-        .desc(String.format(Locale.ENGLISH, "DEPRECATED: forbids calls to non-portable runtime APIs; use bundled signatures '%s' instead", Checker.BS_JDK_NONPORTABLE))
+        .desc(String.format(Locale.ENGLISH, "DEPRECATED: forbids calls to non-portable runtime APIs; use bundled signatures '%s' instead", BS_JDK_NONPORTABLE))
         .longOpt("internalruntimeforbidden")
         .build());
     options.addOption(allowmissingclassesOpt = Option.builder()
@@ -259,7 +260,10 @@ public final class CliMain {
         if (bundledSignatures != null) for (String bs : new LinkedHashSet<String>(Arrays.asList(bundledSignatures))) {
           checker.addBundledSignatures(bs, null);
         }
-        if (cmd.hasOption(internalruntimeforbiddenOpt.getLongOpt())) checker.addBundledSignatures(Checker.BS_JDK_NONPORTABLE, null);
+        if (cmd.hasOption(internalruntimeforbiddenOpt.getLongOpt())) {
+          LOG.warn(DEPRECATED_WARN_INTERNALRUNTIME);
+          checker.addBundledSignatures(BS_JDK_NONPORTABLE, null);
+        }
         
         final String[] signaturesFiles = cmd.getOptionValues(signaturesfileOpt.getLongOpt());
         if (signaturesFiles != null) for (String sf : new LinkedHashSet<String>(Arrays.asList(signaturesFiles))) {
