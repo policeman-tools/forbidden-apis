@@ -305,7 +305,6 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
     
     try {
       final EnumSet<Checker.Option> options = EnumSet.noneOf(Checker.Option.class);
-      if (internalRuntimeForbidden) options.add(INTERNAL_RUNTIME_FORBIDDEN);
       if (failOnMissingClasses) options.add(FAIL_ON_MISSING_CLASSES);
       if (failOnViolation) options.add(FAIL_ON_VIOLATION);
       if (failOnUnresolvableSignatures) options.add(FAIL_ON_UNRESOLVABLE_SIGNATURES);
@@ -360,9 +359,11 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
               "You have to explicitely specify the version in the resource name.");
           }
           for (String bs : new LinkedHashSet<String>(Arrays.asList(bundledSignatures))) {
-            checker.parseBundledSignatures(bs, targetVersion);
+            checker.addBundledSignatures(bs, targetVersion);
           }
         }
+        if (internalRuntimeForbidden) checker.addBundledSignatures(Checker.BS_JDK_NONPORTABLE, null);
+        
         final Set<File> sigFiles = new LinkedHashSet<File>();
         final Set<URL> sigUrls = new LinkedHashSet<URL>();
         if (signaturesFiles != null) {

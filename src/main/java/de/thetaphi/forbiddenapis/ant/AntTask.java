@@ -104,7 +104,6 @@ public class AntTask extends Task {
       apiSignatures.setProject(getProject());
       
       final EnumSet<Checker.Option> options = EnumSet.noneOf(Checker.Option.class);
-      if (internalRuntimeForbidden) options.add(INTERNAL_RUNTIME_FORBIDDEN);
       if (failOnMissingClasses) options.add(FAIL_ON_MISSING_CLASSES);
       if (failOnViolation) options.add(FAIL_ON_VIOLATION);
       if (failOnUnresolvableSignatures) options.add(FAIL_ON_UNRESOLVABLE_SIGNATURES);
@@ -132,8 +131,9 @@ public class AntTask extends Task {
           if (name == null) {
             throw new BuildException("<bundledSignatures/> must have the mandatory attribute 'name' referring to a bundled signatures file.");
           }
-          checker.parseBundledSignatures(name, null);
+          checker.addBundledSignatures(name, null);
         }
+        if (internalRuntimeForbidden) checker.addBundledSignatures(Checker.BS_JDK_NONPORTABLE, null);
         
         @SuppressWarnings("unchecked")
         final Iterator<Resource> iter = apiSignatures.iterator();

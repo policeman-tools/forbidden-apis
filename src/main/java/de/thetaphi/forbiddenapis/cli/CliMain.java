@@ -126,7 +126,7 @@ public final class CliMain {
         .argName("classname")
         .build());
     options.addOption(internalruntimeforbiddenOpt = Option.builder()
-        .desc("forbids calls to classes from the internal java runtime (like sun.misc.Unsafe)")
+        .desc(String.format(Locale.ENGLISH, "DEPRECATED: forbids calls to non-portable runtime APIs; use bundled signatures '%s' instead", Checker.BS_JDK_NONPORTABLE))
         .longOpt("internalruntimeforbidden")
         .build());
     options.addOption(allowmissingclassesOpt = Option.builder()
@@ -216,7 +216,6 @@ public final class CliMain {
     final URLClassLoader loader = URLClassLoader.newInstance(urls, ClassLoader.getSystemClassLoader());
     try {
       final EnumSet<Checker.Option> options = EnumSet.of(FAIL_ON_VIOLATION);
-      if (cmd.hasOption(internalruntimeforbiddenOpt.getLongOpt())) options.add(INTERNAL_RUNTIME_FORBIDDEN);
       if (!cmd.hasOption(allowmissingclassesOpt.getLongOpt())) options.add(FAIL_ON_MISSING_CLASSES);
       if (!cmd.hasOption(allowunresolvablesignaturesOpt.getLongOpt())) options.add(FAIL_ON_UNRESOLVABLE_SIGNATURES);
       final Checker checker = new Checker(LOG, loader, options);
@@ -258,8 +257,10 @@ public final class CliMain {
       try {
         final String[] bundledSignatures = cmd.getOptionValues(bundledsignaturesOpt.getLongOpt());
         if (bundledSignatures != null) for (String bs : new LinkedHashSet<String>(Arrays.asList(bundledSignatures))) {
-          checker.parseBundledSignatures(bs, null);
+          checker.addBundledSignatures(bs, null);
         }
+        if (cmd.hasOption(internalruntimeforbiddenOpt.getLongOpt())) checker.addBundledSignatures(Checker.BS_JDK_NONPORTABLE, null);
+        
         final String[] signaturesFiles = cmd.getOptionValues(signaturesfileOpt.getLongOpt());
         if (signaturesFiles != null) for (String sf : new LinkedHashSet<String>(Arrays.asList(signaturesFiles))) {
           final File f = new File(sf).getAbsoluteFile();

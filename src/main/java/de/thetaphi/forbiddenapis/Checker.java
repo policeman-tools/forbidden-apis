@@ -57,11 +57,12 @@ import java.lang.management.RuntimeMXBean;
 public final class Checker implements RelatedClassLookup {
   
   public static enum Option {
-    INTERNAL_RUNTIME_FORBIDDEN,
     FAIL_ON_MISSING_CLASSES,
     FAIL_ON_VIOLATION,
     FAIL_ON_UNRESOLVABLE_SIGNATURES
   }
+
+  public static final String BS_JDK_NONPORTABLE = "jdk-nonportable";
 
   public final boolean isSupportedJDK;
   
@@ -80,6 +81,8 @@ public final class Checker implements RelatedClassLookup {
   // key is the binary name (dotted):
   final Map<String,ClassSignature> classpathClassCache = new HashMap<String,ClassSignature>();
   
+  // if enabled, the bundled signature to enable heuristics for detection of non-portable runtime calls is used:
+  private boolean forbidNonPortableRuntime = false;  
   // key is the internal name (slashed), followed by \000 and the field name:
   final Map<String,String> forbiddenFields = new HashMap<String,String>();
   // key is the internal name (slashed), followed by \000 and the method signature:
@@ -430,13 +433,18 @@ public final class Checker implements RelatedClassLookup {
   }
 
   /** Reads a list of bundled API signatures from classpath. */
-  public void parseBundledSignatures(String name, String jdkTargetVersion) throws IOException,ParseException {
-    parseBundledSignatures(name, jdkTargetVersion, true);
+  public void addBundledSignatures(String name, String jdkTargetVersion) throws IOException,ParseException {
+    addBundledSignatures(name, jdkTargetVersion, true);
   }
   
-  private void parseBundledSignatures(String name, String jdkTargetVersion, boolean logging) throws IOException,ParseException {
+  private void addBundledSignatures(String name, String jdkTargetVersion, boolean logging) throws IOException,ParseException {
     if (!name.matches("[A-Za-z0-9\\-\\.]+")) {
       throw new ParseException("Invalid bundled signature reference: " + name);
+    }
+    if (BS_JDK_NONPORTABLE.equals(name)) {
+      if (logging) logger.info("Reading bundled API signatures: " + name);
+      forbidNonPortableRuntime = true;
+      return;
     }
     // use Checker.class hardcoded (not getClass) so we have a fixed package name:
     InputStream in = Checker.class.getResourceAsStream("signatures/" + name + ".txt");
@@ -498,7 +506,7 @@ public final class Checker implements RelatedClassLookup {
         if (line.startsWith("@")) {
           if (isBundled && line.startsWith(BUNDLED_PREFIX)) {
             final String name = line.substring(BUNDLED_PREFIX.length()).trim();
-            parseBundledSignatures(name, null, false);
+            addBundledSignatures(name, null, false);
           } else if (line.startsWith(DEFAULT_MESSAGE_PREFIX)) {
             defaultMessage = line.substring(DEFAULT_MESSAGE_PREFIX.length()).trim();
             if (defaultMessage.length() == 0) defaultMessage = null;
@@ -560,7 +568,11 @@ public final class Checker implements RelatedClassLookup {
   }
 
   public boolean hasNoSignatures() {
-    return forbiddenMethods.isEmpty() && forbiddenFields.isEmpty() && forbiddenClasses.isEmpty() && forbiddenClassPatterns.isEmpty() && (!options.contains(Option.INTERNAL_RUNTIME_FORBIDDEN));
+    return 0 == forbiddenMethods.size() + 
+        forbiddenFields.size() + 
+        forbiddenClasses.size() + 
+        forbiddenClassPatterns.size() +
+        (forbidNonPortableRuntime ? 1 : 0);
   }
   
   /** Adds the given annotation class for suppressing errors. */
@@ -576,7 +588,7 @@ public final class Checker implements RelatedClassLookup {
   /** Parses a class and checks for valid method invocations */
   private int checkClass(final ClassReader reader, Pattern suppressAnnotationsPattern) {
     final String className = Type.getObjectType(reader.getClassName()).getClassName();
-    final ClassScanner scanner = new ClassScanner(this, forbiddenClasses, forbiddenClassPatterns, forbiddenMethods, forbiddenFields, suppressAnnotationsPattern, options.contains(Option.INTERNAL_RUNTIME_FORBIDDEN)); 
+    final ClassScanner scanner = new ClassScanner(this, forbiddenClasses, forbiddenClassPatterns, forbiddenMethods, forbiddenFields, suppressAnnotationsPattern, forbidNonPortableRuntime); 
     reader.accept(scanner, ClassReader.SKIP_FRAMES);
     final List<ForbiddenViolation> violations = scanner.getSortedViolations();
     final Pattern splitter = Pattern.compile(Pattern.quote(ForbiddenViolation.SEPARATOR));

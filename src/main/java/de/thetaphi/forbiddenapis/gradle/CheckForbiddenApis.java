@@ -473,7 +473,6 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
     
     try {
       final EnumSet<Checker.Option> options = EnumSet.noneOf(Checker.Option.class);
-      if (getInternalRuntimeForbidden()) options.add(INTERNAL_RUNTIME_FORBIDDEN);
       if (getFailOnMissingClasses()) options.add(FAIL_ON_MISSING_CLASSES);
       if (!getIgnoreFailures()) options.add(FAIL_ON_VIOLATION);
       if (getFailOnUnresolvableSignatures()) options.add(FAIL_ON_UNRESOLVABLE_SIGNATURES);
@@ -508,9 +507,11 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
               "You have to explicitely specify the version in the resource name.");
           }
           for (String bs : bundledSignatures) {
-            checker.parseBundledSignatures(bs, bundledSigsJavaVersion);
+            checker.addBundledSignatures(bs, bundledSigsJavaVersion);
           }
         }
+        if (getInternalRuntimeForbidden()) checker.addBundledSignatures(Checker.BS_JDK_NONPORTABLE, null);
+        
         final FileCollection signaturesFiles = getSignaturesFiles();
         if (signaturesFiles != null) for (final File f : signaturesFiles) {
           checker.parseSignaturesFile(f);
