@@ -30,6 +30,7 @@
     <au:assertLogContains text=" 0 error(s)."/> 
     <au:assertLogContains text="Reading bundled API signatures: jdk-deprecated-${jdk.version}"/> 
     <au:assertLogContains text="Reading bundled API signatures: jdk-unsafe-${jdk.version}"/> 
+    <au:assertLogContains text="Reading bundled API signatures: jdk-non-portable"/> 
   </target>
 
   <target name="testIncludesExcludes">
@@ -52,6 +53,8 @@
     <au:assertLogContains text="Reading bundled API signatures: jdk-deprecated-${jdk.version}"/> 
     <au:assertLogContains text="Reading bundled API signatures: jdk-unsafe-${jdk.version}"/> 
     <au:assertLogContains text="Reading bundled API signatures: jdk-system-out"/> 
+    <au:assertLogContains text="Reading bundled API signatures: jdk-non-portable"/> 
+    <au:assertLogContains text="WARNING: The setting 'internalRuntimeForbidden' was deprecated"/> 
   </target>
 
   <target name="testSuppressAnnotations">
