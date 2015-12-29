@@ -24,7 +24,7 @@
     <au:expectfailure expectedMessage="Check for forbidden API calls failed, see log">
       <forbiddenapis failOnMissingClasses="false">
         <file file="OracleInternalRuntime.class"/>
-        <bundledsignatures name="jdk-nonportable"/>
+        <bundledsignatures name="jdk-non-portable"/>
       </forbiddenapis>
     </au:expectfailure>
     <au:assertLogContains level="error" text="sun.misc.BASE64Encoder [non-portable or internal runtime class]"/> 

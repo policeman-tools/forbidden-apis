@@ -325,9 +325,9 @@ public class AntTask extends Task implements Constants {
 
   /**
    * Forbids calls to non-portable runtime APIs (like {@code sun.misc.Unsafe}).
-   * <em>Please note:</em> This enables {@code "jdk-nonportable"} bundled signatures for backwards compatibility.
+   * <em>Please note:</em> This enables {@code "jdk-non-portable"} bundled signatures for backwards compatibility.
    * Defaults to {@code false}. 
-   * @deprecated Use bundled signatures {@code "jdk-nonportable"} or {@code "jdk-internal"} instead.
+   * @deprecated Use bundled signatures {@code "jdk-non-portable"} or {@code "jdk-internal"} instead.
    */
   @Deprecated
   public void setInternalRuntimeForbidden(boolean internalRuntimeForbidden) {

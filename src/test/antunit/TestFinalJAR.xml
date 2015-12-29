@@ -23,7 +23,7 @@
       <fileset dir="${antunit.main.classes}"/>
       <bundledsignatures name="jdk-unsafe-${jdk.version}"/>
       <bundledsignatures name="jdk-deprecated-${jdk.version}"/>
-      <bundledsignatures name="jdk-nonportable"/>
+      <bundledsignatures name="jdk-non-portable"/>
     </forbiddenapis-jar>
     <au:assertLogContains level="info" text=" 0 error(s)."/> 
   </target>
@@ -32,7 +32,7 @@
     <forbiddenapis-jar dir="${antunit.main.classes}" classpathref="path.all">
       <bundledsignatures name="jdk-unsafe-${jdk.version}"/>
       <bundledsignatures name="jdk-deprecated-${jdk.version}"/>
-      <bundledsignatures name="jdk-nonportable"/>
+      <bundledsignatures name="jdk-non-portable"/>
     </forbiddenapis-jar>
     <au:assertLogContains level="info" text=" 0 error(s)."/> 
   </target>
@@ -42,7 +42,7 @@
     <fa:forbiddenapis xmlns:fa="antlib:de.thetaphi.forbiddenapis" dir="${antunit.main.classes}" classpathref="path.all">
       <bundledsignatures name="jdk-unsafe-${jdk.version}"/>
       <bundledsignatures name="jdk-deprecated-${jdk.version}"/>
-      <bundledsignatures name="jdk-nonportable"/>
+      <bundledsignatures name="jdk-non-portable"/>
     </fa:forbiddenapis>
     <au:assertLogContains level="info" text=" 0 error(s)."/> 
   </target>
@@ -59,7 +59,7 @@
       <zipfileset src="${jar-file}" excludes="de/thetaphi/forbiddenapis/commons/cli/**"/>
       <bundledsignatures name="jdk-unsafe-${jdk.version}"/>
       <bundledsignatures name="jdk-deprecated-${jdk.version}"/>
-      <bundledsignatures name="jdk-nonportable"/>
+      <bundledsignatures name="jdk-non-portable"/>
       <classpath>
         <pathelement path="${jar-file}"/>
         <path refid="path.main-build"/>

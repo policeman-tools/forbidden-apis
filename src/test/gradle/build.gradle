@@ -32,7 +32,7 @@ apply plugin: 'de.thetaphi.forbiddenapis'
 sourceCompatibility = forbiddenSourceCompatibility
 
 forbiddenApis {
-  bundledSignatures = [ 'jdk-unsafe', 'jdk-deprecated', 'jdk-nonportable' ]
+  bundledSignatures = [ 'jdk-unsafe', 'jdk-deprecated', 'jdk-non-portable' ]
   failOnUnsupportedJava = false
 }
 

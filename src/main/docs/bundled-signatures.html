@@ -38,7 +38,7 @@ methods from the JDK (for Java <tt>*</tt> = 1.6, 1.7, 1.8; Maven / Gradle automa
 Calling those methods will always trigger security manager and is completely forbidden from Java 9 on
 (for Java <tt>*</tt> = 1.6, 1.7, 1.8; Maven / Gradle automatically add the compile Java version, <em>since forbiddenapis v2.1</em>).</li>
 
-<li><strong><tt>jdk-nonportable</tt>:</strong> Signatures of all non-portable (like <code>com.sun.management.HotSpotDiagnosticMXBean</code>)
+<li><strong><tt>jdk-non-portable</tt>:</strong> Signatures of all non-portable (like <code>com.sun.management.HotSpotDiagnosticMXBean</code>)
 or internal runtime APIs (like <code>sun.misc.Unsafe</code>). This is a superset of <tt>jdk-internal</tt>.<br>
 <em>Internally this is implemented using heuristics:</em> Any reference to an API that is part of the Java runtime (<tt>rt.jar</tt>, extensions,
 Java 9 <tt>java.*</tt> / <tt>jdk.*</tt> core modules) and is <strong>not</strong> part of the Java SE specification packages

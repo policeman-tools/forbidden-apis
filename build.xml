@@ -470,7 +470,7 @@
       <signatures>
         <bundled name="jdk-unsafe-${jdk.version}"/>
         <bundled name="jdk-deprecated-${jdk.version}"/>
-        <bundled name="jdk-nonportable"/>
+        <bundled name="jdk-non-portable"/>
         <bundled name="jdk-system-out"/>
         <bundled name="jdk-reflection"/>
       </signatures>

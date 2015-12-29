@@ -51,7 +51,7 @@
               <bundledSignatures>
                 <bundledSignature>jdk-unsafe</bundledSignature>
                 <bundledSignature>jdk-deprecated</bundledSignature>
-                <bundledSignature>jdk-nonportable</bundledSignature>
+                <bundledSignature>jdk-non-portable</bundledSignature>
                 <bundledSignature>jdk-system-out</bundledSignature>
               </bundledSignatures>
               <signatures>${antunit.signatures}</signatures>
@@ -84,5 +84,5 @@
       </dependencies>
     </project>
   </xsl:template>
-	
+  
 </xsl:stylesheet>

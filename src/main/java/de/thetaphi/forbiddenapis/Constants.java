@@ -22,7 +22,7 @@ import java.util.Locale;
 
 public interface Constants {
 
-  final String BS_JDK_NONPORTABLE = "jdk-nonportable";
+  final String BS_JDK_NONPORTABLE = "jdk-non-portable";
   
   final String DEPRECATED_WARN_INTERNALRUNTIME = String.format(Locale.ENGLISH,
       "The setting 'internalRuntimeForbidden' was deprecated and will be removed in next version. For backwards compatibility task/mojo is using '%s' bundled signatures instead.", BS_JDK_NONPORTABLE);

@@ -114,8 +114,8 @@ public abstract class AbstractCheckMojo extends AbstractMojo implements Constant
 
   /**
    * Forbids calls to non-portable runtime APIs (like {@code sun.misc.Unsafe}).
-   * <em>Please note:</em> This enables {@code "jdk-nonportable"} bundled signatures for backwards compatibility.
-   * @deprecated Use <a href="bundled-signatures.html">bundled signatures</a> {@code "jdk-nonportable"} or {@code "jdk-internal"} instead.
+   * <em>Please note:</em> This enables {@code "jdk-non-portable"} bundled signatures for backwards compatibility.
+   * @deprecated Use <a href="bundled-signatures.html">bundled signatures</a> {@code "jdk-non-portable"} or {@code "jdk-internal"} instead.
    * @since 1.0
    */
   @Deprecated
