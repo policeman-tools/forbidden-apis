@@ -16,6 +16,7 @@ package de.thetaphi.forbiddenapis;
  * limitations under the License.
  */
 
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Locale;
 import java.util.regex.Pattern;
@@ -129,16 +130,21 @@ public final class AsmUtils {
     if (!"jrt".equalsIgnoreCase(jrtUrl.getProtocol())) {
       return null;
     }
-    String mod = jrtUrl.getPath();
-    if (mod != null && mod.length() >= 1) {
-      mod = mod.substring(1);
-      int p = mod.indexOf('/');
-      if (p >= 0) {
-        mod = mod.substring(0, p);
+    try {
+      // use URI class to also decode path and remove escapes:
+      String mod = jrtUrl.toURI().getPath();
+      if (mod != null && mod.length() >= 1) {
+        mod = mod.substring(1);
+        int p = mod.indexOf('/');
+        if (p >= 0) {
+          mod = mod.substring(0, p);
+        }
+        return mod.isEmpty() ? null : mod;
       }
-      return mod.isEmpty() ? null : mod;
+      return null;
+    } catch (URISyntaxException use) {
+      return null;
     }
-    return null;
   }
 
 }
