@@ -54,10 +54,9 @@ import java.lang.management.RuntimeMXBean;
 /**
  * Forbidden APIs checker class.
  */
-public final class Checker implements RelatedClassLookup {
+public final class Checker implements RelatedClassLookup, Constants {
   
   public static enum Option {
-    INTERNAL_RUNTIME_FORBIDDEN,
     FAIL_ON_MISSING_CLASSES,
     FAIL_ON_VIOLATION,
     FAIL_ON_UNRESOLVABLE_SIGNATURES
@@ -66,13 +65,12 @@ public final class Checker implements RelatedClassLookup {
   public final boolean isSupportedJDK;
   
   private final long start;
-  
+  private final NavigableSet<String> runtimePaths;
+    
   final Logger logger;
   
-  final NavigableSet<String> runtimePaths;
-  
   final ClassLoader loader;
-  final java.lang.reflect.Method method_Class_getModule, method_Module_getResourceAsStream;
+  final java.lang.reflect.Method method_Class_getModule, method_Module_getResourceAsStream, method_Module_getName;
   final EnumSet<Option> options;
   
   // key is the binary name (dotted):
@@ -80,13 +78,15 @@ public final class Checker implements RelatedClassLookup {
   // key is the binary name (dotted):
   final Map<String,ClassSignature> classpathClassCache = new HashMap<String,ClassSignature>();
   
+  // if enabled, the bundled signature to enable heuristics for detection of non-portable runtime calls is used:
+  private boolean forbidNonPortableRuntime = false;  
   // key is the internal name (slashed), followed by \000 and the field name:
   final Map<String,String> forbiddenFields = new HashMap<String,String>();
   // key is the internal name (slashed), followed by \000 and the method signature:
   final Map<String,String> forbiddenMethods = new HashMap<String,String>();
   // key is the internal name (slashed):
   final Map<String,String> forbiddenClasses = new HashMap<String,String>();
-  // key is pattern to binary class name:
+  // set of patterns of forbidden classes:
   final Set<ClassPatternRule> forbiddenClassPatterns = new LinkedHashSet<ClassPatternRule>();
   // descriptors (not internal names) of all annotations that suppress:
   final Set<String> suppressAnnotations = new LinkedHashSet<String>();
@@ -129,19 +129,22 @@ public final class Checker implements RelatedClassLookup {
     
     boolean isSupportedJDK = false;
     
-    // first try Java 9 mdoule system (Jigsaw)
+    // first try Java 9 module system (Jigsaw)
     // Please note: This code is not guaranteed to work with final Java 9 version. This is just for testing!
-    java.lang.reflect.Method method_Class_getModule, method_Module_getResourceAsStream;
+    java.lang.reflect.Method method_Class_getModule, method_Module_getResourceAsStream, method_Module_getName;
     try {
       method_Class_getModule = Class.class.getMethod("getModule");
       method_Module_getResourceAsStream = method_Class_getModule
           .getReturnType().getMethod("getResourceAsStream", String.class);
+      method_Module_getName = method_Class_getModule
+          .getReturnType().getMethod("getName");
       isSupportedJDK = true;
     } catch (NoSuchMethodException e) {
-      method_Class_getModule = method_Module_getResourceAsStream = null;
+      method_Class_getModule = method_Module_getResourceAsStream = method_Module_getName = null;
     }
     this.method_Class_getModule = method_Class_getModule;
     this.method_Module_getResourceAsStream = method_Module_getResourceAsStream;
+    this.method_Module_getName = method_Module_getName;
     
     final NavigableSet<String> runtimePaths = new TreeSet<String>();
     
@@ -222,16 +225,29 @@ public final class Checker implements RelatedClassLookup {
    * This code is not guaranteed to work with final Java 9 version.
    * This is just for testing!
    **/
-  private InputStream getBytecodeFromJigsaw(String classname) {
-    if (method_Class_getModule == null || method_Module_getResourceAsStream == null) {
+  private ClassSignature loadClassFromJigsaw(String classname) throws IOException {
+    if (method_Class_getModule == null || method_Module_getResourceAsStream == null || method_Module_getName == null) {
       return null; // not Java 9 JIGSAW
     }
+    
+    final InputStream in;
+    final String moduleName;
     try {
       final Class<?> clazz = Class.forName(classname, false, loader);
       final Object module = method_Class_getModule.invoke(clazz);
-      return (InputStream) method_Module_getResourceAsStream.invoke(module, AsmUtils.getClassResourceName(classname));
+      moduleName = (String) method_Module_getName.invoke(module);
+      in = (InputStream) method_Module_getResourceAsStream.invoke(module, AsmUtils.getClassResourceName(classname));
+      if (in == null) {
+        return null;
+      }
     } catch (Exception e) {
       return null; // not found
+    }
+    
+    try {
+      return new ClassSignature(new ClassReader(in), AsmUtils.isRuntimeModule(moduleName), false);
+    } finally {
+      in.close();
     }
   }
   
@@ -260,7 +276,7 @@ public final class Checker implements RelatedClassLookup {
       // all 'jrt:' URLs refer to a module in the Java 9+ runtime (see http://openjdk.java.net/jeps/220)
       // This may still be different with module system. We support both variants for now.
       // Please note: This code is not guaranteed to work with final Java 9 version. This is just for testing!
-      return true;
+      return AsmUtils.isRuntimeModule(AsmUtils.getModuleName(url));
     }
     return false;
   }
@@ -287,14 +303,9 @@ public final class Checker implements RelatedClassLookup {
         }
         return c;
       } else {
-        final InputStream in = getBytecodeFromJigsaw(clazz);
-        if (in != null) {
-          try {
-            // we mark it as runtime class because it was derived from the module system:
-            classpathClassCache.put(clazz, c = new ClassSignature(new ClassReader(in), true, false));
-          } finally {
-            in.close();
-          }
+        final ClassSignature jigsawCl = loadClassFromJigsaw(clazz);
+        if (jigsawCl != null) {
+          classpathClassCache.put(clazz, c = jigsawCl);
           return c;
         }
       }
@@ -336,7 +347,8 @@ public final class Checker implements RelatedClassLookup {
   
   /** Adds the method signature to the list of disallowed methods. The Signature is checked against the given ClassLoader. */
   private void addSignature(final String line, final String defaultMessage, final UnresolvableReporting report) throws ParseException,IOException {
-    final String clazz, field, signature, message;
+    final String clazz, field, signature;
+    String message = null;
     final Method method;
     int p = line.indexOf('@');
     if (p >= 0) {
@@ -371,15 +383,17 @@ public final class Checker implements RelatedClassLookup {
       method = null;
       field = null;
     }
+    if (message != null && message.isEmpty()) {
+      message = null;
+    }
     // create printout message:
-    final String printout = (message != null && message.length() > 0) ?
-      (signature + " [" + message + "]") : signature;
+    final String printout = (message != null) ? (signature + " [" + message + "]") : signature;
     // check class & method/field signature, if it is really existent (in classpath), but we don't really load the class into JVM:
     if (AsmUtils.isGlob(clazz)) {
       if (method != null || field != null) {
         throw new ParseException(String.format(Locale.ENGLISH, "Class level glob pattern cannot be combined with methods/fields: %s", signature));
       }
-      forbiddenClassPatterns.add(new ClassPatternRule(clazz, printout));
+      forbiddenClassPatterns.add(new ClassPatternRule(clazz, message));
     } else {
       final ClassSignature c;
       try {
@@ -419,13 +433,18 @@ public final class Checker implements RelatedClassLookup {
   }
 
   /** Reads a list of bundled API signatures from classpath. */
-  public void parseBundledSignatures(String name, String jdkTargetVersion) throws IOException,ParseException {
-    parseBundledSignatures(name, jdkTargetVersion, true);
+  public void addBundledSignatures(String name, String jdkTargetVersion) throws IOException,ParseException {
+    addBundledSignatures(name, jdkTargetVersion, true);
   }
   
-  private void parseBundledSignatures(String name, String jdkTargetVersion, boolean logging) throws IOException,ParseException {
+  private void addBundledSignatures(String name, String jdkTargetVersion, boolean logging) throws IOException,ParseException {
     if (!name.matches("[A-Za-z0-9\\-\\.]+")) {
       throw new ParseException("Invalid bundled signature reference: " + name);
+    }
+    if (BS_JDK_NONPORTABLE.equals(name)) {
+      if (logging) logger.info("Reading bundled API signatures: " + name);
+      forbidNonPortableRuntime = true;
+      return;
     }
     // use Checker.class hardcoded (not getClass) so we have a fixed package name:
     InputStream in = Checker.class.getResourceAsStream("signatures/" + name + ".txt");
@@ -487,7 +506,7 @@ public final class Checker implements RelatedClassLookup {
         if (line.startsWith("@")) {
           if (isBundled && line.startsWith(BUNDLED_PREFIX)) {
             final String name = line.substring(BUNDLED_PREFIX.length()).trim();
-            parseBundledSignatures(name, null, false);
+            addBundledSignatures(name, null, false);
           } else if (line.startsWith(DEFAULT_MESSAGE_PREFIX)) {
             defaultMessage = line.substring(DEFAULT_MESSAGE_PREFIX.length()).trim();
             if (defaultMessage.length() == 0) defaultMessage = null;
@@ -549,7 +568,11 @@ public final class Checker implements RelatedClassLookup {
   }
 
   public boolean hasNoSignatures() {
-    return forbiddenMethods.isEmpty() && forbiddenFields.isEmpty() && forbiddenClasses.isEmpty() && forbiddenClassPatterns.isEmpty() && (!options.contains(Option.INTERNAL_RUNTIME_FORBIDDEN));
+    return 0 == forbiddenMethods.size() + 
+        forbiddenFields.size() + 
+        forbiddenClasses.size() + 
+        forbiddenClassPatterns.size() +
+        (forbidNonPortableRuntime ? 1 : 0);
   }
   
   /** Adds the given annotation class for suppressing errors. */
@@ -565,7 +588,7 @@ public final class Checker implements RelatedClassLookup {
   /** Parses a class and checks for valid method invocations */
   private int checkClass(final ClassReader reader, Pattern suppressAnnotationsPattern) {
     final String className = Type.getObjectType(reader.getClassName()).getClassName();
-    final ClassScanner scanner = new ClassScanner(this, forbiddenClasses, forbiddenClassPatterns, forbiddenMethods, forbiddenFields, suppressAnnotationsPattern, options.contains(Option.INTERNAL_RUNTIME_FORBIDDEN)); 
+    final ClassScanner scanner = new ClassScanner(this, forbiddenClasses, forbiddenClassPatterns, forbiddenMethods, forbiddenFields, suppressAnnotationsPattern, forbidNonPortableRuntime); 
     reader.accept(scanner, ClassReader.SKIP_FRAMES);
     final List<ForbiddenViolation> violations = scanner.getSortedViolations();
     final Pattern splitter = Pattern.compile(Pattern.quote(ForbiddenViolation.SEPARATOR));

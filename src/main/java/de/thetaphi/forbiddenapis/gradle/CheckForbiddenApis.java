@@ -52,6 +52,7 @@ import org.gradle.api.tasks.util.PatternFilterable;
 import org.gradle.api.tasks.util.PatternSet;
 
 import de.thetaphi.forbiddenapis.Checker;
+import de.thetaphi.forbiddenapis.Constants;
 import de.thetaphi.forbiddenapis.ForbiddenApiException;
 import de.thetaphi.forbiddenapis.Logger;
 import de.thetaphi.forbiddenapis.ParseException;
@@ -102,7 +103,7 @@ import de.thetaphi.forbiddenapis.ParseException;
  * @since 2.0
  */
 @ParallelizableTask
-public class CheckForbiddenApis extends DefaultTask implements PatternFilterable,VerificationTask {
+public class CheckForbiddenApis extends DefaultTask implements PatternFilterable,VerificationTask,Constants {
   
   private static final String NL = System.getProperty("line.separator", "\n");
   
@@ -218,15 +219,21 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
   }
 
   /**
-   * Forbids calls to classes from the internal java runtime (like sun.misc.Unsafe)
-   * Defaults to {@code false}.
+   * Forbids calls to non-portable runtime APIs (like {@code sun.misc.Unsafe}).
+   * <em>Please note:</em> This enables {@code "jdk-non-portable"} bundled signatures for backwards compatibility.
+   * Defaults to {@code false}. 
+   * @deprecated Use <a href="bundled-signatures.html">bundled signatures</a> {@code "jdk-non-portable"} or {@code "jdk-internal"} instead.
    */
+  @Deprecated
   @Input
   public boolean getInternalRuntimeForbidden() {
     return data.internalRuntimeForbidden;
   }
 
-  /** @see #getInternalRuntimeForbidden */
+  /** @see #getInternalRuntimeForbidden
+   * @deprecated Use bundled signatures {@code "jdk-non-portable"} or {@code "jdk-internal"} instead.
+   */
+  @Deprecated
   public void setInternalRuntimeForbidden(boolean internalRuntimeForbidden) {
     data.internalRuntimeForbidden = internalRuntimeForbidden;
   }
@@ -473,7 +480,6 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
     
     try {
       final EnumSet<Checker.Option> options = EnumSet.noneOf(Checker.Option.class);
-      if (getInternalRuntimeForbidden()) options.add(INTERNAL_RUNTIME_FORBIDDEN);
       if (getFailOnMissingClasses()) options.add(FAIL_ON_MISSING_CLASSES);
       if (!getIgnoreFailures()) options.add(FAIL_ON_VIOLATION);
       if (getFailOnUnresolvableSignatures()) options.add(FAIL_ON_UNRESOLVABLE_SIGNATURES);
@@ -508,9 +514,14 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
               "You have to explicitely specify the version in the resource name.");
           }
           for (String bs : bundledSignatures) {
-            checker.parseBundledSignatures(bs, bundledSigsJavaVersion);
+            checker.addBundledSignatures(bs, bundledSigsJavaVersion);
           }
         }
+        if (getInternalRuntimeForbidden()) {
+          log.warn(DEPRECATED_WARN_INTERNALRUNTIME);
+          checker.addBundledSignatures(BS_JDK_NONPORTABLE, null);
+        }
+        
         final FileCollection signaturesFiles = getSignaturesFiles();
         if (signaturesFiles != null) for (final File f : signaturesFiles) {
           checker.parseSignaturesFile(f);

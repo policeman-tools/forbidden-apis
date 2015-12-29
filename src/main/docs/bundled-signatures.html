@@ -34,15 +34,23 @@ stupid to call those methods, as the results will definitely not what the user w
 <li><strong><tt>jdk-deprecated-*</tt>:</strong> This disallows all deprecated
 methods from the JDK (for Java <tt>*</tt> = 1.6, 1.7, 1.8; Maven / Gradle automatically add the compile Java version).</li>
 
+<li><strong><tt>jdk-internal-*</tt>:</strong> Lists all internal packages of the JDK as of <code>Security.getProperty(&quot;package.access&quot;)</code>.
+Calling those methods will always trigger security manager and is completely forbidden from Java 9 on
+(for Java <tt>*</tt> = 1.6, 1.7, 1.8; Maven / Gradle automatically add the compile Java version, <em>since forbiddenapis v2.1</em>).</li>
+
+<li><strong><tt>jdk-non-portable</tt>:</strong> Signatures of all non-portable (like <code>com.sun.management.HotSpotDiagnosticMXBean</code>)
+or internal runtime APIs (like <code>sun.misc.Unsafe</code>). This is a superset of <tt>jdk-internal</tt>.<br>
+<em>Internally this is implemented using heuristics:</em> Any reference to an API that is part of the Java runtime (<tt>rt.jar</tt>, extensions,
+Java 9 <tt>java.*</tt> / <tt>jdk.*</tt> core modules) and is <strong>not</strong> part of the Java SE specification packages
+(mainly <tt>java</tt>, <tt>javax</tt>, but also <tt>org.ietf.jgss</tt>, <tt>org.omg</tt>, <tt>org.w3c.dom</tt>, and <tt>org.xml.sax</tt>) is forbidden
+(any java version, no specific JDK version, <em>since forbiddenapis v2.1 / replaces deprecated and wrong-named task
+setting <tt>internalRuntimeForbidden</tt></em>).</li>
+
 <li><strong><tt>jdk-system-out</tt>:</strong> On server-side applications or libraries used by other programs, printing to
 <tt>System.out</tt> or <tt>System.err</tt> is discouraged and should be avoided (any java version, no specific JDK version).</li>
 
 <li><strong><tt>jdk-reflection</tt>:</strong> Reflection usage to work around access flags fails with SecurityManagers
 and likely will not work anymore on runtime classes in Java 9 (any java version, no specific JDK version, <em>since forbiddenapis v2.1</em>).</li>
-
-<li><strong><tt>jdk-internal</tt>:</strong> Lists all internal packages of the JDK as of <code>Security.getProperty(&quot;package.access&quot;)</code>.
-Calling those methods will always trigger security manager and is completely forbidden from Java 9 on
-(for Java <tt>*</tt> = 1.6, 1.7, 1.8; Maven / Gradle automatically add the compile Java version, <em>since forbiddenapis v2.1</em>).</li>
 
 <li><strong><tt>commons-io-unsafe-*</tt>:</strong> If your application uses the famous <i>Apache Common-IO</i> library,
 this adds signatures of all methods that depend on default charset

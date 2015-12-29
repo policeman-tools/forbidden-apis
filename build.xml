@@ -462,7 +462,7 @@
   </target>
   
   <target name="-check-myself" depends="compile,compile-tools,compile-test,-install-forbiddenapi-task">
-    <forbiddenapis internalRuntimeForbidden="true" failOnUnsupportedJava="false">
+    <forbiddenapis failOnUnsupportedJava="false">
       <classpath refid="path.all"/>
       <fileset dir="build/main"/>
       <fileset dir="build/tools"/>
@@ -470,7 +470,7 @@
       <signatures>
         <bundled name="jdk-unsafe-${jdk.version}"/>
         <bundled name="jdk-deprecated-${jdk.version}"/>
-        <bundled name="jdk-internal-${jdk.version}"/>
+        <bundled name="jdk-non-portable"/>
         <bundled name="jdk-system-out"/>
         <bundled name="jdk-reflection"/>
       </signatures>
