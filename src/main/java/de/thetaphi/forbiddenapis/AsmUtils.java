@@ -16,10 +16,16 @@ package de.thetaphi.forbiddenapis;
  * limitations under the License.
  */
 
+import java.io.EOFException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.PushbackInputStream;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Locale;
 import java.util.regex.Pattern;
+
+import org.objectweb.asm.ClassReader;
 
 /** Some static utilities for analyzing with ASM, also constants. */
 public final class AsmUtils {
@@ -145,6 +151,23 @@ public final class AsmUtils {
     } catch (URISyntaxException use) {
       return null;
     }
+  }
+  
+  /** Utility method to load class files of Java 9 by patching them, so ASM can read them. */
+  public static ClassReader readAndPatchClass(InputStream in) throws IOException {
+    final byte[] b = new byte[8];
+    final PushbackInputStream pbin = new PushbackInputStream(in, b.length);
+    for (int upto = 0; upto < b.length;) {
+      final int read = pbin.read(b, upto, b.length - upto);
+      if (read == -1)
+        throw new EOFException("Not enough bytes available to read header of class file.");
+      upto += read;
+    }
+    if (b[6] == 0 && b[7] == 53) {
+      b[7] = 52;
+    }
+    pbin.unread(b);
+    return new ClassReader(pbin);
   }
 
 }

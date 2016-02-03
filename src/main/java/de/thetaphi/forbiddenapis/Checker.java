@@ -245,7 +245,7 @@ public final class Checker implements RelatedClassLookup, Constants {
     }
     
     try {
-      return new ClassSignature(new ClassReader(in), AsmUtils.isRuntimeModule(moduleName), false);
+      return new ClassSignature(AsmUtils.readAndPatchClass(in), AsmUtils.isRuntimeModule(moduleName), false);
     } finally {
       in.close();
     }
@@ -297,7 +297,7 @@ public final class Checker implements RelatedClassLookup, Constants {
         final boolean isRuntimeClass = isRuntimeClass(conn);
         final InputStream in = conn.getInputStream();
         try {
-          classpathClassCache.put(clazz, c = new ClassSignature(new ClassReader(in), isRuntimeClass, false));
+          classpathClassCache.put(clazz, c = new ClassSignature(AsmUtils.readAndPatchClass(in), isRuntimeClass, false));
         } finally {
           in.close();
         }
@@ -528,7 +528,7 @@ public final class Checker implements RelatedClassLookup, Constants {
   public void addClassToCheck(final InputStream in) throws IOException {
     final ClassReader reader;
     try {
-      reader = new ClassReader(in);
+      reader = AsmUtils.readAndPatchClass(in);
     } finally {
       in.close();
     }
