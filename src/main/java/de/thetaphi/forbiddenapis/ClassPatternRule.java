@@ -1,5 +1,3 @@
-package de.thetaphi.forbiddenapis;
-
 /*
  * (C) Copyright Uwe Schindler (Generics Policeman) and others.
  *
@@ -16,39 +14,41 @@ package de.thetaphi.forbiddenapis;
  * limitations under the License.
  */
 
+package de.thetaphi.forbiddenapis;
+
 import java.util.regex.Pattern;
 
 public final class ClassPatternRule {
 
   private final Pattern pattern;
-  
-  /** the message printed if rule is violated */
-  public final String printout;
+  private final String glob, message;
   
   /** Create new rule for class glob and given printout */
-  public ClassPatternRule(String glob, String printout) {
-    if (glob == null || printout == null) {
-      throw new NullPointerException();
+  public ClassPatternRule(String glob, String message) {
+    if (glob == null) {
+      throw new NullPointerException("glob");
     }
+    this.glob = glob;
     this.pattern = AsmUtils.glob2Pattern(glob);
-    assert this.pattern.flags() == 0 : "the pattern should have no flags (must be case-sensitive,...)";
-    this.printout = printout;
+    this.message = message;
   }
   
   /** returns true, if the given class (binary name, dotted) matches this rule. */
   public boolean matches(String className) {
     return pattern.matcher(className).matches();
   }
-
-  // equals() / hashCode() use the string representation of pattern for comparisons
-  // (Pattern unfortunately does not implement equals/hashCode)
   
+  /** returns the printout using the message and the given class name */
+  public String getPrintout(String className) {
+    return message == null ? className : (className + " [" + message + "]");
+  }
+
   @Override
   public int hashCode() {
     final int prime = 31;
     int result = 1;
-    result = prime * result + pattern.pattern().hashCode();
-    result = prime * result + printout.hashCode();
+    result = prime * result + glob.hashCode();
+    result = prime * result + ((message == null) ? 0 : message.hashCode());
     return result;
   }
 
@@ -58,14 +58,18 @@ public final class ClassPatternRule {
     if (obj == null) return false;
     if (getClass() != obj.getClass()) return false;
     ClassPatternRule other = (ClassPatternRule) obj;
-    if (!pattern.pattern().equals(other.pattern.pattern())) return false;
-    if (!printout.equals(other.printout)) return false;
+    if (!glob.equals(other.glob)) return false;
+    if (message == null) {
+      if (other.message != null) return false;
+    } else if (!message.equals(other.message)) {
+      return false;
+    }
     return true;
   }
 
   @Override
   public String toString() {
-    return "ClassPatternRule [pattern=" + pattern + ", printout=" + printout + "]";
+    return "ClassPatternRule [glob=" + glob + ", message=" + message + "]";
   }
 
 }

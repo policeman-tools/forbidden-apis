@@ -1,5 +1,3 @@
-package de.thetaphi.forbiddenapis;
-
 /*
  * (C) Copyright Uwe Schindler (Generics Policeman) and others.
  *
@@ -15,6 +13,8 @@ package de.thetaphi.forbiddenapis;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+package de.thetaphi.forbiddenapis;
 
 import static de.thetaphi.forbiddenapis.Checker.Option.*;
 import static org.junit.Assert.assertEquals;
@@ -32,9 +32,9 @@ public final class CheckerSetupTest {
   
   @Before
   public void setUp() {
-    checker = new Checker(StdIoLogger.INSTANCE, ClassLoader.getSystemClassLoader(), INTERNAL_RUNTIME_FORBIDDEN, FAIL_ON_MISSING_CLASSES, FAIL_ON_VIOLATION, FAIL_ON_UNRESOLVABLE_SIGNATURES);
+    checker = new Checker(StdIoLogger.INSTANCE, ClassLoader.getSystemClassLoader(), FAIL_ON_MISSING_CLASSES, FAIL_ON_VIOLATION, FAIL_ON_UNRESOLVABLE_SIGNATURES);
     assumeTrue("This test only works with a supported JDK (see docs)", checker.isSupportedJDK);
-    assertEquals(EnumSet.of(INTERNAL_RUNTIME_FORBIDDEN, FAIL_ON_MISSING_CLASSES, FAIL_ON_VIOLATION, FAIL_ON_UNRESOLVABLE_SIGNATURES), checker.options);
+    assertEquals(EnumSet.of(FAIL_ON_MISSING_CLASSES, FAIL_ON_VIOLATION, FAIL_ON_UNRESOLVABLE_SIGNATURES), checker.options);
   }
 
   @Test
@@ -58,7 +58,7 @@ public final class CheckerSetupTest {
   public void testClassPatternSignature() throws Exception {
     checker.parseSignaturesString("java.lang.** @ Foobar");
     assertEquals(Collections.emptyMap(), checker.forbiddenClasses);
-    assertEquals(Collections.singleton(new ClassPatternRule("java.lang.**", "java.lang.** [Foobar]")), checker.forbiddenClassPatterns);
+    assertEquals(Collections.singleton(new ClassPatternRule("java.lang.**", "Foobar")), checker.forbiddenClassPatterns);
     assertEquals(Collections.emptyMap(), checker.forbiddenFields);
     assertEquals(Collections.emptyMap(), checker.forbiddenMethods);
   }

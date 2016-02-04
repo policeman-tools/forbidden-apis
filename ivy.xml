@@ -14,6 +14,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 -->
+<!DOCTYPE ivy-module [
+  <!ENTITY maven.version "2.0">
+  <!ENTITY gradle.version "2.3">
+  <!ENTITY asm.version "5.0.4">
+]>
 <ivy-module version="2.0">
   <info organisation="de.thetaphi" module="forbiddenapis"/>
   <configurations defaultconfmapping="build-&gt;*;bundle-&gt;*;test-&gt;*;buildtools-&gt;*">
@@ -25,25 +30,25 @@
   <dependencies>
     <!-- we compile against the minimum ANT / Maven / Gradle versions: -->
     <dependency org="org.apache.ant" name="ant" rev="1.7.0" conf="build"/>
-    <dependency org="org.apache.maven" name="maven-plugin-api" rev="2.0" conf="build"/>
-    <dependency org="org.apache.maven" name="maven-artifact" rev="2.0" conf="build"/>
-    <dependency org="org.apache.maven.plugin-tools" name="maven-plugin-annotations" rev="3.2" conf="build"/>
-    <dependency org="org.gradle" name="gradle-core" rev="2.3" conf="build"/>
-    <dependency org="org.gradle" name="gradle-base-services" rev="2.3" conf="build"/>
-    <dependency org="org.gradle" name="gradle-base-services-groovy" rev="2.3" conf="build"/>
+    <dependency org="org.apache.maven" name="maven-plugin-api" rev="&maven.version;" conf="build"/>
+    <dependency org="org.apache.maven" name="maven-artifact" rev="&maven.version;" conf="build"/>
+    <dependency org="org.apache.maven.plugin-tools" name="maven-plugin-annotations" rev="3.4" conf="build"/>
+    <dependency org="org.gradle" name="gradle-core" rev="&gradle.version;" conf="build"/>
+    <dependency org="org.gradle" name="gradle-base-services" rev="&gradle.version;" conf="build"/>
+    <dependency org="org.gradle" name="gradle-base-services-groovy" rev="&gradle.version;" conf="build"/>
     <dependency org="org.slf4j" name="slf4j-api" rev="1.7.5" conf="build"/>
     <!-- Gradle also needs Groovy, but we need it as build tool, too: -->
     <dependency org="org.codehaus.groovy" name="groovy-all" rev="2.4.5" conf="build,buildtools"/>
     <!-- ASM 5.0.4 minimal: -->
-    <dependency org="org.ow2.asm" name="asm" rev="5.0.4" conf="build,bundle,buildtools"/>
-    <dependency org="org.ow2.asm" name="asm-commons" rev="5.0.4" conf="build,bundle,buildtools"/>
+    <dependency org="org.ow2.asm" name="asm" rev="&asm.version;" conf="build,bundle,buildtools"/>
+    <dependency org="org.ow2.asm" name="asm-commons" rev="&asm.version;" conf="build,bundle,buildtools"/>
     <!--
     We also bundle plexus-util, as we cannot rely on maven providing it.
     See: http://jira.codehaus.org/browse/MNG-2892 and related issues.
     We use version 1.1, because it's smallest and has DirectoryScanner and no forbidden apis! :-)
     -->
     <dependency org="org.codehaus.plexus" name="plexus-utils" rev="1.1" conf="build,bundle"/>
-    <dependency org="commons-cli" name="commons-cli" rev="1.2" conf="build,bundle"/>
+    <dependency org="commons-cli" name="commons-cli" rev="1.3.1" conf="build,bundle"/>
     <dependency org="org.sonatype.plugins" name="jarjar-maven-plugin" rev="1.9" conf="buildtools"/>
     <dependency org="org.apache.maven" name="maven-ant-tasks" rev="2.1.3" conf="buildtools"/>
     <dependency org="org.apache.rat" name="apache-rat" rev="0.11" conf="buildtools"/>

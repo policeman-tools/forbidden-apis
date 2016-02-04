@@ -1,8 +1,3 @@
-package de.thetaphi.forbiddenapis.maven;
-
-import org.apache.maven.artifact.Artifact;
-import org.apache.maven.artifact.factory.ArtifactFactory;
-
 /*
  * (C) Copyright Uwe Schindler (Generics Policeman) and others.
  *
@@ -18,6 +13,11 @@ import org.apache.maven.artifact.factory.ArtifactFactory;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+package de.thetaphi.forbiddenapis.maven;
+
+import org.apache.maven.artifact.Artifact;
+import org.apache.maven.artifact.factory.ArtifactFactory;
 
 /**
  * Defines coordinates of a Maven artifact that provides signatures files.

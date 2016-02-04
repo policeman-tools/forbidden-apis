@@ -29,8 +29,19 @@
       <syspropertyset refid="injected-properties"/>
     </artifact:mvn>
     <au:assertLogContains text=" 0 error(s)."/> 
-    <au:assertLogContains text="Reading bundled API signatures: jdk-deprecated"/> 
-    <au:assertLogContains text="Reading bundled API signatures: jdk-unsafe"/> 
+    <au:assertLogContains text="Reading bundled API signatures: jdk-deprecated-${jdk.version}"/> 
+    <au:assertLogContains text="Reading bundled API signatures: jdk-unsafe-${jdk.version}"/> 
+  </target>
+  
+  <target name="testMyselfMaven2NewJavaVersion">
+    <artifact:mvn pom="${antunit.fake-pom}" mavenVersion="${maven.version}" failonerror="true" fork="${maven.fork}">
+      <arg value="${groupId}:${artifactId}:${version}:check"/>
+      <syspropertyset refid="injected-properties"/>
+      <sysproperty key="maven.compiler.target" value="6.0"/>
+    </artifact:mvn>
+    <au:assertLogContains text=" 0 error(s)."/> 
+    <au:assertLogContains text="Reading bundled API signatures: jdk-deprecated-1.6"/> 
+    <au:assertLogContains text="Reading bundled API signatures: jdk-unsafe-1.6"/> 
   </target>
   
   <target name="testInlineSignaturesMaven2">
@@ -105,8 +116,8 @@
       <syspropertyset refid="injected-properties"/>
     </artifact:mvn>
     <au:assertLogContains text=" 0 error(s)."/> 
-    <au:assertLogContains text="Reading bundled API signatures: jdk-deprecated"/> 
-    <au:assertLogContains text="Reading bundled API signatures: jdk-unsafe"/> 
+    <au:assertLogContains text="Reading bundled API signatures: jdk-deprecated-${jdk.version}"/> 
+    <au:assertLogContains text="Reading bundled API signatures: jdk-unsafe-${jdk.version}"/> 
   </target>
 
   <target name="testSigArtifacts-Maven2">

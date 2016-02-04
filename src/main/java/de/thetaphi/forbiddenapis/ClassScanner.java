@@ -1,5 +1,3 @@
-package de.thetaphi.forbiddenapis;
-
 /*
  * (C) Copyright Uwe Schindler (Generics Policeman) and others.
  * Parts of this work are licensed to the Apache Software Foundation (ASF)
@@ -17,6 +15,8 @@ package de.thetaphi.forbiddenapis;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+package de.thetaphi.forbiddenapis;
 
 import java.util.ArrayList;
 import java.util.BitSet;
@@ -46,7 +46,7 @@ final class ClassScanner extends ClassVisitor {
   static final String LAMBDA_META_FACTORY_INTERNALNAME = "java/lang/invoke/LambdaMetafactory";
   static final String LAMBDA_METHOD_NAME_PREFIX = "lambda$";
 
-  private final boolean internalRuntimeForbidden;
+  private final boolean forbidNonPortableRuntime;
   final RelatedClassLookup lookup;
   final List<ForbiddenViolation> violations = new ArrayList<ForbiddenViolation>();
   
@@ -70,7 +70,7 @@ final class ClassScanner extends ClassVisitor {
   // Mapping from a (possible) lambda Method to groupId of declaring method
   final Map<Method,Integer> lambdas = new HashMap<Method,Integer>();
   
-  // all groups that were disabled due to supressing annotation
+  // all groups that were disabled due to suppressing annotation
   final BitSet suppressedGroups = new BitSet();
   boolean classSuppressed = false;
   
@@ -78,7 +78,7 @@ final class ClassScanner extends ClassVisitor {
       final Map<String,String> forbiddenClasses, final Iterable<ClassPatternRule> forbiddenClassPatterns,
       final Map<String,String> forbiddenMethods, final Map<String,String> forbiddenFields,
       final Pattern suppressAnnotations,
-      final boolean internalRuntimeForbidden) {
+      final boolean forbidNonPortableRuntime) {
     super(Opcodes.ASM5);
     this.lookup = lookup;
     this.forbiddenClasses = forbiddenClasses;
@@ -86,7 +86,7 @@ final class ClassScanner extends ClassVisitor {
     this.forbiddenMethods = forbiddenMethods;
     this.forbiddenFields = forbiddenFields;
     this.suppressAnnotations = suppressAnnotations;
-    this.internalRuntimeForbidden = internalRuntimeForbidden;
+    this.forbidNonPortableRuntime = forbidNonPortableRuntime;
   }
   
   private void checkDone() {
@@ -119,18 +119,16 @@ final class ClassScanner extends ClassVisitor {
     final String binaryClassName = type.getClassName();
     for (final ClassPatternRule r : forbiddenClassPatterns) {
       if (r.matches(binaryClassName)) {
-        return String.format(Locale.ENGLISH, "Forbidden %s use: %s", what, r.printout);
+        return String.format(Locale.ENGLISH, "Forbidden %s use: %s", what, r.getPrintout(binaryClassName));
       }
     }
-    if (deep && internalRuntimeForbidden) {
-      if (AsmUtils.isInternalClass(binaryClassName)) {
-        final ClassSignature c = lookup.lookupRelatedClass(internalName);
-        if (c == null || c.isRuntimeClass) {
-          return String.format(Locale.ENGLISH,
-            "Forbidden %s use: %s [non-public internal runtime class]",
-            what, binaryClassName
-          );
-        }
+    if (deep && forbidNonPortableRuntime) {
+      final ClassSignature c = lookup.lookupRelatedClass(internalName);
+      if (c != null && c.isRuntimeClass && !AsmUtils.isPortableRuntimeClass(binaryClassName)) {
+        return String.format(Locale.ENGLISH,
+          "Forbidden %s use: %s [non-portable or internal runtime class]",
+          what, binaryClassName
+        );
       }
     }
     return null;

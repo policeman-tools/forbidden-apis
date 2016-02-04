@@ -46,12 +46,12 @@
             <artifactId>${artifactId}</artifactId>
             <version>${version}</version>
             <configuration>
-              <internalRuntimeForbidden>true</internalRuntimeForbidden>
               <failOnUnresolvableSignatures>${antunit.failOnUnresolvableSignatures}</failOnUnresolvableSignatures>
               <failOnViolation>${antunit.failOnViolation}</failOnViolation>
               <bundledSignatures>
                 <bundledSignature>jdk-unsafe</bundledSignature>
                 <bundledSignature>jdk-deprecated</bundledSignature>
+                <bundledSignature>jdk-non-portable</bundledSignature>
                 <bundledSignature>jdk-system-out</bundledSignature>
               </bundledSignatures>
               <signatures>${antunit.signatures}</signatures>
@@ -84,5 +84,5 @@
       </dependencies>
     </project>
   </xsl:template>
-	
+  
 </xsl:stylesheet>

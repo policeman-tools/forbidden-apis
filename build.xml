@@ -83,7 +83,7 @@
 
   <property name="jdk.version" value="1.6"/>
   <property name="maven.version" value="2.2.1"/>
-  <property name="maven-plugin-plugin.version" value="3.3"/>
+  <property name="maven-plugin-plugin.version" value="3.4"/>
   
   <!-- with fork=false this somehow takes endless to download the internet, so let's fork - and slow down in an other way (startup) -->
   <property name="maven.fork" value="true"/>
@@ -106,7 +106,7 @@
   <!-- define Maven coordinates -->
   <property name="groupId" value="de.thetaphi" />
   <property name="artifactId" value="forbiddenapis" />
-  <property name="version" value="2.0-SNAPSHOT"/>
+  <property name="version" value="2.1-SNAPSHOT"/>
   
   <property name="description" value="Allows to parse Java byte code to find invocations of method/class/field signatures and fail build (Apache Ant, Apache Maven, Gradle, or CLI)"/>
 
@@ -281,7 +281,10 @@
     <artifact:mvn pom="${maven-build-dir}/pom-build.xml" mavenVersion="${maven.version}" failonerror="true" fork="${maven.fork}">
       <arg value="plugin:helpmojo"/>
       <arg value="plugin:descriptor"/>
-      <arg value="plugin:xdoc"/>
+      <arg value="plugin:report"/>
+      <sysproperty key="user.language" value="en"/>
+      <sysproperty key="user.country" value="US"/>
+      <sysproperty key="java.awt.headless" value="true"/>
       <sysproperty key="injected.src.dir" file="src/main/java"/>
       <sysproperty key="injected.output.dir" file="build/main"/>
       <sysproperty key="injected.build.dir" file="${maven-build-dir}"/>
@@ -459,22 +462,30 @@
   </target>
   
   <target name="-check-myself" depends="compile,compile-tools,compile-test,-install-forbiddenapi-task">
-    <forbiddenapis internalRuntimeForbidden="true" failOnUnsupportedJava="false">
+    <forbiddenapis failOnUnsupportedJava="false">
       <classpath refid="path.all"/>
       <fileset dir="build/main"/>
       <fileset dir="build/tools"/>
       <fileset dir="build/test"/>
-      <bundledsignatures name="jdk-unsafe-${jdk.version}"/>
-      <bundledsignatures name="jdk-deprecated-${jdk.version}"/>
-      <bundledsignatures name="jdk-system-out"/>
+      <signatures>
+        <bundled name="jdk-unsafe-${jdk.version}"/>
+        <bundled name="jdk-deprecated-${jdk.version}"/>
+        <bundled name="jdk-non-portable"/>
+        <bundled name="jdk-system-out"/>
+        <bundled name="jdk-reflection"/>
+      </signatures>
     </forbiddenapis>
   </target>
 
   <target name="-check-bundled-signatures" depends="-install-forbiddenapi-task" if="tests.supported">
-    <forbiddenapis failOnUnsupportedJava="true" classpathref="path.tools-run" ignoreEmptyFileset="true">
-      <bundledsignatures name="jdk-unsafe-${build.java.runtime}"/>
-      <bundledsignatures name="jdk-deprecated-${build.java.runtime}"/>
-      <bundledsignatures name="jdk-system-out"/>
+    <forbiddenapis failOnUnsupportedJava="true" ignoreEmptyFileset="true">
+      <signatures>
+        <bundled name="jdk-unsafe-${build.java.runtime}"/>
+        <bundled name="jdk-deprecated-${build.java.runtime}"/>
+        <bundled name="jdk-internal-${build.java.runtime}"/>
+        <bundled name="jdk-system-out"/>
+        <bundled name="jdk-reflection"/>
+      </signatures>
     </forbiddenapis>
   </target>
 
@@ -571,6 +582,7 @@
         <include name="src/**"/>
         <exclude name="README.md"/>
         <exclude name="**/jdk-deprecated-*.txt"/>
+        <exclude name="**/jdk-internal-*.txt"/>
       </fileset>
     </rat:report>
     <!-- now print the output, for review -->
@@ -602,6 +614,15 @@
     <mkdir dir="${signatures.dir}"/>
     <property name="deprecated.output.file" location="${signatures.dir}/jdk-deprecated-${build.java.runtime}.txt"/>
     <groovy classpathref="path.tools-run" src="${groovy-tools.dir}/generate-deprecated.groovy"/>
+  </target>
+
+  <target name="generate-internal" depends="compile-tools" description="Generates deprecated API signature lists for current JDK">
+    <mkdir dir="${signatures.dir}"/>
+    <property name="internal.output.file" location="${signatures.dir}/jdk-internal-${build.java.runtime}.txt"/>
+    <java classpathref="path.tools-run" classname="de.thetaphi.forbiddenapis.InternalApiGen" fork="false">
+      <arg value="${build.java.runtime}"/>
+      <arg file="${internal.output.file}"/>
+    </java>
   </target>
 
   <target name="-generate-test-classes-init">
@@ -643,6 +664,7 @@
     <artifact:mvn mavenVersion="${maven.version}" failonerror="true" fork="${maven.fork}" taskname="help">
       <arg value="${groupId}:${artifactId}:${version}:help"/>
       <sysproperty key="detail" value="true"/>
+      <sysproperty key="java.awt.headless" value="true"/>
     </artifact:mvn>
   </target>
 

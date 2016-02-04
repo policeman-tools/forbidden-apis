@@ -1,5 +1,3 @@
-package de.thetaphi.forbiddenapis.ant;
-
 /*
  * (C) Copyright Uwe Schindler (Generics Policeman) and others.
  * Parts of this work are licensed to the Apache Software Foundation (ASF)
@@ -17,6 +15,8 @@ package de.thetaphi.forbiddenapis.ant;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+package de.thetaphi.forbiddenapis.ant;
 
 import static de.thetaphi.forbiddenapis.Checker.Option.*;
 
@@ -36,6 +36,7 @@ import org.apache.tools.ant.types.resources.StringResource;
 import org.apache.tools.ant.types.resources.Union;
 
 import de.thetaphi.forbiddenapis.Checker;
+import de.thetaphi.forbiddenapis.Constants;
 import de.thetaphi.forbiddenapis.ForbiddenApiException;
 import de.thetaphi.forbiddenapis.Logger;
 import de.thetaphi.forbiddenapis.ParseException;
@@ -54,7 +55,7 @@ import java.util.Locale;
  * In contrast to other ANT tasks, this tool does only visit the given classpath
  * and the system classloader, not ANT's class loader.
  */
-public class AntTask extends Task {
+public class AntTask extends Task implements Constants {
 
   private final Union classFiles = new Union();
   private final Union apiSignatures = new Union();
@@ -63,7 +64,7 @@ public class AntTask extends Task {
   private Path classpath = null;
   
   private boolean failOnUnsupportedJava = false;
-  private boolean internalRuntimeForbidden = false;
+  @Deprecated private boolean internalRuntimeForbidden = false;
   private boolean restrictClassFilename = true;
   private boolean failOnMissingClasses = true;
   private boolean failOnUnresolvableSignatures = true;
@@ -105,7 +106,6 @@ public class AntTask extends Task {
       apiSignatures.setProject(getProject());
       
       final EnumSet<Checker.Option> options = EnumSet.noneOf(Checker.Option.class);
-      if (internalRuntimeForbidden) options.add(INTERNAL_RUNTIME_FORBIDDEN);
       if (failOnMissingClasses) options.add(FAIL_ON_MISSING_CLASSES);
       if (failOnViolation) options.add(FAIL_ON_VIOLATION);
       if (failOnUnresolvableSignatures) options.add(FAIL_ON_UNRESOLVABLE_SIGNATURES);
@@ -134,7 +134,11 @@ public class AntTask extends Task {
           if (name == null) {
             throw new BuildException("<bundledSignatures/> must have the mandatory attribute 'name' referring to a bundled signatures file.");
           }
-          checker.parseBundledSignatures(name, null);
+          checker.addBundledSignatures(name, null);
+        }
+        if (internalRuntimeForbidden) {
+          log.warn(DEPRECATED_WARN_INTERNALRUNTIME);
+          checker.addBundledSignatures(BS_JDK_NONPORTABLE, null);
         }
         
         @SuppressWarnings("unchecked")
@@ -322,9 +326,12 @@ public class AntTask extends Task {
   }
 
   /**
-   * Forbids calls to classes from the internal java runtime (like sun.misc.Unsafe)
+   * Forbids calls to non-portable runtime APIs (like {@code sun.misc.Unsafe}).
+   * <em>Please note:</em> This enables {@code "jdk-non-portable"} bundled signatures for backwards compatibility.
    * Defaults to {@code false}. 
+   * @deprecated Use bundled signatures {@code "jdk-non-portable"} or {@code "jdk-internal"} instead.
    */
+  @Deprecated
   public void setInternalRuntimeForbidden(boolean internalRuntimeForbidden) {
     this.internalRuntimeForbidden = internalRuntimeForbidden;
   }

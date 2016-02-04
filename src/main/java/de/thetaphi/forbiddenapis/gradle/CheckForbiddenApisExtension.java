@@ -1,5 +1,3 @@
-package de.thetaphi.forbiddenapis.gradle;
-
 /*
  * (C) Copyright Uwe Schindler (Generics Policeman) and others.
  *
@@ -15,6 +13,8 @@ package de.thetaphi.forbiddenapis.gradle;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+package de.thetaphi.forbiddenapis.gradle;
 
 import java.net.URL;
 import java.util.ArrayList;
@@ -53,8 +53,8 @@ public class CheckForbiddenApisExtension {
   public List<String> signatures = new ArrayList<String>();
   public Set<String> bundledSignatures = new LinkedHashSet<String>(),
     suppressAnnotations = new LinkedHashSet<String>();
-  public boolean internalRuntimeForbidden = false,
-    failOnUnsupportedJava = false,
+  @Deprecated public boolean internalRuntimeForbidden = false;
+  public boolean failOnUnsupportedJava = false,
     failOnMissingClasses = true,
     failOnUnresolvableSignatures = true,
     ignoreFailures = false,

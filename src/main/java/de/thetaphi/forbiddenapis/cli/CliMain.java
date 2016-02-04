@@ -1,5 +1,3 @@
-package de.thetaphi.forbiddenapis.cli;
-
 /*
  * (C) Copyright Uwe Schindler (Generics Policeman) and others.
  *
@@ -15,6 +13,8 @@ package de.thetaphi.forbiddenapis.cli;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+package de.thetaphi.forbiddenapis.cli;
 
 import static de.thetaphi.forbiddenapis.Checker.Option.*;
 
@@ -33,26 +33,25 @@ import java.net.URL;
 import java.net.MalformedURLException;
 
 import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionGroup;
 import org.apache.commons.cli.Options;
-import org.apache.commons.cli.PosixParser;
 import org.codehaus.plexus.util.DirectoryScanner;
 
 import de.thetaphi.forbiddenapis.AsmUtils;
 import de.thetaphi.forbiddenapis.Checker;
+import de.thetaphi.forbiddenapis.Constants;
 import de.thetaphi.forbiddenapis.ForbiddenApiException;
 import de.thetaphi.forbiddenapis.Logger;
 import de.thetaphi.forbiddenapis.ParseException;
 import de.thetaphi.forbiddenapis.StdIoLogger;
-import de.thetaphi.forbiddenapis.SuppressForbidden;
 
 /**
  * CLI class with a static main() method
  */
-public final class CliMain {
+public final class CliMain implements Constants {
 
   private final Option classpathOpt, dirOpt, includesOpt, excludesOpt, signaturesfileOpt, bundledsignaturesOpt, suppressannotationsOpt,
     internalruntimeforbiddenOpt, allowmissingclassesOpt, allowunresolvablesignaturesOpt, versionOpt, helpOpt;
@@ -66,83 +65,82 @@ public final class CliMain {
   public static final int EXIT_UNSUPPORTED_JDK = 3;
   public static final int EXIT_ERR_OTHER = 4;
 
-  @SuppressWarnings({"static-access","static"})
   public CliMain(String... args) throws ExitException {
     final OptionGroup required = new OptionGroup();
     required.setRequired(true);
-    required.addOption(dirOpt = OptionBuilder
-        .withDescription("directory with class files to check for forbidden api usage; this directory is also added to classpath")
-        .withLongOpt("dir")
+    required.addOption(dirOpt = Option.builder("d")
+        .desc("directory with class files to check for forbidden api usage; this directory is also added to classpath")
+        .longOpt("dir")
         .hasArg()
-        .withArgName("directory")
-        .create('d'));
-    required.addOption(versionOpt = OptionBuilder
-        .withDescription("print product version and exit")
-        .withLongOpt("version")
-        .create('V'));
-    required.addOption(helpOpt = OptionBuilder
-        .withDescription("print this help")
-        .withLongOpt("help")
-        .create('h'));
+        .argName("directory")
+        .build());
+    required.addOption(versionOpt = Option.builder("V")
+        .desc("print product version and exit")
+        .longOpt("version")
+        .build());
+    required.addOption(helpOpt = Option.builder("h")
+        .desc("print this help")
+        .longOpt("help")
+        .build());
         
     final Options options = new Options();
     options.addOptionGroup(required);
-    options.addOption(classpathOpt = OptionBuilder
-        .withDescription("class search path of directories and zip/jar files")
-        .withLongOpt("classpath")
+    options.addOption(classpathOpt = Option.builder("c")
+        .desc("class search path of directories and zip/jar files")
+        .longOpt("classpath")
         .hasArgs()
-        .withValueSeparator(File.pathSeparatorChar)
-        .withArgName("path")
-        .create('c'));
-    options.addOption(includesOpt = OptionBuilder
-        .withDescription("ANT-style pattern to select class files (separated by commas or option can be given multiple times, defaults to '**/*.class')")
-        .withLongOpt("includes")
+        .valueSeparator(File.pathSeparatorChar)
+        .argName("path")
+        .build());
+    options.addOption(includesOpt = Option.builder("i")
+        .desc("ANT-style pattern to select class files (separated by commas or option can be given multiple times, defaults to '**/*.class')")
+        .longOpt("includes")
         .hasArgs()
-        .withValueSeparator(',')
-        .withArgName("pattern")
-        .create('i'));
-    options.addOption(excludesOpt = OptionBuilder
-        .withDescription("ANT-style pattern to exclude some files from checks (separated by commas or option can be given multiple times)")
-        .withLongOpt("excludes")
+        .valueSeparator(',')
+        .argName("pattern")
+        .build());
+    options.addOption(excludesOpt = Option.builder("e")
+        .desc("ANT-style pattern to exclude some files from checks (separated by commas or option can be given multiple times)")
+        .longOpt("excludes")
         .hasArgs()
-        .withValueSeparator(',')
-        .withArgName("pattern")
-        .create('e'));
-    options.addOption(signaturesfileOpt = OptionBuilder
-        .withDescription("path to a file containing signatures (option can be given multiple times)")
-        .withLongOpt("signaturesfile")
+        .valueSeparator(',')
+        .argName("pattern")
+        .build());
+    options.addOption(signaturesfileOpt = Option.builder("f")
+        .desc("path to a file containing signatures (option can be given multiple times)")
+        .longOpt("signaturesfile")
         .hasArg()
-        .withArgName("file")
-        .create('f'));
-    options.addOption(bundledsignaturesOpt = OptionBuilder
-        .withDescription("name of a bundled signatures definition (separated by commas or option can be given multiple times)")
-        .withLongOpt("bundledsignatures")
+        .argName("file")
+        .build());
+    options.addOption(bundledsignaturesOpt = Option.builder("b")
+        .desc("name of a bundled signatures definition (separated by commas or option can be given multiple times)")
+        .longOpt("bundledsignatures")
         .hasArgs()
-        .withValueSeparator(',')
-        .withArgName("name")
-        .create('b'));
-    options.addOption(suppressannotationsOpt = OptionBuilder
-        .withDescription("class name or glob pattern of annotation that suppresses error reporting in classes/methods/fields (separated by commas or option can be given multiple times)")
-        .withLongOpt("suppressannotation")
+        .valueSeparator(',')
+        .argName("name")
+        .build());
+    options.addOption(suppressannotationsOpt = Option.builder()
+        .desc("class name or glob pattern of annotation that suppresses error reporting in classes/methods/fields (separated by commas or option can be given multiple times)")
+        .longOpt("suppressannotation")
         .hasArgs()
-        .withValueSeparator(',')
-        .withArgName("classname")
-        .create());
-    options.addOption(internalruntimeforbiddenOpt = OptionBuilder
-        .withDescription("forbids calls to classes from the internal java runtime (like sun.misc.Unsafe)")
-        .withLongOpt("internalruntimeforbidden")
-        .create());
-    options.addOption(allowmissingclassesOpt = OptionBuilder
-        .withDescription("don't fail if a referenced class is missing on classpath")
-        .withLongOpt("allowmissingclasses")
-        .create());
-    options.addOption(allowunresolvablesignaturesOpt = OptionBuilder
-        .withDescription("don't fail if a signature is not resolving")
-        .withLongOpt("allowunresolvablesignatures")
-        .create());
+        .valueSeparator(',')
+        .argName("classname")
+        .build());
+    options.addOption(internalruntimeforbiddenOpt = Option.builder()
+        .desc(String.format(Locale.ENGLISH, "DEPRECATED: forbids calls to non-portable runtime APIs; use bundled signatures '%s' instead", BS_JDK_NONPORTABLE))
+        .longOpt("internalruntimeforbidden")
+        .build());
+    options.addOption(allowmissingclassesOpt = Option.builder()
+        .desc("don't fail if a referenced class is missing on classpath")
+        .longOpt("allowmissingclasses")
+        .build());
+    options.addOption(allowunresolvablesignaturesOpt = Option.builder()
+        .desc("don't fail if a signature is not resolving")
+        .longOpt("allowunresolvablesignatures")
+        .build());
 
     try {
-      this.cmd = new PosixParser().parse(options, args);
+      this.cmd = new DefaultParser().parse(options, args);
       if (cmd.hasOption(helpOpt.getLongOpt())) {
         printHelp(options);
         throw new ExitException(EXIT_SUCCESS);
@@ -219,7 +217,6 @@ public final class CliMain {
     final URLClassLoader loader = URLClassLoader.newInstance(urls, ClassLoader.getSystemClassLoader());
     try {
       final EnumSet<Checker.Option> options = EnumSet.of(FAIL_ON_VIOLATION);
-      if (cmd.hasOption(internalruntimeforbiddenOpt.getLongOpt())) options.add(INTERNAL_RUNTIME_FORBIDDEN);
       if (!cmd.hasOption(allowmissingclassesOpt.getLongOpt())) options.add(FAIL_ON_MISSING_CLASSES);
       if (!cmd.hasOption(allowunresolvablesignaturesOpt.getLongOpt())) options.add(FAIL_ON_UNRESOLVABLE_SIGNATURES);
       final Checker checker = new Checker(LOG, loader, options);
@@ -261,8 +258,13 @@ public final class CliMain {
       try {
         final String[] bundledSignatures = cmd.getOptionValues(bundledsignaturesOpt.getLongOpt());
         if (bundledSignatures != null) for (String bs : new LinkedHashSet<String>(Arrays.asList(bundledSignatures))) {
-          checker.parseBundledSignatures(bs, null);
+          checker.addBundledSignatures(bs, null);
         }
+        if (cmd.hasOption(internalruntimeforbiddenOpt.getLongOpt())) {
+          LOG.warn(DEPRECATED_WARN_INTERNALRUNTIME);
+          checker.addBundledSignatures(BS_JDK_NONPORTABLE, null);
+        }
+        
         final String[] signaturesFiles = cmd.getOptionValues(signaturesfileOpt.getLongOpt());
         if (signaturesFiles != null) for (String sf : new LinkedHashSet<String>(Arrays.asList(signaturesFiles))) {
           final File f = new File(sf).getAbsoluteFile();
@@ -302,13 +304,12 @@ public final class CliMain {
     }
   }
   
-  @SuppressForbidden
   public static void main(String... args) {
     try {
       new CliMain(args).run();
     } catch (ExitException e) {
       if (e.getMessage() != null) {
-        System.err.println("ERROR: " + e.getMessage());
+        LOG.error(e.getMessage());
       }
       if (e.exitCode != 0) {
         System.exit(e.exitCode);

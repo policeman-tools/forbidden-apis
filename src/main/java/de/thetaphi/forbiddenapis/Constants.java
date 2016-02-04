@@ -1,5 +1,7 @@
 /*
  * (C) Copyright Uwe Schindler (Generics Policeman) and others.
+ * Parts of this work are licensed to the Apache Software Foundation (ASF)
+ * under one or more contributor license agreements.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +18,13 @@
 
 package de.thetaphi.forbiddenapis;
 
-public interface Logger {
-  void error(String msg);
-  void warn(String msg);
-  void info(String msg);
+import java.util.Locale;
+
+public interface Constants {
+
+  final String BS_JDK_NONPORTABLE = "jdk-non-portable";
+  
+  final String DEPRECATED_WARN_INTERNALRUNTIME = String.format(Locale.ENGLISH,
+      "The setting 'internalRuntimeForbidden' was deprecated and will be removed in next version. For backwards compatibility task/mojo is using '%s' bundled signatures instead.", BS_JDK_NONPORTABLE);
+  
 }

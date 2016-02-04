@@ -1,5 +1,3 @@
-package de.thetaphi.forbiddenapis;
-
 /*
  * (C) Copyright Uwe Schindler (Generics Policeman) and others.
  *
@@ -16,13 +14,17 @@ package de.thetaphi.forbiddenapis;
  * limitations under the License.
  */
 
+package de.thetaphi.forbiddenapis;
+
 import static de.thetaphi.forbiddenapis.AsmUtils.glob2Pattern;
 import static de.thetaphi.forbiddenapis.AsmUtils.isGlob;
-import static de.thetaphi.forbiddenapis.AsmUtils.isInternalClass;
+import static de.thetaphi.forbiddenapis.AsmUtils.isPortableRuntimeClass;
+import static de.thetaphi.forbiddenapis.AsmUtils.isRuntimeModule;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.util.ArrayList;
 import java.util.regex.Pattern;
 
 import org.junit.Test;
@@ -74,12 +76,25 @@ public final class AsmUtilsTest {
   }
   
   @Test
-  public void testInternalRuntime() {
-    assertTrue(isInternalClass("sun.misc.Unsafe"));
-    assertTrue(isInternalClass("jdk.internal.Asm"));
-    assertTrue(isInternalClass("sun.misc.Unsafe$1"));
-    assertFalse(isInternalClass(Object.class.getName()));
-    assertFalse(isInternalClass(getClass().getName()));
+  public void testPortableRuntime() {
+    assertFalse(isPortableRuntimeClass("sun.misc.Unsafe"));
+    assertFalse(isPortableRuntimeClass("jdk.internal.Asm"));
+    assertFalse(isPortableRuntimeClass("sun.misc.Unsafe$1"));
+    assertTrue(isPortableRuntimeClass(Object.class.getName()));
+    assertTrue(isPortableRuntimeClass(ArrayList.class.getName()));
+    assertTrue(isPortableRuntimeClass("org.w3c.dom.Document"));
+    assertFalse(isPortableRuntimeClass(getClass().getName()));
+  }
+  
+  @Test
+  public void testRuntimeModule() {
+    assertTrue(isRuntimeModule("java.base"));
+    assertTrue(isRuntimeModule("java.sql"));
+    assertTrue(isRuntimeModule("java.xml.ws"));
+    assertTrue(isRuntimeModule("jdk.nashorn"));
+    assertFalse(isRuntimeModule(null));
+    assertFalse(isRuntimeModule("foo"));
+    assertFalse(isRuntimeModule("foo.bar"));
   }
   
 }

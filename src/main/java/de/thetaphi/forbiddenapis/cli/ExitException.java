@@ -1,5 +1,3 @@
-package de.thetaphi.forbiddenapis.cli;
-
 /*
  * (C) Copyright Uwe Schindler (Generics Policeman) and others.
  *
@@ -15,6 +13,8 @@ package de.thetaphi.forbiddenapis.cli;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+package de.thetaphi.forbiddenapis.cli;
 
 /**
  * Used by the CLI to signal process exit with a specific exit code

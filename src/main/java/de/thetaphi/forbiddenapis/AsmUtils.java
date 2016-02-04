@@ -1,5 +1,3 @@
-package de.thetaphi.forbiddenapis;
-
 /*
  * (C) Copyright Uwe Schindler (Generics Policeman) and others.
  *
@@ -16,7 +14,10 @@ package de.thetaphi.forbiddenapis;
  * limitations under the License.
  */
 
-import java.util.Arrays;
+package de.thetaphi.forbiddenapis;
+
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.Locale;
 import java.util.regex.Pattern;
 
@@ -26,24 +27,44 @@ public final class AsmUtils {
   private AsmUtils() {}
   
   private static final String REGEX_META_CHARS = ".^$+{}[]|()\\";
-  private static final Pattern INTERNAL_PACKAGE_PATTERN;
-  static {
+  
+  /** Package prefixes of documented Java API (extracted from Javadocs of Java 8). */
+  private static final Pattern PORTABLE_RUNTIME_PACKAGE_PATTERN = makePkgPrefixPattern("java", "javax", "org.ietf.jgss", "org.omg", "org.w3c.dom", "org.xml.sax");
+  
+  /** Pattern that matches all module names, which are shipped by default in Java.
+   * (see: {@code http://openjdk.java.net/projects/jigsaw/spec/sotms/}):
+   * The remaining platform modules will share the 'java.' name prefix and are likely to include,
+   * e.g., java.sql for database connectivity, java.xml for XML processing, and java.logging for
+   * logging. Modules that are not defined in the Java SE 9 Platform Specification but instead
+   * specific to the JDK will, by convention, share the 'jdk.' name prefix.
+   */
+  private static final Pattern RUNTIME_MODULES_PATTERN = makePkgPrefixPattern("java", "jdk");
+  
+  private static Pattern makePkgPrefixPattern(String... prefixes) {
     final StringBuilder sb = new StringBuilder();
     boolean first = true;
-    for (final String pkg : Arrays.asList("sun.", "oracle.", "com.sun.", "com.oracle.", "jdk.", "sunw.")) {
-      sb.append(first ? '(' : '|').append(Pattern.quote(pkg));
+    for (final String p : prefixes) {
+      sb.append(first ? '(' : '|').append(Pattern.quote(p));
       first = false;
     }
-    INTERNAL_PACKAGE_PATTERN = Pattern.compile(sb.append(").*").toString());
+    sb.append(")").append(Pattern.quote(".")).append(".*");
+    return Pattern.compile(sb.toString());
   }
   
   private static boolean isRegexMeta(char c) {
     return REGEX_META_CHARS.indexOf(c) != -1;
   }
 
-  /** Returns true, if the given binary class name (dotted) is likely a internal class (like sun.misc.Unsafe) */
-  public static boolean isInternalClass(String className) {
-    return INTERNAL_PACKAGE_PATTERN.matcher(className).matches();
+  /** Returns true, if the given binary class name (dotted) is part of the documented and portable Java APIs. */
+  public static boolean isPortableRuntimeClass(String className) {
+    return PORTABLE_RUNTIME_PACKAGE_PATTERN.matcher(className).matches();
+  }
+  
+  /** Returns true, if the given Java 9 module name is part of the runtime (no custom 3rd party module).
+   * @param module the module name or {@code null}, if in unnamed module
+   */
+  public static boolean isRuntimeModule(String module) {
+    return module != null && RUNTIME_MODULES_PATTERN.matcher(module).matches();
   }
   
   /** Converts a binary class name (dotted) to the JVM internal one (slashed). Only accepts valid class names, no arrays. */
@@ -102,6 +123,28 @@ public final class AsmUtils {
       needOr = true;
     }
     return Pattern.compile(regex.toString(), 0);
+  }
+  
+  /** Returns the module name from a {@code jrt:/} URL; returns null if no module given or wrong URL type. */
+  public static String getModuleName(URL jrtUrl) {
+    if (!"jrt".equalsIgnoreCase(jrtUrl.getProtocol())) {
+      return null;
+    }
+    try {
+      // use URI class to also decode path and remove escapes:
+      String mod = jrtUrl.toURI().getPath();
+      if (mod != null && mod.length() >= 1) {
+        mod = mod.substring(1);
+        int p = mod.indexOf('/');
+        if (p >= 0) {
+          mod = mod.substring(0, p);
+        }
+        return mod.isEmpty() ? null : mod;
+      }
+      return null;
+    } catch (URISyntaxException use) {
+      return null;
+    }
   }
 
 }

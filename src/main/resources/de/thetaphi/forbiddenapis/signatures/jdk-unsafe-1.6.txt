@@ -91,6 +91,8 @@ java.util.Locale#getDisplayCountry()
 java.util.Locale#getDisplayLanguage()
 java.util.Locale#getDisplayName()
 java.util.Locale#getDisplayVariant()
+java.util.ResourceBundle#getBundle(java.lang.String)
+java.util.ResourceBundle#getBundle(java.lang.String,java.util.ResourceBundle$Control)
 java.util.TimeZone#getDisplayName()
 java.util.TimeZone#getDisplayName(boolean,int)
 

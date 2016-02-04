@@ -1,5 +1,3 @@
-package de.thetaphi.forbiddenapis;
-
 /*
  * (C) Copyright Uwe Schindler (Generics Policeman) and others.
  *
@@ -15,6 +13,8 @@ package de.thetaphi.forbiddenapis;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+package de.thetaphi.forbiddenapis;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -80,7 +80,7 @@ public abstract class DeprecatedGen<Input> implements Opcodes {
     // exclude internal classes like Unsafe,... and non-public classes!
     // Note: reader.getAccess() does no indicate if class is deprecated, as this is a special
     // attribute or annotation (both is handled later), we have to parse the class - this is just early exit!
-    if ((reader.getAccess() & ACC_PUBLIC) == 0 || AsmUtils.isInternalClass(className)) {
+    if ((reader.getAccess() & ACC_PUBLIC) == 0 || !AsmUtils.isPortableRuntimeClass(className)) {
       return;
     }
     reader.accept(new ClassVisitor(ASM5) {

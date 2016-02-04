@@ -1,5 +1,3 @@
-package de.thetaphi.forbiddenapis.maven;
-
 /*
  * (C) Copyright Uwe Schindler (Generics Policeman) and others.
  *
@@ -16,6 +14,8 @@ package de.thetaphi.forbiddenapis.maven;
  * limitations under the License.
  */
 
+package de.thetaphi.forbiddenapis.maven;
+
 import static de.thetaphi.forbiddenapis.Checker.Option.*;
 
 import org.apache.maven.artifact.Artifact;
@@ -31,6 +31,7 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.codehaus.plexus.util.DirectoryScanner;
 
 import de.thetaphi.forbiddenapis.Checker;
+import de.thetaphi.forbiddenapis.Constants;
 import de.thetaphi.forbiddenapis.ForbiddenApiException;
 import de.thetaphi.forbiddenapis.Logger;
 import de.thetaphi.forbiddenapis.ParseException;
@@ -55,7 +56,7 @@ import java.util.Set;
  * Base class for forbiddenapis Mojos.
  * @since 1.0
  */
-public abstract class AbstractCheckMojo extends AbstractMojo {
+public abstract class AbstractCheckMojo extends AbstractMojo implements Constants {
 
   /**
    * Lists all files, which contain signatures and comments for forbidden API calls.
@@ -112,9 +113,12 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
   private String[] bundledSignatures;
 
   /**
-   * Forbids calls to classes from the internal java runtime (like sun.misc.Unsafe)
+   * Forbids calls to non-portable runtime APIs (like {@code sun.misc.Unsafe}).
+   * <em>Please note:</em> This enables {@code "jdk-non-portable"} bundled signatures for backwards compatibility.
+   * @deprecated Use <a href="bundled-signatures.html">bundled signatures</a> {@code "jdk-non-portable"} or {@code "jdk-internal"} instead.
    * @since 1.0
    */
+  @Deprecated
   @Parameter(required = false, defaultValue = "false")
   private boolean internalRuntimeForbidden;
 
@@ -240,7 +244,12 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
   private File resolveSignaturesArtifact(SignaturesArtifact signaturesArtifact) throws ArtifactResolutionException, ArtifactNotFoundException {
     final Artifact artifact = signaturesArtifact.createArtifact(artifactFactory);
     artifactResolver.resolve(artifact, this.remoteRepositories, this.localRepository);
-    return artifact.getFile();
+    final File f = artifact.getFile();
+    // Can this ever be false? Be sure. Found the null check also in other Maven code, so be safe!
+    if (f == null) {
+      throw new ArtifactNotFoundException("Artifact does not resolve to a file.", artifact);
+    }
+    return f;
   }
   
   private String encodeUrlPath(String path) {
@@ -311,7 +320,6 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
     
     try {
       final EnumSet<Checker.Option> options = EnumSet.noneOf(Checker.Option.class);
-      if (internalRuntimeForbidden) options.add(INTERNAL_RUNTIME_FORBIDDEN);
       if (failOnMissingClasses) options.add(FAIL_ON_MISSING_CLASSES);
       if (failOnViolation) options.add(FAIL_ON_VIOLATION);
       if (failOnUnresolvableSignatures) options.add(FAIL_ON_UNRESOLVABLE_SIGNATURES);
@@ -367,19 +375,31 @@ public abstract class AbstractCheckMojo extends AbstractMojo {
               "You have to explicitely specify the version in the resource name.");
           }
           for (String bs : new LinkedHashSet<String>(Arrays.asList(bundledSignatures))) {
-            checker.parseBundledSignatures(bs, targetVersion);
+            checker.addBundledSignatures(bs, targetVersion);
           }
         }
+        if (internalRuntimeForbidden) {
+          log.warn(DEPRECATED_WARN_INTERNALRUNTIME);
+          checker.addBundledSignatures(BS_JDK_NONPORTABLE, null);
+        }
+        
         final Set<File> sigFiles = new LinkedHashSet<File>();
         final Set<URL> sigUrls = new LinkedHashSet<URL>();
         if (signaturesFiles != null) {
           sigFiles.addAll(Arrays.asList(signaturesFiles));
         }
+
         if (signaturesArtifacts != null) {
           for (final SignaturesArtifact artifact : signaturesArtifacts) {
             final File f = resolveSignaturesArtifact(artifact);
             if (artifact.path != null) {
-              sigUrls.add(createJarUrl(f, artifact.path));
+              if (f.isDirectory()) {
+                // if Maven did not yet jarred the artifact, it returns the classes
+                // folder of the foreign Maven project, just use that one:
+                sigFiles.add(new File(f, artifact.path));
+              } else {
+                sigUrls.add(createJarUrl(f, artifact.path));
+              }
             } else {
               sigFiles.add(f);
             }

@@ -19,27 +19,30 @@
   <taskdef name="forbiddenapis-jar" classname="de.thetaphi.forbiddenapis.ant.AntTask" classpath="${jar-file}"/>
 
   <target name="testMySelfWithFinalJAR1">
-    <forbiddenapis-jar internalRuntimeForbidden="true" classpathref="path.all">
+    <forbiddenapis-jar classpathref="path.all">
       <fileset dir="${antunit.main.classes}"/>
       <bundledsignatures name="jdk-unsafe-${jdk.version}"/>
       <bundledsignatures name="jdk-deprecated-${jdk.version}"/>
+      <bundledsignatures name="jdk-non-portable"/>
     </forbiddenapis-jar>
     <au:assertLogContains level="info" text=" 0 error(s)."/> 
   </target>
   
   <target name="testMySelfWithFinalJAR2">
-    <forbiddenapis-jar dir="${antunit.main.classes}" internalRuntimeForbidden="true" classpathref="path.all">
+    <forbiddenapis-jar dir="${antunit.main.classes}" classpathref="path.all">
       <bundledsignatures name="jdk-unsafe-${jdk.version}"/>
       <bundledsignatures name="jdk-deprecated-${jdk.version}"/>
+      <bundledsignatures name="jdk-non-portable"/>
     </forbiddenapis-jar>
     <au:assertLogContains level="info" text=" 0 error(s)."/> 
   </target>
   
   <target name="testMySelfWithAntLib">
     <taskdef uri="antlib:de.thetaphi.forbiddenapis" classpath="${jar-file}"/>
-    <fa:forbiddenapis xmlns:fa="antlib:de.thetaphi.forbiddenapis" dir="${antunit.main.classes}" internalRuntimeForbidden="true" classpathref="path.all">
+    <fa:forbiddenapis xmlns:fa="antlib:de.thetaphi.forbiddenapis" dir="${antunit.main.classes}" classpathref="path.all">
       <bundledsignatures name="jdk-unsafe-${jdk.version}"/>
       <bundledsignatures name="jdk-deprecated-${jdk.version}"/>
+      <bundledsignatures name="jdk-non-portable"/>
     </fa:forbiddenapis>
     <au:assertLogContains level="info" text=" 0 error(s)."/> 
   </target>
@@ -52,10 +55,11 @@
     only plexus-utils v1.1, which is much slimmer and does not reference
     broken StringUtils. ASM is completely forbidden-api bug-free!
     -->
-    <forbiddenapis-jar internalRuntimeForbidden="true">
+    <forbiddenapis-jar>
       <zipfileset src="${jar-file}" excludes="de/thetaphi/forbiddenapis/commons/cli/**"/>
       <bundledsignatures name="jdk-unsafe-${jdk.version}"/>
       <bundledsignatures name="jdk-deprecated-${jdk.version}"/>
+      <bundledsignatures name="jdk-non-portable"/>
       <classpath>
         <pathelement path="${jar-file}"/>
         <path refid="path.main-build"/>

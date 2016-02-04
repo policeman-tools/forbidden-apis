@@ -16,13 +16,41 @@
 -->
 <project xmlns:au="antlib:org.apache.ant.antunit">
 
-  <target name="testInternalRuntimeForbidden">
+  <condition property="has.sunmisc">
+    <available classname="sun.misc.BASE64Encoder"/>
+  </condition>
+  
+  <target name="testNonPortableSignatures" if="has.sunmisc">
+    <au:expectfailure expectedMessage="Check for forbidden API calls failed, see log">
+      <forbiddenapis failOnMissingClasses="false">
+        <file file="OracleInternalRuntime.class"/>
+        <bundledsignatures name="jdk-non-portable"/>
+      </forbiddenapis>
+    </au:expectfailure>
+    <au:assertLogContains level="error" text="sun.misc.BASE64Encoder [non-portable or internal runtime class]"/> 
+    <au:assertLogContains level="error" text=" 2 error(s)"/> 
+  </target>
+  
+  <target name="testDeprecatedInternalRuntimeForbidden" if="has.sunmisc">
     <au:expectfailure expectedMessage="Check for forbidden API calls failed, see log">
       <forbiddenapis internalRuntimeForbidden="true" failOnMissingClasses="false">
         <file file="OracleInternalRuntime.class"/>
       </forbiddenapis>
     </au:expectfailure>
-    <au:assertLogContains level="error" text="sun.misc.BASE64Encoder [non-public internal runtime class]"/> 
+    <au:assertLogContains level="warn" text="The setting 'internalRuntimeForbidden' was deprecated"/> 
+    <au:assertLogContains level="error" text="sun.misc.BASE64Encoder [non-portable or internal runtime class]"/> 
+    <au:assertLogContains level="error" text=" 2 error(s)"/> 
+  </target>
+  
+  <!-- this should work also with non-Oracle runtimes, as no heuristics: -->
+  <target name="testInternalSignatures">
+    <au:expectfailure expectedMessage="Check for forbidden API calls failed, see log">
+      <forbiddenapis failOnMissingClasses="false">
+        <file file="OracleInternalRuntime.class"/>
+        <bundledsignatures name="jdk-internal-${jdk.version}"/>
+      </forbiddenapis>
+    </au:expectfailure>
+    <au:assertLogContains level="error" text="sun.misc.BASE64Encoder [non-public internal runtime class in Java ${jdk.version}]"/> 
     <au:assertLogContains level="error" text=" 2 error(s)"/> 
   </target>
   

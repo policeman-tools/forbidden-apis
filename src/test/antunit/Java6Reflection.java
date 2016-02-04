@@ -14,10 +14,29 @@
  * limitations under the License.
  */
 
-package de.thetaphi.forbiddenapis;
+/* The binary class file is packaged together with the source distribution.
+ */
 
-public interface Logger {
-  void error(String msg);
-  void warn(String msg);
-  void info(String msg);
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.util.*;
+
+class Java6Reflection {
+  static Field test() throws Exception {
+    Class c = Java6Reflection.class;
+    Field f = c.getDeclaredField("field1");
+    f.setAccessible(true);
+    
+    Method m = c.getDeclaredMethod("testMethod");
+    m.setAccessible(true);
+    m.invoke(new Java6Reflection());
+    
+    return f;
+  }
+  
+  private Integer field1;
+
+  private void testMethod() {
+    // nothing to do here
+  }
 }
