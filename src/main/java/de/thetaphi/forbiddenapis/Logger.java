@@ -1,5 +1,3 @@
-package de.thetaphi.forbiddenapis;
-
 /*
  * (C) Copyright Uwe Schindler (Generics Policeman) and others.
  *
@@ -15,6 +13,8 @@ package de.thetaphi.forbiddenapis;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+package de.thetaphi.forbiddenapis;
 
 public interface Logger {
   void error(String msg);

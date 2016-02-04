@@ -1,5 +1,3 @@
-package de.thetaphi.forbiddenapis.maven;
-
 /*
  * (C) Copyright Uwe Schindler (Generics Policeman) and others.
  *
@@ -15,6 +13,8 @@ package de.thetaphi.forbiddenapis.maven;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+package de.thetaphi.forbiddenapis.maven;
 
 import static de.thetaphi.forbiddenapis.Checker.Option.*;
 
