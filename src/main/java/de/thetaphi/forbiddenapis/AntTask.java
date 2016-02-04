@@ -1,5 +1,3 @@
-package de.thetaphi.forbiddenapis;
-
 /*
  * (C) Copyright Uwe Schindler (Generics Policeman) and others.
  * Parts of this work are licensed to the Apache Software Foundation (ASF)
@@ -17,6 +15,8 @@ package de.thetaphi.forbiddenapis;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+package de.thetaphi.forbiddenapis;
 
 import java.util.Locale;
 

@@ -1,5 +1,3 @@
-package de.thetaphi.forbiddenapis;
-
 /*
  * (C) Copyright Uwe Schindler (Generics Policeman) and others.
  *
@@ -15,6 +13,8 @@ package de.thetaphi.forbiddenapis;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+package de.thetaphi.forbiddenapis;
 
 import static de.thetaphi.forbiddenapis.Checker.Option.*;
 import static org.junit.Assert.assertEquals;
