@@ -52,6 +52,9 @@
     - To define a target to be only run on a specific version, add <equals/> condition to one of the supplied versions.
     - To explicitely exclude specific versions (and unknown ones), add a condition to disallow "unknown" and some versions like "1.9"!
    -->
+  <condition property="build.java.runtime" value="1.9">
+    <equals arg1="${-cleaned.specification.version}" arg2="9"/>
+  </condition>
   <condition property="build.java.runtime" value="${-cleaned.specification.version}" else="unknown">
     <or>
       <equals arg1="${-cleaned.specification.version}" arg2="1.6"/>
@@ -66,11 +69,12 @@
   <!-- workaround for https://issues.apache.org/bugzilla/show_bug.cgi?id=53347 -->
   <condition property="build.compiler" value="javac1.7">
     <and>
-      <or>
-        <equals arg1="${build.java.runtime}" arg2="1.9"/>
-        <equals arg1="${build.java.runtime}" arg2="1.8"/>
-        <equals arg1="${build.java.runtime}" arg2="unknown"/>
-      </or>
+      <not>
+        <or>
+          <equals arg1="${build.java.runtime}" arg2="1.6"/>
+          <equals arg1="${build.java.runtime}" arg2="1.7"/>
+        </or>
+      </not>
       <or>
         <antversion exactly="1.8.3" />
         <antversion exactly="1.8.4" />

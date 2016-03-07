@@ -17,13 +17,17 @@
 import org.apache.tools.ant.BuildException;
 
 URL objectClassURL = ClassLoader.getSystemClassLoader().getResource("java/lang/Object.class");
-boolean isJava9 = objectClassURL != null && "jrt".equalsIgnoreCase(objectClassURL.getProtocol());
+boolean isJava9 = Class.metaClass.respondsTo(Class.class, 'getModule') ||
+  (objectClassURL != null && "jrt".equalsIgnoreCase(objectClassURL.getProtocol()));
 
 boolean hasRTJar = new File(properties['java.home'], "lib/rt.jar").isFile();
 
-String vendor = properties['java.vendor'].toLowerCase(Locale.ENGLISH);
+String vendor = properties['java.vendor'].toLowerCase(Locale.ROOT);
 boolean isOracle = vendor.contains("oracle") || vendor.contains("sun microsystems");
 boolean isDetectedJavaVersion = properties['java.version'].startsWith(properties['build.java.runtime']);
+if (!isDetectedJavaVersion) {
+  isDetectedJavaVersion = properties['java.version'].startsWith('9') && properties['build.java.runtime'] == '1.9';
+}
 
 if (isOracle && isDetectedJavaVersion && (isJava9 || hasRTJar)) {
   String script = isJava9 ? "generate-deprecated-java9.groovy" : "generate-deprecated-java6.groovy";
