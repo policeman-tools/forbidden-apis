@@ -17,7 +17,7 @@
 <!DOCTYPE ivy-module [
   <!ENTITY maven.version "2.0">
   <!ENTITY gradle.version "2.3">
-  <!ENTITY asm.version "5.0.4">
+  <!ENTITY asm.version "5.1">
 ]>
 <ivy-module version="2.0">
   <info organisation="de.thetaphi" module="forbiddenapis"/>
