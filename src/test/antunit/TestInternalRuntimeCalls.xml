@@ -22,7 +22,7 @@
   
   <target name="testNonPortableSignatures" if="has.sunmisc">
     <au:expectfailure expectedMessage="Check for forbidden API calls failed, see log">
-      <forbiddenapis failOnMissingClasses="false">
+      <forbiddenapis failOnMissingClasses="false" targetVersion="${jdk.version}">
         <file file="OracleInternalRuntime.class"/>
         <bundledsignatures name="jdk-non-portable"/>
       </forbiddenapis>
@@ -45,9 +45,9 @@
   <!-- this should work also with non-Oracle runtimes, as no heuristics: -->
   <target name="testInternalSignatures">
     <au:expectfailure expectedMessage="Check for forbidden API calls failed, see log">
-      <forbiddenapis failOnMissingClasses="false">
+      <forbiddenapis failOnMissingClasses="false" targetVersion="${jdk.version}">
         <file file="OracleInternalRuntime.class"/>
-        <bundledsignatures name="jdk-internal-${jdk.version}"/>
+        <bundledsignatures name="jdk-internal"/>
       </forbiddenapis>
     </au:expectfailure>
     <au:assertLogContains level="error" text="sun.misc.BASE64Encoder [non-public internal runtime class in Java ${jdk.version}]"/> 

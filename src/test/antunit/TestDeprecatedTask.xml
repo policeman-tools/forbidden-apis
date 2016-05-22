@@ -19,10 +19,10 @@
   <taskdef name="forbiddenapis-deprecated" classname="de.thetaphi.forbiddenapis.AntTask" classpath="${jar-file}"/>
 
   <target name="testMySelf">
-    <forbiddenapis-deprecated classpathref="path.all">
+    <forbiddenapis-deprecated classpathref="path.all" targetVersion="${jdk.version}">
       <fileset dir="${antunit.main.classes}"/>
-      <bundledsignatures name="jdk-unsafe-${jdk.version}"/>
-      <bundledsignatures name="jdk-deprecated-${jdk.version}"/>
+      <bundledsignatures name="jdk-unsafe"/>
+      <bundledsignatures name="jdk-deprecated"/>
       <bundledsignatures name="jdk-non-portable"/>
     </forbiddenapis-deprecated>
     <au:assertLogContains level="info" text=" 0 error(s)."/> 

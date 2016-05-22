@@ -32,7 +32,7 @@
     <echo message="Testing signatures of version ${commons-io-version}..."/>
     <ivy:cachepath organisation="commons-io" module="commons-io" revision="${commons-io-version}"
       inline="true" conf="master" type="jar" pathid="commons-io.classpath" log="${ivy.logging}"/> 
-    <forbiddenapis bundledSignatures="${commons-io-signature}" ignoreEmptyFileset="true" classpathref="commons-io.classpath"/>
+    <forbiddenapis bundledSignatures="${commons-io-signature}" ignoreEmptyFileset="true" classpathref="commons-io.classpath" targetVersion="${jdk.version}"/>
   </target>
   
 </project>

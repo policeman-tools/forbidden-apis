@@ -46,6 +46,7 @@ import java.util.NavigableSet;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.TreeSet;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.lang.annotation.Annotation;
 import java.lang.management.ManagementFactory;
@@ -426,6 +427,24 @@ public final class Checker implements RelatedClassLookup, Constants {
     addBundledSignatures(name, jdkTargetVersion, true);
   }
   
+  public static String fixTargetVersion(String name) throws ParseException {
+    final Matcher m = JDK_SIG_PATTERN.matcher(name);
+    if (m.matches()) {
+      if (m.group(4) == null) {
+        // rewrite version number if it does not start with "1"
+        if ("1".equals(m.group(2)) && m.group(3) != null) {
+          return name;
+        } else {
+          if (".0".equals(m.group(3)) || m.group(3) == null) {
+            return m.group(1) + "1." + m.group(2);
+          }
+        }
+      }
+      throw new ParseException("Invalid bundled signature reference (JDK version is invalid): " + name);
+    }
+    return name;
+  }
+  
   private void addBundledSignatures(String name, String jdkTargetVersion, boolean logging) throws IOException,ParseException {
     if (!name.matches("[A-Za-z0-9\\-\\.]+")) {
       throw new ParseException("Invalid bundled signature reference: " + name);
@@ -435,15 +454,13 @@ public final class Checker implements RelatedClassLookup, Constants {
       forbidNonPortableRuntime = true;
       return;
     }
+    name = fixTargetVersion(name);
     // use Checker.class hardcoded (not getClass) so we have a fixed package name:
     InputStream in = Checker.class.getResourceAsStream("signatures/" + name + ".txt");
     // automatically expand the compiler version in here (for jdk-* signatures without version):
     if (in == null && jdkTargetVersion != null && name.startsWith("jdk-") && !name.matches(".*?\\-\\d\\.\\d")) {
-      // convert the "new" version number "major.0" to old-style "1.major" (as this matches our resources):
-      if (!jdkTargetVersion.startsWith("1.") && jdkTargetVersion.matches("\\d(\\.0|)")) {
-        jdkTargetVersion = "1." + jdkTargetVersion.substring(0, 1);
-      }
       name = name + "-" + jdkTargetVersion;
+      name = fixTargetVersion(name);
       in = Checker.class.getResourceAsStream("signatures/" + name + ".txt");
     }
     if (in == null) {

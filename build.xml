@@ -466,14 +466,14 @@
   </target>
   
   <target name="-check-myself" depends="compile,compile-tools,compile-test,-install-forbiddenapi-task">
-    <forbiddenapis failOnUnsupportedJava="false">
+    <forbiddenapis failOnUnsupportedJava="false" targetVersion="${jdk.version}">
       <classpath refid="path.all"/>
       <fileset dir="build/main"/>
       <fileset dir="build/tools"/>
       <fileset dir="build/test"/>
       <signatures>
-        <bundled name="jdk-unsafe-${jdk.version}"/>
-        <bundled name="jdk-deprecated-${jdk.version}"/>
+        <bundled name="jdk-unsafe"/>
+        <bundled name="jdk-deprecated"/>
         <bundled name="jdk-non-portable"/>
         <bundled name="jdk-system-out"/>
         <bundled name="jdk-reflection"/>
@@ -482,11 +482,11 @@
   </target>
 
   <target name="-check-bundled-signatures" depends="-install-forbiddenapi-task" if="tests.supported">
-    <forbiddenapis failOnUnsupportedJava="true" ignoreEmptyFileset="true">
+    <forbiddenapis failOnUnsupportedJava="true" ignoreEmptyFileset="true" targetVersion="${build.java.runtime}">
       <signatures>
-        <bundled name="jdk-unsafe-${build.java.runtime}"/>
-        <bundled name="jdk-deprecated-${build.java.runtime}"/>
-        <bundled name="jdk-internal-${build.java.runtime}"/>
+        <bundled name="jdk-unsafe"/>
+        <bundled name="jdk-deprecated"/>
+        <bundled name="jdk-internal"/>
         <bundled name="jdk-system-out"/>
         <bundled name="jdk-reflection"/>
       </signatures>
