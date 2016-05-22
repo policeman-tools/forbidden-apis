@@ -69,7 +69,7 @@ public abstract class DeprecatedGen<Input> implements Opcodes {
   protected void parseClass(InputStream in) throws IOException {
     final ClassReader reader;
     try {
-      reader = new ClassReader(in);
+      reader = AsmUtils.readAndPatchClass(in);
     } catch (IllegalArgumentException iae) {
       // unfortunately the ASM IAE has no message, so add good info!
       throw new IllegalArgumentException("The class file format of your runtime seems to be too recent to be parsed by ASM (may need to be upgraded).");
