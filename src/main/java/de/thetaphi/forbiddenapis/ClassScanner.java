@@ -340,19 +340,30 @@ final class ClassScanner extends ClassVisitor {
         if (violation != null) {
           return violation;
         }
+        return checkMethodAccessRecursion(owner, method);
+      }
+      
+      private String checkMethodAccessRecursion(String owner, Method method) {
         final String printout = forbiddenMethods.get(owner + '\000' + method);
         if (printout != null) {
           return "Forbidden method invocation: " + printout;
         }
         final ClassSignature c = lookup.lookupRelatedClass(owner);
-        if (c != null && !c.methods.contains(method)) {
-          if (c.superName != null && (violation = checkMethodAccess(c.superName, method)) != null) {
+        if (c != null) {
+          String violation;
+          if (c.methods.contains(method)) {
+            violation = checkClassUse(owner, "class/interface");
+            if (violation != null) {
+              return violation;
+            }
+          }
+          if (c.superName != null && (violation = checkMethodAccessRecursion(c.superName, method)) != null) {
             return violation;
           }
           // JVM spec says: interfaces after superclasses
           if (c.interfaces != null) {
             for (String intf : c.interfaces) {
-              if (intf != null && (violation = checkMethodAccess(intf, method)) != null) {
+              if (intf != null && (violation = checkMethodAccessRecursion(intf, method)) != null) {
                 return violation;
               }
             }
@@ -371,6 +382,7 @@ final class ClassScanner extends ClassVisitor {
           return "Forbidden field access: " + printout;
         }
         final ClassSignature c = lookup.lookupRelatedClass(owner);
+        // if we have seen the field already, no need to look into superclasses (fields cannot override)
         if (c != null && !c.fields.contains(field)) {
           if (c.interfaces != null) {
             for (String intf : c.interfaces) {
