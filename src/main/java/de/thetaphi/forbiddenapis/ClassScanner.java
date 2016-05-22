@@ -45,6 +45,8 @@ final class ClassScanner extends ClassVisitor {
   
   static final String LAMBDA_META_FACTORY_INTERNALNAME = "java/lang/invoke/LambdaMetafactory";
   static final String LAMBDA_METHOD_NAME_PREFIX = "lambda$";
+  static final String CLASS_CONSTRUCTOR_METHOD_NAME = "<clinit>";
+  static final String CONSTRUCTOR_METHOD_NAME = "<init>";
 
   private final boolean forbidNonPortableRuntime;
   final RelatedClassLookup lookup;
@@ -340,10 +342,14 @@ final class ClassScanner extends ClassVisitor {
         if (violation != null) {
           return violation;
         }
-        return checkMethodAccessRecursion(owner, method);
+        if  (CLASS_CONSTRUCTOR_METHOD_NAME.equals(method.getName())) {
+          // we don't check for violations on class constructors
+          return null;
+        }
+        return checkMethodAccessRecursion(owner, method, true);
       }
       
-      private String checkMethodAccessRecursion(String owner, Method method) {
+      private String checkMethodAccessRecursion(String owner, Method method, boolean checkClassUse) {
         final String printout = forbiddenMethods.get(owner + '\000' + method);
         if (printout != null) {
           return "Forbidden method invocation: " + printout;
@@ -351,19 +357,23 @@ final class ClassScanner extends ClassVisitor {
         final ClassSignature c = lookup.lookupRelatedClass(owner);
         if (c != null) {
           String violation;
-          if (c.methods.contains(method)) {
+          if (checkClassUse && c.methods.contains(method)) {
             violation = checkClassUse(owner, "class/interface");
             if (violation != null) {
               return violation;
             }
           }
-          if (c.superName != null && (violation = checkMethodAccessRecursion(c.superName, method)) != null) {
+          if (CONSTRUCTOR_METHOD_NAME.equals(method.getName())) {
+            return null; // don't look into superclasses or interfaces to find constructors!
+          }
+          if (c.superName != null && (violation = checkMethodAccessRecursion(c.superName, method, true)) != null) {
             return violation;
           }
           // JVM spec says: interfaces after superclasses
           if (c.interfaces != null) {
             for (String intf : c.interfaces) {
-              if (intf != null && (violation = checkMethodAccessRecursion(intf, method)) != null) {
+              // for interfaces we don't check the class use (it is too strict, if just the interface is implemented, but nothing more!):
+              if (intf != null && (violation = checkMethodAccessRecursion(intf, method, false)) != null) {
                 return violation;
               }
             }
