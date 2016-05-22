@@ -511,3 +511,4 @@ org.xml.sax.HandlerBase
 org.xml.sax.Parser
 org.xml.sax.helpers.AttributeListImpl
 org.xml.sax.helpers.ParserFactory
+org.xml.sax.helpers.XMLReaderFactory
