@@ -54,7 +54,6 @@ jdk.internal.**
 jdk.management.cmm.internal.**
 jdk.nashorn.internal.**
 jdk.nashorn.tools.**
-jdk.rmi.rmic.**
 jdk.tools.jimage.**
 oracle.jrockit.jfr.**
 org.jcp.xml.dsig.internal.**
