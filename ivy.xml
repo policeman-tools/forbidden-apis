@@ -17,7 +17,7 @@
 <!DOCTYPE ivy-module [
   <!ENTITY maven.version "2.0">
   <!ENTITY gradle.version "2.3">
-  <!ENTITY asm.version "5.0.4">
+  <!ENTITY asm.version "5.1">
 ]>
 <ivy-module version="2.0">
   <info organisation="de.thetaphi" module="forbiddenapis"/>
@@ -38,7 +38,7 @@
     <dependency org="org.gradle" name="gradle-base-services-groovy" rev="&gradle.version;" conf="build"/>
     <dependency org="org.slf4j" name="slf4j-api" rev="1.7.5" conf="build"/>
     <!-- Gradle also needs Groovy, but we need it as build tool, too: -->
-    <dependency org="org.codehaus.groovy" name="groovy-all" rev="2.4.5" conf="build,buildtools"/>
+    <dependency org="org.codehaus.groovy" name="groovy-all" rev="2.4.6" conf="build,buildtools"/>
     <!-- ASM 5.0.4 minimal: -->
     <dependency org="org.ow2.asm" name="asm" rev="&asm.version;" conf="build,bundle,buildtools"/>
     <dependency org="org.ow2.asm" name="asm-commons" rev="&asm.version;" conf="build,bundle,buildtools"/>

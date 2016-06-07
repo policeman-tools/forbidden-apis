@@ -52,6 +52,9 @@
     - To define a target to be only run on a specific version, add <equals/> condition to one of the supplied versions.
     - To explicitely exclude specific versions (and unknown ones), add a condition to disallow "unknown" and some versions like "1.9"!
    -->
+  <condition property="build.java.runtime" value="1.9">
+    <equals arg1="${-cleaned.specification.version}" arg2="9"/>
+  </condition>
   <condition property="build.java.runtime" value="${-cleaned.specification.version}" else="unknown">
     <or>
       <equals arg1="${-cleaned.specification.version}" arg2="1.6"/>
@@ -66,11 +69,12 @@
   <!-- workaround for https://issues.apache.org/bugzilla/show_bug.cgi?id=53347 -->
   <condition property="build.compiler" value="javac1.7">
     <and>
-      <or>
-        <equals arg1="${build.java.runtime}" arg2="1.9"/>
-        <equals arg1="${build.java.runtime}" arg2="1.8"/>
-        <equals arg1="${build.java.runtime}" arg2="unknown"/>
-      </or>
+      <not>
+        <or>
+          <equals arg1="${build.java.runtime}" arg2="1.6"/>
+          <equals arg1="${build.java.runtime}" arg2="1.7"/>
+        </or>
+      </not>
       <or>
         <antversion exactly="1.8.3" />
         <antversion exactly="1.8.4" />
@@ -106,7 +110,7 @@
   <!-- define Maven coordinates -->
   <property name="groupId" value="de.thetaphi" />
   <property name="artifactId" value="forbiddenapis" />
-  <property name="version" value="2.1-SNAPSHOT"/>
+  <property name="version" value="2.2-SNAPSHOT"/>
   
   <property name="description" value="Allows to parse Java byte code to find invocations of method/class/field signatures and fail build (Apache Ant, Apache Maven, Gradle, or CLI)"/>
 
@@ -462,14 +466,14 @@
   </target>
   
   <target name="-check-myself" depends="compile,compile-tools,compile-test,-install-forbiddenapi-task">
-    <forbiddenapis failOnUnsupportedJava="false">
+    <forbiddenapis failOnUnsupportedJava="false" targetVersion="${jdk.version}">
       <classpath refid="path.all"/>
       <fileset dir="build/main"/>
       <fileset dir="build/tools"/>
       <fileset dir="build/test"/>
       <signatures>
-        <bundled name="jdk-unsafe-${jdk.version}"/>
-        <bundled name="jdk-deprecated-${jdk.version}"/>
+        <bundled name="jdk-unsafe"/>
+        <bundled name="jdk-deprecated"/>
         <bundled name="jdk-non-portable"/>
         <bundled name="jdk-system-out"/>
         <bundled name="jdk-reflection"/>
@@ -478,11 +482,11 @@
   </target>
 
   <target name="-check-bundled-signatures" depends="-install-forbiddenapi-task" if="tests.supported">
-    <forbiddenapis failOnUnsupportedJava="true" ignoreEmptyFileset="true">
+    <forbiddenapis failOnUnsupportedJava="true" ignoreEmptyFileset="true" targetVersion="${build.java.runtime}">
       <signatures>
-        <bundled name="jdk-unsafe-${build.java.runtime}"/>
-        <bundled name="jdk-deprecated-${build.java.runtime}"/>
-        <bundled name="jdk-internal-${build.java.runtime}"/>
+        <bundled name="jdk-unsafe"/>
+        <bundled name="jdk-deprecated"/>
+        <bundled name="jdk-internal"/>
         <bundled name="jdk-system-out"/>
         <bundled name="jdk-reflection"/>
       </signatures>

@@ -41,6 +41,7 @@ final class ClassSignature {
 	public final String className, superName;
 	public final String[] interfaces;
   
+	/** Builds the information from an ASM ClassReader */
   public ClassSignature(final ClassReader classReader, boolean isRuntimeClass, boolean withReader) {
     this.reader = withReader ? classReader : null;
     this.isRuntimeClass = isRuntimeClass;
@@ -63,6 +64,33 @@ final class ClassSignature {
         return null;
       }
     }, ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES);
+    this.methods = Collections.unmodifiableSet(methods);
+    this.fields = Collections.unmodifiableSet(fields);
+  }
+
+  /** Alternative ctor that can be used to build the information via reflection from an already loaded class. Useful for Java 9 Jigsaw. */
+  public ClassSignature(final Class<?> clazz, boolean isRuntimeClass) {
+    this.reader = null; // no reader available!
+    this.isRuntimeClass = isRuntimeClass;
+    this.className = Type.getType(clazz).getInternalName();
+    final Class<?> superclazz = clazz.getSuperclass();
+    this.superName = superclazz == null ? null : Type.getType(superclazz).getInternalName();
+    final Class<?>[] interfClasses = clazz.getInterfaces();
+    this.interfaces = new String[interfClasses.length];
+    for (int i = 0; i < interfClasses.length; i++) {
+      this.interfaces[i] = Type.getType(interfClasses[i]).getInternalName();
+    }
+    final Set<Method> methods = new HashSet<Method>();
+    final Set<String> fields = new HashSet<String>();
+    for (final java.lang.reflect.Method m : clazz.getDeclaredMethods()) {
+      methods.add(Method.getMethod(m));
+    }
+    for (final java.lang.reflect.Constructor<?> m : clazz.getDeclaredConstructors()) {
+      methods.add(Method.getMethod(m));
+    }
+    for (final java.lang.reflect.Field f : clazz.getDeclaredFields()) {
+      fields.add(f.getName());
+    }
     this.methods = Collections.unmodifiableSet(methods);
     this.fields = Collections.unmodifiableSet(fields);
   }

@@ -59,12 +59,12 @@
   
   <target name="testGeneralResources">
     <au:expectfailure expectedMessage="Check for forbidden API calls failed, see log">
-      <forbiddenapis classpathref="path.all">
+      <forbiddenapis classpathref="path.all" targetVersion="${jdk.version}">
         <fileset refid="main.classes"/>
         <signatures>
           <file file="signatures1.txt"/>
           <string>java.util.Locale#ENGLISH @ We are speaking chinese here!</string>
-          <bundled name="jdk-unsafe-${jdk.version}"/>
+          <bundled name="jdk-unsafe"/>
         </signatures>
       </forbiddenapis>
     </au:expectfailure>

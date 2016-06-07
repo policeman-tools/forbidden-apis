@@ -70,6 +70,7 @@ public class AntTask extends Task implements Constants {
   private boolean failOnUnresolvableSignatures = true;
   private boolean failOnViolation = true;
   private boolean ignoreEmptyFileset = false;
+  private String targetVersion = null;
   private boolean disableClassloadingCache = false;
     
   @Override
@@ -134,7 +135,19 @@ public class AntTask extends Task implements Constants {
           if (name == null) {
             throw new BuildException("<bundledSignatures/> must have the mandatory attribute 'name' referring to a bundled signatures file.");
           }
-          checker.addBundledSignatures(name, null);
+          String targetVersion = this.targetVersion;
+          if (bs.getTargetVersion() != null) {
+            if (!name.startsWith("jdk-")) {
+              throw new ParseException("Cannot supply a targetVersion for non-JDK signatures.");
+            }
+            targetVersion = bs.getTargetVersion();
+          }
+          if (targetVersion == null  && name.startsWith("jdk-")) {
+            log.warn("The 'targetVersion' parameter is missing. " +
+              "Trying to read bundled JDK signatures without compiler target. " +
+              "You have to explicitely specify the version in the resource name.");
+          }
+          checker.addBundledSignatures(name, targetVersion);
         }
         if (internalRuntimeForbidden) {
           log.warn(DEPRECATED_WARN_INTERNALRUNTIME);
@@ -358,6 +371,16 @@ public class AntTask extends Task implements Constants {
    */
   public void setFailOnViolation(boolean failOnViolation) {
     this.failOnViolation = failOnViolation;
+  }
+  
+  /**
+   * The default compiler target version used to expand references to bundled JDK signatures.
+   * E.g., if you use "jdk-deprecated", it will expand to this version.
+   * This setting should be identical to the target version used in the compiler task.
+   * Defaults to {@code null}.
+   */
+  public void setTargetVersion(String targetVersion) {
+    this.targetVersion = targetVersion;
   }
   
   /**

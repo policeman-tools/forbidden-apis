@@ -46,6 +46,7 @@ import java.util.NavigableSet;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.TreeSet;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.lang.annotation.Annotation;
 import java.lang.management.ManagementFactory;
@@ -71,7 +72,7 @@ public final class Checker implements RelatedClassLookup, Constants {
   final Logger logger;
   
   final ClassLoader loader;
-  final java.lang.reflect.Method method_Class_getModule, method_Module_getResourceAsStream, method_Module_getName;
+  final java.lang.reflect.Method method_Class_getModule, method_Module_getName;
   final EnumSet<Option> options;
   
   // key is the binary name (dotted):
@@ -132,19 +133,16 @@ public final class Checker implements RelatedClassLookup, Constants {
     
     // first try Java 9 module system (Jigsaw)
     // Please note: This code is not guaranteed to work with final Java 9 version. This is just for testing!
-    java.lang.reflect.Method method_Class_getModule, method_Module_getResourceAsStream, method_Module_getName;
+    java.lang.reflect.Method method_Class_getModule, method_Module_getName;
     try {
       method_Class_getModule = Class.class.getMethod("getModule");
-      method_Module_getResourceAsStream = method_Class_getModule
-          .getReturnType().getMethod("getResourceAsStream", String.class);
       method_Module_getName = method_Class_getModule
           .getReturnType().getMethod("getName");
       isSupportedJDK = true;
     } catch (NoSuchMethodException e) {
-      method_Class_getModule = method_Module_getResourceAsStream = method_Module_getName = null;
+      method_Class_getModule = method_Module_getName = null;
     }
     this.method_Class_getModule = method_Class_getModule;
-    this.method_Module_getResourceAsStream = method_Module_getResourceAsStream;
     this.method_Module_getName = method_Module_getName;
     
     final NavigableSet<String> runtimePaths = new TreeSet<String>();
@@ -209,7 +207,7 @@ public final class Checker implements RelatedClassLookup, Constants {
         logger.warn("Bundled version of ASM cannot parse bytecode of java.lang.Object class; marking runtime as not suppported.");
         isSupportedJDK = false;
       } catch (ClassNotFoundException cnfe) {
-        logger.warn("Bytecode of java.lang.Object not found; marking runtime as not suppported.");
+        logger.warn("Bytecode or Class<?> instance of java.lang.Object not found; marking runtime as not suppported.");
         isSupportedJDK = false;
       } catch (IOException ioe) {
         logger.warn("IOException while loading java.lang.Object class from classloader; marking runtime as not suppported: " + ioe);
@@ -227,29 +225,21 @@ public final class Checker implements RelatedClassLookup, Constants {
    * This is just for testing!
    **/
   private ClassSignature loadClassFromJigsaw(String classname) throws IOException {
-    if (method_Class_getModule == null || method_Module_getResourceAsStream == null || method_Module_getName == null) {
+    if (method_Class_getModule == null || method_Module_getName == null) {
       return null; // not Java 9 JIGSAW
     }
     
-    final InputStream in;
+    final Class<?> clazz;
     final String moduleName;
     try {
-      final Class<?> clazz = Class.forName(classname, false, loader);
+      clazz = Class.forName(classname, false, loader);
       final Object module = method_Class_getModule.invoke(clazz);
       moduleName = (String) method_Module_getName.invoke(module);
-      in = (InputStream) method_Module_getResourceAsStream.invoke(module, AsmUtils.getClassResourceName(classname));
-      if (in == null) {
-        return null;
-      }
     } catch (Exception e) {
       return null; // not found
     }
     
-    try {
-      return new ClassSignature(new ClassReader(in), AsmUtils.isRuntimeModule(moduleName), false);
-    } finally {
-      in.close();
-    }
+    return new ClassSignature(clazz, AsmUtils.isRuntimeModule(moduleName));
   }
   
   private boolean isRuntimePath(URL url) throws IOException {
@@ -301,7 +291,7 @@ public final class Checker implements RelatedClassLookup, Constants {
         }
         final InputStream in = conn.getInputStream();
         try {
-          classpathClassCache.put(clazz, c = new ClassSignature(new ClassReader(in), isRuntimeClass, false));
+          classpathClassCache.put(clazz, c = new ClassSignature(AsmUtils.readAndPatchClass(in), isRuntimeClass, false));
         } finally {
           in.close();
         }
@@ -441,6 +431,24 @@ public final class Checker implements RelatedClassLookup, Constants {
     addBundledSignatures(name, jdkTargetVersion, true);
   }
   
+  public static String fixTargetVersion(String name) throws ParseException {
+    final Matcher m = JDK_SIG_PATTERN.matcher(name);
+    if (m.matches()) {
+      if (m.group(4) == null) {
+        // rewrite version number if it does not start with "1"
+        if ("1".equals(m.group(2)) && m.group(3) != null) {
+          return name;
+        } else {
+          if (".0".equals(m.group(3)) || m.group(3) == null) {
+            return m.group(1) + "1." + m.group(2);
+          }
+        }
+      }
+      throw new ParseException("Invalid bundled signature reference (JDK version is invalid): " + name);
+    }
+    return name;
+  }
+  
   private void addBundledSignatures(String name, String jdkTargetVersion, boolean logging) throws IOException,ParseException {
     if (!name.matches("[A-Za-z0-9\\-\\.]+")) {
       throw new ParseException("Invalid bundled signature reference: " + name);
@@ -450,15 +458,13 @@ public final class Checker implements RelatedClassLookup, Constants {
       forbidNonPortableRuntime = true;
       return;
     }
+    name = fixTargetVersion(name);
     // use Checker.class hardcoded (not getClass) so we have a fixed package name:
     InputStream in = Checker.class.getResourceAsStream("signatures/" + name + ".txt");
     // automatically expand the compiler version in here (for jdk-* signatures without version):
     if (in == null && jdkTargetVersion != null && name.startsWith("jdk-") && !name.matches(".*?\\-\\d\\.\\d")) {
-      // convert the "new" version number "major.0" to old-style "1.major" (as this matches our resources):
-      if (!jdkTargetVersion.startsWith("1.") && jdkTargetVersion.matches("\\d(\\.0|)")) {
-        jdkTargetVersion = "1." + jdkTargetVersion.substring(0, 1);
-      }
       name = name + "-" + jdkTargetVersion;
+      name = fixTargetVersion(name);
       in = Checker.class.getResourceAsStream("signatures/" + name + ".txt");
     }
     if (in == null) {
@@ -532,7 +538,7 @@ public final class Checker implements RelatedClassLookup, Constants {
   public void addClassToCheck(final InputStream in) throws IOException {
     final ClassReader reader;
     try {
-      reader = new ClassReader(in);
+      reader = AsmUtils.readAndPatchClass(in);
     } finally {
       in.close();
     }
