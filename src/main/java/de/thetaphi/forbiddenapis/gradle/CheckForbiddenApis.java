@@ -309,7 +309,10 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
    * issues with other plugin, that do not close their class loaders.
    * If you get {@code FileNotFoundException}s related to non-existent JAR entries
    * you can try to work around using this setting.
-   * The default is {@code false}.
+   * <p>
+   * The default is {@code false}, unless the plugin detects that your build is
+   * running in the <em>Gradle Daemon</em> (which has this problem), setting the
+   * default to {@code true} as a consequence.
    */
   @Input
   public boolean getDisableClassloadingCache() {

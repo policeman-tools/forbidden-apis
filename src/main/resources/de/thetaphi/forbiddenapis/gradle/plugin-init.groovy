@@ -23,10 +23,19 @@ if (project.plugins.withType(JavaBasePlugin.class).isEmpty()) {
   throw new PluginInstantiationException('Forbidden-apis only works in projects using the java plugin.');
 }
 
+// chck if running in Gradle Daemon?
+// see: http://stackoverflow.com/questions/23265217/how-to-know-whether-you-are-running-inside-a-gradle-daemon
+boolean isGradleDaemon = System.getProperty('sun.java.command', '').startsWith('org.gradle.launcher.daemon.') ||
+  Thread.currentThread().stackTrace.any { it.className.startsWith 'org.gradle.launcher.daemon.' };
+if (isGradleDaemon) {
+  project.logger.info('You are running forbiddenapis in the Gradle Daemon; disabling classloading cache to work around resource leak.');
+}
+
 // create Extension for defaults:
 def extension = project.extensions.create(FORBIDDEN_APIS_EXTENSION_NAME, CheckForbiddenApisExtension.class);
 extension.with {
   signaturesFiles = project.files();
+  disableClassloadingCache |= isGradleDaemon;
 }
 
 // Define our tasks (one for each SourceSet):
