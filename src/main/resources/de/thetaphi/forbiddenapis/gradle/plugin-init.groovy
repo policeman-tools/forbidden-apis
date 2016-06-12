@@ -28,7 +28,7 @@ if (project.plugins.withType(JavaBasePlugin.class).isEmpty()) {
 boolean isGradleDaemon = System.getProperty('sun.java.command', '').startsWith('org.gradle.launcher.daemon.') ||
   Thread.currentThread().stackTrace.any { it.className.startsWith 'org.gradle.launcher.daemon.' };
 if (isGradleDaemon) {
-  project.logger.info('You are running forbiddenapis in the Gradle Daemon; disabling classloading cache to work around resource leak.');
+  project.logger.info('You are running forbidden-apis in the Gradle Daemon; disabling classloading cache to work around resource leak.');
 }
 
 // create Extension for defaults:
