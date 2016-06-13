@@ -156,6 +156,17 @@ public abstract class AbstractCheckMojo extends AbstractMojo implements Constant
   private boolean failOnViolation;
 
   /**
+   * Disable the internal JVM classloading cache when getting bytecode from
+   * the classpath. This setting slows down checks, but <em>may</em> work around
+   * issues with other Mojos, that do not close their class loaders.
+   * If you get {@code FileNotFoundException}s related to non-existent JAR entries
+   * you can try to work around using this setting.
+   * @since 2.0
+   */
+  @Parameter(required = false, defaultValue = "false")
+  private boolean disableClassloadingCache;
+
+  /**
    * The default compiler target version used to expand references to bundled JDK signatures.
    * E.g., if you use "jdk-deprecated", it will expand to this version.
    * This setting should be identical to the target version used in the compiler plugin.
@@ -312,6 +323,7 @@ public abstract class AbstractCheckMojo extends AbstractMojo implements Constant
       if (failOnMissingClasses) options.add(FAIL_ON_MISSING_CLASSES);
       if (failOnViolation) options.add(FAIL_ON_VIOLATION);
       if (failOnUnresolvableSignatures) options.add(FAIL_ON_UNRESOLVABLE_SIGNATURES);
+      if (disableClassloadingCache) options.add(DISABLE_CLASSLOADING_CACHE);
       final Checker checker = new Checker(log, loader, options);
       
       if (!checker.isSupportedJDK) {

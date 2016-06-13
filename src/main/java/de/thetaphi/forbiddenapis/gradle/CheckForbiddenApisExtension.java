@@ -44,7 +44,8 @@ public class CheckForbiddenApisExtension {
     "failOnUnsupportedJava",
     "failOnMissingClasses",
     "failOnUnresolvableSignatures",
-    "ignoreFailures"
+    "ignoreFailures",
+    "disableClassloadingCache"
   );
   
   public FileCollection signaturesFiles; // initialized by plugin-init.groovy
@@ -56,6 +57,7 @@ public class CheckForbiddenApisExtension {
   public boolean failOnUnsupportedJava = false,
     failOnMissingClasses = true,
     failOnUnresolvableSignatures = true,
-    ignoreFailures = false;
+    ignoreFailures = false,
+    disableClassloadingCache = false;
   
 }

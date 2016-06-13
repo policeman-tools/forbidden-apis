@@ -60,7 +60,8 @@ public final class Checker implements RelatedClassLookup, Constants {
   public static enum Option {
     FAIL_ON_MISSING_CLASSES,
     FAIL_ON_VIOLATION,
-    FAIL_ON_UNRESOLVABLE_SIGNATURES
+    FAIL_ON_UNRESOLVABLE_SIGNATURES,
+    DISABLE_CLASSLOADING_CACHE
   }
 
   public final boolean isSupportedJDK;
@@ -285,6 +286,9 @@ public final class Checker implements RelatedClassLookup, Constants {
       if (url != null) {
         final URLConnection conn = url.openConnection();
         final boolean isRuntimeClass = isRuntimeClass(conn);
+        if (!isRuntimeClass && options.contains(Option.DISABLE_CLASSLOADING_CACHE)) {
+          conn.setUseCaches(false);
+        }
         final InputStream in = conn.getInputStream();
         try {
           classpathClassCache.put(clazz, c = new ClassSignature(AsmUtils.readAndPatchClass(in), isRuntimeClass, false));
