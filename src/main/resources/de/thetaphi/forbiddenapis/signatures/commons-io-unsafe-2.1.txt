@@ -19,3 +19,6 @@
 @defaultMessage Uses default charset
 org.apache.commons.io.IOUtils#toString(java.net.URI)
 org.apache.commons.io.IOUtils#toString(java.net.URL)
+org.apache.commons.io.FileUtils#write(java.io.File,java.lang.CharSequence,boolean)
+org.apache.commons.io.FileUtils#writeLines(java.io.File,java.util.Collection,boolean)
+org.apache.commons.io.FileUtils#writeLines(java.io.File,java.util.Collection,java.lang.String,boolean)
