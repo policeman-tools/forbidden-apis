@@ -7,6 +7,10 @@
 @ignoreUnresolvable
 @defaultMessage Deprecated in Java 1.9
 
+java.applet.Applet
+java.applet.AppletContext
+java.applet.AppletStub
+java.applet.AudioClip
 java.awt.AWTKeyStroke#registerSubclass(java.lang.Class)
 java.awt.BorderLayout#addLayoutComponent(java.lang.String,java.awt.Component)
 java.awt.CardLayout#addLayoutComponent(java.lang.String,java.awt.Component)
@@ -315,12 +319,14 @@ java.util.Properties#save(java.io.OutputStream,java.lang.String)
 java.util.jar.Attributes$Name#EXTENSION_INSTALLATION
 java.util.jar.Attributes$Name#IMPLEMENTATION_URL
 java.util.jar.Attributes$Name#IMPLEMENTATION_VENDOR_ID
+java.util.logging.LogManager#getLoggingMXBean()
 java.util.logging.LogRecord#setMillis(long)
 java.util.logging.Logger#global
 java.util.logging.Logger#logrb(java.util.logging.Level,java.lang.String,java.lang.String,java.lang.String,java.lang.String)
 java.util.logging.Logger#logrb(java.util.logging.Level,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.Object)
 java.util.logging.Logger#logrb(java.util.logging.Level,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.Object[])
 java.util.logging.Logger#logrb(java.util.logging.Level,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.Throwable)
+java.util.logging.LoggingMXBean
 javax.accessibility.AccessibleResourceBundle
 javax.activation.ActivationDataFlavor#normalizeMimeType(java.lang.String)
 javax.activation.ActivationDataFlavor#normalizeMimeTypeParameter(java.lang.String,java.lang.String)
@@ -391,6 +397,7 @@ javax.swing.FocusManager#disableSwingFocusManager()
 javax.swing.FocusManager#isFocusManagerEnabled()
 javax.swing.ImageIcon#component
 javax.swing.ImageIcon#tracker
+javax.swing.JApplet
 javax.swing.JComponent#disable()
 javax.swing.JComponent#enable()
 javax.swing.JComponent#getNextFocusableComponent()
