@@ -15,3 +15,6 @@
 # limitations under the License.
 
 @includeBundled commons-io-unsafe-2.1
+
+@defaultMessage Uses default charset
+org.apache.commons.io.input.ReversedLinesFileReader#<init>(java.io.File)
