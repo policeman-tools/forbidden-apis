@@ -21,6 +21,8 @@ package de.thetaphi.forbiddenapis;
 import java.util.Locale;
 import java.util.regex.Pattern;
 
+import org.objectweb.asm.Type;
+
 public interface Constants {
 
   final String BS_JDK_NONPORTABLE = "jdk-non-portable";
@@ -29,5 +31,17 @@ public interface Constants {
   
   final String DEPRECATED_WARN_INTERNALRUNTIME = String.format(Locale.ENGLISH,
       "The setting 'internalRuntimeForbidden' was deprecated and will be removed in next version. For backwards compatibility task/mojo is using '%s' bundled signatures instead.", BS_JDK_NONPORTABLE);
+
+  final Type DEPRECATED_TYPE = Type.getType(Deprecated.class);
+  final String DEPRECATED_DESCRIPTOR = DEPRECATED_TYPE.getDescriptor();
+
+  final String LAMBDA_META_FACTORY_INTERNALNAME = "java/lang/invoke/LambdaMetafactory";
+  final String LAMBDA_METHOD_NAME_PREFIX = "lambda$";
+
+  final String SIGNATURE_POLYMORPHIC_PKG_INTERNALNAME = "java/lang/invoke/";
+  final String SIGNATURE_POLYMORPHIC_DESCRIPTOR = Type.getMethodDescriptor(Type.getType(Object.class), Type.getType(Object[].class));
+
+  final String CLASS_CONSTRUCTOR_METHOD_NAME = "<clinit>";
+  final String CONSTRUCTOR_METHOD_NAME = "<init>";
   
 }

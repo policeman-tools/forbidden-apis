@@ -633,6 +633,9 @@
     <condition property="-gen.sunmisc">
       <available classname="sun.misc.BASE64Encoder"/>
     </condition>
+    <condition property="-gen.jdk7">
+      <available classname="java.lang.invoke.MethodHandle"/>
+    </condition>
     <condition property="-gen.jdk8">
       <hasmethod classname="java.util.Collections" method="emptySortedSet"/>
     </condition>
@@ -655,6 +658,13 @@
       nowarn="true" source="1.6" target="1.6" debug="true" deprecation="false" encoding="${build.encoding}"/>
   </target>
   
+  <target name="-generate-test-classes-jdk7" if="-gen.jdk7">
+    <echo level="info" message="Generating test classes for Java 7:"/>
+    <delete dir="src/test/antunit" includes="Java7*.class"/>
+    <javac includeantruntime="false" srcdir="src/test/antunit" destdir="src/test/antunit" includes="Java7*.java"
+      nowarn="true" source="1.7" target="1.7" debug="true" deprecation="false" encoding="${build.encoding}"/>
+  </target>
+  
   <target name="-generate-test-classes-jdk8" if="-gen.jdk8">
     <echo level="info" message="Generating test classes for Java 8:"/>
     <delete dir="src/test/antunit" includes="Java8*.class"/>
@@ -662,7 +672,7 @@
       nowarn="true" source="1.8" target="1.8" debug="true" deprecation="false" encoding="${build.encoding}"/>
   </target>
   
-  <target name="generate-test-classes" depends="-generate-test-classes-init,-generate-test-classes-sunmisc,-generate-test-classes-jdk6,-generate-test-classes-jdk8" description="Regenerates .class files used by tests if the current JDK version supports it"/>
+  <target name="generate-test-classes" depends="-generate-test-classes-init,-generate-test-classes-sunmisc,-generate-test-classes-jdk6,-generate-test-classes-jdk7,-generate-test-classes-jdk8" description="Regenerates .class files used by tests if the current JDK version supports it"/>
   
   <target name="show-help-mojo" depends="install-maven-artifacts" description="Shows help about mojo usage">
     <artifact:mvn mavenVersion="${maven.version}" failonerror="true" fork="${maven.fork}" taskname="help">

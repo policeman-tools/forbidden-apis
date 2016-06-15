@@ -39,15 +39,7 @@ import org.objectweb.asm.Type;
 import org.objectweb.asm.TypePath;
 import org.objectweb.asm.commons.Method;
 
-final class ClassScanner extends ClassVisitor {
-  static final Type DEPRECATED_TYPE = Type.getType(Deprecated.class);
-  static final String DEPRECATED_DESCRIPTOR = DEPRECATED_TYPE.getDescriptor();
-  
-  static final String LAMBDA_META_FACTORY_INTERNALNAME = "java/lang/invoke/LambdaMetafactory";
-  static final String LAMBDA_METHOD_NAME_PREFIX = "lambda$";
-  static final String CLASS_CONSTRUCTOR_METHOD_NAME = "<clinit>";
-  static final String CONSTRUCTOR_METHOD_NAME = "<init>";
-
+final class ClassScanner extends ClassVisitor implements Constants {
   private final boolean forbidNonPortableRuntime;
   final RelatedClassLookup lookup;
   final List<ForbiddenViolation> violations = new ArrayList<ForbiddenViolation>();
@@ -350,13 +342,21 @@ final class ClassScanner extends ClassVisitor {
       }
       
       private String checkMethodAccessRecursion(String owner, Method method, boolean checkClassUse) {
-        final String printout = forbiddenMethods.get(owner + '\000' + method);
+        String printout = forbiddenMethods.get(owner + '\000' + method);
         if (printout != null) {
           return "Forbidden method invocation: " + printout;
         }
         final ClassSignature c = lookup.lookupRelatedClass(owner);
         if (c != null) {
           String violation;
+          if (c.signaturePolymorphicMethods.contains(method.getName())) {
+            // convert the invoked descriptor to a signature polymorphic one for the lookup
+            final Method lookupMethod = new Method(method.getName(), SIGNATURE_POLYMORPHIC_DESCRIPTOR);
+            printout = forbiddenMethods.get(owner + '\000' + lookupMethod);
+            if (printout != null) {
+              return "Forbidden method invocation (signature polymorphic): " + printout;
+            }
+          }
           if (checkClassUse && c.methods.contains(method)) {
             violation = checkClassUse(owner, "class/interface");
             if (violation != null) {

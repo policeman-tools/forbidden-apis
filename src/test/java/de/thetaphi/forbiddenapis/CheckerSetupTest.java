@@ -17,8 +17,9 @@
 package de.thetaphi.forbiddenapis;
 
 import static de.thetaphi.forbiddenapis.Checker.Option.*;
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 import static org.junit.Assume.assumeTrue;
+import static org.junit.Assume.assumeNoException;
 
 import java.util.Collections;
 import java.util.EnumSet;
@@ -85,6 +86,26 @@ public final class CheckerSetupTest {
   public void testEmptyCtor() throws Exception {
     Checker chk = new Checker(StdIoLogger.INSTANCE, ClassLoader.getSystemClassLoader());
     assertEquals(EnumSet.noneOf(Checker.Option.class), chk.options);
+  }
+  
+  @Test
+  public void testRuntimeClassSignatures() throws Exception {
+    ClassSignature cs = checker.lookupRelatedClass("java/lang/String");
+    assertTrue(cs.isRuntimeClass);
+    assertTrue(cs.signaturePolymorphicMethods.isEmpty());
+  }
+  
+  @Test
+  public void testSignaturePolymorphic() throws Exception {
+    try {
+      ClassSignature cs = checker.lookupRelatedClass("java/lang/invoke/MethodHandle");
+      assertTrue(cs.signaturePolymorphicMethods.contains("invoke"));
+      assertTrue(cs.signaturePolymorphicMethods.contains("invokeExact"));
+      // System.out.println(cs.signaturePolymorphicMethods);
+    } catch (WrapperRuntimeException we) {
+      assertTrue(we.getCause() instanceof ClassNotFoundException);
+      assumeNoException("This test only works with Java 7+", we);
+    }
   }
   
 }
