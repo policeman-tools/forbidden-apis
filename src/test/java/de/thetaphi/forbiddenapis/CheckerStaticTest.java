@@ -24,7 +24,7 @@ import org.junit.Test;
 public final class CheckerStaticTest {
 
   @Test
-  public void testTragetVersionFix() throws Exception {
+  public void testTargetVersionFix() throws Exception {
     assertEquals("jdk-dummy-1.7", Checker.fixTargetVersion("jdk-dummy-1.7"));
     assertEquals("jdk-dummy-1.7", Checker.fixTargetVersion("jdk-dummy-7"));
     assertEquals("jdk-dummy-1.7", Checker.fixTargetVersion("jdk-dummy-7.0"));
