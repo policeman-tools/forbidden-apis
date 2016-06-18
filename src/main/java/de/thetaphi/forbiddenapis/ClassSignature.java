@@ -54,7 +54,7 @@ final class ClassSignature implements Constants {
     final Set<String> signaturePolymorphicMethods = new HashSet<String>();
     classReader.accept(new ClassVisitor(Opcodes.ASM5) {
       @Override
-      public MethodVisitor visitMethod(int access, final String name, String desc, String signature, String[] exceptions) {
+      public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
         final Method m = new Method(name, desc);
         methods.add(m);
         if (className.startsWith(SIGNATURE_POLYMORPHIC_PKG_INTERNALNAME) &&

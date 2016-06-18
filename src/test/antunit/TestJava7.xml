@@ -27,7 +27,7 @@
         java.lang.invoke.MethodHandle#invoke(java.lang.Object[]) @ Forbidden signature polymorphic method
       </forbiddenapis>
     </au:expectfailure>
-    <au:assertLogContains level="error" text="Forbidden method invocation (signature polymorphic): java.lang.invoke.MethodHandle#invoke(java.lang.Object[]) [Forbidden signature polymorphic method]"/> 
+    <au:assertLogContains level="error" text="java.lang.invoke.MethodHandle#invoke(java.lang.Object[]) [Forbidden signature polymorphic method]"/> 
     <au:assertLogContains level="error" text=" 1 error(s)"/> 
   </target>
   

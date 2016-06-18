@@ -348,15 +348,15 @@ final class ClassScanner extends ClassVisitor implements Constants {
         }
         final ClassSignature c = lookup.lookupRelatedClass(owner);
         if (c != null) {
-          String violation;
           if (c.signaturePolymorphicMethods.contains(method.getName())) {
             // convert the invoked descriptor to a signature polymorphic one for the lookup
             final Method lookupMethod = new Method(method.getName(), SIGNATURE_POLYMORPHIC_DESCRIPTOR);
             printout = forbiddenMethods.get(owner + '\000' + lookupMethod);
             if (printout != null) {
-              return "Forbidden method invocation (signature polymorphic): " + printout;
+              return "Forbidden method invocation: " + printout;
             }
           }
+          String violation;
           if (checkClassUse && c.methods.contains(method)) {
             violation = checkClassUse(owner, "class/interface");
             if (violation != null) {
