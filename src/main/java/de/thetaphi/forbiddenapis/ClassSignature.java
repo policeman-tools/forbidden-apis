@@ -18,6 +18,11 @@
 
 package de.thetaphi.forbiddenapis;
 
+import java.lang.reflect.Modifier;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.FieldVisitor;
@@ -26,18 +31,14 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.Method;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
-
 /** Utility class that is used to get an overview of all fields and implemented
  * methods of a class. It make the signatures available as Sets. */
-final class ClassSignature {
+final class ClassSignature implements Constants {
   private ClassReader reader;
   
   public final boolean isRuntimeClass;
   public final Set<Method> methods;
-  public final Set<String> fields;
+  public final Set<String> fields, signaturePolymorphicMethods;
 	public final String className, superName;
 	public final String[] interfaces;
   
@@ -50,11 +51,19 @@ final class ClassSignature {
     this.interfaces = classReader.getInterfaces();
     final Set<Method> methods = new HashSet<Method>();
     final Set<String> fields = new HashSet<String>();
+    final Set<String> signaturePolymorphicMethods = new HashSet<String>();
     classReader.accept(new ClassVisitor(Opcodes.ASM5) {
       @Override
       public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
         final Method m = new Method(name, desc);
         methods.add(m);
+        if (className.startsWith(SIGNATURE_POLYMORPHIC_PKG_INTERNALNAME) &&
+            (access & Opcodes.ACC_VARARGS) != 0 &&
+            (access & Opcodes.ACC_NATIVE) != 0 &&
+            SIGNATURE_POLYMORPHIC_DESCRIPTOR.equals(desc)
+        ) {
+          signaturePolymorphicMethods.add(name);
+        }
         return null;
       }
       
@@ -64,8 +73,9 @@ final class ClassSignature {
         return null;
       }
     }, ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES);
-    this.methods = Collections.unmodifiableSet(methods);
-    this.fields = Collections.unmodifiableSet(fields);
+    this.methods = createSet(methods);
+    this.fields = createSet(fields);
+    this.signaturePolymorphicMethods = createSet(signaturePolymorphicMethods);
   }
 
   /** Alternative ctor that can be used to build the information via reflection from an already loaded class. Useful for Java 9 Jigsaw. */
@@ -82,8 +92,16 @@ final class ClassSignature {
     }
     final Set<Method> methods = new HashSet<Method>();
     final Set<String> fields = new HashSet<String>();
+    final Set<String> signaturePolymorphicMethods = new HashSet<String>();
     for (final java.lang.reflect.Method m : clazz.getDeclaredMethods()) {
       methods.add(Method.getMethod(m));
+      if (className.startsWith(SIGNATURE_POLYMORPHIC_PKG_INTERNALNAME) &&
+          m.isVarArgs() &&
+          (m.getModifiers() & Modifier.NATIVE) != 0 &&
+          SIGNATURE_POLYMORPHIC_DESCRIPTOR.equals(Type.getMethodDescriptor(m))
+      ) {
+        signaturePolymorphicMethods.add(m.getName());
+      }
     }
     for (final java.lang.reflect.Constructor<?> m : clazz.getDeclaredConstructors()) {
       methods.add(Method.getMethod(m));
@@ -91,8 +109,13 @@ final class ClassSignature {
     for (final java.lang.reflect.Field f : clazz.getDeclaredFields()) {
       fields.add(f.getName());
     }
-    this.methods = Collections.unmodifiableSet(methods);
-    this.fields = Collections.unmodifiableSet(fields);
+    this.methods = createSet(methods);
+    this.fields = createSet(fields);
+    this.signaturePolymorphicMethods = createSet(signaturePolymorphicMethods);
+  }
+  
+  private static <T> Set<T> createSet(Set<? extends T> s) {
+    return s.isEmpty() ? Collections.<T>emptySet() : Collections.<T>unmodifiableSet(s);
   }
 
   public ClassReader getReader() {
