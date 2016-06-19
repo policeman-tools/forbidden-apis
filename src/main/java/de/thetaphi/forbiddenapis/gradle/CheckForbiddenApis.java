@@ -313,6 +313,7 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
    * The default is {@code false}, unless the plugin detects that your build is
    * running in the <em>Gradle Daemon</em> (which has this problem), setting the
    * default to {@code true} as a consequence.
+   * @since 2.2
    */
   @Input
   public boolean getDisableClassloadingCache() {

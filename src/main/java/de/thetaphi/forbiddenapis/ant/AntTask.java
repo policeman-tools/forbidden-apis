@@ -378,6 +378,7 @@ public class AntTask extends Task implements Constants {
    * E.g., if you use "jdk-deprecated", it will expand to this version.
    * This setting should be identical to the target version used in the compiler task.
    * Defaults to {@code null}.
+   * @since 2.1
    */
   public void setTargetVersion(String targetVersion) {
     this.targetVersion = targetVersion;
@@ -390,6 +391,7 @@ public class AntTask extends Task implements Constants {
    * If you get {@code FileNotFoundException}s related to non-existent JAR entries
    * you can try to work around using this setting.
    * The default is {@code false}.
+   * @since 2.2
    */
   public void setDisableClassloadingCache(boolean disableClassloadingCache) {
     this.disableClassloadingCache = disableClassloadingCache;

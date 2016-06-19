@@ -161,7 +161,7 @@ public abstract class AbstractCheckMojo extends AbstractMojo implements Constant
    * issues with other Mojos, that do not close their class loaders.
    * If you get {@code FileNotFoundException}s related to non-existent JAR entries
    * you can try to work around using this setting.
-   * @since 2.0
+   * @since 2.2
    */
   @Parameter(required = false, defaultValue = "false")
   private boolean disableClassloadingCache;
