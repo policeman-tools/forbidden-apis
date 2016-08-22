@@ -39,10 +39,10 @@ final class ClassSignature implements Constants {
   public final boolean isRuntimeClass;
   public final Set<Method> methods;
   public final Set<String> fields, signaturePolymorphicMethods;
-	public final String className, superName;
-	public final String[] interfaces;
+  public final String className, superName;
+  public final String[] interfaces;
   
-	/** Builds the information from an ASM ClassReader */
+  /** Builds the information from an ASM ClassReader */
   public ClassSignature(final ClassReader classReader, boolean isRuntimeClass, boolean withReader) {
     this.reader = withReader ? classReader : null;
     this.isRuntimeClass = isRuntimeClass;
