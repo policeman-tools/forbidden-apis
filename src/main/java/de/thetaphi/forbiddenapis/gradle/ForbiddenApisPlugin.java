@@ -58,12 +58,7 @@ public class ForbiddenApisPlugin implements Plugin<Project> {
     if (scriptUrl == null) {
       throw new PluginInstantiationException("Cannot find resource with script: " + PLUGIN_INIT_SCRIPT);
     }
-    final GroovyCodeSource csrc;
-    try {
-      csrc = new GroovyCodeSource(scriptUrl);
-    } catch (IOException ioe) {
-      throw new PluginInstantiationException("Cannot load script: " + scriptUrl, ioe);
-    }
+    final GroovyCodeSource csrc = new GroovyCodeSource(scriptUrl);
     final DelegatingScript script = (DelegatingScript) shell.parse(csrc);
     script.setDelegate(this);
     script.run();
