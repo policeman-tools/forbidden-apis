@@ -21,7 +21,6 @@ import groovy.lang.GroovyCodeSource;
 import groovy.lang.GroovyShell;
 import groovy.util.DelegatingScript;
 
-import java.io.IOException;
 import java.net.URL;
 import java.util.Collections;
 
