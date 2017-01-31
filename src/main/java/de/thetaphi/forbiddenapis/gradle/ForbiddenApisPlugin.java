@@ -19,6 +19,7 @@ package de.thetaphi.forbiddenapis.gradle;
 import groovy.lang.Binding;
 import groovy.lang.GroovyCodeSource;
 import groovy.lang.GroovyShell;
+import groovy.lang.Script;
 import groovy.util.DelegatingScript;
 
 import java.net.URL;
@@ -45,14 +46,14 @@ public class ForbiddenApisPlugin implements Plugin<Project> {
   /** Name of the extension to define defaults for all tasks of this module. */
   public static final String FORBIDDEN_APIS_EXTENSION_NAME = "forbiddenApis";
   
-  @Override
-  public void apply(final Project project) {
+  private final Script script;
+  
+  public ForbiddenApisPlugin() {
     final ImportCustomizer importCustomizer = new ImportCustomizer().addStarImports(ForbiddenApisPlugin.class.getPackage().getName());
     final CompilerConfiguration configuration = new CompilerConfiguration().addCompilationCustomizers(importCustomizer);
     configuration.setScriptBaseClass(DelegatingScript.class.getName());
     configuration.setSourceEncoding("UTF-8");
-    final Binding binding = new Binding(Collections.singletonMap("project", project));
-    final GroovyShell shell = new GroovyShell(ForbiddenApisPlugin.class.getClassLoader(), binding, configuration);
+    final GroovyShell shell = new GroovyShell(ForbiddenApisPlugin.class.getClassLoader(), new Binding(), configuration);
     final URL scriptUrl = ForbiddenApisPlugin.class.getResource(PLUGIN_INIT_SCRIPT);
     if (scriptUrl == null) {
       throw new PluginInstantiationException("Cannot find resource with script: " + PLUGIN_INIT_SCRIPT);
@@ -60,7 +61,15 @@ public class ForbiddenApisPlugin implements Plugin<Project> {
     final GroovyCodeSource csrc = new GroovyCodeSource(scriptUrl);
     final DelegatingScript script = (DelegatingScript) shell.parse(csrc);
     script.setDelegate(this);
+    this.script = script;
+  }
+  
+  // synchronized because we change the property "project" in the binding
+  @Override
+  public synchronized void apply(Project project) {
+    script.setProperty("project", project);
     script.run();
+    script.setProperty("project", null);
   }
   
 }
