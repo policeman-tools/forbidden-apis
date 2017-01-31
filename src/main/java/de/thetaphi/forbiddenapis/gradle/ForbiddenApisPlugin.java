@@ -19,7 +19,6 @@ package de.thetaphi.forbiddenapis.gradle;
 import groovy.lang.Binding;
 import groovy.lang.GroovyCodeSource;
 import groovy.lang.GroovyShell;
-import groovy.lang.Script;
 import groovy.util.DelegatingScript;
 
 import java.net.URL;
@@ -28,7 +27,6 @@ import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.control.customizers.ImportCustomizer;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
-import org.gradle.api.plugins.PluginInstantiationException;
 
 /**
  * Forbiddenapis Gradle Plugin (requires at least Gradle 2.3)
@@ -45,9 +43,8 @@ public class ForbiddenApisPlugin implements Plugin<Project> {
   /** Name of the extension to define defaults for all tasks of this module. */
   public static final String FORBIDDEN_APIS_EXTENSION_NAME = "forbiddenApis";
   
-  private final Script script;
-  
-  public ForbiddenApisPlugin() {
+  private static final DelegatingScript compiledScript;
+  static {
     final ImportCustomizer importCustomizer = new ImportCustomizer().addStarImports(ForbiddenApisPlugin.class.getPackage().getName());
     final CompilerConfiguration configuration = new CompilerConfiguration().addCompilationCustomizers(importCustomizer);
     configuration.setScriptBaseClass(DelegatingScript.class.getName());
@@ -55,20 +52,20 @@ public class ForbiddenApisPlugin implements Plugin<Project> {
     final GroovyShell shell = new GroovyShell(ForbiddenApisPlugin.class.getClassLoader(), new Binding(), configuration);
     final URL scriptUrl = ForbiddenApisPlugin.class.getResource(PLUGIN_INIT_SCRIPT);
     if (scriptUrl == null) {
-      throw new PluginInstantiationException("Cannot find resource with script: " + PLUGIN_INIT_SCRIPT);
+      throw new RuntimeException("Cannot find resource with script: " + PLUGIN_INIT_SCRIPT);
     }
     final GroovyCodeSource csrc = new GroovyCodeSource(scriptUrl);
-    final DelegatingScript script = (DelegatingScript) shell.parse(csrc);
-    script.setDelegate(this);
-    this.script = script;
+    compiledScript = (DelegatingScript) shell.parse(csrc);
   }
   
-  // synchronized because we change the property "project" in the binding
   @Override
-  public synchronized void apply(Project project) {
-    script.setProperty("project", project);
-    script.run();
-    script.setProperty("project", null);
+  public void apply(Project project) {
+    synchronized(compiledScript) {
+      compiledScript.setDelegate(this);
+      compiledScript.setProperty("project", project);
+      compiledScript.run();
+      compiledScript.setProperty("project", null); // free resources
+    }
   }
   
 }
