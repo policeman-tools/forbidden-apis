@@ -17,16 +17,20 @@
 package de.thetaphi.forbiddenapis.gradle;
 
 import groovy.lang.Binding;
+import groovy.lang.GroovyClassLoader;
 import groovy.lang.GroovyCodeSource;
-import groovy.lang.GroovyShell;
 import groovy.util.DelegatingScript;
 
+import java.lang.reflect.Constructor;
 import java.net.URL;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.control.customizers.ImportCustomizer;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
+import org.gradle.api.plugins.PluginInstantiationException;
 
 /**
  * Forbiddenapis Gradle Plugin (requires at least Gradle 2.3)
@@ -43,28 +47,42 @@ public class ForbiddenApisPlugin implements Plugin<Project> {
   /** Name of the extension to define defaults for all tasks of this module. */
   public static final String FORBIDDEN_APIS_EXTENSION_NAME = "forbiddenApis";
   
-  private static final DelegatingScript compiledScript;
+  private static final Constructor<? extends DelegatingScript> compiledScriptCtor;
   static {
     final ImportCustomizer importCustomizer = new ImportCustomizer().addStarImports(ForbiddenApisPlugin.class.getPackage().getName());
     final CompilerConfiguration configuration = new CompilerConfiguration().addCompilationCustomizers(importCustomizer);
     configuration.setScriptBaseClass(DelegatingScript.class.getName());
     configuration.setSourceEncoding("UTF-8");
-    final GroovyShell shell = new GroovyShell(ForbiddenApisPlugin.class.getClassLoader(), new Binding(), configuration);
     final URL scriptUrl = ForbiddenApisPlugin.class.getResource(PLUGIN_INIT_SCRIPT);
     if (scriptUrl == null) {
       throw new RuntimeException("Cannot find resource with script: " + PLUGIN_INIT_SCRIPT);
     }
-    final GroovyCodeSource csrc = new GroovyCodeSource(scriptUrl);
-    compiledScript = (DelegatingScript) shell.parse(csrc);
+    compiledScriptCtor = AccessController.doPrivileged(new PrivilegedAction<Constructor<? extends DelegatingScript>>() {
+      @Override
+      public Constructor<? extends DelegatingScript> run() {
+        try {
+          final GroovyClassLoader loader = new GroovyClassLoader(ForbiddenApisPlugin.class.getClassLoader(), configuration);
+          final GroovyCodeSource csrc = new GroovyCodeSource(scriptUrl);
+          @SuppressWarnings("unchecked") final Class<? extends DelegatingScript> clazz =
+              loader.parseClass(csrc, false).asSubclass(DelegatingScript.class);
+          return clazz.getConstructor(Binding.class);
+        } catch (Exception e) {
+          throw new RuntimeException("Cannot compile Groovy script: " + PLUGIN_INIT_SCRIPT);
+        }
+      }
+    });
   }
   
   @Override
   public void apply(Project project) {
-    synchronized(compiledScript) {
-      compiledScript.setDelegate(this);
-      compiledScript.setProperty("project", project);
-      compiledScript.run();
-      compiledScript.setProperty("project", null); // free resources
+    final Binding binding = new Binding();
+    binding.setVariable("project", project);
+    try {
+      final DelegatingScript script = compiledScriptCtor.newInstance(binding);
+      script.setDelegate(this);
+      script.run();
+    } catch (Exception e) {
+      throw new PluginInstantiationException("Cannot execute Groovy script for apply(Project).", e);
     }
   }
   
