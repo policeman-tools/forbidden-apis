@@ -23,7 +23,6 @@ import groovy.lang.Script;
 import groovy.util.DelegatingScript;
 
 import java.net.URL;
-import java.util.Collections;
 
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.control.customizers.ImportCustomizer;
