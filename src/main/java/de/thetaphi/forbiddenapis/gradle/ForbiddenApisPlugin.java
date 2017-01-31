@@ -22,13 +22,11 @@ import groovy.lang.GroovyShell;
 import groovy.util.DelegatingScript;
 
 import java.net.URL;
-import java.util.Collections;
 
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.control.customizers.ImportCustomizer;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
-import org.gradle.api.plugins.PluginInstantiationException;
 
 /**
  * Forbiddenapis Gradle Plugin (requires at least Gradle 2.3)
@@ -45,22 +43,29 @@ public class ForbiddenApisPlugin implements Plugin<Project> {
   /** Name of the extension to define defaults for all tasks of this module. */
   public static final String FORBIDDEN_APIS_EXTENSION_NAME = "forbiddenApis";
   
-  @Override
-  public void apply(final Project project) {
+  private static final DelegatingScript compiledScript;
+  static {
     final ImportCustomizer importCustomizer = new ImportCustomizer().addStarImports(ForbiddenApisPlugin.class.getPackage().getName());
     final CompilerConfiguration configuration = new CompilerConfiguration().addCompilationCustomizers(importCustomizer);
     configuration.setScriptBaseClass(DelegatingScript.class.getName());
     configuration.setSourceEncoding("UTF-8");
-    final Binding binding = new Binding(Collections.singletonMap("project", project));
-    final GroovyShell shell = new GroovyShell(ForbiddenApisPlugin.class.getClassLoader(), binding, configuration);
+    final GroovyShell shell = new GroovyShell(ForbiddenApisPlugin.class.getClassLoader(), new Binding(), configuration);
     final URL scriptUrl = ForbiddenApisPlugin.class.getResource(PLUGIN_INIT_SCRIPT);
     if (scriptUrl == null) {
-      throw new PluginInstantiationException("Cannot find resource with script: " + PLUGIN_INIT_SCRIPT);
+      throw new RuntimeException("Cannot find resource with script: " + PLUGIN_INIT_SCRIPT);
     }
     final GroovyCodeSource csrc = new GroovyCodeSource(scriptUrl);
-    final DelegatingScript script = (DelegatingScript) shell.parse(csrc);
-    script.setDelegate(this);
-    script.run();
+    compiledScript = (DelegatingScript) shell.parse(csrc);
+  }
+  
+  @Override
+  public void apply(Project project) {
+    synchronized(compiledScript) {
+      compiledScript.setDelegate(this);
+      compiledScript.setProperty("project", project);
+      compiledScript.run();
+      compiledScript.setProperty("project", null); // free resources
+    }
   }
   
 }
