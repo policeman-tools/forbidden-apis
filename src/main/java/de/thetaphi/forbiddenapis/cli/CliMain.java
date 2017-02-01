@@ -278,8 +278,8 @@ public final class CliMain implements Constants {
 
       if (checker.hasNoSignatures()) {
         throw new ExitException(EXIT_ERR_CMDLINE, String.format(Locale.ENGLISH,
-          "No API signatures found; use parameters '--%s', '--%s', and/or '--%s' to define those!",
-          bundledsignaturesOpt.getLongOpt(), signaturesfileOpt.getLongOpt(), internalruntimeforbiddenOpt.getLongOpt()
+          "No API signatures found; use parameters '--%s' and/or '--%s' to specify those!",
+          bundledsignaturesOpt.getLongOpt(), signaturesfileOpt.getLongOpt()
         ));
       }
 
