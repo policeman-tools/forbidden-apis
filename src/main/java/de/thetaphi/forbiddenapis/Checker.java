@@ -131,7 +131,7 @@ public final class Checker implements RelatedClassLookup, Constants {
     
     boolean isSupportedJDK = false;
     
-    // first try Java 9 module system (Jigsaw)
+    // Try to figure out entry points to Java 9 module system (Jigsaw)
     // Please note: This code is not guaranteed to work with final Java 9 version. This is just for testing!
     java.lang.reflect.Method method_Class_getModule, method_Module_getName;
     try {
@@ -152,7 +152,7 @@ public final class Checker implements RelatedClassLookup, Constants {
       try {
         final URL objectClassURL = loader.getResource(AsmUtils.getClassResourceName(Object.class.getName()));
         if (objectClassURL != null && "jrt".equalsIgnoreCase(objectClassURL.getProtocol())) {
-          // this is Java 9 without Jigsaw! TODO: Remove this heuristic once final JDK 9 is out!
+          // this is Java 9 allowing direct access to .class file resources - we do not need to deal with modules!
           isSupportedJDK = true;
         } else {
           String javaHome = System.getProperty("java.home");
@@ -219,7 +219,7 @@ public final class Checker implements RelatedClassLookup, Constants {
     this.isSupportedJDK = isSupportedJDK;
   }
   
-  /** Loads the bytecode from Java9's module system.
+  /** Loads the class from Java9's module system and uses reflection to get methods and fields.
    * <p>
    * This code is not guaranteed to work with final Java 9 version.
    * This is just for testing!
