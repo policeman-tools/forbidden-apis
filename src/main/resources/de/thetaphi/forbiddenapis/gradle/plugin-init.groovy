@@ -34,29 +34,29 @@ if (isGradleDaemon) {
 
 // create Extension for defaults:
 def extension = project.extensions.create(FORBIDDEN_APIS_EXTENSION_NAME, CheckForbiddenApisExtension.class);
-extension.with {
+extension.with{
   signaturesFiles = project.files();
   disableClassloadingCache |= isGradleDaemon;
 }
-def extensionFields = CheckForbiddenApisExtension.class.declaredFields.findAll { f -> 
+def extensionProps = CheckForbiddenApisExtension.class.declaredFields.findAll{ f -> 
   int mods = f.modifiers;
   return Modifier.isPublic(mods) && !f.synthetic && !Modifier.isStatic(mods)
-}
+}*.name;
 
 // Define our tasks (one for each SourceSet):
-def forbiddenTasks = project.sourceSets.collect { sourceSet ->
+def forbiddenTasks = project.sourceSets.collect{ sourceSet ->
   project.tasks.create(sourceSet.getTaskName(FORBIDDEN_APIS_TASK_NAME, null), CheckForbiddenApis.class) {
     description = "Runs forbidden-apis checks on '${sourceSet.name}' classes.";
-    conventionMapping.with {
-      extensionFields.each { f ->
-        map(f.name, { extension[f.name] });
+    conventionMapping.with{
+      extensionProps.each{ key ->
+        map(key, { extension[key] });
       }
       classesDir = { sourceSet.output.classesDir }
       classpath = { sourceSet.compileClasspath }
       targetCompatibility = { project.targetCompatibility?.toString() }
     }
     // add dependency to compile task after evaluation, if the classesDir is from our SourceSet:
-    project.afterEvaluate {
+    project.afterEvaluate{
       if (classesDir == sourceSet.output.classesDir) {
         dependsOn(sourceSet.output);
       }
