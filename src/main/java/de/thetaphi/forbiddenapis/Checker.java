@@ -627,12 +627,9 @@ public final class Checker implements RelatedClassLookup, Constants {
       }
     }
     
-    // Cleanup cache to get statistics right:
-    classpathClassCache.keySet().removeAll(classesToCheck.keySet());
-    
     final String message = String.format(Locale.ENGLISH, 
-        "Scanned %d (and %d related) class file(s) for forbidden API invocations (in %.2fs), %d error(s).",
-        classesToCheck.size(), classesToCheck.isEmpty() ? 0 : classpathClassCache.size(), (System.currentTimeMillis() - start) / 1000.0, errors);
+        "Scanned %d class file(s) for forbidden API invocations (in %.2fs), %d error(s).",
+        classesToCheck.size(), (System.currentTimeMillis() - start) / 1000.0, errors);
     if (options.contains(Option.FAIL_ON_VIOLATION) && errors > 0) {
       logger.error(message);
       throw new ForbiddenApiException("Check for forbidden API calls failed, see log.");
