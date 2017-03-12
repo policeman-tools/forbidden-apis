@@ -39,7 +39,7 @@
     <dependency org="org.slf4j" name="slf4j-api" rev="1.7.5" conf="build"/>
     <!-- Gradle also needs Groovy, but we need it as build tool, too: -->
     <dependency org="org.codehaus.groovy" name="groovy-all" rev="2.4.9" conf="build,buildtools"/>
-    <!-- ASM 5.0.4 minimal: -->
+    <!-- ASM minimal required: -->
     <dependency org="org.ow2.asm" name="asm" rev="&asm.version;" conf="build,bundle,buildtools"/>
     <dependency org="org.ow2.asm" name="asm-commons" rev="&asm.version;" conf="build,bundle,buildtools"/>
     <!--
