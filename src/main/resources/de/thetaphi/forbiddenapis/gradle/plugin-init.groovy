@@ -16,6 +16,7 @@
 
 /** Initializes the plugin and binds it to project lifecycle. */
 
+import java.lang.reflect.Modifier;
 import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.api.plugins.PluginInstantiationException;
 
@@ -37,14 +38,18 @@ extension.with {
   signaturesFiles = project.files();
   disableClassloadingCache |= isGradleDaemon;
 }
+def extensionFields = CheckForbiddenApisExtension.class.declaredFields.findAll { f -> 
+  int mods = f.modifiers;
+  return Modifier.isPublic(mods) && !f.synthetic && !Modifier.isStatic(mods)
+}
 
 // Define our tasks (one for each SourceSet):
 def forbiddenTasks = project.sourceSets.collect { sourceSet ->
   project.tasks.create(sourceSet.getTaskName(FORBIDDEN_APIS_TASK_NAME, null), CheckForbiddenApis.class) {
     description = "Runs forbidden-apis checks on '${sourceSet.name}' classes.";
     conventionMapping.with {
-      CheckForbiddenApisExtension.PROPS.each { key ->
-        map(key, { extension[key] });
+      extensionFields.each { f ->
+        map(f.name, { extension[f.name] });
       }
       classesDir = { sourceSet.output.classesDir }
       classpath = { sourceSet.compileClasspath }

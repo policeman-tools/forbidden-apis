@@ -18,10 +18,9 @@ package de.thetaphi.forbiddenapis.gradle;
 
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Set;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.gradle.api.file.FileCollection;
 
@@ -32,21 +31,6 @@ import org.gradle.api.file.FileCollection;
  * @since 2.0
  */
 public class CheckForbiddenApisExtension {
-  
-  /** Fields used for the convention mapping, keep up-to-date with class members! */
-  static final List<String> PROPS = Arrays.asList(
-    "signaturesFiles",
-    "signaturesURLs",
-    "signatures",
-    "bundledSignatures",
-    "suppressAnnotations",
-    "internalRuntimeForbidden",
-    "failOnUnsupportedJava",
-    "failOnMissingClasses",
-    "failOnUnresolvableSignatures",
-    "ignoreFailures",
-    "disableClassloadingCache"
-  );
   
   public FileCollection signaturesFiles; // initialized by plugin-init.groovy
   public Set<URL> signaturesURLs = new LinkedHashSet<URL>();
