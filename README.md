@@ -3,7 +3,7 @@
 Allows to parse Java byte code to find invocations of method/class/field
 signatures and fail build (Apache Ant, Apache Maven, or Gradle).
 
-[![Maven Central](https://img.shields.io/maven-central/v/de.thetaphi/forbiddenapis.svg)](http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22de.thetaphi%22%20AND%20a%3A%22forbiddenapis%22)
+[![Maven Central](https://img.shields.io/maven-central/v/de.thetaphi/forbiddenapis.svg)](https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22de.thetaphi%22%20AND%20a%3A%22forbiddenapis%22)
 [![Build Status](https://jenkins.thetaphi.de/job/Forbidden-APIs/badge/icon)](https://jenkins.thetaphi.de/job/Forbidden-APIs/)
 
 ## Documentation ##
