@@ -126,13 +126,16 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
 
   /** @see #getClassesDirs */
   public void setClassesDirs(FileCollection classesDirs) {
+    if (classesDirs == null) throw new NullPointerException("classesDirs");
     this.classesDirs = classesDirs;
   }
 
   /**
    * Directory with the class files to check.
-   * Defaults to current sourseSet's output directory.
-   * @deprecated use {@link #getClassesDirs()} instead
+   * Defaults to current sourseSet's output directory (Gradle 2/3 only).
+   * @deprecated use {@link #getClassesDirs()} instead. If there are more than one
+   *  {@code classesDir} set by {@link #setClassesDirs(FileCollection)}, this getter may
+   *  throw an exception!
    */
   @Deprecated
   public File getClassesDir() {
@@ -140,12 +143,15 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
     return (col == null) ? null : col.getSingleFile();
   }
 
-  /** Sets the directory where to look for classes. Overwrites any value set by {@link #setClassesDirs()}!
-   * @deprecated use {@link #setClassesDirs()} instead
+  /** Sets the directory where to look for classes. Overwrites any value set by {@link #setClassesDirs(FileCollection)}!
+   * @deprecated use {@link #setClassesDirs(FileCollection)} instead.
    * @see #getClassesDir
    */
   @Deprecated
   public void setClassesDir(File classesDir) {
+    if (classesDir == null) throw new NullPointerException("classesDir");
+    getLogger().warn("The 'classesDir' property on the '{}' task is deprecated. Use 'classesDirs' of type FileCollection instead!",
+        getName());
     setClassesDirs(getProject().files(classesDir));
   }
 
@@ -170,6 +176,7 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
 
   /** @see #getClasspath */
   public void setClasspath(FileCollection classpath) {
+    if (classpath == null) throw new NullPointerException("classpath");
     this.classpath = classpath;
   }
 
