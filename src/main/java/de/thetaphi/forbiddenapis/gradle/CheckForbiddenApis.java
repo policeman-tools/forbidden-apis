@@ -27,6 +27,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.EnumSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -43,7 +44,7 @@ import org.gradle.api.specs.Spec;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
-import org.gradle.api.tasks.OutputDirectory;
+import org.gradle.api.tasks.OutputDirectories;
 import org.gradle.api.tasks.ParallelizableTask;
 import org.gradle.api.tasks.SkipWhenEmpty;
 import org.gradle.api.tasks.TaskAction;
@@ -109,23 +110,49 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
   
   private final CheckForbiddenApisExtension data = new CheckForbiddenApisExtension();
   private final PatternSet patternSet = new PatternSet().include("**/*.class");
-  private File classesDir;
+  private FileCollection classesDirs;
   private FileCollection classpath;
   private String targetCompatibility;
   
   /**
-   * Directory with the class files to check.
-   * Defaults to current sourseSet's output directory.
+   * Directories with the class files to check.
+   * Defaults to current sourseSet's output directory (Gradle 2/3) or output directories (Gradle 4.0+).
    */
-  @OutputDirectory
-  // no @InputDirectory, we use separate getter for a list of all input files
-  public File getClassesDir() {
-    return classesDir;
+  @OutputDirectories
+  // no @InputDirectories, we use separate getter for a list of all input files
+  public FileCollection getClassesDirs() {
+    return classesDirs;
   }
 
-  /** @see #getClassesDir */
+  /** @see #getClassesDirs */
+  public void setClassesDirs(FileCollection classesDirs) {
+    if (classesDirs == null) throw new NullPointerException("classesDirs");
+    this.classesDirs = classesDirs;
+  }
+
+  /**
+   * Directory with the class files to check.
+   * Defaults to current sourseSet's output directory (Gradle 2/3 only).
+   * @deprecated use {@link #getClassesDirs()} instead. If there are more than one
+   *  {@code classesDir} set by {@link #setClassesDirs(FileCollection)}, this getter may
+   *  throw an exception!
+   */
+  @Deprecated
+  public File getClassesDir() {
+    final FileCollection col = getClassesDirs();
+    return (col == null) ? null : col.getSingleFile();
+  }
+
+  /** Sets the directory where to look for classes. Overwrites any value set by {@link #setClassesDirs(FileCollection)}!
+   * @deprecated use {@link #setClassesDirs(FileCollection)} instead.
+   * @see #getClassesDir
+   */
+  @Deprecated
   public void setClassesDir(File classesDir) {
-    this.classesDir = classesDir;
+    if (classesDir == null) throw new NullPointerException("classesDir");
+    getLogger().warn("The 'classesDir' property on the '{}' task is deprecated. Use 'classesDirs' of type FileCollection instead!",
+        getName());
+    setClassesDirs(getProject().files(classesDir));
   }
 
   /** Returns the pattern set to match against class files in {@link #getClassesDir()}. */
@@ -149,6 +176,7 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
 
   /** @see #getClasspath */
   public void setClasspath(FileCollection classpath) {
+    if (classpath == null) throw new NullPointerException("classpath");
     this.classpath = classpath;
   }
 
@@ -453,16 +481,16 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
   @InputFiles
   @SkipWhenEmpty
   public FileTree getClassFiles() {
-    return getProject().files(getClassesDir()).getAsFileTree().matching(getPatternSet());
+    return getClassesDirs().getAsFileTree().matching(getPatternSet());
   }
 
   /** Executes the forbidden apis task. */
   @TaskAction
   public void checkForbidden() throws ForbiddenApiException {
-    final File classesDir = getClassesDir();
+    final FileCollection classesDirs = getClassesDirs();
     final FileCollection classpath = getClasspath();
-    if (classesDir == null || classpath == null) {
-      throw new InvalidUserDataException("Missing 'classesDir' or 'classpath' property.");
+    if (classesDirs == null || classpath == null) {
+      throw new InvalidUserDataException("Missing 'classesDirs' or 'classpath' property.");
     }
     
     final Logger log = new Logger() {
@@ -482,14 +510,15 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
       }
     };
     
-    final Set<File> cpElements = classpath.getFiles();
-    final URL[] urls = new URL[cpElements.size() + 1];
+    final Set<File> cpElements = new LinkedHashSet<File>();
+    cpElements.addAll(classpath.getFiles());
+    cpElements.addAll(classesDirs.getFiles());
+    final URL[] urls = new URL[cpElements.size()];
     try {
       int i = 0;
       for (final File cpElement : cpElements) {
         urls[i++] = cpElement.toURI().toURL();
       }
-      urls[i++] = classesDir.toURI().toURL();
       assert i == urls.length;
     } catch (MalformedURLException mfue) {
       throw new InvalidUserDataException("Failed to build classpath URLs.", mfue);

@@ -37,12 +37,13 @@ forbiddenApis {
 }
 
 forbiddenApisMain {
-  classesDir = new File(forbiddenRootDir, 'build/main')
+  classesDirs = files(new File(forbiddenRootDir, 'build/main'))
   classpath = files(forbiddenClasspath.tokenize(File.pathSeparator))
   bundledSignatures += 'jdk-system-out'
 }
 
 forbiddenApisTest {
+  // use classesDir here to check backwards compatibility!:
   classesDir = new File(forbiddenRootDir, 'build/test')
   classpath = files(forbiddenTestClasspath.tokenize(File.pathSeparator))
 }
