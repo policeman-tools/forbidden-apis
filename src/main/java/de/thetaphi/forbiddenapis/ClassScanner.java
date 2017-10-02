@@ -73,7 +73,7 @@ final class ClassScanner extends ClassVisitor implements Constants {
       final Map<String,String> forbiddenMethods, final Map<String,String> forbiddenFields,
       final Pattern suppressAnnotations,
       final boolean forbidNonPortableRuntime) {
-    super(Opcodes.ASM5);
+    super(Opcodes.ASM6);
     this.lookup = lookup;
     this.forbiddenClasses = forbiddenClasses;
     this.forbiddenClassPatterns = forbiddenClassPatterns;
@@ -268,7 +268,7 @@ final class ClassScanner extends ClassVisitor implements Constants {
     if (classSuppressed) {
       return null;
     }
-    return new FieldVisitor(Opcodes.ASM5) {
+    return new FieldVisitor(Opcodes.ASM6) {
       final boolean isDeprecated = (access & Opcodes.ACC_DEPRECATED) != 0;
       {
         // only check signature, if field is not synthetic
@@ -313,7 +313,7 @@ final class ClassScanner extends ClassVisitor implements Constants {
     if (classSuppressed) {
       return null;
     }
-    return new MethodVisitor(Opcodes.ASM5) {
+    return new MethodVisitor(Opcodes.ASM6) {
       private final Method myself = new Method(name, desc);
       private final boolean isDeprecated = (access & Opcodes.ACC_DEPRECATED) != 0;
       private int lineNo = -1;

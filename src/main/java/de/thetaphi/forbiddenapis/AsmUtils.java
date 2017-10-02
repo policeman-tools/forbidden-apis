@@ -156,6 +156,7 @@ public final class AsmUtils {
     }
   }
   
+  @SuppressWarnings("unused")
   private static void patchClassMajorVersion(byte[] header, int versionFrom, int versionTo) {
     final ByteBuffer buf = ByteBuffer.wrap(header).order(ByteOrder.BIG_ENDIAN);
     if (buf.getShort(6) == versionFrom) {
@@ -163,8 +164,9 @@ public final class AsmUtils {
     }
   }
   
-  /** Utility method to load class files of Java 9 by patching them, so ASM can read them. */
+  /** Utility method to load class files of later Java versions by patching them, so ASM can read them. Does nothing at the moment. */
   public static ClassReader readAndPatchClass(InputStream in) throws IOException {
+    /*
     final byte[] b = new byte[8];
     final PushbackInputStream pbin = new PushbackInputStream(in, b.length);
     for (int upto = 0; upto < b.length;) {
@@ -173,9 +175,11 @@ public final class AsmUtils {
         throw new EOFException("Not enough bytes available to read header of class file.");
       upto += read;
     }
-    patchClassMajorVersion(b, Opcodes.V1_8 + 1, Opcodes.V1_8);
+    patchClassMajorVersion(b, Opcodes.V9 + 1, Opcodes.V9);
     pbin.unread(b);
     return new ClassReader(pbin);
+    */
+    return new ClassReader(in);
   }
 
 }

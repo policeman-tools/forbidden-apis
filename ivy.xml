@@ -17,15 +17,17 @@
 <!DOCTYPE ivy-module [
   <!ENTITY maven.version "2.0">
   <!ENTITY gradle.version "2.3">
-  <!ENTITY asm.version "5.2">
+  <!ENTITY asm.version "6.0">
+  <!ENTITY jarjar.asm.version "5.2">
 ]>
 <ivy-module version="2.0">
   <info organisation="de.thetaphi" module="forbiddenapis"/>
-  <configurations defaultconfmapping="build-&gt;*;bundle-&gt;*;test-&gt;*;buildtools-&gt;*">
+  <configurations defaultconfmapping="build-&gt;*;bundle-&gt;*;test-&gt;*;buildtools-&gt;*;jarjar-&gt;*">
      <conf name="build" transitive="false" visibility="private" />
      <conf name="bundle" transitive="false" visibility="private" />
      <conf name="test" transitive="false" visibility="private" />
      <conf name="buildtools" transitive="false" visibility="private" />
+     <conf name="jarjar" transitive="false" visibility="private" />
   </configurations>
   <dependencies>
     <!-- we compile against the minimum ANT / Maven / Gradle versions: -->
@@ -39,7 +41,7 @@
     <dependency org="org.slf4j" name="slf4j-api" rev="1.7.5" conf="build"/>
     <!-- Gradle also needs Groovy, but we need it as build tool, too: -->
     <dependency org="org.codehaus.groovy" name="groovy-all" rev="2.4.12" conf="build,buildtools"/>
-    <!-- ASM minimal required: -->
+    <!-- ASM minimal (latest version) required: -->
     <dependency org="org.ow2.asm" name="asm" rev="&asm.version;" conf="build,bundle,buildtools"/>
     <dependency org="org.ow2.asm" name="asm-commons" rev="&asm.version;" conf="build,bundle,buildtools"/>
     <!--
@@ -49,13 +51,18 @@
     -->
     <dependency org="org.codehaus.plexus" name="plexus-utils" rev="1.1" conf="build,bundle"/>
     <dependency org="commons-cli" name="commons-cli" rev="1.3.1" conf="build,bundle"/>
-    <dependency org="org.sonatype.plugins" name="jarjar-maven-plugin" rev="1.9" conf="buildtools"/>
-    <dependency org="org.apache.maven" name="maven-ant-tasks" rev="2.1.3" conf="buildtools"/>
-    <dependency org="org.apache.rat" name="apache-rat" rev="0.11" conf="buildtools"/>
     <dependency org="org.apache.ant" name="ant-antunit" rev="1.3" conf="test"/>
     <dependency org="ant-contrib" name="ant-contrib" rev="1.0b3" conf="test"/>
     <dependency org="junit" name="junit" rev="4.12" conf="test"/>
     <dependency org="org.hamcrest" name="hamcrest-core" rev="1.3" conf="test"/>
+    <!-- deps only needed for build tools and tasks: -->
+    <dependency org="org.apache.maven" name="maven-ant-tasks" rev="2.1.3" conf="buildtools"/>
+    <dependency org="org.apache.rat" name="apache-rat" rev="0.11" conf="buildtools"/>
+    <!-- JarJar needs older ASM version until it gets updated - add separate config: -->
+    <dependency org="org.ow2.asm" name="asm" rev="&jarjar.asm.version;" conf="jarjar"/>
+    <dependency org="org.ow2.asm" name="asm-commons" rev="&jarjar.asm.version;" conf="jarjar"/>
+    <dependency org="org.sonatype.plugins" name="jarjar-maven-plugin" rev="1.9" conf="jarjar"/>
+    <!-- exclude sources and javadocs in Maven/Ivy downloads: -->
     <exclude org="*" ext="*" matcher="regexp" type="source|javadoc"/> 
   </dependencies>
 </ivy-module>

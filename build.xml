@@ -177,6 +177,7 @@
     <ivy:cachepath pathid="path.main-build" conf="build" log="${ivy.logging}"/>
     <ivy:cachepath pathid="path.main-bundle" conf="bundle" log="${ivy.logging}"/>
     <ivy:cachepath pathid="path.test" conf="test" log="${ivy.logging}"/>
+    <ivy:cachepath pathid="path.jarjar" conf="jarjar" log="${ivy.logging}"/>
     <path id="path.main-run">
       <path refid="path.main-bundle"/>
       <pathelement path="build/main"/>
@@ -205,7 +206,7 @@
 
   <target name="-install-tasks" depends="-init" unless="installed.tasks">
     <ivy:cachepath pathid="path.tasks" conf="buildtools" log="${ivy.logging}"/>
-    <taskdef name="jarjar" classname="com.tonicsystems.jarjar.JarJarTask" classpathref="path.tasks"/>
+    <taskdef name="jarjar" classname="com.tonicsystems.jarjar.JarJarTask" classpathref="path.jarjar"/>
     <taskdef uri="antlib:org.apache.maven.artifact.ant" classpathref="path.tasks"/>
     <taskdef name="groovy" classname="org.codehaus.groovy.ant.Groovy" classpathref="path.tasks"/>
     <typedef uri="antlib:org.apache.rat.anttasks" classpathref="path.tasks"/>
@@ -366,6 +367,9 @@
       <zipfileset dir="build/main"/>
       <restrict>
         <name name="**/*.class" handledirsep="true"/>
+        <not>
+          <name name="module-info.class" handledirsep="true"/>
+        </not>
         <archives>
           <zips><fileset refid="fileset.bundle"/></zips>
         </archives>
@@ -620,7 +624,7 @@
     <groovy classpathref="path.tools-run" src="${groovy-tools.dir}/generate-deprecated.groovy"/>
   </target>
 
-  <target name="generate-internal" depends="compile-tools" description="Generates deprecated API signature lists for current JDK">
+  <target name="generate-internal" depends="compile-tools" description="Generates internal API signature lists for current JDK">
     <mkdir dir="${signatures.dir}"/>
     <property name="internal.output.file" location="${signatures.dir}/jdk-internal-${build.java.runtime}.txt"/>
     <java classpathref="path.tools-run" classname="de.thetaphi.forbiddenapis.InternalApiGen" fork="false">
