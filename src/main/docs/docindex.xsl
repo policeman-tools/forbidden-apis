@@ -65,6 +65,11 @@
           <xsl:text>&#10;</xsl:text>
           <xsl:value-of select="$clihelp"/>
         </pre>
+        <h2>Additional documentation</h2>
+        <ul>
+          <li><a href="bundled-signatures.html">Bundled Signatures</a></li>
+          <li><a href="signatures-syntax.html">Syntax of Custom Signatures Files</a></li>
+        </ul>
       </body>
     </html>
   </xsl:template>

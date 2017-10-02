@@ -321,7 +321,7 @@
     </loadresource>
   </target>
   
-  <target name="documentation" depends="maven-descriptor,-get-cli-help">
+  <target name="documentation" depends="maven-descriptor,-get-cli-help" description="Builds documentation and creates ZIP">
     <mkdir dir="${documentation-dir}"/>
     <copy todir="${documentation-dir}">
       <fileset dir="src/main/docs" excludes="*.xsl" />

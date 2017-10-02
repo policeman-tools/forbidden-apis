@@ -1,0 +1,64 @@
+<html>
+<!--
+ * (C) Copyright Uwe Schindler (Generics Policeman) and others.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+-->
+<head>
+<META http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Syntax of Custom Signatures Files</title>
+</head>
+<body>
+<h1>Syntax of Custom Signatures Files</h1>
+
+<p><b>Forbidden API Checker</b> allows to define custom signatures files. Depending on
+the type of task (Ant, Maven, or Gradle), you can add them via references to
+local files from your project directory. Maven also supports to refer to them using
+Maven coordinates.</p>
+
+<p>The syntax of those files is: Each line that is not empty, does not start with a
+<code>#</code> or <code>@</code> symbol is treated as a signature. The following types
+of signatures are supported:</p>
+
+<ul>
+  <li><em>Class reference:</em> A binary/fully-qualified class name (including package). You may
+  use the output of <a href="https://docs.oracle.com/javase/6/docs/api/java/lang/Class.html#getName()">
+  Class.getName()</a>. Be sure to use correct name for inner
+  classes! Example: <code>java.lang.String</code></li>
+  <li><em>A package/class glob pattern:</em> To forbid all classes from a package, you may use
+  glob patterns, like <code>sun.misc.**</code> (&quot;<code>**</code>&quot; matches against package
+  boundaries).</li>
+  <li><em>A field of a class:</em> <code>package.Class#fieldName</code></li>
+  <li><em>A method signature:</em> It consists of a binary class name, followed by <code>#</code>
+  and a method name including method parameters: <code>java.lang.String#concat(java.lang.String)</code>
+  &ndash; All method parameters need to use fully qualified class names!</li>
+</ul>
+
+<p>The error message displayed when the signature matches can be given at the end of each
+signature line using &quot;<code>@</code>&quot; as separator:</p>
+
+<pre>
+  java.lang.String @ You are crazy that you disallow strings
+</pre>
+
+<p>To not repeat the same message after each signature, you can prepend signatures
+with a default message. Use a line starting with &quot;<code>@defaultMessage</code>&quot;.
+
+<pre>
+  @defaultMessage You are crazy that you disallow substrings
+  java.lang.String#substring(int)
+  java.lang.String#substring(int,int)
+</pre>
+
+</body>
+</html>
