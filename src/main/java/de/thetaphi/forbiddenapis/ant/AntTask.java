@@ -168,7 +168,7 @@ public class AntTask extends Task implements Constants {
           }
         }
       } catch (IOException ioe) {
-        throw new BuildException("IO problem while reading files with API signatures.", ioe);
+        throw new BuildException("IO problem while reading files with API signatures: " + ioe.getMessage(), ioe);
       } catch (ParseException pe) {
         throw new BuildException("Parsing signatures failed: " + pe.getMessage(), pe);
       }
@@ -201,7 +201,7 @@ public class AntTask extends Task implements Constants {
           }
         }
       } catch (IOException ioe) {
-        throw new BuildException("Failed to load one of the given class files.", ioe);
+        throw new BuildException("Failed to load one of the given class files: " + ioe.getMessage(), ioe);
       }
 
       try {
