@@ -131,8 +131,7 @@ public final class Checker implements RelatedClassLookup, Constants {
     
     boolean isSupportedJDK = false;
     
-    // Try to figure out entry points to Java 9 module system (Jigsaw)
-    // Please note: This code is not guaranteed to work with final Java 9 version. This is just for testing!
+    // Try to figure out entry points to Java 9+ module system (Jigsaw)
     java.lang.reflect.Method method_Class_getModule, method_Module_getName;
     try {
       method_Class_getModule = Class.class.getMethod("getModule");
@@ -152,7 +151,7 @@ public final class Checker implements RelatedClassLookup, Constants {
       try {
         final URL objectClassURL = loader.getResource(AsmUtils.getClassResourceName(Object.class.getName()));
         if (objectClassURL != null && "jrt".equalsIgnoreCase(objectClassURL.getProtocol())) {
-          // this is Java 9 allowing direct access to .class file resources - we do not need to deal with modules!
+          // this is Java 9+ allowing direct access to .class file resources - we do not need to deal with modules!
           isSupportedJDK = true;
         } else {
           String javaHome = System.getProperty("java.home");
@@ -219,14 +218,10 @@ public final class Checker implements RelatedClassLookup, Constants {
     this.isSupportedJDK = isSupportedJDK;
   }
   
-  /** Loads the class from Java9's module system and uses reflection to get methods and fields.
-   * <p>
-   * This code is not guaranteed to work with final Java 9 version.
-   * This is just for testing!
-   **/
+  /** Loads the class from Java9's module system and uses reflection to get methods and fields. */
   private ClassSignature loadClassFromJigsaw(String classname) throws IOException {
     if (method_Class_getModule == null || method_Module_getName == null) {
-      return null; // not Java 9 JIGSAW
+      return null; // not Jigsaw Module System
     }
     
     final Class<?> clazz;
@@ -265,8 +260,6 @@ public final class Checker implements RelatedClassLookup, Constants {
       return isRuntimePath(jarUrl);
     } else if ("jrt".equalsIgnoreCase(url.getProtocol())) {
       // all 'jrt:' URLs refer to a module in the Java 9+ runtime (see http://openjdk.java.net/jeps/220)
-      // This may still be different with module system. We support both variants for now.
-      // Please note: This code is not guaranteed to work with final Java 9 version. This is just for testing!
       return AsmUtils.isRuntimeModule(AsmUtils.getModuleName(url));
     }
     return false;
