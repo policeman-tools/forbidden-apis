@@ -108,4 +108,19 @@ public final class CheckerSetupTest {
     }
   }
   
+  @Test
+  public void testJava9ModuleSystemFallback() {
+    final Class<?> moduleClass;
+    try {
+      moduleClass = Class.forName("java.lang.Module");
+    } catch (ClassNotFoundException cfe) {
+      assumeNoException("This test only works with Java 9+", cfe);
+      return;
+    }
+    assertNotNull(checker.method_Class_getModule);
+    assertSame(moduleClass, checker.method_Class_getModule.getReturnType());
+    assertNotNull(checker.method_Module_getName);
+    assertSame(moduleClass, checker.method_Module_getName.getDeclaringClass());
+  }
+
 }
