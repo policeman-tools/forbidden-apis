@@ -27,7 +27,7 @@ public interface Constants {
 
   final String BS_JDK_NONPORTABLE = "jdk-non-portable";
   
-  final Pattern JDK_SIG_PATTERN = Pattern.compile("(jdk\\-.*?\\-)(\\d)(\\.\\d)?(\\.\\d)*");
+  final Pattern JDK_SIG_PATTERN = Pattern.compile("(jdk\\-.*?\\-)(\\d+)(\\.\\d+)?(\\.\\d+)*");
   
   final String DEPRECATED_WARN_INTERNALRUNTIME = String.format(Locale.ENGLISH,
       "The setting 'internalRuntimeForbidden' was deprecated and will be removed in next version. For backwards compatibility task/mojo is using '%s' bundled signatures instead.", BS_JDK_NONPORTABLE);

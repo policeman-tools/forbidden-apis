@@ -435,13 +435,21 @@ public final class Checker implements RelatedClassLookup, Constants {
     final Matcher m = JDK_SIG_PATTERN.matcher(name);
     if (m.matches()) {
       if (m.group(4) == null) {
-        // rewrite version number if it does not start with "1"
-        if ("1".equals(m.group(2)) && m.group(3) != null) {
-          return name;
-        } else {
-          if (".0".equals(m.group(3)) || m.group(3) == null) {
-            return m.group(1) + "1." + m.group(2);
+        final String prefix = m.group(1);
+        final int major = Integer.parseInt(m.group(2));
+        final int minor = m.group(3) != null ? Integer.parseInt(m.group(3).substring(1)) : 0;
+        if (major == 1 && minor >= 1 && minor < 9) {
+          // Java 1.1 till 1.8 (aka 8):
+          return prefix + "1." + minor;
+        } else if (major > 1 && major < 9) {
+          // fix pre-Java9 major version to use "1.x" syntax:
+          if (minor == 0) {
+            return prefix + "1." + major;
           }
+        } else if (major >= 9 && minor > 0) {
+          return prefix + major + "." + minor;
+        } else  if (major >= 9 && minor == 0) {
+          return prefix + major;
         }
       }
       throw new ParseException("Invalid bundled signature reference (JDK version is invalid): " + name);
@@ -462,7 +470,7 @@ public final class Checker implements RelatedClassLookup, Constants {
     // use Checker.class hardcoded (not getClass) so we have a fixed package name:
     InputStream in = Checker.class.getResourceAsStream("signatures/" + name + ".txt");
     // automatically expand the compiler version in here (for jdk-* signatures without version):
-    if (in == null && jdkTargetVersion != null && name.startsWith("jdk-") && !name.matches(".*?\\-\\d\\.\\d")) {
+    if (in == null && jdkTargetVersion != null && name.startsWith("jdk-") && !name.matches(".*?\\-\\d+(\\.\\d+)*")) {
       name = name + "-" + jdkTargetVersion;
       name = fixTargetVersion(name);
       in = Checker.class.getResourceAsStream("signatures/" + name + ".txt");

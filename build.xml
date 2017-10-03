@@ -50,17 +50,14 @@
     We want to detect here only a limited set of versions and placed in normalized form in ${build.java.runtime},
     every other version is normalized to "unknown":
     - To define a target to be only run on a specific version, add <equals/> condition to one of the supplied versions.
-    - To explicitely exclude specific versions (and unknown ones), add a condition to disallow "unknown" and some versions like "1.9"!
+    - To explicitely exclude specific versions (and unknown ones), add a condition to disallow "unknown" and some versions like "9"!
    -->
-  <condition property="build.java.runtime" value="1.9">
-    <equals arg1="${-cleaned.specification.version}" arg2="9"/>
-  </condition>
   <condition property="build.java.runtime" value="${-cleaned.specification.version}" else="unknown">
     <or>
       <equals arg1="${-cleaned.specification.version}" arg2="1.6"/>
       <equals arg1="${-cleaned.specification.version}" arg2="1.7"/>
       <equals arg1="${-cleaned.specification.version}" arg2="1.8"/>
-      <equals arg1="${-cleaned.specification.version}" arg2="1.9"/>
+      <equals arg1="${-cleaned.specification.version}" arg2="9"/>
     </or>
   </condition>
   
@@ -135,7 +132,7 @@
       <equals arg1="${build.java.runtime}" arg2="1.6"/>
       <equals arg1="${build.java.runtime}" arg2="1.7"/>
       <equals arg1="${build.java.runtime}" arg2="1.8"/>
-      <equals arg1="${build.java.runtime}" arg2="1.9"/>
+      <equals arg1="${build.java.runtime}" arg2="9"/>
     </or>
   </condition>
 

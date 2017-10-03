@@ -29,9 +29,18 @@ public final class CheckerStaticTest {
     assertEquals("jdk-dummy-1.7", Checker.fixTargetVersion("jdk-dummy-7"));
     assertEquals("jdk-dummy-1.7", Checker.fixTargetVersion("jdk-dummy-7.0"));
     
-    assertEquals("jdk-dummy-1.1", Checker.fixTargetVersion("jdk-dummy-1"));
     assertEquals("jdk-dummy-1.1", Checker.fixTargetVersion("jdk-dummy-1.1"));
     
+    assertEquals("jdk-dummy-9", Checker.fixTargetVersion("jdk-dummy-9"));
+    assertEquals("jdk-dummy-9", Checker.fixTargetVersion("jdk-dummy-9.0"));
+    
+    assertEquals("jdk-dummy-18", Checker.fixTargetVersion("jdk-dummy-18"));
+    assertEquals("jdk-dummy-18.3", Checker.fixTargetVersion("jdk-dummy-18.3"));
+    assertEquals("jdk-dummy-18.3", Checker.fixTargetVersion("jdk-dummy-18.03"));
+    
+    assertFails("jdk-dummy-0");
+    assertFails("jdk-dummy-1");
+
     assertFails("jdk-dummy-1.7.1");
     assertFails("jdk-dummy-1.7.1.1");
     assertFails("jdk-dummy-1.7.0.1");
@@ -39,6 +48,10 @@ public final class CheckerStaticTest {
     assertFails("jdk-dummy-7.1");
     assertFails("jdk-dummy-7.1.1");
     assertFails("jdk-dummy-7.0.1");
+    
+    assertFails("jdk-dummy-1.9");
+    assertFails("jdk-dummy-9.0.1");
+    assertFails("jdk-dummy-9.0.0.1");
   }
   
   private void assertFails(String name) {
