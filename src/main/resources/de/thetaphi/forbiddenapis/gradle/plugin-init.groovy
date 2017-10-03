@@ -45,20 +45,21 @@ def extensionProps = CheckForbiddenApisExtension.class.declaredFields.findAll{ f
 
 // Define our tasks (one for each SourceSet):
 def forbiddenTasks = project.sourceSets.collect{ sourceSet ->
-  def getClassesDirs = { sourceSet.output.hasProperty('classesDirs') ? sourceSet.output.classesDirs : project.files(sourceSet.output.classesDir) }
+  def getSourceSetClassesDirs = { sourceSet.output.hasProperty('classesDirs') ? sourceSet.output.classesDirs : project.files(sourceSet.output.classesDir) }
   project.tasks.create(sourceSet.getTaskName(FORBIDDEN_APIS_TASK_NAME, null), CheckForbiddenApis.class) {
     description = "Runs forbidden-apis checks on '${sourceSet.name}' classes.";
     conventionMapping.with{
       extensionProps.each{ key ->
         map(key, { extension[key] });
       }
-      classesDirs = { getClassesDirs() }
+      classesDirs = { getSourceSetClassesDirs() }
       classpath = { sourceSet.compileClasspath }
       targetCompatibility = { project.targetCompatibility?.toString() }
     }
     // add dependency to compile task after evaluation, if the classesDirs collection has overlaps with our SourceSet:
-    project.afterEvaluate{ 
-      if (!classesDirs.minus(getClassesDirs()).isEmpty()) {
+    project.afterEvaluate{
+      def sourceSetDirs = getSourceSetClassesDirs().files;
+      if (classesDirs.any{ sourceSetDirs.contains(it) }) {
         dependsOn(sourceSet.output);
       }
     }
