@@ -79,6 +79,13 @@
     </and>
   </condition>
 
+  <condition property="javadoc.doclint.args" value="" else="-Xdoclint:none">
+    <or>
+      <equals arg1="${build.java.runtime}" arg2="1.6"/>
+      <equals arg1="${build.java.runtime}" arg2="1.7"/>
+    </or>
+  </condition>
+  
   <property file="${user.home}/build.properties" />
   <property file="build.properties" />
 
@@ -330,6 +337,7 @@
     <javadoc destdir="${documentation-dir}/tmp" locale="en_US" encoding="UTF-8" access="public" classpathref="path.all" group="false" nodeprecatedlist="true"
       use="false" notree="true" noindex="true" nohelp="true" nonavbar="true" charset="UTF-8" docencoding="UTF-8" source="${jdk.version}">
       <fileset dir="src/main/java" includes="de/thetaphi/forbiddenapis/gradle/CheckForbiddenApis*.java"/>
+      <arg line="${javadoc.doclint.args}"/>
     </javadoc>
     <copy todir="${documentation-dir}">
       <fileset dir="${documentation-dir}/tmp/de/thetaphi/forbiddenapis/gradle" includes="CheckForbiddenApis*.html" />
