@@ -188,7 +188,7 @@ public class AntTask extends Task implements Constants {
           if (restrictClassFilename && name != null && !name.endsWith(".class")) {
             continue;
           }
-          checker.addClassToCheck(r.getInputStream());
+          checker.addClassToCheck(r.getInputStream(), r.getName());
           foundClass = true;
         }
         if (!foundClass) {

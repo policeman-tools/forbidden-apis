@@ -267,9 +267,8 @@ public final class Checker implements RelatedClassLookup, Constants {
   
   /** Reads a class (binary name) from the given {@link ClassLoader}. If not found there, falls back to the list of classes to be checked. */
   private ClassSignature getClassFromClassLoader(final String clazz) throws ClassNotFoundException,IOException {
-    final ClassSignature c;
     if (classpathClassCache.containsKey(clazz)) {
-      c = classpathClassCache.get(clazz);
+      final ClassSignature c = classpathClassCache.get(clazz);
       if (c == null) {
         throw new ClassNotFoundException(clazz);
       }
@@ -283,21 +282,37 @@ public final class Checker implements RelatedClassLookup, Constants {
           conn.setUseCaches(false);
         }
         final InputStream in = conn.getInputStream();
+        final ClassReader cr;
         try {
-          classpathClassCache.put(clazz, c = new ClassSignature(AsmUtils.readAndPatchClass(in), isRuntimeClass, false));
+          cr = AsmUtils.readAndPatchClass(in);
+        } catch (IllegalArgumentException iae) {
+          // if class is too new for this JVM, we try to load it as Class<?> via Jigsaw
+          // (only if it's a runtime class):
+          if (isRuntimeClass) {
+            final ClassSignature c = loadClassFromJigsaw(clazz);
+            if (c != null) {
+              classpathClassCache.put(clazz, c);
+              return c;
+            }
+          }
+          // unfortunately the ASM IAE has no message, so add good info!
+          throw new IllegalArgumentException(String.format(Locale.ENGLISH,
+              "The class file format of '%s' is too recent to be parsed by ASM.", clazz));
         } finally {
           in.close();
         }
+        final ClassSignature c = new ClassSignature(cr, isRuntimeClass, false);
+        classpathClassCache.put(clazz, c);
         return c;
       } else {
-        final ClassSignature jigsawCl = loadClassFromJigsaw(clazz);
-        if (jigsawCl != null) {
-          classpathClassCache.put(clazz, c = jigsawCl);
+        final ClassSignature c = loadClassFromJigsaw(clazz);
+        if (c != null) {
+          classpathClassCache.put(clazz, c);
           return c;
         }
       }
       // try to get class from our list of classes we are checking:
-      c = classesToCheck.get(clazz);
+      final ClassSignature c = classesToCheck.get(clazz);
       if (c != null) {
         classpathClassCache.put(clazz, c);
         return c;
@@ -536,10 +551,14 @@ public final class Checker implements RelatedClassLookup, Constants {
   }
   
   /** Parses and adds a class from the given stream to the list of classes to check. Closes the stream when parsed (on Exception, too)! Does not log anything. */
-  public void addClassToCheck(final InputStream in) throws IOException {
+  public void addClassToCheck(final InputStream in, String name) throws IOException {
     final ClassReader reader;
     try {
       reader = AsmUtils.readAndPatchClass(in);
+    } catch (IllegalArgumentException iae) {
+      // unfortunately the ASM IAE has no message, so add good info!
+      throw new IllegalArgumentException(String.format(Locale.ENGLISH,
+          "The class file format of '%s' is too recent to be parsed by ASM.", name));
     } finally {
       in.close();
     }
@@ -549,7 +568,7 @@ public final class Checker implements RelatedClassLookup, Constants {
   
   /** Parses and adds a class from the given file to the list of classes to check. Does not log anything. */
   public void addClassToCheck(File f) throws IOException {
-    addClassToCheck(new FileInputStream(f));
+    addClassToCheck(new FileInputStream(f), f.toString());
   }
 
   /** Parses and adds a multiple class files. */
