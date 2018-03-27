@@ -180,8 +180,14 @@ public final class AsmUtils {
     pbin.unread(b);
     return new ClassReader(pbin);
     */
-    // use a BufferedInputStream, as ASM 6.1+ reads files byte-by-byte:
-    return new ClassReader(new BufferedInputStream(in));
+    
+    // use a BufferedInputStream, as ASM 6.1+ reads files byte-by-byte
+    // (bug https://gitlab.ow2.org/asm/asm/issues/317816), depending on
+    // stream type:
+    if (in.available() < 1024) {
+      in = new BufferedInputStream(in);
+    }
+    return new ClassReader(in);
   }
 
 }
