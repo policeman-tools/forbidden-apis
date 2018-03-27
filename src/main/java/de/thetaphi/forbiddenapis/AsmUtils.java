@@ -16,6 +16,7 @@
 
 package de.thetaphi.forbiddenapis;
 
+import java.io.BufferedInputStream;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -179,7 +180,8 @@ public final class AsmUtils {
     pbin.unread(b);
     return new ClassReader(pbin);
     */
-    return new ClassReader(in);
+    // use a BufferedInputStream, as ASM 6.1+ reads files byte-by-byte:
+    return new ClassReader(new BufferedInputStream(in));
   }
 
 }
