@@ -176,6 +176,7 @@ public final class AsmUtils {
   }
   
   /** Utility method to load class files of later Java versions by patching them, so ASM can read them. Does nothing at the moment. */
+  @SuppressForbidden
   public static ClassReader readAndPatchClass(InputStream in) throws IOException {
     final byte[] bytecode = readStream(in);
     // patchClassMajorVersion(bytecode, Opcodes.V10 + 1, Opcodes.V10);

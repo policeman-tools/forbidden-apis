@@ -488,6 +488,7 @@
         <bundled name="jdk-non-portable"/>
         <bundled name="jdk-system-out"/>
         <bundled name="jdk-reflection"/>
+        <file file="src/tools/signatures/mysignatures.txt"/>
       </signatures>
     </forbiddenapis>
   </target>
