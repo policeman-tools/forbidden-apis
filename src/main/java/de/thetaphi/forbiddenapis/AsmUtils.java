@@ -16,11 +16,9 @@
 
 package de.thetaphi.forbiddenapis;
 
-import java.io.BufferedInputStream;
-import java.io.EOFException;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.PushbackInputStream;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.ByteBuffer;
@@ -158,36 +156,30 @@ public final class AsmUtils {
   }
   
   @SuppressWarnings("unused")
-  private static void patchClassMajorVersion(byte[] header, int versionFrom, int versionTo) {
-    final ByteBuffer buf = ByteBuffer.wrap(header).order(ByteOrder.BIG_ENDIAN);
+  private static void patchClassMajorVersion(byte[] bytecode, int versionFrom, int versionTo) {
+    final ByteBuffer buf = ByteBuffer.wrap(bytecode).order(ByteOrder.BIG_ENDIAN);
     if (buf.getShort(6) == versionFrom) {
       buf.putShort(6, (short) versionTo);
     }
   }
   
+  /** This method is used to read the whole stream into byte array. This allows patching.
+   * It also works around a bug in ASM 6.1 (https://gitlab.ow2.org/asm/asm/issues/317816). */
+  private static byte[] readStream(final InputStream in) throws IOException {
+    final ByteArrayOutputStream bos = new ByteArrayOutputStream();
+    final byte[] data = new byte[4096];
+    int bytesRead;
+    while ((bytesRead = in.read(data, 0, data.length)) != -1) {
+      bos.write(data, 0, bytesRead);
+    }
+    return bos.toByteArray();
+  }
+  
   /** Utility method to load class files of later Java versions by patching them, so ASM can read them. Does nothing at the moment. */
   public static ClassReader readAndPatchClass(InputStream in) throws IOException {
-    /*
-    final byte[] b = new byte[8];
-    final PushbackInputStream pbin = new PushbackInputStream(in, b.length);
-    for (int upto = 0; upto < b.length;) {
-      final int read = pbin.read(b, upto, b.length - upto);
-      if (read == -1)
-        throw new EOFException("Not enough bytes available to read header of class file.");
-      upto += read;
-    }
-    patchClassMajorVersion(b, Opcodes.V9 + 1, Opcodes.V9);
-    pbin.unread(b);
-    return new ClassReader(pbin);
-    */
-    
-    // use a BufferedInputStream, as ASM 6.1+ reads files byte-by-byte
-    // (bug https://gitlab.ow2.org/asm/asm/issues/317816), depending on
-    // stream type:
-    if (in.available() < 1024) {
-      in = new BufferedInputStream(in);
-    }
-    return new ClassReader(in);
+    final byte[] bytecode = readStream(in);
+    // patchClassMajorVersion(bytecode, Opcodes.V10 + 1, Opcodes.V10);
+    return new ClassReader(bytecode);
   }
 
 }
