@@ -372,7 +372,7 @@ public abstract class AbstractCheckMojo extends AbstractMojo implements Constant
           if (targetVersion == null) {
             log.warn("The 'targetVersion' parameter or '${maven.compiler.target}' property is missing. " +
               "Trying to read bundled JDK signatures without compiler target. " +
-              "You have to explicitely specify the version in the resource name.");
+              "You have to explicitly specify the version in the resource name.");
           }
           for (String bs : new LinkedHashSet<String>(Arrays.asList(bundledSignatures))) {
             checker.addBundledSignatures(bs, targetVersion);

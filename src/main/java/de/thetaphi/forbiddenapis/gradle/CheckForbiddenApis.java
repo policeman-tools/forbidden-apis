@@ -563,7 +563,7 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
           if (bundledSigsJavaVersion == null) {
             log.warn("The 'targetCompatibility' project or task property is missing. " +
               "Trying to read bundled JDK signatures without compiler target. " +
-              "You have to explicitely specify the version in the resource name.");
+              "You have to explicitly specify the version in the resource name.");
           }
           for (String bs : bundledSignatures) {
             checker.addBundledSignatures(bs, bundledSigsJavaVersion);

@@ -145,7 +145,7 @@ public class AntTask extends Task implements Constants {
           if (targetVersion == null  && name.startsWith("jdk-")) {
             log.warn("The 'targetVersion' parameter is missing. " +
               "Trying to read bundled JDK signatures without compiler target. " +
-              "You have to explicitely specify the version in the resource name.");
+              "You have to explicitly specify the version in the resource name.");
           }
           checker.addBundledSignatures(name, targetVersion);
         }
