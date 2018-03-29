@@ -43,10 +43,16 @@ def extensionProps = CheckForbiddenApisExtension.class.declaredFields.findAll{ f
   return Modifier.isPublic(mods) && !f.synthetic && !Modifier.isStatic(mods)
 }*.name;
 
+// Create a convenience task for all checks (this does not conflict with extension, as it has higher priority in DSL):
+def forbiddenTask = project.tasks.create(FORBIDDEN_APIS_TASK_NAME) {
+  description = "Runs forbidden-apis checks.";
+  group = JavaBasePlugin.VERIFICATION_GROUP;
+}
+
 // Define our tasks (one for each SourceSet):
-def forbiddenTasks = project.sourceSets.collect{ sourceSet ->
+project.sourceSets.all{ sourceSet ->
   def getSourceSetClassesDirs = { sourceSet.output.hasProperty('classesDirs') ? sourceSet.output.classesDirs : project.files(sourceSet.output.classesDir) }
-  project.tasks.create(sourceSet.getTaskName(FORBIDDEN_APIS_TASK_NAME, null), CheckForbiddenApis.class) {
+  project.tasks.create(sourceSet.getTaskName(FORBIDDEN_APIS_TASK_NAME, null), CheckForbiddenApis.class) { task ->
     description = "Runs forbidden-apis checks on '${sourceSet.name}' classes.";
     conventionMapping.with{
       extensionProps.each{ key ->
@@ -60,17 +66,11 @@ def forbiddenTasks = project.sourceSets.collect{ sourceSet ->
     project.afterEvaluate{
       def sourceSetDirs = getSourceSetClassesDirs().files;
       if (classesDirs.any{ sourceSetDirs.contains(it) }) {
-        dependsOn(sourceSet.output);
+        task.dependsOn(sourceSet.output);
       }
     }
+    forbiddenTask.dependsOn(task);
   }
-}
-
-// Create a convenience task for all checks (this does not conflict with extension, as it has higher priority in DSL):
-def forbiddenTask = project.tasks.create(FORBIDDEN_APIS_TASK_NAME) {
-  description = "Runs forbidden-apis checks.";
-  group = JavaBasePlugin.VERIFICATION_GROUP;
-  dependsOn(forbiddenTasks);
 }
 
 // Add our task as dependency to chain
