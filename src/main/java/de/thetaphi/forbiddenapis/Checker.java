@@ -94,25 +94,30 @@ public final class Checker implements RelatedClassLookup, Constants {
   final Set<String> suppressAnnotations = new LinkedHashSet<String>();
     
   private static enum UnresolvableReporting {
-    FAIL() {
+    FAIL(true) {
       @Override
       public void parseFailed(Logger logger, String message, String signature) throws ParseException {
         throw new ParseException(String.format(Locale.ENGLISH, "%s while parsing signature: %s", message, signature));
       }
     },
-    WARNING() {
+    WARNING(false) {
       @Override
       public void parseFailed(Logger logger, String message, String signature) throws ParseException {
         logger.warn(String.format(Locale.ENGLISH, "%s while parsing signature: %s [signature ignored]", message, signature));
       }
     },
-    SILENT() {
+    SILENT(true) {
       @Override
       public void parseFailed(Logger logger, String message, String signature) throws ParseException {
         // keep silent
       }
     };
     
+    private UnresolvableReporting(boolean reportClassNotFound) {
+      this.reportClassNotFound = reportClassNotFound;
+    }
+    
+    public final boolean reportClassNotFound;
     public abstract void parseFailed(Logger logger, String message, String signature) throws ParseException;
   }
 
@@ -348,7 +353,7 @@ public final class Checker implements RelatedClassLookup, Constants {
   }
   
   /** Adds the method signature to the list of disallowed methods. The Signature is checked against the given ClassLoader. */
-  private void addSignature(final String line, final String defaultMessage, final UnresolvableReporting report) throws ParseException,IOException {
+  private void addSignature(final String line, final String defaultMessage, final UnresolvableReporting report, final Set<String> missingClasses) throws ParseException,IOException {
     final String clazz, field, signature;
     String message = null;
     final Method method;
@@ -359,6 +364,9 @@ public final class Checker implements RelatedClassLookup, Constants {
     } else {
       signature = line;
       message = defaultMessage;
+    }
+    if (line.isEmpty()) {
+      throw new ParseException("Empty signature");
     }
     p = signature.indexOf('#');
     if (p >= 0) {
@@ -401,7 +409,11 @@ public final class Checker implements RelatedClassLookup, Constants {
       try {
         c = getClassFromClassLoader(clazz);
       } catch (ClassNotFoundException cnfe) {
-        report.parseFailed(logger, String.format(Locale.ENGLISH, "Class '%s' not found on classpath", cnfe.getMessage()), signature);
+        if (report.reportClassNotFound) {
+          report.parseFailed(logger, String.format(Locale.ENGLISH, "Class '%s' not found on classpath", cnfe.getMessage()), signature);
+        } else {
+          missingClasses.add(clazz);
+        }
         return;
       }
       if (method != null) {
@@ -433,10 +445,30 @@ public final class Checker implements RelatedClassLookup, Constants {
       }
     }
   }
+  
+  private void reportMissingSignatureClasses(Set<String> missingClasses) {
+    if (missingClasses.isEmpty()) {
+      return;
+    }
+    logger.warn("Some signatures were ignored because the following classes were not found on classpath:");
+    final StringBuilder sb = new StringBuilder();
+    int count = 0;
+    for (String s : missingClasses) {
+      sb.append(count == 0 ? "  " : ", ").append(s);
+      count++;
+      if (sb.length() >= 70) {
+        sb.append(",... (and ").append(missingClasses.size() - count).append(" more).");
+        break;
+      }
+    }
+    logger.warn(sb.toString());
+  }
 
   /** Reads a list of bundled API signatures from classpath. */
   public void addBundledSignatures(String name, String jdkTargetVersion) throws IOException,ParseException {
-    addBundledSignatures(name, jdkTargetVersion, true);
+    final Set<String> missingClasses = new TreeSet<String>();
+    addBundledSignatures(name, jdkTargetVersion, true, missingClasses);
+    reportMissingSignatureClasses(missingClasses);
   }
   
   public static String fixTargetVersion(String name) throws ParseException {
@@ -465,7 +497,7 @@ public final class Checker implements RelatedClassLookup, Constants {
     return name;
   }
   
-  private void addBundledSignatures(String name, String jdkTargetVersion, boolean logging) throws IOException,ParseException {
+  private void addBundledSignatures(String name, String jdkTargetVersion, boolean logging, Set<String> missingClasses) throws IOException,ParseException {
     if (!name.matches("[A-Za-z0-9\\-\\.]+")) {
       throw new ParseException("Invalid bundled signature reference: " + name);
     }
@@ -487,13 +519,15 @@ public final class Checker implements RelatedClassLookup, Constants {
       throw new FileNotFoundException("Bundled signatures resource not found: " + name);
     }
     if (logging) logger.info("Reading bundled API signatures: " + name);
-    parseSignaturesFile(in, true);
+    parseSignaturesStream(in, true, missingClasses);
   }
   
   /** Reads a list of API signatures. Closes the Reader when done (on Exception, too)! */
   public void parseSignaturesFile(InputStream in, String name) throws IOException,ParseException {
     logger.info("Reading API signatures: " + name);
-    parseSignaturesFile(in, false);
+    final Set<String> missingClasses = new TreeSet<String>();
+    parseSignaturesStream(in, false, missingClasses);
+    reportMissingSignatureClasses(missingClasses);
   }
   
   /** Reads a list of API signatures from the given URL. */
@@ -509,18 +543,20 @@ public final class Checker implements RelatedClassLookup, Constants {
   /** Reads a list of API signatures from a String. */
   public void parseSignaturesString(String signatures) throws IOException,ParseException {
     logger.info("Reading inline API signatures...");
-    parseSignaturesFile(new StringReader(signatures), false);
+    final Set<String> missingClasses = new TreeSet<String>();
+    parseSignaturesFile(new StringReader(signatures), false, missingClasses);
+    reportMissingSignatureClasses(missingClasses);
   }
   
-  private void parseSignaturesFile(InputStream in, boolean allowBundled) throws IOException,ParseException {
-    parseSignaturesFile(new InputStreamReader(in, "UTF-8"), allowBundled);
+  private void parseSignaturesStream(InputStream in, boolean allowBundled, Set<String> missingClasses) throws IOException,ParseException {
+    parseSignaturesFile(new InputStreamReader(in, "UTF-8"), allowBundled, missingClasses);
   }
 
   private static final String BUNDLED_PREFIX = "@includeBundled ";
   private static final String DEFAULT_MESSAGE_PREFIX = "@defaultMessage ";
   private static final String IGNORE_UNRESOLVABLE_LINE = "@ignoreUnresolvable";
 
-  private void parseSignaturesFile(Reader reader, boolean isBundled) throws IOException,ParseException {
+  private void parseSignaturesFile(Reader reader, boolean isBundled, Set<String> missingClasses) throws IOException,ParseException {
     final BufferedReader r = new BufferedReader(reader);
     try {
       String line, defaultMessage = null;
@@ -532,7 +568,7 @@ public final class Checker implements RelatedClassLookup, Constants {
         if (line.startsWith("@")) {
           if (isBundled && line.startsWith(BUNDLED_PREFIX)) {
             final String name = line.substring(BUNDLED_PREFIX.length()).trim();
-            addBundledSignatures(name, null, false);
+            addBundledSignatures(name, null, false, missingClasses);
           } else if (line.startsWith(DEFAULT_MESSAGE_PREFIX)) {
             defaultMessage = line.substring(DEFAULT_MESSAGE_PREFIX.length()).trim();
             if (defaultMessage.length() == 0) defaultMessage = null;
@@ -542,7 +578,7 @@ public final class Checker implements RelatedClassLookup, Constants {
             throw new ParseException("Invalid line in signature file: " + line);
           }
         } else {
-          addSignature(line, defaultMessage, reporter);
+          addSignature(line, defaultMessage, reporter, missingClasses);
         }
       }
     } finally {
