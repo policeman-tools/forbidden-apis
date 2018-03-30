@@ -97,7 +97,7 @@
       java.lang.String#forbiddenFoobarField @ should be ignored
       java.awt.Color @ Color is disallowed, thats not bad, because ANT has no colors... (this was just added to don't fail because of missing signatures)
     </forbiddenapis>
-    <au:assertLogContains level="warning" text="Class 'foo.bar.ForbiddenApis' not found on classpath while parsing signature: foo.bar.ForbiddenApis#testMethod() [signature ignored]"/> 
+    <au:assertLogContains level="warning" text="Some signatures were ignored because the following classes were not found on classpath: foo.bar.ForbiddenApis"/> 
     <au:assertLogContains level="warning" text="Method not found while parsing signature: java.lang.String#forbiddenFoobarMethod() [signature ignored]"/> 
     <au:assertLogContains level="warning" text="Field not found while parsing signature: java.lang.String#forbiddenFoobarField [signature ignored]"/> 
   </target>
@@ -110,7 +110,7 @@
       java.lang.String#forbiddenFoobarField @ should be ignored
       java.awt.Color @ Color is disallowed, thats not bad, because ANT has no colors... (this was just added to don't fail because of missing signatures)
     </forbiddenapis>
-    <au:assertLogContains level="warning" text="Class 'foo.bar.ForbiddenApis' not found on classpath while parsing signature: foo.bar.ForbiddenApis#testMethod() [signature ignored]"/> 
+    <au:assertLogContains level="warning" text="Some signatures were ignored because the following classes were not found on classpath: foo.bar.ForbiddenApis"/> 
     <au:assertLogContains level="warning" text="Method not found while parsing signature: java.lang.String#forbiddenFoobarMethod() [signature ignored]"/> 
     <au:assertLogContains level="warning" text="Field not found while parsing signature: java.lang.String#forbiddenFoobarField [signature ignored]"/> 
   </target>
