@@ -84,7 +84,8 @@
       <sysproperty key="antunit.signatures" value="foo.bar.ForbiddenApis#testMethod()&#10;java.lang.String#forbiddenFoobarMethod()&#10;java.lang.String#forbiddenFoobarField"/>
       <sysproperty key="antunit.failOnUnresolvableSignatures" value="false"/>
     </artifact:mvn>
-    <au:assertLogContains text="Some signatures were ignored because the following classes were not found on classpath: foo.bar.ForbiddenApis"/> 
+    <au:assertLogContains text="Some signatures were ignored because the following classes were not found on classpath:"/> 
+    <au:assertLogContains text="  foo.bar.ForbiddenApis"/> 
     <au:assertLogContains text="Method not found while parsing signature: java.lang.String#forbiddenFoobarMethod() [signature ignored]"/> 
     <au:assertLogContains text="Field not found while parsing signature: java.lang.String#forbiddenFoobarField [signature ignored]"/> 
   </target>

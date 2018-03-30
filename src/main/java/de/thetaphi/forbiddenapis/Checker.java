@@ -447,16 +447,21 @@ public final class Checker implements RelatedClassLookup, Constants {
   }
   
   private void reportMissingSignatureClasses(Set<String> missingClasses) {
-    if (!missingClasses.isEmpty()) {
-      final StringBuilder sb = new StringBuilder("Some signatures were ignored because the following classes were not found on classpath: ");
-      boolean comma = false;
-      for (String s : missingClasses) {
-        if (comma) sb.append(", ");
-        comma = true;
-        sb.append(s);
-      }
-      logger.warn(sb.toString());
+    if (missingClasses.isEmpty()) {
+      return;
     }
+    logger.warn("Some signatures were ignored because the following classes were not found on classpath:");
+    final StringBuilder sb = new StringBuilder();
+    int count = 0;
+    for (String s : missingClasses) {
+      sb.append(count == 0 ? "  " : ", ").append(s);
+      count++;
+      if (sb.length() >= 70) {
+        sb.append(",... (and ").append(missingClasses.size() - count).append(" more).");
+        break;
+      }
+    }
+    logger.warn(sb.toString());
   }
 
   /** Reads a list of bundled API signatures from classpath. */
