@@ -104,6 +104,18 @@ public final class Signatures implements Constants {
     this.failOnUnresolvableSignatures = failOnUnresolvableSignatures;
   }
   
+  static String getKey(String internalClassName) {
+    return "c\000" + internalClassName;
+  }
+  
+  static String getKey(String internalClassName, String field) {
+    return "f\000" + internalClassName + '\000' + field;
+  }
+  
+  static String getKey(String internalClassName, Method method) {
+    return "m\000" + internalClassName + '\000' + method;
+  }
+  
   /** Adds the method signature to the list of disallowed methods. The Signature is checked against the given ClassLoader. */
   private void addSignature(final String line, final String defaultMessage, final UnresolvableReporting report, final Set<String> missingClasses) throws ParseException,IOException {
     final String clazz, field, signature;
@@ -175,7 +187,7 @@ public final class Signatures implements Constants {
         for (final Method m : c.methods) {
           if (m.getName().equals(method.getName()) && Arrays.equals(m.getArgumentTypes(), method.getArgumentTypes())) {
             found = true;
-            signatures.put(c.className + '\000' + m, printout);
+            signatures.put(getKey(c.className, m), printout);
             // don't break when found, as there may be more covariant overrides!
           }
         }
@@ -189,11 +201,11 @@ public final class Signatures implements Constants {
           report.parseFailed(logger, "Field not found", signature);
           return;
         }
-        signatures.put(c.className + '\000' + field, printout);
+        signatures.put(getKey(c.className, field), printout);
       } else {
         assert field == null && method == null;
         // only add the signature as class name
-        signatures.put(c.className, printout);
+        signatures.put(getKey(c.className), printout);
       }
     }
   }
@@ -314,7 +326,7 @@ public final class Signatures implements Constants {
     if (type.getSort() != Type.OBJECT) {
       return null; // we don't know this type, just pass!
     }
-    final String printout = signatures.get(type.getInternalName());
+    final String printout = signatures.get(getKey(type.getInternalName()));
     if (printout != null) {
       return printout;
     }
@@ -328,11 +340,11 @@ public final class Signatures implements Constants {
   }
   
   public String checkMethod(String internalClassName, Method method) {
-    return signatures.get(internalClassName + '\000' + method);
+    return signatures.get(getKey(internalClassName, method));
   }
   
   public String checkField(String internalClassName, String field) {
-    return signatures.get(internalClassName + '\000' + field);
+    return signatures.get(getKey(internalClassName, field));
   }
   
   public static String fixTargetVersion(String name) throws ParseException {

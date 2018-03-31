@@ -26,6 +26,7 @@ import java.util.EnumSet;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.objectweb.asm.commons.Method;
 
 public final class CheckerSetupTest {
   
@@ -44,12 +45,13 @@ public final class CheckerSetupTest {
   public void testEmpty() {
     assertEquals(Collections.emptyMap(), forbiddenSignatures.signatures);
     assertEquals(Collections.emptySet(), forbiddenSignatures.classPatterns);
+    assertTrue(checker.hasNoSignatures());
   }
 
   @Test
   public void testClassSignature() throws Exception {
     checker.parseSignaturesString("java.lang.Object @ Foobar");
-    assertEquals(Collections.singletonMap("java/lang/Object", "java.lang.Object [Foobar]"), forbiddenSignatures.signatures);
+    assertEquals(Collections.singletonMap(Signatures.getKey("java/lang/Object"), "java.lang.Object [Foobar]"), forbiddenSignatures.signatures);
     assertEquals(Collections.emptySet(), forbiddenSignatures.classPatterns);
   }
   
@@ -57,20 +59,23 @@ public final class CheckerSetupTest {
   public void testClassPatternSignature() throws Exception {
     checker.parseSignaturesString("java.lang.** @ Foobar");
     assertEquals(Collections.emptyMap(), forbiddenSignatures.signatures);
-    assertEquals(Collections.singleton(new ClassPatternRule("java.lang.**", "Foobar")), forbiddenSignatures.classPatterns);
+    assertEquals(Collections.singleton(new ClassPatternRule("java.lang.**", "Foobar")),
+        forbiddenSignatures.classPatterns);
   }
   
   @Test
   public void testFieldSignature() throws Exception {
     checker.parseSignaturesString("java.lang.String#CASE_INSENSITIVE_ORDER @ Foobar");
-    assertEquals(Collections.singletonMap("java/lang/String\000CASE_INSENSITIVE_ORDER", "java.lang.String#CASE_INSENSITIVE_ORDER [Foobar]"), forbiddenSignatures.signatures);
+    assertEquals(Collections.singletonMap(Signatures.getKey("java/lang/String", "CASE_INSENSITIVE_ORDER"), "java.lang.String#CASE_INSENSITIVE_ORDER [Foobar]"),
+        forbiddenSignatures.signatures);
     assertEquals(Collections.emptySet(), forbiddenSignatures.classPatterns);
   }
 
   @Test
   public void testMethodSignature() throws Exception {
     checker.parseSignaturesString("java.lang.Object#toString() @ Foobar");
-    assertEquals(Collections.singletonMap("java/lang/Object\000toString()Ljava/lang/String;", "java.lang.Object#toString() [Foobar]"), forbiddenSignatures.signatures);
+    assertEquals(Collections.singletonMap(Signatures.getKey("java/lang/Object", new Method("toString", "()Ljava/lang/String;")), "java.lang.Object#toString() [Foobar]"),
+        forbiddenSignatures.signatures);
     assertEquals(Collections.emptySet(), forbiddenSignatures.classPatterns);
   }
   
