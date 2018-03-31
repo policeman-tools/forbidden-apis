@@ -44,12 +44,14 @@ final class ClassScanner extends ClassVisitor implements Constants {
   final RelatedClassLookup lookup;
   final List<ForbiddenViolation> violations = new ArrayList<ForbiddenViolation>();
   
-  // key is the internal name (slashed), followed by \000 and the field name:
-  final Map<String,String> forbiddenFields;
-  // key is the internal name (slashed), followed by \000 and the method signature:
-  final Map<String,String> forbiddenMethods;
-  // key is the internal name (slashed):
-  final Map<String,String> forbiddenClasses;
+  /** Key is used to lookup forbidden signature in following formats:
+   * <ul>
+   * <li>methods: key is the internal name (slashed), followed by \000 and the method signature
+   * <li>fields: key is the internal name (slashed), followed by \000 and the field name
+   * <li>classes: key is the internal name (slashed)
+   * </ul>
+   */
+  final Map<String,String> forbiddenSignatures;
   // key is pattern to binary class name:
   final Iterable<ClassPatternRule> forbiddenClassPatterns;
   // pattern that matches binary (dotted) class name of all annotations that suppress:
@@ -69,16 +71,13 @@ final class ClassScanner extends ClassVisitor implements Constants {
   boolean classSuppressed = false;
   
   public ClassScanner(RelatedClassLookup lookup,
-      final Map<String,String> forbiddenClasses, final Iterable<ClassPatternRule> forbiddenClassPatterns,
-      final Map<String,String> forbiddenMethods, final Map<String,String> forbiddenFields,
+      final Map<String,String> forbiddenSignatures, final Iterable<ClassPatternRule> forbiddenClassPatterns,
       final Pattern suppressAnnotations,
       final boolean forbidNonPortableRuntime) {
     super(Opcodes.ASM6);
     this.lookup = lookup;
-    this.forbiddenClasses = forbiddenClasses;
+    this.forbiddenSignatures = forbiddenSignatures;
     this.forbiddenClassPatterns = forbiddenClassPatterns;
-    this.forbiddenMethods = forbiddenMethods;
-    this.forbiddenFields = forbiddenFields;
     this.suppressAnnotations = suppressAnnotations;
     this.forbidNonPortableRuntime = forbidNonPortableRuntime;
   }
@@ -106,7 +105,7 @@ final class ClassScanner extends ClassVisitor implements Constants {
       return null; // we don't know this type, just pass!
     }
     final String internalName = type.getInternalName();
-    final String printout = forbiddenClasses.get(internalName);
+    final String printout = forbiddenSignatures.get(internalName);
     if (printout != null) {
       return String.format(Locale.ENGLISH, "Forbidden %s use: %s", what, printout);
     }
@@ -342,7 +341,7 @@ final class ClassScanner extends ClassVisitor implements Constants {
       }
       
       private String checkMethodAccessRecursion(String owner, Method method, boolean checkClassUse) {
-        String printout = forbiddenMethods.get(owner + '\000' + method);
+        String printout = forbiddenSignatures.get(owner + '\000' + method);
         if (printout != null) {
           return "Forbidden method invocation: " + printout;
         }
@@ -351,7 +350,7 @@ final class ClassScanner extends ClassVisitor implements Constants {
           if (c.signaturePolymorphicMethods.contains(method.getName())) {
             // convert the invoked descriptor to a signature polymorphic one for the lookup
             final Method lookupMethod = new Method(method.getName(), SIGNATURE_POLYMORPHIC_DESCRIPTOR);
-            printout = forbiddenMethods.get(owner + '\000' + lookupMethod);
+            printout = forbiddenSignatures.get(owner + '\000' + lookupMethod);
             if (printout != null) {
               return "Forbidden method invocation: " + printout;
             }
@@ -387,7 +386,7 @@ final class ClassScanner extends ClassVisitor implements Constants {
         if (violation != null) {
           return violation;
         }
-        final String printout = forbiddenFields.get(owner + '\000' + field);
+        final String printout = forbiddenSignatures.get(owner + '\000' + field);
         if (printout != null) {
           return "Forbidden field access: " + printout;
         }

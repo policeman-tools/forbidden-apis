@@ -75,22 +75,26 @@ public final class Checker implements RelatedClassLookup, Constants {
   final java.lang.reflect.Method method_Class_getModule, method_Module_getName;
   final EnumSet<Option> options;
   
-  // key is the binary name (dotted):
+  /** Classes to check: key is the binary name (dotted) */
   final Map<String,ClassSignature> classesToCheck = new HashMap<String,ClassSignature>();
-  // key is the binary name (dotted):
+  /** Cache of loaded classes: key is the binary name (dotted) */
   final Map<String,ClassSignature> classpathClassCache = new HashMap<String,ClassSignature>();
   
-  // if enabled, the bundled signature to enable heuristics for detection of non-portable runtime calls is used:
-  private boolean forbidNonPortableRuntime = false;  
-  // key is the internal name (slashed), followed by \000 and the field name:
-  final Map<String,String> forbiddenFields = new HashMap<String,String>();
-  // key is the internal name (slashed), followed by \000 and the method signature:
-  final Map<String,String> forbiddenMethods = new HashMap<String,String>();
-  // key is the internal name (slashed):
-  final Map<String,String> forbiddenClasses = new HashMap<String,String>();
-  // set of patterns of forbidden classes:
+  /** if enabled, the bundled signature to enable heuristics for detection of non-portable runtime calls is used */
+  private boolean forbidNonPortableRuntime = false;
+  
+  /** Key is used to lookup forbidden signature in following formats:
+   * <ul>
+   * <li>methods: key is the internal name (slashed), followed by \000 and the method signature
+   * <li>fields: key is the internal name (slashed), followed by \000 and the field name
+   * <li>classes: key is the internal name (slashed)
+   * </ul>
+   */
+  final Map<String,String> forbiddenSignatures = new HashMap<String,String>();
+  
+  /** set of patterns of forbidden classes */
   final Set<ClassPatternRule> forbiddenClassPatterns = new LinkedHashSet<ClassPatternRule>();
-  // descriptors (not internal names) of all annotations that suppress:
+  /** descriptors (not internal names) of all annotations that suppress */
   final Set<String> suppressAnnotations = new LinkedHashSet<String>();
     
   private static enum UnresolvableReporting {
@@ -423,7 +427,7 @@ public final class Checker implements RelatedClassLookup, Constants {
         for (final Method m : c.methods) {
           if (m.getName().equals(method.getName()) && Arrays.equals(m.getArgumentTypes(), method.getArgumentTypes())) {
             found = true;
-            forbiddenMethods.put(c.className + '\000' + m, printout);
+            forbiddenSignatures.put(c.className + '\000' + m, printout);
             // don't break when found, as there may be more covariant overrides!
           }
         }
@@ -437,11 +441,11 @@ public final class Checker implements RelatedClassLookup, Constants {
           report.parseFailed(logger, "Field not found", signature);
           return;
         }
-        forbiddenFields.put(c.className + '\000' + field, printout);
+        forbiddenSignatures.put(c.className + '\000' + field, printout);
       } else {
         assert field == null && method == null;
         // only add the signature as class name
-        forbiddenClasses.put(c.className, printout);
+        forbiddenSignatures.put(c.className, printout);
       }
     }
   }
@@ -634,9 +638,7 @@ public final class Checker implements RelatedClassLookup, Constants {
   }
 
   public boolean hasNoSignatures() {
-    return 0 == forbiddenMethods.size() + 
-        forbiddenFields.size() + 
-        forbiddenClasses.size() + 
+    return 0 == forbiddenSignatures.size() + 
         forbiddenClassPatterns.size() +
         (forbidNonPortableRuntime ? 1 : 0);
   }
@@ -654,7 +656,7 @@ public final class Checker implements RelatedClassLookup, Constants {
   /** Parses a class and checks for valid method invocations */
   private int checkClass(final ClassReader reader, Pattern suppressAnnotationsPattern) {
     final String className = Type.getObjectType(reader.getClassName()).getClassName();
-    final ClassScanner scanner = new ClassScanner(this, forbiddenClasses, forbiddenClassPatterns, forbiddenMethods, forbiddenFields, suppressAnnotationsPattern, forbidNonPortableRuntime); 
+    final ClassScanner scanner = new ClassScanner(this, forbiddenSignatures, forbiddenClassPatterns, suppressAnnotationsPattern, forbidNonPortableRuntime); 
     reader.accept(scanner, ClassReader.SKIP_FRAMES);
     final List<ForbiddenViolation> violations = scanner.getSortedViolations();
     final Pattern splitter = Pattern.compile(Pattern.quote(ForbiddenViolation.SEPARATOR));
