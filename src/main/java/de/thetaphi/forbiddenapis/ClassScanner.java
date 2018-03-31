@@ -39,7 +39,7 @@ import org.objectweb.asm.Type;
 import org.objectweb.asm.TypePath;
 import org.objectweb.asm.commons.Method;
 
-final class ClassScanner extends ClassVisitor implements Constants {
+public final class ClassScanner extends ClassVisitor implements Constants {
   private final boolean forbidNonPortableRuntime;
   final RelatedClassLookup lookup;
   final List<ForbiddenViolation> violations = new ArrayList<ForbiddenViolation>();
