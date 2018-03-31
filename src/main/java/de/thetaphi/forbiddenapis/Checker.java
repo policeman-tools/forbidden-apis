@@ -320,7 +320,7 @@ public final class Checker implements RelatedClassLookup, Constants {
   
   /** Reads a list of API signatures. Closes the Reader when done (on Exception, too)! */
   public void parseSignaturesFile(InputStream in, String name) throws IOException,ParseException {
-    forbiddenSignatures.parseSignaturesFile(in, name);
+    forbiddenSignatures.parseSignaturesStream(in, name);
   }
   
   /** Reads a list of API signatures from the given URL. */

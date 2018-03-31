@@ -41,8 +41,12 @@ import de.thetaphi.forbiddenapis.Checker.Option;
 
 /** Utility class that is used to get an overview of all fields and implemented
  * methods of a class. It make the signatures available as Sets. */
-final class Signatures implements Constants {
+public final class Signatures implements Constants {
   
+  private static final String BUNDLED_PREFIX = "@includeBundled ";
+  private static final String DEFAULT_MESSAGE_PREFIX = "@defaultMessage ";
+  private static final String IGNORE_UNRESOLVABLE_LINE = "@ignoreUnresolvable";
+
   private static enum UnresolvableReporting {
     FAIL(true) {
       @Override
@@ -88,12 +92,16 @@ final class Signatures implements Constants {
   final Set<ClassPatternRule> classPatterns = new LinkedHashSet<ClassPatternRule>();
   
   /** if enabled, the bundled signature to enable heuristics for detection of non-portable runtime calls is used */
-  boolean forbidNonPortableRuntime = false;
+  private boolean forbidNonPortableRuntime = false;
 
   public Signatures(Checker checker) {
-    this.lookup = checker;
-    this.logger = checker.logger;
-    this.failOnUnresolvableSignatures = checker.options.contains(Option.FAIL_ON_UNRESOLVABLE_SIGNATURES);
+    this(checker, checker.logger, checker.options.contains(Option.FAIL_ON_UNRESOLVABLE_SIGNATURES));
+  }
+  
+  public Signatures(RelatedClassLookup lookup, Logger logger, boolean failOnUnresolvableSignatures) {
+    this.lookup = lookup;
+    this.logger = logger;
+    this.failOnUnresolvableSignatures = failOnUnresolvableSignatures;
   }
   
   /** Adds the method signature to the list of disallowed methods. The Signature is checked against the given ClassLoader. */
@@ -208,39 +216,6 @@ final class Signatures implements Constants {
     logger.warn(sb.toString());
   }
 
-  /** Reads a list of bundled API signatures from classpath. */
-  public void addBundledSignatures(String name, String jdkTargetVersion) throws IOException,ParseException {
-    final Set<String> missingClasses = new TreeSet<String>();
-    addBundledSignatures(name, jdkTargetVersion, true, missingClasses);
-    reportMissingSignatureClasses(missingClasses);
-  }
-  
-  public static String fixTargetVersion(String name) throws ParseException {
-    final Matcher m = JDK_SIG_PATTERN.matcher(name);
-    if (m.matches()) {
-      if (m.group(4) == null) {
-        final String prefix = m.group(1);
-        final int major = Integer.parseInt(m.group(2));
-        final int minor = m.group(3) != null ? Integer.parseInt(m.group(3).substring(1)) : 0;
-        if (major == 1 && minor >= 1 && minor < 9) {
-          // Java 1.1 till 1.8 (aka 8):
-          return prefix + "1." + minor;
-        } else if (major > 1 && major < 9) {
-          // fix pre-Java9 major version to use "1.x" syntax:
-          if (minor == 0) {
-            return prefix + "1." + major;
-          }
-        } else if (major >= 9 && minor > 0) {
-          return prefix + major + "." + minor;
-        } else  if (major >= 9 && minor == 0) {
-          return prefix + major;
-        }
-      }
-      throw new ParseException("Invalid bundled signature reference (JDK version is invalid): " + name);
-    }
-    return name;
-  }
-  
   private void addBundledSignatures(String name, String jdkTargetVersion, boolean logging, Set<String> missingClasses) throws IOException,ParseException {
     if (!name.matches("[A-Za-z0-9\\-\\.]+")) {
       throw new ParseException("Invalid bundled signature reference: " + name);
@@ -266,29 +241,9 @@ final class Signatures implements Constants {
     parseSignaturesStream(in, true, missingClasses);
   }
   
-  /** Reads a list of API signatures. Closes the Reader when done (on Exception, too)! */
-  public void parseSignaturesFile(InputStream in, String name) throws IOException,ParseException {
-    logger.info("Reading API signatures: " + name);
-    final Set<String> missingClasses = new TreeSet<String>();
-    parseSignaturesStream(in, false, missingClasses);
-    reportMissingSignatureClasses(missingClasses);
-  }
-  
-  /** Reads a list of API signatures from a String. */
-  public void parseSignaturesString(String signatures) throws IOException,ParseException {
-    logger.info("Reading inline API signatures...");
-    final Set<String> missingClasses = new TreeSet<String>();
-    parseSignaturesFile(new StringReader(signatures), false, missingClasses);
-    reportMissingSignatureClasses(missingClasses);
-  }
-  
   private void parseSignaturesStream(InputStream in, boolean allowBundled, Set<String> missingClasses) throws IOException,ParseException {
     parseSignaturesFile(new InputStreamReader(in, "UTF-8"), allowBundled, missingClasses);
   }
-
-  private static final String BUNDLED_PREFIX = "@includeBundled ";
-  private static final String DEFAULT_MESSAGE_PREFIX = "@defaultMessage ";
-  private static final String IGNORE_UNRESOLVABLE_LINE = "@ignoreUnresolvable";
 
   private void parseSignaturesFile(Reader reader, boolean isBundled, Set<String> missingClasses) throws IOException,ParseException {
     final BufferedReader r = new BufferedReader(reader);
@@ -320,11 +275,39 @@ final class Signatures implements Constants {
     }
   }
   
+  /** Reads a list of bundled API signatures from classpath. */
+  public void addBundledSignatures(String name, String jdkTargetVersion) throws IOException,ParseException {
+    final Set<String> missingClasses = new TreeSet<String>();
+    addBundledSignatures(name, jdkTargetVersion, true, missingClasses);
+    reportMissingSignatureClasses(missingClasses);
+  }
+  
+  /** Reads a list of API signatures. Closes the Reader when done (on Exception, too)! */
+  public void parseSignaturesStream(InputStream in, String name) throws IOException,ParseException {
+    logger.info("Reading API signatures: " + name);
+    final Set<String> missingClasses = new TreeSet<String>();
+    parseSignaturesStream(in, false, missingClasses);
+    reportMissingSignatureClasses(missingClasses);
+  }
+  
+  /** Reads a list of API signatures from a String. */
+  public void parseSignaturesString(String signatures) throws IOException,ParseException {
+    logger.info("Reading inline API signatures...");
+    final Set<String> missingClasses = new TreeSet<String>();
+    parseSignaturesFile(new StringReader(signatures), false, missingClasses);
+    reportMissingSignatureClasses(missingClasses);
+  }
+  
   /** Returns if there are any signatures. */
   public boolean hasNoSignatures() {
     return 0 == signatures.size() + 
         classPatterns.size() +
         (forbidNonPortableRuntime ? 1 : 0);
+  }
+  
+  /** Returns if bundled signature to enable heuristics for detection of non-portable runtime calls is used */
+  public boolean isNonPortableRuntimeForbidden() {
+    return this.forbidNonPortableRuntime;
   }
   
   public String checkType(Type type) {
@@ -347,6 +330,32 @@ final class Signatures implements Constants {
   
   public String checkField(String internalClassName, String field) {
     return signatures.get(internalClassName + '\000' + field);
+  }
+  
+  public static String fixTargetVersion(String name) throws ParseException {
+    final Matcher m = JDK_SIG_PATTERN.matcher(name);
+    if (m.matches()) {
+      if (m.group(4) == null) {
+        final String prefix = m.group(1);
+        final int major = Integer.parseInt(m.group(2));
+        final int minor = m.group(3) != null ? Integer.parseInt(m.group(3).substring(1)) : 0;
+        if (major == 1 && minor >= 1 && minor < 9) {
+          // Java 1.1 till 1.8 (aka 8):
+          return prefix + "1." + minor;
+        } else if (major > 1 && major < 9) {
+          // fix pre-Java9 major version to use "1.x" syntax:
+          if (minor == 0) {
+            return prefix + "1." + major;
+          }
+        } else if (major >= 9 && minor > 0) {
+          return prefix + major + "." + minor;
+        } else  if (major >= 9 && minor == 0) {
+          return prefix + major;
+        }
+      }
+      throw new ParseException("Invalid bundled signature reference (JDK version is invalid): " + name);
+    }
+    return name;
   }
   
 }

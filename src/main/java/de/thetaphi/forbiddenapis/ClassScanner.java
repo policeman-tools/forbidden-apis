@@ -67,7 +67,7 @@ final class ClassScanner extends ClassVisitor implements Constants {
     this.lookup = lookup;
     this.forbiddenSignatures = forbiddenSignatures;
     this.suppressAnnotations = suppressAnnotations;
-    this.forbidNonPortableRuntime = forbiddenSignatures.forbidNonPortableRuntime;
+    this.forbidNonPortableRuntime = forbiddenSignatures.isNonPortableRuntimeForbidden();
   }
   
   private void checkDone() {
