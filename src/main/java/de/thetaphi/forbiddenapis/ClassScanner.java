@@ -89,9 +89,6 @@ public final class ClassScanner extends ClassVisitor implements Constants {
     while (type.getSort() == Type.ARRAY) {
       type = type.getElementType();
     }
-    if (type.getSort() != Type.OBJECT) {
-      return null; // we don't know this type, just pass!
-    }
     final String printout = forbiddenSignatures.checkType(type);
     if (printout != null) {
       return String.format(Locale.ENGLISH, "Forbidden %s use: %s", what, printout);

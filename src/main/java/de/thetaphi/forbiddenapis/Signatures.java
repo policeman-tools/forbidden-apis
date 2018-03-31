@@ -311,6 +311,9 @@ public final class Signatures implements Constants {
   }
   
   public String checkType(Type type) {
+    if (type.getSort() != Type.OBJECT) {
+      return null; // we don't know this type, just pass!
+    }
     final String printout = signatures.get(type.getInternalName());
     if (printout != null) {
       return printout;
