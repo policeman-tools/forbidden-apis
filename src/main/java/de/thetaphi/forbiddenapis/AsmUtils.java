@@ -155,7 +155,6 @@ public final class AsmUtils {
     }
   }
   
-  @SuppressWarnings("unused")
   private static void patchClassMajorVersion(byte[] bytecode, int versionFrom, int versionTo) {
     final ByteBuffer buf = ByteBuffer.wrap(bytecode).order(ByteOrder.BIG_ENDIAN);
     if (buf.getShort(6) == versionFrom) {
@@ -177,9 +176,10 @@ public final class AsmUtils {
   
   /** Utility method to load class files of later Java versions by patching them, so ASM can read them. Does nothing at the moment. */
   @SuppressForbidden
+  @SuppressWarnings("unused")
   public static ClassReader readAndPatchClass(InputStream in) throws IOException {
     final byte[] bytecode = readStream(in);
-    // patchClassMajorVersion(bytecode, Opcodes.V10 + 1, Opcodes.V10);
+    if (false) patchClassMajorVersion(bytecode, Opcodes.V10 + 1, Opcodes.V10);
     return new ClassReader(bytecode);
   }
 
