@@ -21,22 +21,22 @@ import static org.junit.Assert.fail;
 
 import org.junit.Test;
 
-public final class CheckerStaticTest {
+public final class SignaturesParserTest {
 
   @Test
   public void testTargetVersionFix() throws Exception {
-    assertEquals("jdk-dummy-1.7", Checker.fixTargetVersion("jdk-dummy-1.7"));
-    assertEquals("jdk-dummy-1.7", Checker.fixTargetVersion("jdk-dummy-7"));
-    assertEquals("jdk-dummy-1.7", Checker.fixTargetVersion("jdk-dummy-7.0"));
+    assertEquals("jdk-dummy-1.7", Signatures.fixTargetVersion("jdk-dummy-1.7"));
+    assertEquals("jdk-dummy-1.7", Signatures.fixTargetVersion("jdk-dummy-7"));
+    assertEquals("jdk-dummy-1.7", Signatures.fixTargetVersion("jdk-dummy-7.0"));
     
-    assertEquals("jdk-dummy-1.1", Checker.fixTargetVersion("jdk-dummy-1.1"));
+    assertEquals("jdk-dummy-1.1", Signatures.fixTargetVersion("jdk-dummy-1.1"));
     
-    assertEquals("jdk-dummy-9", Checker.fixTargetVersion("jdk-dummy-9"));
-    assertEquals("jdk-dummy-9", Checker.fixTargetVersion("jdk-dummy-9.0"));
+    assertEquals("jdk-dummy-9", Signatures.fixTargetVersion("jdk-dummy-9"));
+    assertEquals("jdk-dummy-9", Signatures.fixTargetVersion("jdk-dummy-9.0"));
     
-    assertEquals("jdk-dummy-18", Checker.fixTargetVersion("jdk-dummy-18"));
-    assertEquals("jdk-dummy-18.3", Checker.fixTargetVersion("jdk-dummy-18.3"));
-    assertEquals("jdk-dummy-18.3", Checker.fixTargetVersion("jdk-dummy-18.03"));
+    assertEquals("jdk-dummy-18", Signatures.fixTargetVersion("jdk-dummy-18"));
+    assertEquals("jdk-dummy-18.3", Signatures.fixTargetVersion("jdk-dummy-18.3"));
+    assertEquals("jdk-dummy-18.3", Signatures.fixTargetVersion("jdk-dummy-18.03"));
     
     assertFails("jdk-dummy-0");
     assertFails("jdk-dummy-1");
@@ -56,7 +56,7 @@ public final class CheckerStaticTest {
   
   private void assertFails(String name) {
     try {
-      Checker.fixTargetVersion(name);
+      Signatures.fixTargetVersion(name);
       fail("Should fail for: " + name);
     } catch (ParseException pe) {
       // pass

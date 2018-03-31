@@ -44,16 +44,8 @@ final class ClassScanner extends ClassVisitor implements Constants {
   final RelatedClassLookup lookup;
   final List<ForbiddenViolation> violations = new ArrayList<ForbiddenViolation>();
   
-  /** Key is used to lookup forbidden signature in following formats:
-   * <ul>
-   * <li>methods: key is the internal name (slashed), followed by \000 and the method signature
-   * <li>fields: key is the internal name (slashed), followed by \000 and the field name
-   * <li>classes: key is the internal name (slashed)
-   * </ul>
-   */
-  final Map<String,String> forbiddenSignatures;
-  // key is pattern to binary class name:
-  final Iterable<ClassPatternRule> forbiddenClassPatterns;
+  final Signatures forbiddenSignatures;
+  
   // pattern that matches binary (dotted) class name of all annotations that suppress:
   final Pattern suppressAnnotations;
   
@@ -70,16 +62,12 @@ final class ClassScanner extends ClassVisitor implements Constants {
   final BitSet suppressedGroups = new BitSet();
   boolean classSuppressed = false;
   
-  public ClassScanner(RelatedClassLookup lookup,
-      final Map<String,String> forbiddenSignatures, final Iterable<ClassPatternRule> forbiddenClassPatterns,
-      final Pattern suppressAnnotations,
-      final boolean forbidNonPortableRuntime) {
+  public ClassScanner(RelatedClassLookup lookup, Signatures forbiddenSignatures, final Pattern suppressAnnotations) {
     super(Opcodes.ASM6);
     this.lookup = lookup;
     this.forbiddenSignatures = forbiddenSignatures;
-    this.forbiddenClassPatterns = forbiddenClassPatterns;
     this.suppressAnnotations = suppressAnnotations;
-    this.forbidNonPortableRuntime = forbidNonPortableRuntime;
+    this.forbidNonPortableRuntime = forbiddenSignatures.forbidNonPortableRuntime;
   }
   
   private void checkDone() {
@@ -104,19 +92,13 @@ final class ClassScanner extends ClassVisitor implements Constants {
     if (type.getSort() != Type.OBJECT) {
       return null; // we don't know this type, just pass!
     }
-    final String internalName = type.getInternalName();
-    final String printout = forbiddenSignatures.get(internalName);
+    final String printout = forbiddenSignatures.checkType(type);
     if (printout != null) {
       return String.format(Locale.ENGLISH, "Forbidden %s use: %s", what, printout);
     }
-    final String binaryClassName = type.getClassName();
-    for (final ClassPatternRule r : forbiddenClassPatterns) {
-      if (r.matches(binaryClassName)) {
-        return String.format(Locale.ENGLISH, "Forbidden %s use: %s", what, r.getPrintout(binaryClassName));
-      }
-    }
     if (deep && forbidNonPortableRuntime) {
-      final ClassSignature c = lookup.lookupRelatedClass(internalName);
+      final String binaryClassName = type.getClassName();
+      final ClassSignature c = lookup.lookupRelatedClass(type.getInternalName());
       if (c != null && c.isRuntimeClass && !AsmUtils.isPortableRuntimeClass(binaryClassName)) {
         return String.format(Locale.ENGLISH,
           "Forbidden %s use: %s [non-portable or internal runtime class]",
@@ -341,7 +323,7 @@ final class ClassScanner extends ClassVisitor implements Constants {
       }
       
       private String checkMethodAccessRecursion(String owner, Method method, boolean checkClassUse) {
-        String printout = forbiddenSignatures.get(owner + '\000' + method);
+        String printout = forbiddenSignatures.checkMethod(owner, method);
         if (printout != null) {
           return "Forbidden method invocation: " + printout;
         }
@@ -350,7 +332,7 @@ final class ClassScanner extends ClassVisitor implements Constants {
           if (c.signaturePolymorphicMethods.contains(method.getName())) {
             // convert the invoked descriptor to a signature polymorphic one for the lookup
             final Method lookupMethod = new Method(method.getName(), SIGNATURE_POLYMORPHIC_DESCRIPTOR);
-            printout = forbiddenSignatures.get(owner + '\000' + lookupMethod);
+            printout = forbiddenSignatures.checkMethod(owner, lookupMethod);
             if (printout != null) {
               return "Forbidden method invocation: " + printout;
             }
@@ -386,7 +368,7 @@ final class ClassScanner extends ClassVisitor implements Constants {
         if (violation != null) {
           return violation;
         }
-        final String printout = forbiddenSignatures.get(owner + '\000' + field);
+        final String printout = forbiddenSignatures.checkField(owner, field);
         if (printout != null) {
           return "Forbidden field access: " + printout;
         }
