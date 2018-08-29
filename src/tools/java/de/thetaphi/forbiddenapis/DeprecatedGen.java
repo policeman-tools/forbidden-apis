@@ -81,7 +81,7 @@ public abstract class DeprecatedGen<Input> implements Opcodes {
     if ((reader.getAccess() & ACC_PUBLIC) == 0 || !AsmUtils.isPortableRuntimeClass(className)) {
       return;
     }
-    reader.accept(new ClassVisitor(ASM6) {
+    reader.accept(new ClassVisitor(ASM7_EXPERIMENTAL) {
       boolean classDeprecated = false;
     
       @Override
