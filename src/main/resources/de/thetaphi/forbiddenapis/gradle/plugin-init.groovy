@@ -60,7 +60,9 @@ project.sourceSets.all{ sourceSet ->
       }
       classesDirs = { getSourceSetClassesDirs() }
       classpath = { sourceSet.compileClasspath }
-      targetCompatibility = { project.targetCompatibility?.toString() }
+      // Gradle is buggy with it's JavaVersion enum: We use majorVersion property before Java 11 (6,7,8,9,10) and for later we use toString() to be future-proof:
+      targetCompatibility = { (project.targetCompatibility?.hasProperty('java11Compatible') && project.targetCompatibility?.java11Compatible) ?
+        project.targetCompatibility.toString() : project.targetCompatibility?.majorVersion }
     }
     // add dependency to compile task after evaluation, if the classesDirs collection has overlaps with our SourceSet:
     project.afterEvaluate{
