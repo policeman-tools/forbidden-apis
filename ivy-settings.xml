@@ -24,8 +24,10 @@
   
   <resolvers>
     <ibiblio name="gradle" root="http://repo.gradle.org/gradle/libs-releases-local" m2compatible="true" />
+    <ibiblio name="maven-http-backup" root="${ivy.maven-central.backup}" m2compatible="true" />
     <chain name="default" returnFirst="true" checkmodified="true" changingPattern=".*SNAPSHOT">
       <resolver ref="main"/>
+      <resolver ref="maven-http-backup" />
       <resolver ref="gradle" />
     </chain>
   </resolvers>

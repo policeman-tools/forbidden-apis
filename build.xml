@@ -80,6 +80,14 @@
       </or>
     </and>
   </condition>
+  
+  <!-- With Java 6 and Java 7, the HTTPS access to Maven central is broken, workaround (no TLS 1.2 support): -->
+  <condition property="ivy.maven-central.backup" value="http://repo1.maven.org/maven2" else="https://repo1.maven.org/maven2">
+    <or>
+      <equals arg1="${build.java.runtime}" arg2="1.6"/>
+      <equals arg1="${build.java.runtime}" arg2="1.7"/>
+    </or>
+  </condition>
 
   <condition property="javadoc.doclint.args" value="" else="-Xdoclint:none">
     <or>
