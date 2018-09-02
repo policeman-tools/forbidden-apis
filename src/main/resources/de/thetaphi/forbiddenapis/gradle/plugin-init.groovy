@@ -18,11 +18,8 @@
 
 import java.lang.reflect.Modifier;
 import org.gradle.api.plugins.JavaBasePlugin;
-import org.gradle.api.plugins.PluginInstantiationException;
 
-if (project.plugins.withType(JavaBasePlugin.class).isEmpty()) {
-  throw new PluginInstantiationException('Forbidden-apis only works in projects using the java plugin.');
-}
+project.plugins.apply(JavaBasePlugin.class);
 
 // check if running in Gradle Daemon?
 // see: http://stackoverflow.com/questions/23265217/how-to-know-whether-you-are-running-inside-a-gradle-daemon
