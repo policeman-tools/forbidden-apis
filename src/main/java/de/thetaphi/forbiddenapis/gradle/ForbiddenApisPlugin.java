@@ -29,6 +29,7 @@ import org.codehaus.groovy.control.customizers.ImportCustomizer;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.plugins.PluginInstantiationException;
+import org.gradle.util.GradleVersion;
 
 /**
  * Forbiddenapis Gradle Plugin (requires at least Gradle 2.3)
@@ -39,11 +40,14 @@ public class ForbiddenApisPlugin implements Plugin<Project> {
   /** Resource with Groovy script that initializes the plugin. */
   private static final String PLUGIN_INIT_SCRIPT = "plugin-init.groovy";
   
-  /** Name of the base task that depends on one for every SourceSet */
+  /** Name of the base task that depends on one for every SourceSet. */
   public static final String FORBIDDEN_APIS_TASK_NAME = "forbiddenApis";
   
   /** Name of the extension to define defaults for all tasks of this module. */
   public static final String FORBIDDEN_APIS_EXTENSION_NAME = "forbiddenApis";
+  
+  /** Minimum Gradle version this plugin requires to run. */
+  public static final GradleVersion MIN_GRADLE_VERSION = GradleVersion.version("2.3");
   
   private static final Class<? extends DelegatingScript> compiledScript;
   static {
@@ -73,6 +77,9 @@ public class ForbiddenApisPlugin implements Plugin<Project> {
   
   @Override
   public void apply(Project project) {
+    if (GradleVersion.current().compareTo(MIN_GRADLE_VERSION) < 0) {
+      throw new PluginInstantiationException("Forbiddenapis needs at least " + MIN_GRADLE_VERSION + ", running version is " + GradleVersion.current());
+    }
     try {
       final DelegatingScript script = compiledScript.newInstance();
       script.setDelegate(this);
