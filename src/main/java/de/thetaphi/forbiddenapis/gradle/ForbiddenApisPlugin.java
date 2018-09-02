@@ -26,9 +26,9 @@ import java.security.PrivilegedAction;
 
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.control.customizers.ImportCustomizer;
+import org.gradle.api.GradleException;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
-import org.gradle.api.plugins.PluginInstantiationException;
 import org.gradle.util.GradleVersion;
 
 /**
@@ -46,7 +46,7 @@ public class ForbiddenApisPlugin implements Plugin<Project> {
   /** Name of the extension to define defaults for all tasks of this module. */
   public static final String FORBIDDEN_APIS_EXTENSION_NAME = "forbiddenApis";
   
-  /** Minimum Gradle version this plugin requires to run. */
+  /** Minimum Gradle version this plugin requires to run (v2.3). */
   public static final GradleVersion MIN_GRADLE_VERSION = GradleVersion.version("2.3");
   
   private static final Class<? extends DelegatingScript> compiledScript;
@@ -78,16 +78,17 @@ public class ForbiddenApisPlugin implements Plugin<Project> {
   @Override
   public void apply(Project project) {
     if (GradleVersion.current().compareTo(MIN_GRADLE_VERSION) < 0) {
-      throw new PluginInstantiationException("Forbiddenapis needs at least " + MIN_GRADLE_VERSION + ", running version is " + GradleVersion.current());
+      throw new GradleException("Forbiddenapis plugin requires at least " + MIN_GRADLE_VERSION + ", running version is " + GradleVersion.current());
     }
+    final DelegatingScript script;
     try {
-      final DelegatingScript script = compiledScript.newInstance();
-      script.setDelegate(this);
-      script.setProperty("project", project);
-      script.run();
+      script = compiledScript.newInstance();
     } catch (Exception e) {
-      throw new PluginInstantiationException("Cannot execute Groovy script for apply(Project).", e);
+      throw new GradleException("Cannot instantiate Groovy script to apply forbiddenapis plugin.", e);
     }
+    script.setDelegate(this);
+    script.setProperty("project", project);
+    script.run();
   }
   
 }
