@@ -263,7 +263,8 @@ public final class Checker implements RelatedClassLookup, Constants {
           }
           // unfortunately the ASM IAE has no message, so add good info!
           throw new IllegalArgumentException(String.format(Locale.ENGLISH,
-              "The class file format of '%s' is too recent to be parsed by ASM.", clazz));
+              "The class file format of '%s' (loaded from location '%s') is too recent to be parsed by ASM.",
+              clazz, url.toExternalForm()));
         } finally {
           in.close();
         }
@@ -290,7 +291,7 @@ public final class Checker implements RelatedClassLookup, Constants {
   }
   
   @Override
-  public ClassSignature lookupRelatedClass(String internalName) {
+  public ClassSignature lookupRelatedClass(String internalName, String internalNameOrig) {
     final Type type = Type.getObjectType(internalName);
     if (type.getSort() != Type.OBJECT) {
       return null;
@@ -299,17 +300,18 @@ public final class Checker implements RelatedClassLookup, Constants {
       // use binary name, so we need to convert:
       return getClassFromClassLoader(type.getClassName());
     } catch (ClassNotFoundException cnfe) {
+      final String origClassName = Type.getObjectType(internalNameOrig).getClassName();
       if (options.contains(Option.FAIL_ON_MISSING_CLASSES)) {
-        throw new WrapperRuntimeException(cnfe);
+        throw new RelatedClassLoadingException(cnfe, origClassName);
       } else {
         logger.warn(String.format(Locale.ENGLISH,
-          "The referenced class '%s' cannot be loaded. Please fix the classpath!",
-          type.getClassName()
+          "Class '%s' cannot be loaded (while looking up details about referenced class '%s'). Please fix the classpath!",
+          type.getClassName(), origClassName
         ));
         return null;
       }
     } catch (IOException ioe) {
-      throw new WrapperRuntimeException(ioe);
+      throw new RelatedClassLoadingException(ioe, Type.getObjectType(internalNameOrig).getClassName());
     }
   }
   
@@ -401,10 +403,26 @@ public final class Checker implements RelatedClassLookup, Constants {
   }
   
   /** Parses a class and checks for valid method invocations */
-  private int checkClass(final ClassReader reader, Pattern suppressAnnotationsPattern) {
+  private int checkClass(final ClassReader reader, Pattern suppressAnnotationsPattern) throws ForbiddenApiException {
     final String className = Type.getObjectType(reader.getClassName()).getClassName();
     final ClassScanner scanner = new ClassScanner(this, forbiddenSignatures, suppressAnnotationsPattern); 
-    reader.accept(scanner, ClassReader.SKIP_FRAMES);
+    try {
+      reader.accept(scanner, ClassReader.SKIP_FRAMES);
+    } catch (RelatedClassLoadingException rcle) {
+      final Exception cause = rcle.getException();
+      final StringBuilder msg = new StringBuilder()
+          .append("Check for forbidden API calls failed while scanning class '")
+          .append(className)
+          .append('\'');
+      final String source = scanner.getSourceFile();
+      if (source != null) {
+        msg.append(" (").append(source).append(')');
+      }
+      msg.append(": ").append(cause);
+      msg.append(" (while looking up details about referenced class '").append(rcle.getClassName()).append("')");
+      assert cause != null && (cause instanceof IOException || cause instanceof ClassNotFoundException);
+      throw new ForbiddenApiException(msg.toString(), cause);
+    }
     final List<ForbiddenViolation> violations = scanner.getSortedViolations();
     final Pattern splitter = Pattern.compile(Pattern.quote(ForbiddenViolation.SEPARATOR));
     for (final ForbiddenViolation v : violations) {
@@ -419,17 +437,8 @@ public final class Checker implements RelatedClassLookup, Constants {
     logger.info("Scanning classes for violations...");
     int errors = 0;
     final Pattern suppressAnnotationsPattern = AsmUtils.glob2Pattern(suppressAnnotations.toArray(new String[suppressAnnotations.size()]));
-    try {
-      for (final ClassSignature c : classesToCheck.values()) {
-        errors += checkClass(c.getReader(), suppressAnnotationsPattern);
-      }
-    } catch (WrapperRuntimeException wre) {
-      final Throwable cause = wre.getCause();
-      if (cause != null) {
-        throw new ForbiddenApiException("Check for forbidden API calls failed: " + cause.toString(), cause);
-      } else {
-        throw new ForbiddenApiException("Check for forbidden API calls failed.");
-      }
+    for (final ClassSignature c : classesToCheck.values()) {
+      errors += checkClass(c.getReader(), suppressAnnotationsPattern);
     }
     
     final String message = String.format(Locale.ENGLISH, 

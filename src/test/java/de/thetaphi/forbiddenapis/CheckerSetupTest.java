@@ -87,7 +87,8 @@ public final class CheckerSetupTest {
   
   @Test
   public void testRuntimeClassSignatures() throws Exception {
-    ClassSignature cs = checker.lookupRelatedClass("java/lang/String");
+    String internalName = "java/lang/String";
+    ClassSignature cs = checker.lookupRelatedClass(internalName, internalName);
     assertTrue(cs.isRuntimeClass);
     assertTrue(cs.signaturePolymorphicMethods.isEmpty());
   }
@@ -95,11 +96,12 @@ public final class CheckerSetupTest {
   @Test
   public void testSignaturePolymorphic() throws Exception {
     try {
-      ClassSignature cs = checker.lookupRelatedClass("java/lang/invoke/MethodHandle");
+      String internalName = "java/lang/invoke/MethodHandle";
+      ClassSignature cs = checker.lookupRelatedClass(internalName, internalName);
       assertTrue(cs.signaturePolymorphicMethods.contains("invoke"));
       assertTrue(cs.signaturePolymorphicMethods.contains("invokeExact"));
       // System.out.println(cs.signaturePolymorphicMethods);
-    } catch (WrapperRuntimeException we) {
+    } catch (RelatedClassLoadingException we) {
       assertTrue(we.getCause() instanceof ClassNotFoundException);
       assumeNoException("This test only works with Java 7+", we);
     }
