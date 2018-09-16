@@ -23,6 +23,7 @@ import groovy.util.DelegatingScript;
 import java.net.URL;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.control.customizers.ImportCustomizer;
@@ -48,6 +49,12 @@ public class ForbiddenApisPlugin implements Plugin<Project> {
   
   /** Minimum Gradle version this plugin requires to run (v2.3). */
   public static final GradleVersion MIN_GRADLE_VERSION = GradleVersion.version("2.3");
+  
+  /** Java Package that contains the Gradle Daemon (needed to detect it on startup). */
+  private static final String GRADLE_DAEMON_PACKAGE = "org.gradle.launcher.daemon.";
+
+  /** Don't log info about Gradle Daemon multiple times. */
+  private static final AtomicBoolean logGradleDaemonWarning = new AtomicBoolean(true);
   
   private static final Class<? extends DelegatingScript> compiledScript;
   static {
@@ -75,6 +82,27 @@ public class ForbiddenApisPlugin implements Plugin<Project> {
     });
   }
   
+  private static boolean isGradleDaemon() {
+    // see: http://stackoverflow.com/questions/23265217/how-to-know-whether-you-are-running-inside-a-gradle-daemon
+    if (System.getProperty("sun.java.command", "").startsWith(GRADLE_DAEMON_PACKAGE)) {
+      return true;
+    }
+    for (StackTraceElement e : Thread.currentThread().getStackTrace()) {
+      if (e.getClassName().startsWith(GRADLE_DAEMON_PACKAGE)) {
+        return true;
+      }
+    }
+    return false;
+  }
+  
+  private static boolean detectAndLogGradleDaemon(Project project) {
+    final boolean daemon = isGradleDaemon();
+    if (daemon && logGradleDaemonWarning.getAndSet(false)) {
+      project.getLogger().info("You are running forbidden-apis in the Gradle Daemon; disabling classloading cache by default to work around resource leak.");
+    }
+    return daemon;
+  }
+  
   @Override
   public void apply(Project project) {
     if (GradleVersion.current().compareTo(MIN_GRADLE_VERSION) < 0) {
@@ -88,6 +116,7 @@ public class ForbiddenApisPlugin implements Plugin<Project> {
     }
     script.setDelegate(this);
     script.setProperty("project", project);
+    script.setProperty("isGradleDaemon", detectAndLogGradleDaemon(project));
     script.run();
   }
   
