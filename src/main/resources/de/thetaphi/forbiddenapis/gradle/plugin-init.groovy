@@ -21,14 +21,6 @@ import org.gradle.api.plugins.JavaBasePlugin;
 
 project.plugins.apply(JavaBasePlugin.class);
 
-// check if running in Gradle Daemon?
-// see: http://stackoverflow.com/questions/23265217/how-to-know-whether-you-are-running-inside-a-gradle-daemon
-boolean isGradleDaemon = System.getProperty('sun.java.command', '').startsWith('org.gradle.launcher.daemon.') ||
-  Thread.currentThread().stackTrace.any { it.className.startsWith 'org.gradle.launcher.daemon.' };
-if (isGradleDaemon) {
-  project.logger.info('You are running forbidden-apis in the Gradle Daemon; disabling classloading cache to work around resource leak.');
-}
-
 // create Extension for defaults:
 def extension = project.extensions.create(FORBIDDEN_APIS_EXTENSION_NAME, CheckForbiddenApisExtension.class);
 extension.with{
