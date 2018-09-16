@@ -62,6 +62,7 @@ public final class ClassScanner extends ClassVisitor implements Constants {
   final BitSet suppressedGroups = new BitSet();
   boolean classSuppressed = false;
   
+  @SuppressWarnings("deprecation")
   public ClassScanner(RelatedClassLookup lookup, Signatures forbiddenSignatures, final Pattern suppressAnnotations) {
     super(Opcodes.ASM7_EXPERIMENTAL);
     this.lookup = lookup;
@@ -240,6 +241,7 @@ public final class ClassScanner extends ClassVisitor implements Constants {
     return null;
   }
   
+  @SuppressWarnings("deprecation")
   @Override
   public FieldVisitor visitField(final int access, final String name, final String desc, String signature, Object value) {
     currentGroupId++;
@@ -285,6 +287,7 @@ public final class ClassScanner extends ClassVisitor implements Constants {
     };
   }
   
+  @SuppressWarnings("deprecation")
   @Override
   public MethodVisitor visitMethod(final int access, final String name, final String desc, String signature, String[] exceptions) {
     currentGroupId++;

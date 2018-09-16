@@ -66,6 +66,7 @@ public abstract class DeprecatedGen<Input> implements Opcodes {
    return ((access & (ACC_PUBLIC | ACC_PROTECTED)) != 0 && (access & ACC_DEPRECATED) != 0);
   }
   
+  @SuppressWarnings("deprecation")
   protected void parseClass(InputStream in) throws IOException {
     final ClassReader reader;
     try {

@@ -43,6 +43,7 @@ final class ClassSignature implements Constants {
   public final String[] interfaces;
   
   /** Builds the information from an ASM ClassReader */
+  @SuppressWarnings("deprecation")
   public ClassSignature(final ClassReader classReader, boolean isRuntimeClass, boolean withReader) {
     this.reader = withReader ? classReader : null;
     this.isRuntimeClass = isRuntimeClass;
