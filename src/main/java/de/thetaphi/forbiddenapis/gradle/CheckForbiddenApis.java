@@ -69,18 +69,23 @@ import de.thetaphi.forbiddenapis.ParseException;
  * For convenience, the plugin also defines an additional task {@code forbiddenApis}
  * that runs checks on all source sets.
  * <p>
- * Installation can be done from your {@code build.gradle} file:
+ * Installation can be done from your {@code build.gradle} file using the Gradle {@code plugin} DSL:
+ * <pre>
+ * plugins {
+ *  id 'de.thetaphi.forbiddenapis' version '@VERSION@'
+ * }
+ * </pre>
+ * Alternatively, you can use the following script snippet if dynamic configuration is required (e.g., for own tasks):
  * <pre>
  * buildscript {
  *  repositories {
  *   mavenCentral()
  *  }
  *  dependencies {
- *   classpath 'de.thetaphi:forbiddenapis:' + FORBIDDEN_APIS_VERSION
+ *   classpath '@GROUPID@:@ARTIFACTID@:@VERSION@'
  *  }
  * }
  * 
- * apply plugin: 'java'
  * apply plugin: 'de.thetaphi.forbiddenapis'
  * </pre>
  * After that you can add the following task configuration closures:
