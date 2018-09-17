@@ -1,0 +1,76 @@
+/*
+ * (C) Copyright Uwe Schindler (Generics Policeman) and others.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+plugins {
+  id "com.gradle.plugin-publish" version "0.10.0"
+}
+
+def publishGroup = '@GROUPID@'
+group = '@GROUPID@.ignored'
+version = '@VERSION@'
+
+pluginBundle {
+  website = 'https://github.com/policeman-tools/forbidden-apis'
+  vcsUrl = 'https://github.com/policeman-tools/forbidden-apis'
+
+  plugins {
+    forbiddenApisPlugin {
+      id = 'de.thetaphi.forbiddenapis'
+      displayName = 'Policeman\'s Forbidden API Checker'
+      description = 'Allows to parse Java byte code to find invocations of method/class/field signatures and fail build.'
+      tags = ['forbiddenapis', 'verification', 'code checker', 'static analysis']
+    }
+  }
+
+  mavenCoordinates {
+    groupId = publishGroup
+    artifactId = project.name
+  }
+}
+
+repositories {
+  mavenCentral()
+  mavenLocal()
+}
+
+configurations {
+  pluginArtifacts.transitive = false
+}
+
+dependencies {
+  pluginArtifacts group: publishGroup, name: project.name, version: project.version
+  pluginArtifacts group: publishGroup, name: project.name, version: project.version, classifier: 'sources'
+}
+
+task copyPluginArtifacts(type: Copy) {
+  group 'Build'
+  description 'Copies plugin artifacts (from Maven) to local folder for publishing'
+  from configurations.pluginArtifacts
+  into libsDir
+}
+
+publishPlugins {
+  dependsOn('copyPluginArtifacts')
+}
+
+afterEvaluate {
+  configurations.archives.artifacts.removeAll{
+    it.classifier=='javadoc'
+  }
+  tasks.withType(Jar) {
+    enabled = false
+  }
+}

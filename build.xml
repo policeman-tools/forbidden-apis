@@ -114,7 +114,8 @@
 
   <property name="signatures.dir" location="src/main/resources/de/thetaphi/forbiddenapis/signatures"/>
   <property name="groovy-tools.dir" location="src/tools/groovy"/>
-  <property name="gradle-build-dir" location="build/gradle"/>
+  <property name="gradle-test-build-dir" location="build/test-gradle"/>
+  <property name="gradle-publish-build-dir" location="build/gradle-plugin-portal"/>
   <property name="maven-build-dir" location="build/maven"/>
   <property name="documentation-dir" location="build/docs"/>
   <property name="test-results-dir" location="build/test-results"/>
@@ -576,21 +577,21 @@
   </target>
   
   <target name="test-gradle" depends="compile,compile-test,jar,-gradle-unsupported" if="gradle.supported" description="Runs a basic Gradle project to check ourselves">
-    <mkdir dir="${gradle-build-dir}"/>
-    <copy todir="${gradle-build-dir}">
+    <mkdir dir="${gradle-test-build-dir}"/>
+    <copy todir="${gradle-test-build-dir}">
       <fileset dir="src/test/gradle"/>
     </copy>
     <pathconvert property="gradle.forbiddenClasspath" refid="path.main-build"/>
     <pathconvert property="gradle.forbiddenTestClasspath" refid="path.junit-build"/>
     <property name="gradle.forbiddenRootDir" location="."/>
     <property name="gradle.forbiddenSourceCompatibility" value="${jdk.version}"/>
-    <echoproperties destfile="${gradle-build-dir}/gradle.properties" failonerror="true">
+    <echoproperties destfile="${gradle-test-build-dir}/gradle.properties" failonerror="true">
       <propertyset>
         <propertyref prefix="gradle."/>
         <globmapper from="gradle.*" to="*"/>
       </propertyset>
     </echoproperties>
-    <exec executable="${gradle.exe}" dir="${gradle-build-dir}" searchpath="true" vmlauncher="false" failonerror="true" failifexecutionfails="true" taskname="gradle">
+    <exec executable="${gradle.exe}" dir="${gradle-test-build-dir}" searchpath="true" vmlauncher="false" failonerror="true" failifexecutionfails="true" taskname="gradle">
       <arg value="--rerun-tasks"/>
       <arg value="--info"/>
       <arg value="--stacktrace"/>
@@ -694,7 +695,8 @@
       nowarn="true" source="1.8" target="1.8" debug="true" deprecation="false" encoding="${build.encoding}"/>
   </target>
   
-  <target name="generate-test-classes" depends="-generate-test-classes-init,-generate-test-classes-sunmisc,-generate-test-classes-jdk6,-generate-test-classes-jdk7,-generate-test-classes-jdk8" description="Regenerates .class files used by tests if the current JDK version supports it"/>
+  <target name="generate-test-classes" depends="-generate-test-classes-init,-generate-test-classes-sunmisc,-generate-test-classes-jdk6,-generate-test-classes-jdk7,-generate-test-classes-jdk8"
+    description="Regenerates .class files used by tests if the current JDK version supports it"/>
   
   <target name="show-help-mojo" depends="install-maven-artifacts" description="Shows help about mojo usage">
     <artifact:mvn mavenVersion="${maven.version}" failonerror="true" fork="${maven.fork}" taskname="help">
@@ -704,5 +706,27 @@
     </artifact:mvn>
   </target>
 
+  <target name="publish-gradle-plugin" description="Publish artifacts (from Maven repo) to Gradle Plugin Portal (pass -Dversion=x.y)">
+    <fail unless="gradle.supported" message="You need to enable Gradle support with -Dgradle.exe=/path/to/gradle"/>
+    <fail if="isSnapshot" message="You can only publish release versions to Gradle Plugin Portal"/>
+    <!-- prepare the Gradle build file (in new empty directory): -->
+    <delete failonerror="false" dir="${gradle-publish-build-dir}"/>
+    <mkdir dir="${gradle-publish-build-dir}"/>
+    <copy todir="${gradle-publish-build-dir}" encoding="${build.encoding}" outputencoding="${build.encoding}">
+      <fileset dir="src/tools/gradle-plugin-portal" includes="*.template"/>
+      <filterset>
+        <filter token="VERSION" value="${version}"/>
+        <filter token="GROUPID" value="${groupId}"/>
+        <filter token="ARTIFACTID" value="${artifactId}"/>
+      </filterset>
+      <globmapper from="*.template" to="*"/>
+    </copy>
+    <!-- Exceute Gradle and execute task 'publishPlugins': -->
+    <exec executable="${gradle.exe}" dir="${gradle-publish-build-dir}" searchpath="true" vmlauncher="false" failonerror="true" failifexecutionfails="true" taskname="gradle">
+      <arg value="--no-daemon"/>
+      <arg value="publishPlugins"/>
+    </exec>
+  </target>
+  
   <target name="jenkins" depends="clean,dist,test,documentation,-stage.snapshots" description="Runs Jenkins Nightly"/>
 </project>
