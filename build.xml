@@ -164,6 +164,14 @@
     <contains string="${version}" substring="-SNAPSHOT"/>
   </condition>
 
+  <filterset id="artifact-props-filterset">
+    <filter token="NAME" value="${ant.project.name}"/>
+    <filter token="VERSION" value="${version}"/>
+    <filter token="GROUPID" value="${groupId}"/>
+    <filter token="ARTIFACTID" value="${artifactId}"/>
+    <filter token="DESCRIPTION" value="${description}"/>
+  </filterset>
+
   <property name="ivy.install.version" value="2.3.0" />
   <property name="ivy.jar.dir" location=".ivy" />
   <property name="ivy.jar.file" location="${ivy.jar.dir}/ivy-${ivy.install.version}.jar" />
@@ -280,13 +288,7 @@
     <mkdir dir="${maven-build-dir}"/>
     <copy todir="${maven-build-dir}" encoding="${build.encoding}" outputencoding="${build.encoding}">
       <fileset dir="src/main/maven" includes="*.template"/>
-      <filterset>
-        <filter token="NAME" value="${ant.project.name}"/>
-        <filter token="VERSION" value="${version}"/>
-        <filter token="GROUPID" value="${groupId}"/>
-        <filter token="ARTIFACTID" value="${artifactId}"/>
-        <filter token="DESCRIPTION" value="${description}"/>
-      </filterset>
+      <filterset refid="artifact-props-filterset"/>
       <globmapper from="*.template" to="*"/>
     </copy>
     <property name="maven.deploy.pom" location="${maven-build-dir}/pom-deploy.xml"/>
@@ -355,6 +357,7 @@
     <copy todir="${documentation-dir}">
       <fileset dir="${documentation-dir}/tmp/de/thetaphi/forbiddenapis/gradle" includes="CheckForbiddenApis*.html" />
       <mapper type="glob" from="CheckForbiddenApis*" to="gradleApi*"/>
+      <filterset refid="artifact-props-filterset"/>
       <filterchain>
         <tokenfilter>
           <filetokenizer/>
@@ -714,11 +717,7 @@
     <mkdir dir="${gradle-publish-build-dir}"/>
     <copy todir="${gradle-publish-build-dir}" encoding="${build.encoding}" outputencoding="${build.encoding}">
       <fileset dir="src/tools/gradle-plugin-portal" includes="*.template"/>
-      <filterset>
-        <filter token="VERSION" value="${version}"/>
-        <filter token="GROUPID" value="${groupId}"/>
-        <filter token="ARTIFACTID" value="${artifactId}"/>
-      </filterset>
+      <filterset refid="artifact-props-filterset"/>
       <globmapper from="*.template" to="*"/>
     </copy>
     <!-- Exceute Gradle and execute task 'publishPlugins': -->
