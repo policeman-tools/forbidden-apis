@@ -221,7 +221,10 @@ public final class Signatures implements Constants {
       sb.append(count == 0 ? "  " : ", ").append(s);
       count++;
       if (sb.length() >= 70) {
-        sb.append(",... (and ").append(missingClasses.size() - count).append(" more).");
+        int remaining = missingClasses.size() - count;
+        if (remaining > 0) {
+          sb.append(",... (and ").append(remaining).append(" more).");
+        }
         break;
       }
     }
