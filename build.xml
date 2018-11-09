@@ -542,6 +542,7 @@
   
   <target name="-test-antunit" depends="compile,compile-tools,compile-test,install-maven-artifacts,-install-forbiddenapi-task,-install-antunit,-antunit-fake-pom" if="tests.supported">
     <mkdir dir="${test-results-dir}"/>
+    <property name="antunit.project.rootdir" location="."/>
     <property name="antunit.main.classes" location="build/main"/>
     <property name="antunit.tools.classes" location="build/tools"/>
     <property name="antunit.maven3.version" value="3.0.4"/>
@@ -556,6 +557,7 @@
         <propertyref name="groupId"/>
         <propertyref name="artifactId"/>
         <propertyref name="ivy.logging"/>
+        <propertyref name="ivy.maven-central.backup"/>
         <propertyref name="maven.fork"/>
       </propertyset>
       <referenceset>

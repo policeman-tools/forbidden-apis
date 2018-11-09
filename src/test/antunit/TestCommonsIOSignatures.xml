@@ -19,6 +19,7 @@
   <fileset id="main.classes" dir="${antunit.main.classes}"/>
   
   <target name="testCommonsIO">
+    <ivy:configure file="${antunit.project.rootdir}/ivy-settings.xml"/>
     <ac:foreach param="signatures-file" target="-check-signatures-file" inheritall="true" inheritrefs="true">
       <path>
         <fileset dir="${antunit.main.classes}/de/thetaphi/forbiddenapis/signatures" includes="commons-io-*"/>
