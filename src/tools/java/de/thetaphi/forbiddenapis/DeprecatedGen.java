@@ -66,7 +66,6 @@ public abstract class DeprecatedGen<Input> implements Opcodes {
    return ((access & (ACC_PUBLIC | ACC_PROTECTED)) != 0 && (access & ACC_DEPRECATED) != 0);
   }
   
-  @SuppressWarnings("deprecation")
   protected void parseClass(InputStream in) throws IOException {
     final ClassReader reader;
     try {
@@ -82,7 +81,7 @@ public abstract class DeprecatedGen<Input> implements Opcodes {
     if ((reader.getAccess() & ACC_PUBLIC) == 0 || !AsmUtils.isPortableRuntimeClass(className)) {
       return;
     }
-    reader.accept(new ClassVisitor(ASM7_EXPERIMENTAL) {
+    reader.accept(new ClassVisitor(ASM7) {
       boolean classDeprecated = false;
     
       @Override

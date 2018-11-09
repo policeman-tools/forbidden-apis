@@ -62,9 +62,8 @@ public final class ClassScanner extends ClassVisitor implements Constants {
   final BitSet suppressedGroups = new BitSet();
   boolean classSuppressed = false;
   
-  @SuppressWarnings("deprecation")
   public ClassScanner(RelatedClassLookup lookup, Signatures forbiddenSignatures, final Pattern suppressAnnotations) {
-    super(Opcodes.ASM7_EXPERIMENTAL);
+    super(Opcodes.ASM7);
     this.lookup = lookup;
     this.forbiddenSignatures = forbiddenSignatures;
     this.suppressAnnotations = suppressAnnotations;
@@ -244,14 +243,13 @@ public final class ClassScanner extends ClassVisitor implements Constants {
     return null;
   }
   
-  @SuppressWarnings("deprecation")
   @Override
   public FieldVisitor visitField(final int access, final String name, final String desc, String signature, Object value) {
     currentGroupId++;
     if (classSuppressed) {
       return null;
     }
-    return new FieldVisitor(Opcodes.ASM7_EXPERIMENTAL) {
+    return new FieldVisitor(Opcodes.ASM7) {
       final boolean isDeprecated = (access & Opcodes.ACC_DEPRECATED) != 0;
       {
         // only check signature, if field is not synthetic
@@ -290,14 +288,13 @@ public final class ClassScanner extends ClassVisitor implements Constants {
     };
   }
   
-  @SuppressWarnings("deprecation")
   @Override
   public MethodVisitor visitMethod(final int access, final String name, final String desc, String signature, String[] exceptions) {
     currentGroupId++;
     if (classSuppressed) {
       return null;
     }
-    return new MethodVisitor(Opcodes.ASM7_EXPERIMENTAL) {
+    return new MethodVisitor(Opcodes.ASM7) {
       private final Method myself = new Method(name, desc);
       private final boolean isDeprecated = (access & Opcodes.ACC_DEPRECATED) != 0;
       private int lineNo = -1;
