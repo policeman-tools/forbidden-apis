@@ -17,7 +17,7 @@
 <!DOCTYPE ivy-module [
   <!ENTITY maven.version "2.0">
   <!ENTITY gradle.version "2.3">
-  <!ENTITY asm.version "7.0">
+  <!ENTITY asm.version "7.1">
   <!ENTITY jarjar.asm.version "5.2">
 ]>
 <ivy-module version="2.0">
