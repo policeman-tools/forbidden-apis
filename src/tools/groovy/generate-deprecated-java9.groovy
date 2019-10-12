@@ -27,7 +27,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 new DeprecatedGen<URI>(properties['build.java.runtime'], URI.create("jrt:/"), properties['deprecated.output.file'] as File) {
   @Override
   protected void collectClasses(URI uri) throws IOException {
-    Path modules = Paths.get(uri);
+    Path modules = Paths.get(uri).getRoot().resolve('modules'); // needed for Java 9-12 only, but does not hurt!
     PathMatcher fileMatcher = modules.getFileSystem().getPathMatcher("glob:/modules/java.**/*.class");
     Files.walkFileTree(modules, new SimpleFileVisitor<Path>() {
       @Override
