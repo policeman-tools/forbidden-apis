@@ -84,7 +84,7 @@
   </condition>
   
   <!-- With Java 6 and Java 7, the HTTPS access to Maven central is broken, workaround (no TLS 1.2 support): -->
-  <condition property="ivy.maven-central.backup" value="http://repo1.maven.org/maven2" else="https://repo1.maven.org/maven2">
+  <condition property="ivy.maven-central.backup" value="http://insecure.repo1.maven.org/maven2" else="https://repo1.maven.org/maven2">
     <or>
       <equals arg1="${build.java.runtime}" arg2="1.6"/>
       <equals arg1="${build.java.runtime}" arg2="1.7"/>
@@ -186,7 +186,7 @@
 
   <target name="-install.ivy" unless="ivy.available">
     <mkdir dir="${ivy.jar.dir}"/>
-    <get src="http://repo1.maven.org/maven2/org/apache/ivy/ivy/${ivy.install.version}/ivy-${ivy.install.version}.jar" dest="${ivy.jar.file}" skipexisting="true"/>
+    <get src="http://insecure.repo1.maven.org/maven2/org/apache/ivy/ivy/${ivy.install.version}/ivy-${ivy.install.version}.jar" dest="${ivy.jar.file}" skipexisting="true"/>
     <taskdef uri="antlib:org.apache.ivy.ant" classpath="${ivy.jar.file}"/>
   </target>
   
