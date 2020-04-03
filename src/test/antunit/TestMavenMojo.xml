@@ -25,6 +25,7 @@
 
   <target name="testMyselfMaven2">
     <artifact:mvn pom="${antunit.fake-pom}" mavenVersion="${maven.version}" failonerror="true" fork="${maven.fork}">
+      <arg value="-s"/><arg file="${maven.local.settings}"/>
       <arg value="${groupId}:${artifactId}:${version}:check"/>
       <syspropertyset refid="injected-properties"/>
     </artifact:mvn>
@@ -35,6 +36,7 @@
   
   <target name="testMyselfMaven2NewJavaVersion">
     <artifact:mvn pom="${antunit.fake-pom}" mavenVersion="${maven.version}" failonerror="true" fork="${maven.fork}">
+      <arg value="-s"/><arg file="${maven.local.settings}"/>
       <arg value="${groupId}:${artifactId}:${version}:check"/>
       <syspropertyset refid="injected-properties"/>
       <sysproperty key="maven.compiler.target" value="6.0"/>
@@ -47,6 +49,7 @@
   <target name="testInlineSignaturesMaven2">
     <au:expectfailure>
       <artifact:mvn pom="${antunit.fake-pom}" mavenVersion="${maven.version}" failonerror="true" fork="${maven.fork}">
+        <arg value="-s"/><arg file="${maven.local.settings}"/>
         <arg value="${groupId}:${artifactId}:${version}:check"/>
         <syspropertyset refid="injected-properties"/>
         <sysproperty key="antunit.signatures" value="java.lang.String @ You are crazy that you disallow strings"/>
@@ -57,6 +60,7 @@
 
   <target name="testFailOnViolation">
     <artifact:mvn pom="${antunit.fake-pom}" mavenVersion="${maven.version}" failonerror="true" fork="${maven.fork}">
+      <arg value="-s"/><arg file="${maven.local.settings}"/>
       <arg value="${groupId}:${artifactId}:${version}:check"/>
       <syspropertyset refid="injected-properties"/>
       <sysproperty key="antunit.failOnViolation" value="false"/>
@@ -68,6 +72,7 @@
   <target name="testFailOnUnresolveableSignaturesMaven2">
     <au:expectfailure>
       <artifact:mvn pom="${antunit.fake-pom}" mavenVersion="${maven.version}" failonerror="true" fork="${maven.fork}">
+        <arg value="-s"/><arg file="${maven.local.settings}"/>
         <arg value="${groupId}:${artifactId}:${version}:check"/>
         <syspropertyset refid="injected-properties"/>
         <sysproperty key="antunit.signatures" value="foo.bar.ForbiddenApis#testMethod()&#10;java.lang.String#forbiddenFoobarMethod()&#10;java.lang.String#forbiddenFoobarField"/>
@@ -79,6 +84,7 @@
   
   <target name="testPassOnUnresolveableSignaturesMaven2">
     <artifact:mvn pom="${antunit.fake-pom}" mavenVersion="${maven.version}" failonerror="true" fork="${maven.fork}">
+      <arg value="-s"/><arg file="${maven.local.settings}"/>
       <arg value="${groupId}:${artifactId}:${version}:check"/>
       <syspropertyset refid="injected-properties"/>
       <sysproperty key="antunit.signatures" value="foo.bar.ForbiddenApis#testMethod()&#10;java.lang.String#forbiddenFoobarMethod()&#10;java.lang.String#forbiddenFoobarField"/>
@@ -93,6 +99,7 @@
   <target name="testMissingTargetVersion">
     <au:expectfailure>
       <artifact:mvn pom="${antunit.fake-pom}" mavenVersion="${maven.version}" failonerror="true" fork="${maven.fork}">
+        <arg value="-s"/><arg file="${maven.local.settings}"/>
         <arg value="${groupId}:${artifactId}:${version}:check"/>
         <syspropertyset refid="injected-properties"/>
         <sysproperty key="maven.compiler.target" value=""/>
@@ -105,6 +112,7 @@
   <target name="testIncludesExcludes-SuppressedAnnotations-Maven2">
     <artifact:mvn pom="pom-InclExclSuppress.xml" mavenVersion="${maven.version}" failonerror="true" fork="${maven.fork}">
       <syspropertyset refid="injected-properties"/>
+      <arg value="-s"/><arg file="${maven.local.settings}"/>
       <arg value="${groupId}:${artifactId}:${version}:check"/>
     </artifact:mvn>
     <au:assertLogContains text=" 0 error(s)."/> 
@@ -113,6 +121,7 @@
   
   <target name="testMyselfMaven3">
     <artifact:mvn pom="${antunit.fake-pom}" mavenVersion="${antunit.maven3.version}" failonerror="true" fork="${maven.fork}">
+      <arg value="-s"/><arg file="${maven.local.settings}"/>
       <arg value="${groupId}:${artifactId}:${version}:check"/>
       <syspropertyset refid="injected-properties"/>
     </artifact:mvn>
@@ -124,6 +133,7 @@
   <target name="testSigArtifacts-Maven2">
     <artifact:mvn pom="pom-sigArtifacts.xml" mavenVersion="${maven.version}" failonerror="true" fork="${maven.fork}">
       <syspropertyset refid="injected-properties"/>
+      <arg value="-s"/><arg file="${maven.local.settings}"/>
       <arg value="${groupId}:${artifactId}:${version}:check"/>
     </artifact:mvn>
     <au:assertLogContains text=" 0 error(s)."/> 
@@ -133,6 +143,7 @@
   <target name="testSigArtifacts-Maven3">
     <artifact:mvn pom="pom-sigArtifacts.xml" mavenVersion="${antunit.maven3.version}" failonerror="true" fork="${maven.fork}">
       <syspropertyset refid="injected-properties"/>
+      <arg value="-s"/><arg file="${maven.local.settings}"/>
       <arg value="${groupId}:${artifactId}:${version}:check"/>
     </artifact:mvn>
     <au:assertLogContains text=" 0 error(s)."/> 
