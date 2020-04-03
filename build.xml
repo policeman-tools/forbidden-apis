@@ -456,7 +456,6 @@
       <pom refid="maven.deploy.pom"/>
       <attach file="${sources-jar-file}" classifier="sources"/>
       <attach file="${documentation-file}" classifier="docs" type="zip"/>
-      <remoteRepository refid="mvn.maven-central.backup" />
     </artifact:deploy>
   </target>
   
@@ -499,7 +498,6 @@
       <attach file="${jar-file}.asc" type="jar.asc"/>
       <attach file="${sources-jar-file}.asc" classifier="sources" type="jar.asc"/>
       <attach file="${documentation-file}.asc" classifier="docs" type="zip.asc"/>
-      <remoteRepository refid="mvn.maven-central.backup" />
     </artifact:deploy>
   </target>
 
