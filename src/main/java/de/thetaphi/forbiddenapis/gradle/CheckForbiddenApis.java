@@ -43,6 +43,7 @@ import org.gradle.api.resources.ResourceException;
 import org.gradle.api.specs.Spec;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
+import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectories;
 import org.gradle.api.tasks.ParallelizableTask;
@@ -123,8 +124,8 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
    * Directories with the class files to check.
    * Defaults to current sourseSet's output directory (Gradle 2/3) or output directories (Gradle 4.0+).
    */
-  @OutputDirectories
   // no @InputDirectories, we use separate getter for a list of all input files
+  @Internal
   public FileCollection getClassesDirs() {
     return classesDirs;
   }
@@ -143,6 +144,7 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
    *  throw an exception!
    */
   @Deprecated
+  @Internal
   public File getClassesDir() {
     final FileCollection col = getClassesDirs();
     return (col == null) ? null : col.getSingleFile();
@@ -161,6 +163,7 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
   }
 
   /** Returns the pattern set to match against class files in {@link #getClassesDir()}. */
+  @Internal
   public PatternSet getPatternSet() {
     return patternSet;
   }
@@ -406,7 +409,7 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
    * The default is a single include with pattern '**&#47;*.class'
    */
   @Override
-  @Input
+  @Internal
   public Set<String> getIncludes() {
     return getPatternSet().getIncludes();
   }
@@ -423,7 +426,7 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
    * Set of patterns matching class files to be excluded from checking.
    */
   @Override
-  @Input
+  @Internal
   public Set<String> getExcludes() {
     return getPatternSet().getExcludes();
   }
