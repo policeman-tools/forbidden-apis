@@ -124,8 +124,8 @@ public final class Checker implements RelatedClassLookup, Constants {
             }
             runtimePaths.add(javaHome);
           }
-          // Scan the runtime's bootclasspath, too! This is needed because
-          // Apple's JDK 1.6 has the main rt.jar outside ${java.home}!
+          // Scan the runtime's bootclasspath, too! This is needed for
+          // some JDKs that may have the rt.jar outside ${java.home}!
           final RuntimeMXBean rb = ManagementFactory.getRuntimeMXBean();
           if (rb.isBootClassPathSupported()) {
             final String cp = rb.getBootClassPath();
