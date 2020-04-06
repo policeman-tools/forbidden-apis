@@ -176,7 +176,7 @@
     <filter token="REPO" value="${ivy.maven-central.backup}"/>
   </filterset>
 
-  <property name="ivy.install.version" value="2.3.0" />
+  <property name="ivy.install.version" value="2.5.0" />
   <property name="ivy.jar.dir" location=".ivy" />
   <property name="ivy.jar.file" location="${ivy.jar.dir}/ivy-${ivy.install.version}.jar" />
 
@@ -186,7 +186,7 @@
 
   <target name="-install.ivy" unless="ivy.available">
     <mkdir dir="${ivy.jar.dir}"/>
-    <get src="http://insecure.repo1.maven.org/maven2/org/apache/ivy/ivy/${ivy.install.version}/ivy-${ivy.install.version}.jar" dest="${ivy.jar.file}" skipexisting="true"/>
+    <get src="${ivy.maven-central.backup}/org/apache/ivy/ivy/${ivy.install.version}/ivy-${ivy.install.version}.jar" dest="${ivy.jar.file}" skipexisting="true"/>
     <taskdef uri="antlib:org.apache.ivy.ant" classpath="${ivy.jar.file}"/>
   </target>
   
