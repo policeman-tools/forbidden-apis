@@ -18,7 +18,6 @@ package de.thetaphi.forbiddenapis.cli;
 
 import static de.thetaphi.forbiddenapis.Checker.Option.*;
 
-import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
@@ -214,8 +213,7 @@ public final class CliMain implements Constants {
     }
     // System.err.println("Classpath: " + Arrays.toString(urls));
 
-    final URLClassLoader loader = URLClassLoader.newInstance(urls, ClassLoader.getSystemClassLoader());
-    try {
+    try (final URLClassLoader loader = URLClassLoader.newInstance(urls, ClassLoader.getSystemClassLoader())) {
       final EnumSet<Checker.Option> options = EnumSet.of(FAIL_ON_VIOLATION);
       if (!cmd.hasOption(allowmissingclassesOpt.getLongOpt())) options.add(FAIL_ON_MISSING_CLASSES);
       if (!cmd.hasOption(allowunresolvablesignaturesOpt.getLongOpt())) options.add(FAIL_ON_UNRESOLVABLE_SIGNATURES);
@@ -257,7 +255,7 @@ public final class CliMain implements Constants {
       
       try {
         final String[] bundledSignatures = cmd.getOptionValues(bundledsignaturesOpt.getLongOpt());
-        if (bundledSignatures != null) for (String bs : new LinkedHashSet<String>(Arrays.asList(bundledSignatures))) {
+        if (bundledSignatures != null) for (String bs : new LinkedHashSet<>(Arrays.asList(bundledSignatures))) {
           checker.addBundledSignatures(bs, null);
         }
         if (cmd.hasOption(internalruntimeforbiddenOpt.getLongOpt())) {
@@ -266,7 +264,7 @@ public final class CliMain implements Constants {
         }
         
         final String[] signaturesFiles = cmd.getOptionValues(signaturesfileOpt.getLongOpt());
-        if (signaturesFiles != null) for (String sf : new LinkedHashSet<String>(Arrays.asList(signaturesFiles))) {
+        if (signaturesFiles != null) for (String sf : new LinkedHashSet<>(Arrays.asList(signaturesFiles))) {
           final File f = new File(sf).getAbsoluteFile();
           checker.parseSignaturesFile(f);
         }
@@ -294,13 +292,8 @@ public final class CliMain implements Constants {
       } catch (ForbiddenApiException fae) {
         throw new ExitException(EXIT_VIOLATION, fae.getMessage());
       }
-    } finally {
-      // Java 7 supports closing URLClassLoader, so check for Closeable interface:
-      if (loader instanceof Closeable) try {
-        ((Closeable) loader).close();
-      } catch (IOException ioe) {
-        // ignore
-      }
+    } catch (IOException ioe) {
+      throw new ExitException(EXIT_ERR_OTHER, "General IO problem: " + ioe);
     }
   }
   

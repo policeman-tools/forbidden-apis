@@ -43,7 +43,7 @@ import org.objectweb.asm.commons.Method;
 public final class ClassScanner extends ClassVisitor implements Constants {
   private final boolean forbidNonPortableRuntime;
   final RelatedClassLookup lookup;
-  final List<ForbiddenViolation> violations = new ArrayList<ForbiddenViolation>();
+  final List<ForbiddenViolation> violations = new ArrayList<>();
   
   final Signatures forbiddenSignatures;
   
@@ -57,7 +57,7 @@ public final class ClassScanner extends ClassVisitor implements Constants {
   int currentGroupId = 0;
   
   // Mapping from a (possible) lambda Method to groupId of declaring method
-  final Map<Method,Integer> lambdas = new HashMap<Method,Integer>();
+  final Map<Method,Integer> lambdas = new HashMap<>();
   
   // all groups that were disabled due to suppressing annotation
   final BitSet suppressedGroups = new BitSet();
@@ -156,7 +156,7 @@ public final class ClassScanner extends ClassVisitor implements Constants {
           type = type.getElementType();
           break;
         case Type.METHOD:
-          final ArrayList<String> violations = new ArrayList<String>();
+          final ArrayList<String> violations = new ArrayList<>();
           violation = checkType(type.getReturnType());
           if (violation != null) {
             violations.add(violation);

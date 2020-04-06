@@ -17,10 +17,10 @@
 /* The binary class file is packaged together with the source distribution.
  */
 
-class Java6DeprecatedAnnotation {
+class Java7DeprecatedAnnotation {
   
   /** @deprecated **/
-  public Java6DeprecatedAnnotation() {
+  public Java7DeprecatedAnnotation() {
     new StringBuilder();
   }
   

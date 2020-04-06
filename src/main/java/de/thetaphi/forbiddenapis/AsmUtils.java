@@ -162,8 +162,7 @@ public final class AsmUtils {
     }
   }
   
-  /** This method is used to read the whole stream into byte array. This allows patching.
-   * It also works around a bug in ASM 6.1 (https://gitlab.ow2.org/asm/asm/issues/317816). */
+  /** This method is used to read the whole stream into byte array. This allows patching. */
   private static byte[] readStream(final InputStream in) throws IOException {
     final ByteArrayOutputStream bos = new ByteArrayOutputStream();
     final byte[] data = new byte[4096];

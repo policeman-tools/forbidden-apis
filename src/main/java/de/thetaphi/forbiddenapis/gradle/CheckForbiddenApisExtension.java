@@ -33,10 +33,10 @@ import org.gradle.api.file.FileCollection;
 public class CheckForbiddenApisExtension {
   
   public FileCollection signaturesFiles; // initialized by plugin-init.groovy
-  public Set<URL> signaturesURLs = new LinkedHashSet<URL>();
-  public List<String> signatures = new ArrayList<String>();
-  public Set<String> bundledSignatures = new LinkedHashSet<String>(),
-    suppressAnnotations = new LinkedHashSet<String>();
+  public Set<URL> signaturesURLs = new LinkedHashSet<>();
+  public List<String> signatures = new ArrayList<>();
+  public Set<String> bundledSignatures = new LinkedHashSet<>(),
+    suppressAnnotations = new LinkedHashSet<>();
   @Deprecated public boolean internalRuntimeForbidden = false;
   public boolean failOnUnsupportedJava = false,
     failOnMissingClasses = true,

@@ -20,7 +20,7 @@
     <au:expectfailure expectedMessage="Check for forbidden API calls failed, see log">
       <forbiddenapis targetVersion="${jdk.version}">
         <bundledsignatures name="jdk-reflection"/>
-        <file file="Java6Reflection.class"/>
+        <file file="Java7Reflection.class"/>
       </forbiddenapis>
     </au:expectfailure>
     <au:assertLogContains level="error" text="java.lang.reflect.AccessibleObject#setAccessible(boolean) [Reflection usage to work around access flags"/>

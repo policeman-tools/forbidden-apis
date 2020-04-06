@@ -95,16 +95,11 @@ public final class CheckerSetupTest {
   
   @Test
   public void testSignaturePolymorphic() throws Exception {
-    try {
-      String internalName = "java/lang/invoke/MethodHandle";
-      ClassSignature cs = checker.lookupRelatedClass(internalName, internalName);
-      assertTrue(cs.signaturePolymorphicMethods.contains("invoke"));
-      assertTrue(cs.signaturePolymorphicMethods.contains("invokeExact"));
-      // System.out.println(cs.signaturePolymorphicMethods);
-    } catch (RelatedClassLoadingException we) {
-      assertTrue(we.getCause() instanceof ClassNotFoundException);
-      assumeNoException("This test only works with Java 7+", we);
-    }
+    String internalName = "java/lang/invoke/MethodHandle";
+    ClassSignature cs = checker.lookupRelatedClass(internalName, internalName);
+    assertTrue(cs.signaturePolymorphicMethods.contains("invoke"));
+    assertTrue(cs.signaturePolymorphicMethods.contains("invokeExact"));
+    // System.out.println(cs.signaturePolymorphicMethods);
   }
   
   @Test

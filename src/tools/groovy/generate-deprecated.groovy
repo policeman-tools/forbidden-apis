@@ -30,7 +30,7 @@ if (!isDetectedJavaVersion) {
 }
 
 if (isOracle && isDetectedJavaVersion && (isJava9 || hasRTJar)) {
-  String script = isJava9 ? "generate-deprecated-java9.groovy" : "generate-deprecated-java6.groovy";
+  String script = isJava9 ? "generate-deprecated-java9.groovy" : "generate-deprecated-java7.groovy";
   evaluate(new File(properties['groovy-tools.dir'], script));
 } else {
   throw new BuildException("Regenerating the deprecated signatures files need stock Oracle/Sun JDK, "+

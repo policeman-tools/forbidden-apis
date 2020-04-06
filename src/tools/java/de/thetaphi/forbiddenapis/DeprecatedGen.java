@@ -38,7 +38,7 @@ import org.objectweb.asm.Type;
 public abstract class DeprecatedGen<Input> implements Opcodes {
   
   final static String NL = System.getProperty("line.separator", "\n");
-  final SortedSet<String> deprecated = new TreeSet<String>();
+  final SortedSet<String> deprecated = new TreeSet<>();
   final String javaVersion, header;
   
   private final Input source;
@@ -67,13 +67,7 @@ public abstract class DeprecatedGen<Input> implements Opcodes {
   }
   
   protected void parseClass(InputStream in) throws IOException {
-    final ClassReader reader;
-    try {
-      reader = AsmUtils.readAndPatchClass(in);
-    } catch (IllegalArgumentException iae) {
-      // unfortunately the ASM IAE has no message, so add good info!
-      throw new IllegalArgumentException("The class file format of your runtime seems to be too recent to be parsed by ASM (may need to be upgraded).");
-    }
+    final ClassReader reader = AsmUtils.readAndPatchClass(in);
     final String className =  Type.getObjectType(reader.getClassName()).getClassName();
     // exclude internal classes like Unsafe,... and non-public classes!
     // Note: reader.getAccess() does no indicate if class is deprecated, as this is a special
@@ -135,11 +129,8 @@ public abstract class DeprecatedGen<Input> implements Opcodes {
   public void run() throws IOException {
     System.err.println(String.format(Locale.ENGLISH, "Reading '%s' and extracting deprecated APIs to signatures file '%s'...", source, output));
     collectClasses(source);
-    final FileOutputStream out = new FileOutputStream(output);
-    try {
+    try (final FileOutputStream out = new FileOutputStream(output)) {
       writeOutput(out);
-    } finally {
-      out.close();
     }
     System.err.println("Deprecated API signatures for Java version " + javaVersion + " written successfully.");
   }

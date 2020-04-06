@@ -39,11 +39,11 @@
       <arg value="-s"/><arg file="${maven.local.settings}"/>
       <arg value="${groupId}:${artifactId}:${version}:check"/>
       <syspropertyset refid="injected-properties"/>
-      <sysproperty key="maven.compiler.target" value="6.0"/>
+      <sysproperty key="maven.compiler.target" value="7.0"/>
     </artifact:mvn>
     <au:assertLogContains text=" 0 error(s)."/> 
-    <au:assertLogContains text="Reading bundled API signatures: jdk-deprecated-1.6"/> 
-    <au:assertLogContains text="Reading bundled API signatures: jdk-unsafe-1.6"/> 
+    <au:assertLogContains text="Reading bundled API signatures: jdk-deprecated-1.7"/> 
+    <au:assertLogContains text="Reading bundled API signatures: jdk-unsafe-1.7"/> 
   </target>
   
   <target name="testInlineSignaturesMaven2">

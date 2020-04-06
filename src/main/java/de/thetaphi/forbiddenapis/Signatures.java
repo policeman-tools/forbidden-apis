@@ -86,10 +86,10 @@ public final class Signatures implements Constants {
    * <li>classes: key is the internal name (slashed)
    * </ul>
    */
-  final Map<String,String> signatures = new HashMap<String,String>();
+  final Map<String,String> signatures = new HashMap<>();
   
   /** set of patterns of forbidden classes */
-  final Set<ClassPatternRule> classPatterns = new LinkedHashSet<ClassPatternRule>();
+  final Set<ClassPatternRule> classPatterns = new LinkedHashSet<>();
   
   /** if enabled, the bundled signature to enable heuristics for detection of non-portable runtime calls is used */
   private boolean forbidNonPortableRuntime = false;
@@ -261,8 +261,7 @@ public final class Signatures implements Constants {
   }
 
   private void parseSignaturesFile(Reader reader, boolean isBundled, Set<String> missingClasses) throws IOException,ParseException {
-    final BufferedReader r = new BufferedReader(reader);
-    try {
+    try (final BufferedReader r = new BufferedReader(reader)) {
       String line, defaultMessage = null;
       UnresolvableReporting reporter = failOnUnresolvableSignatures ? UnresolvableReporting.FAIL : UnresolvableReporting.WARNING;
       while ((line = r.readLine()) != null) {
@@ -285,14 +284,12 @@ public final class Signatures implements Constants {
           addSignature(line, defaultMessage, reporter, missingClasses);
         }
       }
-    } finally {
-      r.close();
     }
   }
   
   /** Reads a list of bundled API signatures from classpath. */
   public void addBundledSignatures(String name, String jdkTargetVersion) throws IOException,ParseException {
-    final Set<String> missingClasses = new TreeSet<String>();
+    final Set<String> missingClasses = new TreeSet<>();
     addBundledSignatures(name, jdkTargetVersion, true, missingClasses);
     reportMissingSignatureClasses(missingClasses);
   }
@@ -300,7 +297,7 @@ public final class Signatures implements Constants {
   /** Reads a list of API signatures. Closes the Reader when done (on Exception, too)! */
   public void parseSignaturesStream(InputStream in, String name) throws IOException,ParseException {
     logger.info("Reading API signatures: " + name);
-    final Set<String> missingClasses = new TreeSet<String>();
+    final Set<String> missingClasses = new TreeSet<>();
     parseSignaturesStream(in, false, missingClasses);
     reportMissingSignatureClasses(missingClasses);
   }
@@ -308,7 +305,7 @@ public final class Signatures implements Constants {
   /** Reads a list of API signatures from a String. */
   public void parseSignaturesString(String signatures) throws IOException,ParseException {
     logger.info("Reading inline API signatures...");
-    final Set<String> missingClasses = new TreeSet<String>();
+    final Set<String> missingClasses = new TreeSet<>();
     parseSignaturesFile(new StringReader(signatures), false, missingClasses);
     reportMissingSignatureClasses(missingClasses);
   }

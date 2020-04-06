@@ -36,7 +36,6 @@ import de.thetaphi.forbiddenapis.ForbiddenApiException;
 import de.thetaphi.forbiddenapis.Logger;
 import de.thetaphi.forbiddenapis.ParseException;
 
-import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.lang.annotation.RetentionPolicy;
@@ -374,7 +373,7 @@ public abstract class AbstractCheckMojo extends AbstractMojo implements Constant
               "Trying to read bundled JDK signatures without compiler target. " +
               "You have to explicitly specify the version in the resource name.");
           }
-          for (String bs : new LinkedHashSet<String>(Arrays.asList(bundledSignatures))) {
+          for (String bs : new LinkedHashSet<>(Arrays.asList(bundledSignatures))) {
             checker.addBundledSignatures(bs, targetVersion);
           }
         }
@@ -383,8 +382,8 @@ public abstract class AbstractCheckMojo extends AbstractMojo implements Constant
           checker.addBundledSignatures(BS_JDK_NONPORTABLE, null);
         }
         
-        final Set<File> sigFiles = new LinkedHashSet<File>();
-        final Set<URL> sigUrls = new LinkedHashSet<URL>();
+        final Set<File> sigFiles = new LinkedHashSet<>();
+        final Set<URL> sigUrls = new LinkedHashSet<>();
         if (signaturesFiles != null) {
           sigFiles.addAll(Arrays.asList(signaturesFiles));
         }
@@ -446,9 +445,9 @@ public abstract class AbstractCheckMojo extends AbstractMojo implements Constant
         throw new MojoExecutionException(fae.getMessage(), fae.getCause());
       }
     } finally {
-      // Java 7 supports closing URLClassLoader, so check for Closeable interface:
-      if (urlLoader instanceof Closeable) try {
-        ((Closeable) urlLoader).close();
+      // Close the classloader to free resources:
+      try {
+        if (urlLoader != null) urlLoader.close();
       } catch (IOException ioe) {
         // ignore
       }

@@ -17,22 +17,26 @@
 /* The binary class file is packaged together with the source distribution.
  */
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.*;
 
-class Java6ClassReferences {
-  static Integer[][] test() {
-    Integer.class.getName();
-    System.out.println(Integer[].class);
-    Integer[] arr = new Integer[1];
-    arr[0] = new Integer(0);
-    return new Integer[1][1];
+class Java7Reflection {
+  static Field test() throws Exception {
+    Class c = Java7Reflection.class;
+    Field f = c.getDeclaredField("field1");
+    f.setAccessible(true);
+    
+    Method m = c.getDeclaredMethod("testMethod");
+    m.setAccessible(true);
+    m.invoke(new Java7Reflection());
+    
+    return f;
   }
   
   private Integer field1;
-  private final Integer[] field2 = null;
-  
-  // we forbid the superclass or interface, but concrete instance is used:
-  public List<?> list1;
-  public ArrayList<?> list2;
-  public HashSet<?> set1;
+
+  private void testMethod() {
+    // nothing to do here
+  }
 }

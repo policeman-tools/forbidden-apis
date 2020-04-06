@@ -69,14 +69,14 @@ public final class Checker implements RelatedClassLookup, Constants {
   final EnumSet<Option> options;
   
   /** Classes to check: key is the binary name (dotted) */
-  final Map<String,ClassSignature> classesToCheck = new HashMap<String,ClassSignature>();
+  final Map<String,ClassSignature> classesToCheck = new HashMap<>();
   /** Cache of loaded classes: key is the binary name (dotted) */
-  final Map<String,ClassSignature> classpathClassCache = new HashMap<String,ClassSignature>();
+  final Map<String,ClassSignature> classpathClassCache = new HashMap<>();
   
   final Signatures forbiddenSignatures;
   
   /** descriptors (not internal names) of all annotations that suppress */
-  final Set<String> suppressAnnotations = new LinkedHashSet<String>();
+  final Set<String> suppressAnnotations = new LinkedHashSet<>();
     
   public Checker(Logger logger, ClassLoader loader, Option... options) {
     this(logger, loader, (options.length == 0) ? EnumSet.noneOf(Option.class) : EnumSet.copyOf(Arrays.asList(options)));
@@ -106,7 +106,7 @@ public final class Checker implements RelatedClassLookup, Constants {
     this.method_Class_getModule = method_Class_getModule;
     this.method_Module_getName = method_Module_getName;
     
-    final NavigableSet<String> runtimePaths = new TreeSet<String>();
+    final NavigableSet<String> runtimePaths = new TreeSet<>();
     
     // fall back to legacy behavior:
     if (!isSupportedJDK) {
@@ -124,8 +124,8 @@ public final class Checker implements RelatedClassLookup, Constants {
             }
             runtimePaths.add(javaHome);
           }
-          // Scan the runtime's bootclasspath, too! This is needed because
-          // Apple's JDK 1.6 has the main rt.jar outside ${java.home}!
+          // Scan the runtime's bootclasspath, too! This is needed for
+          // some JDKs that may have the rt.jar outside ${java.home}!
           final RuntimeMXBean rb = ManagementFactory.getRuntimeMXBean();
           if (rb.isBootClassPathSupported()) {
             final String cp = rb.getBootClassPath();
@@ -247,9 +247,8 @@ public final class Checker implements RelatedClassLookup, Constants {
         if (!isRuntimeClass && options.contains(Option.DISABLE_CLASSLOADING_CACHE)) {
           conn.setUseCaches(false);
         }
-        final InputStream in = conn.getInputStream();
         final ClassReader cr;
-        try {
+        try (final InputStream in = conn.getInputStream()) {
           cr = AsmUtils.readAndPatchClass(in);
         } catch (IllegalArgumentException iae) {
           // if class is too new for this JVM, we try to load it as Class<?> via Jigsaw
@@ -261,12 +260,9 @@ public final class Checker implements RelatedClassLookup, Constants {
               return c;
             }
           }
-          // unfortunately the ASM IAE has no message, so add good info!
           throw new IllegalArgumentException(String.format(Locale.ENGLISH,
               "The class file format of '%s' (loaded from location '%s') is too recent to be parsed by ASM.",
               clazz, url.toExternalForm()));
-        } finally {
-          in.close();
         }
         final ClassSignature c = new ClassSignature(cr, isRuntimeClass, false);
         classpathClassCache.put(clazz, c);
@@ -348,14 +344,11 @@ public final class Checker implements RelatedClassLookup, Constants {
   /** Parses and adds a class from the given stream to the list of classes to check. Closes the stream when parsed (on Exception, too)! Does not log anything. */
   public void addClassToCheck(final InputStream in, String name) throws IOException {
     final ClassReader reader;
-    try {
-      reader = AsmUtils.readAndPatchClass(in);
+    try (final InputStream in_ = in) {
+      reader = AsmUtils.readAndPatchClass(in_);
     } catch (IllegalArgumentException iae) {
-      // unfortunately the ASM IAE has no message, so add good info!
       throw new IllegalArgumentException(String.format(Locale.ENGLISH,
           "The class file format of '%s' is too recent to be parsed by ASM.", name));
-    } finally {
-      in.close();
     }
     final String binaryName = Type.getObjectType(reader.getClassName()).getClassName();
     classesToCheck.put(binaryName, new ClassSignature(reader, false, true));

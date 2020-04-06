@@ -44,9 +44,9 @@
       <arg value="--bundledsignatures"/>
       <arg value="jdk-system-out"/>
       <arg value="--includes"/>
-      <arg value="Java6*.class"/>
+      <arg value="Java7*.class"/>
       <arg value="--excludes"/>
-      <arg value="Java6ClassReferences.class"/>
+      <arg value="Java7ClassReferences.class"/>
       <arg value="--internalruntimeforbidden"/>
     </java>
     <au:assertLogContains text=" 0 error(s)."/> 

@@ -26,9 +26,9 @@
     </condition>
   </fail>
 
-  <fail message="Minimum supported Java version is 1.6.">
+  <fail message="Minimum supported Java version is 1.7.">
     <condition>
-      <not><hasmethod classname="java.lang.String" method="isEmpty"/></not>
+      <not><available classname="java.lang.invoke.MethodHandle"/></not>
     </condition>
   </fail>
 
@@ -54,7 +54,6 @@
    -->
   <condition property="build.java.runtime" value="${-cleaned.specification.version}" else="unknown">
     <or>
-      <equals arg1="${-cleaned.specification.version}" arg2="1.6"/>
       <equals arg1="${-cleaned.specification.version}" arg2="1.7"/>
       <equals arg1="${-cleaned.specification.version}" arg2="1.8"/>
       <equals arg1="${-cleaned.specification.version}" arg2="9"/>
@@ -68,9 +67,8 @@
   
   <property name="build.java.info" value="${java.version} / JVM: ${java.vm.name} / Vendor: ${java.vendor} / OS: ${os.name} (${os.version})"/>
   
-  <condition property="is.java-6-7">
+  <condition property="is.java7">
     <or>
-      <equals arg1="${build.java.runtime}" arg2="1.6"/>
       <equals arg1="${build.java.runtime}" arg2="1.7"/>
     </or>
   </condition>
@@ -79,7 +77,7 @@
   <condition property="build.compiler" value="javac1.7">
     <and>
       <not>
-        <isset property="is.java-6-7"/>
+        <isset property="is.java7"/>
       </not>
       <or>
         <antversion exactly="1.8.3" />
@@ -88,19 +86,19 @@
     </and>
   </condition>
   
-  <!-- With Java 6 and Java 7, the HTTPS access to Maven central is broken, workaround (no TLS 1.2 support): -->
+  <!-- With Java 7, the HTTPS access to Maven central is broken, workaround (no TLS 1.2 support): -->
   <condition property="ivy.maven-central.backup" value="http://insecure.repo1.maven.org/maven2" else="https://repo1.maven.org/maven2">
-    <isset property="is.java-6-7"/>
+    <isset property="is.java7"/>
   </condition>
 
   <condition property="javadoc.doclint.args" value="" else="-Xdoclint:none">
-    <isset property="is.java-6-7"/>
+    <isset property="is.java7"/>
   </condition>
   
   <property file="${user.home}/build.properties" />
   <property file="build.properties" />
 
-  <property name="jdk.version" value="1.6"/>
+  <property name="jdk.version" value="1.7"/>
   <property name="maven.version" value="2.2.1"/>
   <property name="maven-plugin-plugin.version" value="3.4"/>
   
@@ -126,7 +124,7 @@
   <!-- define Maven coordinates -->
   <property name="groupId" value="de.thetaphi" />
   <property name="artifactId" value="forbiddenapis" />
-  <property name="version" value="2.8-SNAPSHOT"/>
+  <property name="version" value="3.0-SNAPSHOT"/>
   
   <property name="description" value="Allows to parse Java byte code to find invocations of method/class/field signatures and fail build (Apache Ant, Apache Maven, Gradle, or CLI)"/>
 
@@ -148,7 +146,6 @@
 
   <condition property="tests.supported">
     <or>
-      <equals arg1="${build.java.runtime}" arg2="1.6"/>
       <equals arg1="${build.java.runtime}" arg2="1.7"/>
       <equals arg1="${build.java.runtime}" arg2="1.8"/>
       <equals arg1="${build.java.runtime}" arg2="9"/>
@@ -156,6 +153,7 @@
       <equals arg1="${build.java.runtime}" arg2="11"/>
       <equals arg1="${build.java.runtime}" arg2="12"/>
       <equals arg1="${build.java.runtime}" arg2="13"/>
+      <equals arg1="${build.java.runtime}" arg2="14"/>
     </or>
   </condition>
 
@@ -195,10 +193,10 @@
     <echo level="info" taskname="check-java" message="Java runtime: ${build.java.info}"/>
     <local name="java.version-message"/>
     <condition property="java.version-message"
-      value="Java 6 and Java 7 do not support TLS 1.2, so we have to use the insecure Maven Central mirror. If you are building a release, please run the build at least once with Java 8+ to download all Artifacts using HTTPS. If you don't yet have the Gradle Artifacts downloaded, you have to do this anyways."
+      value="Java 7 does not support TLS 1.2, so we have to use the insecure Maven Central mirror. If you are building a release, please run the build at least once with Java 8+ to download all Artifacts using HTTPS. If you don't yet have the Gradle Artifacts downloaded, you have to do this anyways."
       else="You are using Java 8+, so wecan use the HTTPS Maven Repository for downloading artifacts."
     >
-      <isset property="is.java-6-7"/>
+      <isset property="is.java7"/>
     </condition>
     <echo level="warn" taskname="check-java" message="${java.version-message}"/>
     <ivy:configure file="ivy-settings.xml"/>
@@ -687,9 +685,6 @@
     <condition property="-gen.sunmisc">
       <available classname="sun.misc.BASE64Encoder"/>
     </condition>
-    <condition property="-gen.jdk7">
-      <available classname="java.lang.invoke.MethodHandle"/>
-    </condition>
     <condition property="-gen.jdk8">
       <hasmethod classname="java.util.Collections" method="emptySortedSet"/>
     </condition>
@@ -699,20 +694,13 @@
     <echo level="info" message="Generating test classes using sun.misc internal APIs (needs Oracle Java):"/>
     <delete dir="src/test/antunit" includes="Oracle*.class"/>
     <javac includeantruntime="false" srcdir="src/test/antunit" destdir="src/test/antunit" includes="Oracle*.java"
-      nowarn="true" source="1.6" target="1.6" debug="true" deprecation="false" encoding="${build.encoding}">
+      nowarn="true" source="1.7" target="1.7" debug="true" deprecation="false" encoding="${build.encoding}">
       <!-- This disables the symbol file used to detect internal APIs while compiling: -->
       <compilerarg value="-XDignore.symbol.file=true"/>
     </javac>
   </target>
   
-  <target name="-generate-test-classes-jdk6">
-    <echo level="info" message="Generating test classes for Java 6:"/>
-    <delete dir="src/test/antunit" includes="Java6*.class"/>
-    <javac includeantruntime="false" srcdir="src/test/antunit" destdir="src/test/antunit" includes="Java6*.java"
-      nowarn="true" source="1.6" target="1.6" debug="true" deprecation="false" encoding="${build.encoding}"/>
-  </target>
-  
-  <target name="-generate-test-classes-jdk7" if="-gen.jdk7">
+  <target name="-generate-test-classes-jdk7">
     <echo level="info" message="Generating test classes for Java 7:"/>
     <delete dir="src/test/antunit" includes="Java7*.class"/>
     <javac includeantruntime="false" srcdir="src/test/antunit" destdir="src/test/antunit" includes="Java7*.java"
@@ -726,7 +714,7 @@
       nowarn="true" source="1.8" target="1.8" debug="true" deprecation="false" encoding="${build.encoding}"/>
   </target>
   
-  <target name="generate-test-classes" depends="-generate-test-classes-init,-generate-test-classes-sunmisc,-generate-test-classes-jdk6,-generate-test-classes-jdk7,-generate-test-classes-jdk8"
+  <target name="generate-test-classes" depends="-generate-test-classes-init,-generate-test-classes-sunmisc,-generate-test-classes-jdk7,-generate-test-classes-jdk8"
     description="Regenerates .class files used by tests if the current JDK version supports it"/>
   
   <target name="show-help-mojo" depends="install-maven-artifacts" description="Shows help about mojo usage">

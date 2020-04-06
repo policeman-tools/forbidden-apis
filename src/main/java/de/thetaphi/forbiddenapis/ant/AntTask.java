@@ -59,8 +59,8 @@ public class AntTask extends Task implements Constants {
 
   private final Union classFiles = new Union();
   private final Union apiSignatures = new Union();
-  private final Collection<BundledSignaturesType> bundledSignatures = new LinkedHashSet<BundledSignaturesType>();
-  private final Collection<SuppressAnnotationType> suppressAnnotations = new LinkedHashSet<SuppressAnnotationType>();
+  private final Collection<BundledSignaturesType> bundledSignatures = new LinkedHashSet<>();
+  private final Collection<SuppressAnnotationType> suppressAnnotations = new LinkedHashSet<>();
   private Path classpath = null;
   
   private boolean failOnUnsupportedJava = false;
