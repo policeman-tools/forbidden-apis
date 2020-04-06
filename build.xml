@@ -639,6 +639,7 @@
         <exclude name="README.md"/>
         <exclude name="**/jdk-deprecated-*.txt"/>
         <exclude name="**/jdk-internal-*.txt"/>
+        <exclude name="**/*.iml"/>
       </fileset>
     </rat:report>
     <!-- now print the output, for review -->

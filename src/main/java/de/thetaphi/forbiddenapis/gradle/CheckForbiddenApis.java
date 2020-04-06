@@ -38,8 +38,8 @@ import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.FileTree;
 import org.gradle.api.file.FileTreeElement;
-import org.gradle.api.resources.ResourceException;
 import org.gradle.api.specs.Spec;
+import org.gradle.api.tasks.Classpath;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
@@ -174,6 +174,7 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
    * Defaults to current sourseSet's compile classpath.
    */
   @InputFiles
+  @Classpath
   public FileCollection getClasspath() {
     return classpath;
   }
@@ -595,7 +596,7 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
           checker.parseSignaturesString(sb.toString());
         }
       } catch (IOException ioe) {
-        throw new ResourceException("IO problem while reading files with API signatures.", ioe);
+        throw new GradleException("IO problem while reading files with API signatures.", ioe);
       } catch (ParseException pe) {
         throw new InvalidUserDataException("Parsing signatures failed: " + pe.getMessage(), pe);
       }
@@ -612,7 +613,7 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
       try {
         checker.addClassesToCheck(getClassFiles());
       } catch (IOException ioe) {
-        throw new ResourceException("Failed to load one of the given class files.", ioe);
+        throw new GradleException("Failed to load one of the given class files.", ioe);
       }
 
       checker.run();
