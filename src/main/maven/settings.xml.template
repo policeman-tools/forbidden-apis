@@ -20,7 +20,7 @@
   <mirrors>
     <!--
      This is a "mirror" of Maven Central, so we can use HTTPS
-     with Java 8+ and the insecure clone repo with Java 6/7.
+     with Java 8+ and the insecure clone repo with Java 7.
      We also force Maven 2 to use HTTPS, which would otherwise
      always use HTTP and break build completely.
      The property is set by ANT when it detects used JVM.

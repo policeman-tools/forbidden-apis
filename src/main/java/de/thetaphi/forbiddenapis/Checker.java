@@ -260,7 +260,6 @@ public final class Checker implements RelatedClassLookup, Constants {
               return c;
             }
           }
-          // unfortunately the ASM IAE has no message, so add good info!
           throw new IllegalArgumentException(String.format(Locale.ENGLISH,
               "The class file format of '%s' (loaded from location '%s') is too recent to be parsed by ASM.",
               clazz, url.toExternalForm()));
@@ -348,7 +347,6 @@ public final class Checker implements RelatedClassLookup, Constants {
     try (final InputStream in_ = in) {
       reader = AsmUtils.readAndPatchClass(in_);
     } catch (IllegalArgumentException iae) {
-      // unfortunately the ASM IAE has no message, so add good info!
       throw new IllegalArgumentException(String.format(Locale.ENGLISH,
           "The class file format of '%s' is too recent to be parsed by ASM.", name));
     }

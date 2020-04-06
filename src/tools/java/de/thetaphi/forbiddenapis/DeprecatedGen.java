@@ -67,13 +67,7 @@ public abstract class DeprecatedGen<Input> implements Opcodes {
   }
   
   protected void parseClass(InputStream in) throws IOException {
-    final ClassReader reader;
-    try {
-      reader = AsmUtils.readAndPatchClass(in);
-    } catch (IllegalArgumentException iae) {
-      // unfortunately the ASM IAE has no message, so add good info!
-      throw new IllegalArgumentException("The class file format of your runtime seems to be too recent to be parsed by ASM (may need to be upgraded).");
-    }
+    final ClassReader reader = AsmUtils.readAndPatchClass(in);
     final String className =  Type.getObjectType(reader.getClassName()).getClassName();
     // exclude internal classes like Unsafe,... and non-public classes!
     // Note: reader.getAccess() does no indicate if class is deprecated, as this is a special
