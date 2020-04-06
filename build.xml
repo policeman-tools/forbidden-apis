@@ -193,7 +193,7 @@
     <echo level="info" taskname="check-java" message="Java runtime: ${build.java.info}"/>
     <local name="java.version-message"/>
     <condition property="java.version-message"
-      value="Java 7 do not support TLS 1.2, so we have to use the insecure Maven Central mirror. If you are building a release, please run the build at least once with Java 8+ to download all Artifacts using HTTPS. If you don't yet have the Gradle Artifacts downloaded, you have to do this anyways."
+      value="Java 7 does not support TLS 1.2, so we have to use the insecure Maven Central mirror. If you are building a release, please run the build at least once with Java 8+ to download all Artifacts using HTTPS. If you don't yet have the Gradle Artifacts downloaded, you have to do this anyways."
       else="You are using Java 8+, so wecan use the HTTPS Maven Repository for downloading artifacts."
     >
       <isset property="is.java7"/>
