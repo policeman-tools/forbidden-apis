@@ -19,7 +19,7 @@
   <target name="testClassReferences">
     <au:expectfailure expectedMessage="Check for forbidden API calls failed, see log">
       <forbiddenapis>
-        <file file="Java6ClassReferences.class"/>
+        <file file="Java7ClassReferences.class"/>
         java.lang.Integer @ Forbidden class reference!
         java.util.List @ Forbidden class reference!
         java.util.AbstractCollection @ Forbidden class reference!

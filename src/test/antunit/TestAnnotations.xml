@@ -34,7 +34,7 @@
   <target name="testMissingDeprecatedAnnotation">
     <au:expectfailure expectedMessage="Check for forbidden API calls failed, see log">
       <forbiddenapis failOnMissingClasses="true" classpath="${basedir}">
-        <file file="Java6DeprecatedAnnotation.class"/>
+        <file file="Java7DeprecatedAnnotation.class"/>
         java.lang.Deprecated @ Deprecated annotation
       </forbiddenapis>
     </au:expectfailure>
@@ -44,7 +44,7 @@
   
   <target name="testSuppressAnnotationsDeprecated1">
     <forbiddenapis failOnMissingClasses="true" classpath="${basedir}" suppressAnnotation="java.lang.Deprecated">
-      <file file="Java6DeprecatedAnnotation.class"/>
+      <file file="Java7DeprecatedAnnotation.class"/>
       java.lang.StringBuilder
     </forbiddenapis>
     <au:assertLogContains text=" 0 error(s)."/> 
@@ -53,7 +53,7 @@
   <target name="testSuppressAnnotationsDeprecated2">
     <forbiddenapis failOnMissingClasses="true" classpath="${basedir}">
       <suppressAnnotation classname="java.lang.Deprecated"/>
-      <file file="Java6DeprecatedAnnotation.class"/>
+      <file file="Java7DeprecatedAnnotation.class"/>
       java.lang.StringBuilder
     </forbiddenapis>
     <au:assertLogContains text=" 0 error(s)."/> 
