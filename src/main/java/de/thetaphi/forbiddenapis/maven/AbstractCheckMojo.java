@@ -36,7 +36,6 @@ import de.thetaphi.forbiddenapis.ForbiddenApiException;
 import de.thetaphi.forbiddenapis.Logger;
 import de.thetaphi.forbiddenapis.ParseException;
 
-import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.lang.annotation.RetentionPolicy;
@@ -446,9 +445,9 @@ public abstract class AbstractCheckMojo extends AbstractMojo implements Constant
         throw new MojoExecutionException(fae.getMessage(), fae.getCause());
       }
     } finally {
-      // Java 7 supports closing URLClassLoader, so check for Closeable interface:
-      if (urlLoader instanceof Closeable) try {
-        ((Closeable) urlLoader).close();
+      // Close the classloader to free resources:
+      try {
+        if (urlLoader != null) urlLoader.close();
       } catch (IOException ioe) {
         // ignore
       }

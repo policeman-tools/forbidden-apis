@@ -247,9 +247,8 @@ public final class Checker implements RelatedClassLookup, Constants {
         if (!isRuntimeClass && options.contains(Option.DISABLE_CLASSLOADING_CACHE)) {
           conn.setUseCaches(false);
         }
-        final InputStream in = conn.getInputStream();
         final ClassReader cr;
-        try {
+        try (final InputStream in = conn.getInputStream()) {
           cr = AsmUtils.readAndPatchClass(in);
         } catch (IllegalArgumentException iae) {
           // if class is too new for this JVM, we try to load it as Class<?> via Jigsaw
@@ -265,8 +264,6 @@ public final class Checker implements RelatedClassLookup, Constants {
           throw new IllegalArgumentException(String.format(Locale.ENGLISH,
               "The class file format of '%s' (loaded from location '%s') is too recent to be parsed by ASM.",
               clazz, url.toExternalForm()));
-        } finally {
-          in.close();
         }
         final ClassSignature c = new ClassSignature(cr, isRuntimeClass, false);
         classpathClassCache.put(clazz, c);
@@ -348,14 +345,12 @@ public final class Checker implements RelatedClassLookup, Constants {
   /** Parses and adds a class from the given stream to the list of classes to check. Closes the stream when parsed (on Exception, too)! Does not log anything. */
   public void addClassToCheck(final InputStream in, String name) throws IOException {
     final ClassReader reader;
-    try {
-      reader = AsmUtils.readAndPatchClass(in);
+    try (final InputStream in_ = in) {
+      reader = AsmUtils.readAndPatchClass(in_);
     } catch (IllegalArgumentException iae) {
       // unfortunately the ASM IAE has no message, so add good info!
       throw new IllegalArgumentException(String.format(Locale.ENGLISH,
           "The class file format of '%s' is too recent to be parsed by ASM.", name));
-    } finally {
-      in.close();
     }
     final String binaryName = Type.getObjectType(reader.getClassName()).getClassName();
     classesToCheck.put(binaryName, new ClassSignature(reader, false, true));

@@ -75,15 +75,12 @@ public final class InternalApiGen {
     parsePackages(Security.getProperty("package.access"), packages);
     // TODO: add this, too??: parsePackages(Security.getProperty("package.definition"), packages);
 
-    final BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(output), "UTF-8"));
-    try {
+    try (final BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(output), "UTF-8"))) {
       writer.write(header);
       for (final String s : packages) {
         writer.write(s);
         writer.newLine();
       }
-    } finally {
-      writer.close();
     }
     
     System.err.println("Internal API signatures for Java version " + javaVersion + " written successfully.");

@@ -261,8 +261,7 @@ public final class Signatures implements Constants {
   }
 
   private void parseSignaturesFile(Reader reader, boolean isBundled, Set<String> missingClasses) throws IOException,ParseException {
-    final BufferedReader r = new BufferedReader(reader);
-    try {
+    try (final BufferedReader r = new BufferedReader(reader)) {
       String line, defaultMessage = null;
       UnresolvableReporting reporter = failOnUnresolvableSignatures ? UnresolvableReporting.FAIL : UnresolvableReporting.WARNING;
       while ((line = r.readLine()) != null) {
@@ -285,8 +284,6 @@ public final class Signatures implements Constants {
           addSignature(line, defaultMessage, reporter, missingClasses);
         }
       }
-    } finally {
-      r.close();
     }
   }
   

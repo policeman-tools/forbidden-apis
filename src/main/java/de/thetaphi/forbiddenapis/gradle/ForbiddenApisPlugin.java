@@ -70,7 +70,9 @@ public class ForbiddenApisPlugin implements Plugin<Project> {
       @Override
       public Class<? extends DelegatingScript> run() {
         try {
-          final GroovyClassLoader loader = new GroovyClassLoader(ForbiddenApisPlugin.class.getClassLoader(), configuration);
+          // We don't close the classloader, as we may need it later when loading other classes from inside script:
+          @SuppressWarnings("resource") final GroovyClassLoader loader =
+              new GroovyClassLoader(ForbiddenApisPlugin.class.getClassLoader(), configuration);
           final GroovyCodeSource csrc = new GroovyCodeSource(scriptUrl);
           @SuppressWarnings("unchecked") final Class<? extends DelegatingScript> clazz =
               loader.parseClass(csrc, false).asSubclass(DelegatingScript.class);

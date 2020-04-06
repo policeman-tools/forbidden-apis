@@ -135,11 +135,8 @@ public abstract class DeprecatedGen<Input> implements Opcodes {
   public void run() throws IOException {
     System.err.println(String.format(Locale.ENGLISH, "Reading '%s' and extracting deprecated APIs to signatures file '%s'...", source, output));
     collectClasses(source);
-    final FileOutputStream out = new FileOutputStream(output);
-    try {
+    try (final FileOutputStream out = new FileOutputStream(output)) {
       writeOutput(out);
-    } finally {
-      out.close();
     }
     System.err.println("Deprecated API signatures for Java version " + javaVersion + " written successfully.");
   }

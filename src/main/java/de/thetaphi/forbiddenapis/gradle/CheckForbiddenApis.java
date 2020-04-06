@@ -19,7 +19,6 @@ package de.thetaphi.forbiddenapis.gradle;
 import static de.thetaphi.forbiddenapis.Checker.Option.*;
 import groovy.lang.Closure;
 
-import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.lang.annotation.RetentionPolicy;
@@ -618,9 +617,9 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
 
       checker.run();
     } finally {
-      // Java 7 supports closing URLClassLoader, so check for Closeable interface:
-      if (urlLoader instanceof Closeable) try {
-        ((Closeable) urlLoader).close();
+      // Close the classloader to free resources:
+      try {
+        if (urlLoader != null) urlLoader.close();
       } catch (IOException ioe) {
         // ignore
       }
