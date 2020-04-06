@@ -120,9 +120,8 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
   
   /**
    * Directories with the class files to check.
-   * Defaults to current sourseSet's output directory (Gradle 2/3) or output directories (Gradle 4.0+).
+   * Defaults to current sourseSet's output directory (Gradle 3) or output directories (Gradle 4.0+).
    */
-  // no @InputDirectories, we use separate getter for a list of all input files
   @Internal
   public FileCollection getClassesDirs() {
     return classesDirs;
@@ -136,7 +135,7 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
 
   /**
    * Directory with the class files to check.
-   * Defaults to current sourseSet's output directory (Gradle 2/3 only).
+   * Defaults to current sourseSet's output directory (Gradle 3 only).
    * @deprecated use {@link #getClassesDirs()} instead. If there are more than one
    *  {@code classesDir} set by {@link #setClassesDirs(FileCollection)}, this getter may
    *  throw an exception!
