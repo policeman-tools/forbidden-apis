@@ -60,6 +60,7 @@ project.sourceSets.all{ sourceSet ->
         task.dependsOn(sourceSet.output);
       }
     }
+    outputs.upToDateWhen { true }
     forbiddenTask.dependsOn(task);
   }
 }
