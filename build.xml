@@ -62,19 +62,24 @@
       <equals arg1="${-cleaned.specification.version}" arg2="11"/>
       <equals arg1="${-cleaned.specification.version}" arg2="12"/>
       <equals arg1="${-cleaned.specification.version}" arg2="13"/>
+      <equals arg1="${-cleaned.specification.version}" arg2="14"/>
     </or>
   </condition>
   
   <property name="build.java.info" value="${java.version} / JVM: ${java.vm.name} / Vendor: ${java.vendor} / OS: ${os.name} (${os.version})"/>
   
+  <condition property="is.java-6-7">
+    <or>
+      <equals arg1="${build.java.runtime}" arg2="1.6"/>
+      <equals arg1="${build.java.runtime}" arg2="1.7"/>
+    </or>
+  </condition>
+
   <!-- workaround for https://issues.apache.org/bugzilla/show_bug.cgi?id=53347 -->
   <condition property="build.compiler" value="javac1.7">
     <and>
       <not>
-        <or>
-          <equals arg1="${build.java.runtime}" arg2="1.6"/>
-          <equals arg1="${build.java.runtime}" arg2="1.7"/>
-        </or>
+        <isset property="is.java-6-7"/>
       </not>
       <or>
         <antversion exactly="1.8.3" />
@@ -84,18 +89,12 @@
   </condition>
   
   <!-- With Java 6 and Java 7, the HTTPS access to Maven central is broken, workaround (no TLS 1.2 support): -->
-  <condition property="ivy.maven-central.backup" value="http://repo1.maven.org/maven2" else="https://repo1.maven.org/maven2">
-    <or>
-      <equals arg1="${build.java.runtime}" arg2="1.6"/>
-      <equals arg1="${build.java.runtime}" arg2="1.7"/>
-    </or>
+  <condition property="ivy.maven-central.backup" value="http://insecure.repo1.maven.org/maven2" else="https://repo1.maven.org/maven2">
+    <isset property="is.java-6-7"/>
   </condition>
 
   <condition property="javadoc.doclint.args" value="" else="-Xdoclint:none">
-    <or>
-      <equals arg1="${build.java.runtime}" arg2="1.6"/>
-      <equals arg1="${build.java.runtime}" arg2="1.7"/>
-    </or>
+    <isset property="is.java-6-7"/>
   </condition>
   
   <property file="${user.home}/build.properties" />
@@ -174,9 +173,10 @@
     <filter token="GROUPID" value="${groupId}"/>
     <filter token="ARTIFACTID" value="${artifactId}"/>
     <filter token="DESCRIPTION" value="${description}"/>
+    <filter token="REPO" value="${ivy.maven-central.backup}"/>
   </filterset>
 
-  <property name="ivy.install.version" value="2.3.0" />
+  <property name="ivy.install.version" value="2.5.0" />
   <property name="ivy.jar.dir" location=".ivy" />
   <property name="ivy.jar.file" location="${ivy.jar.dir}/ivy-${ivy.install.version}.jar" />
 
@@ -186,13 +186,21 @@
 
   <target name="-install.ivy" unless="ivy.available">
     <mkdir dir="${ivy.jar.dir}"/>
-    <get src="http://repo1.maven.org/maven2/org/apache/ivy/ivy/${ivy.install.version}/ivy-${ivy.install.version}.jar" dest="${ivy.jar.file}" skipexisting="true"/>
+    <get src="${ivy.maven-central.backup}/org/apache/ivy/ivy/${ivy.install.version}/ivy-${ivy.install.version}.jar" dest="${ivy.jar.file}" skipexisting="true"/>
     <taskdef uri="antlib:org.apache.ivy.ant" classpath="${ivy.jar.file}"/>
   </target>
   
   <target name="-init" depends="-install.ivy">
-    <echo level="info" message="Detected Java runtime major version: ${build.java.runtime}"/>
-    <echo level="info" message="Java runtime: ${build.java.info}"/>
+    <echo level="info" taskname="check-java" message="Detected Java runtime major version: ${build.java.runtime}"/>
+    <echo level="info" taskname="check-java" message="Java runtime: ${build.java.info}"/>
+    <local name="java.version-message"/>
+    <condition property="java.version-message"
+      value="Java 6 and Java 7 do not support TLS 1.2, so we have to use the insecure Maven Central mirror. If you are building a release, please run the build at least once with Java 8+ to download all Artifacts using HTTPS. If you don't yet have the Gradle Artifacts downloaded, you have to do this anyways."
+      else="You are using Java 8+, so wecan use the HTTPS Maven Repository for downloading artifacts."
+    >
+      <isset property="is.java-6-7"/>
+    </condition>
+    <echo level="warn" taskname="check-java" message="${java.version-message}"/>
     <ivy:configure file="ivy-settings.xml"/>
     <ivy:resolve log="${ivy.logging}"/>
     <local name="ivy.version-message"/>
@@ -239,6 +247,12 @@
     <taskdef uri="antlib:org.apache.maven.artifact.ant" classpathref="path.tasks"/>
     <taskdef name="groovy" classname="org.codehaus.groovy.ant.Groovy" classpathref="path.tasks"/>
     <typedef uri="antlib:org.apache.rat.anttasks" classpathref="path.tasks"/>
+    <artifact:remoteRepository id="mvn.maven-central.backup" url="${ivy.maven-central.backup}"/>
+    <!-- Make sure we downloaded Maven, so artifact:mvn can bootstrap itsself -->
+    <artifact:dependencies pathId="apache-maven-dependencies" pathType="jar" type="pom,jar">
+      <dependency groupId="org.apache.maven" artifactId="apache-maven" version="${maven.version}" type="pom" />
+      <remoteRepository refid="mvn.maven-central.backup" />
+    </artifact:dependencies>
     <property name="installed.tasks" value="true"/>
   </target>
 
@@ -296,6 +310,7 @@
       <globmapper from="*.template" to="*"/>
     </copy>
     <property name="maven.deploy.pom" location="${maven-build-dir}/pom-deploy.xml"/>
+    <property name="maven.local.settings" location="${maven-build-dir}/settings.xml"/>
     <artifact:pom id="maven.deploy.pom" file="${maven.deploy.pom}"/>
   </target>
   
@@ -307,6 +322,7 @@
 
   <target name="maven-descriptor" depends="compile,-maven-setup,-install-tasks,-maven-uptodate" unless="maven-descriptor.uptodate" description="Creates the Maven Plugin Descriptor">
     <artifact:mvn pom="${maven-build-dir}/pom-build.xml" mavenVersion="${maven.version}" failonerror="true" fork="${maven.fork}">
+      <arg value="-s"/><arg file="${maven.local.settings}"/>
       <arg value="plugin:helpmojo"/>
       <arg value="plugin:descriptor"/>
       <arg value="plugin:report"/>
@@ -549,7 +565,12 @@
     <property name="antunit.project.rootdir" location="."/>
     <property name="antunit.main.classes" location="build/main"/>
     <property name="antunit.tools.classes" location="build/tools"/>
-    <property name="antunit.maven3.version" value="3.0.4"/>
+    <property name="antunit.maven3.version" value="3.0.5"/>
+    <!-- Make sure we downloaded Maven 3, so artifact:mvn can bootstrap itsself -->
+    <artifact:dependencies pathId="apache-maven3-dependencies" pathType="jar" type="pom,jar">
+      <dependency groupId="org.apache.maven" artifactId="apache-maven" version="${antunit.maven3.version}" type="pom" />
+      <remoteRepository refid="mvn.maven-central.backup" />
+    </artifact:dependencies>
     <au:antunit>
       <fileset dir="src/test/antunit" includes="Test*.xml"/>
       <au:plainlistener/>
@@ -562,6 +583,7 @@
         <propertyref name="artifactId"/>
         <propertyref name="ivy.logging"/>
         <propertyref name="ivy.maven-central.backup"/>
+        <propertyref name="maven.local.settings"/>
         <propertyref name="maven.fork"/>
       </propertyset>
       <referenceset>
@@ -710,6 +732,7 @@
   
   <target name="show-help-mojo" depends="install-maven-artifacts" description="Shows help about mojo usage">
     <artifact:mvn mavenVersion="${maven.version}" failonerror="true" fork="${maven.fork}" taskname="help">
+      <arg value="-s"/><arg file="${maven.local.settings}"/>
       <arg value="${groupId}:${artifactId}:${version}:help"/>
       <sysproperty key="detail" value="true"/>
       <sysproperty key="java.awt.headless" value="true"/>

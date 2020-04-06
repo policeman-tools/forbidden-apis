@@ -35,6 +35,7 @@ import org.objectweb.asm.Handle;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.RecordComponentVisitor;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.TypePath;
 import org.objectweb.asm.commons.Method;
@@ -63,7 +64,7 @@ public final class ClassScanner extends ClassVisitor implements Constants {
   boolean classSuppressed = false;
   
   public ClassScanner(RelatedClassLookup lookup, Signatures forbiddenSignatures, final Pattern suppressAnnotations) {
-    super(Opcodes.ASM7);
+    super(Opcodes.ASM8);
     this.lookup = lookup;
     this.forbiddenSignatures = forbiddenSignatures;
     this.suppressAnnotations = suppressAnnotations;
@@ -249,7 +250,7 @@ public final class ClassScanner extends ClassVisitor implements Constants {
     if (classSuppressed) {
       return null;
     }
-    return new FieldVisitor(Opcodes.ASM7) {
+    return new FieldVisitor(Opcodes.ASM8) {
       final boolean isDeprecated = (access & Opcodes.ACC_DEPRECATED) != 0;
       {
         // only check signature, if field is not synthetic
@@ -294,7 +295,7 @@ public final class ClassScanner extends ClassVisitor implements Constants {
     if (classSuppressed) {
       return null;
     }
-    return new MethodVisitor(Opcodes.ASM7) {
+    return new MethodVisitor(Opcodes.ASM8) {
       private final Method myself = new Method(name, desc);
       private final boolean isDeprecated = (access & Opcodes.ACC_DEPRECATED) != 0;
       private int lineNo = -1;
@@ -527,6 +528,39 @@ public final class ClassScanner extends ClassVisitor implements Constants {
       @Override
       public void visitLineNumber(int lineNo, Label start) {
         this.lineNo = lineNo;
+      }
+    };
+  }
+
+  @Override
+  public RecordComponentVisitor visitRecordComponent(final String name, final String desc, final String signature) {
+    currentGroupId++;
+    if (classSuppressed) {
+      return null;
+    }
+    return new RecordComponentVisitor(Opcodes.ASM8) {
+      {
+        reportRecordComponentViolation(checkDescriptor(desc), "record component declaration");
+      }
+      
+      @Override
+      public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
+        final Type type = Type.getType(desc);
+        maybeSuppressCurrentGroup(type);
+        reportRecordComponentViolation(checkAnnotationDescriptor(type, visible), "annotation on record component declaration");
+        return null;
+      }
+
+      @Override
+      public AnnotationVisitor visitTypeAnnotation(int typeRef, TypePath typePath, String desc, boolean visible) {
+        reportRecordComponentViolation(checkAnnotationDescriptor(Type.getType(desc), visible), "type annotation on record component declaration");
+        return null;
+      }
+      
+      private void reportRecordComponentViolation(String violation, String where) {
+        if (violation != null) {
+          violations.add(new ForbiddenViolation(currentGroupId, violation, String.format(Locale.ENGLISH, "%s of '%s'", where, name), -1));
+        }
       }
     };
   }
