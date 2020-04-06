@@ -514,7 +514,7 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
       }
     };
     
-    final Set<File> cpElements = new LinkedHashSet<File>();
+    final Set<File> cpElements = new LinkedHashSet<>();
     cpElements.addAll(classpath.getFiles());
     cpElements.addAll(classesDirs.getFiles());
     final URL[] urls = new URL[cpElements.size()];

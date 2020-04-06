@@ -255,7 +255,7 @@ public final class CliMain implements Constants {
       
       try {
         final String[] bundledSignatures = cmd.getOptionValues(bundledsignaturesOpt.getLongOpt());
-        if (bundledSignatures != null) for (String bs : new LinkedHashSet<String>(Arrays.asList(bundledSignatures))) {
+        if (bundledSignatures != null) for (String bs : new LinkedHashSet<>(Arrays.asList(bundledSignatures))) {
           checker.addBundledSignatures(bs, null);
         }
         if (cmd.hasOption(internalruntimeforbiddenOpt.getLongOpt())) {
@@ -264,7 +264,7 @@ public final class CliMain implements Constants {
         }
         
         final String[] signaturesFiles = cmd.getOptionValues(signaturesfileOpt.getLongOpt());
-        if (signaturesFiles != null) for (String sf : new LinkedHashSet<String>(Arrays.asList(signaturesFiles))) {
+        if (signaturesFiles != null) for (String sf : new LinkedHashSet<>(Arrays.asList(signaturesFiles))) {
           final File f = new File(sf).getAbsoluteFile();
           checker.parseSignaturesFile(f);
         }

@@ -373,7 +373,7 @@ public abstract class AbstractCheckMojo extends AbstractMojo implements Constant
               "Trying to read bundled JDK signatures without compiler target. " +
               "You have to explicitly specify the version in the resource name.");
           }
-          for (String bs : new LinkedHashSet<String>(Arrays.asList(bundledSignatures))) {
+          for (String bs : new LinkedHashSet<>(Arrays.asList(bundledSignatures))) {
             checker.addBundledSignatures(bs, targetVersion);
           }
         }
@@ -382,8 +382,8 @@ public abstract class AbstractCheckMojo extends AbstractMojo implements Constant
           checker.addBundledSignatures(BS_JDK_NONPORTABLE, null);
         }
         
-        final Set<File> sigFiles = new LinkedHashSet<File>();
-        final Set<URL> sigUrls = new LinkedHashSet<URL>();
+        final Set<File> sigFiles = new LinkedHashSet<>();
+        final Set<URL> sigUrls = new LinkedHashSet<>();
         if (signaturesFiles != null) {
           sigFiles.addAll(Arrays.asList(signaturesFiles));
         }

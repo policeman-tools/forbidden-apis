@@ -69,14 +69,14 @@ public final class Checker implements RelatedClassLookup, Constants {
   final EnumSet<Option> options;
   
   /** Classes to check: key is the binary name (dotted) */
-  final Map<String,ClassSignature> classesToCheck = new HashMap<String,ClassSignature>();
+  final Map<String,ClassSignature> classesToCheck = new HashMap<>();
   /** Cache of loaded classes: key is the binary name (dotted) */
-  final Map<String,ClassSignature> classpathClassCache = new HashMap<String,ClassSignature>();
+  final Map<String,ClassSignature> classpathClassCache = new HashMap<>();
   
   final Signatures forbiddenSignatures;
   
   /** descriptors (not internal names) of all annotations that suppress */
-  final Set<String> suppressAnnotations = new LinkedHashSet<String>();
+  final Set<String> suppressAnnotations = new LinkedHashSet<>();
     
   public Checker(Logger logger, ClassLoader loader, Option... options) {
     this(logger, loader, (options.length == 0) ? EnumSet.noneOf(Option.class) : EnumSet.copyOf(Arrays.asList(options)));
@@ -106,7 +106,7 @@ public final class Checker implements RelatedClassLookup, Constants {
     this.method_Class_getModule = method_Class_getModule;
     this.method_Module_getName = method_Module_getName;
     
-    final NavigableSet<String> runtimePaths = new TreeSet<String>();
+    final NavigableSet<String> runtimePaths = new TreeSet<>();
     
     // fall back to legacy behavior:
     if (!isSupportedJDK) {

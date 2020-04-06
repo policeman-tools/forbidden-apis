@@ -38,7 +38,7 @@ import org.objectweb.asm.Type;
 public abstract class DeprecatedGen<Input> implements Opcodes {
   
   final static String NL = System.getProperty("line.separator", "\n");
-  final SortedSet<String> deprecated = new TreeSet<String>();
+  final SortedSet<String> deprecated = new TreeSet<>();
   final String javaVersion, header;
   
   private final Input source;

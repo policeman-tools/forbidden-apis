@@ -71,7 +71,7 @@ public final class InternalApiGen {
   void run() throws IOException {
     System.err.println(String.format(Locale.ENGLISH, "Writing internal APIs to signatures file '%s'...", output));
     
-    final Set<String> packages = new TreeSet<String>();
+    final Set<String> packages = new TreeSet<>();
     parsePackages(Security.getProperty("package.access"), packages);
     // TODO: add this, too??: parsePackages(Security.getProperty("package.definition"), packages);
 

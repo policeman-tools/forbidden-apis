@@ -49,9 +49,9 @@ final class ClassSignature implements Constants {
     this.className = classReader.getClassName();
     this.superName = classReader.getSuperName();
     this.interfaces = classReader.getInterfaces();
-    final Set<Method> methods = new HashSet<Method>();
-    final Set<String> fields = new HashSet<String>();
-    final Set<String> signaturePolymorphicMethods = new HashSet<String>();
+    final Set<Method> methods = new HashSet<>();
+    final Set<String> fields = new HashSet<>();
+    final Set<String> signaturePolymorphicMethods = new HashSet<>();
     classReader.accept(new ClassVisitor(Opcodes.ASM8) {
       @Override
       public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
@@ -90,9 +90,9 @@ final class ClassSignature implements Constants {
     for (int i = 0; i < interfClasses.length; i++) {
       this.interfaces[i] = Type.getType(interfClasses[i]).getInternalName();
     }
-    final Set<Method> methods = new HashSet<Method>();
-    final Set<String> fields = new HashSet<String>();
-    final Set<String> signaturePolymorphicMethods = new HashSet<String>();
+    final Set<Method> methods = new HashSet<>();
+    final Set<String> fields = new HashSet<>();
+    final Set<String> signaturePolymorphicMethods = new HashSet<>();
     for (final java.lang.reflect.Method m : clazz.getDeclaredMethods()) {
       methods.add(Method.getMethod(m));
       if (className.startsWith(SIGNATURE_POLYMORPHIC_PKG_INTERNALNAME) &&
