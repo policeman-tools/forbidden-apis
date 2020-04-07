@@ -58,7 +58,7 @@ import de.thetaphi.forbiddenapis.Logger;
 import de.thetaphi.forbiddenapis.ParseException;
 
 /**
- * <h3>ForbiddenApis Gradle Task (requires at least Gradle v2.3)</h3>
+ * <h3>ForbiddenApis Gradle Task (requires at least Gradle v3.2)</h3>
  * <p>
  * The plugin registers a separate task for each defined {@code sourceSet} using
  * the default task naming convention. For default Java projects, two tasks are created:

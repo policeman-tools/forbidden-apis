@@ -33,7 +33,7 @@ import org.gradle.api.Project;
 import org.gradle.util.GradleVersion;
 
 /**
- * Forbiddenapis Gradle Plugin (requires at least Gradle 2.3)
+ * Forbiddenapis Gradle Plugin (requires at least Gradle v3.2)
  * @since 2.0
  */
 public class ForbiddenApisPlugin implements Plugin<Project> {
@@ -47,8 +47,8 @@ public class ForbiddenApisPlugin implements Plugin<Project> {
   /** Name of the extension to define defaults for all tasks of this module. */
   public static final String FORBIDDEN_APIS_EXTENSION_NAME = "forbiddenApis";
   
-  /** Minimum Gradle version this plugin requires to run (v2.3). */
-  public static final GradleVersion MIN_GRADLE_VERSION = GradleVersion.version("2.3");
+  /** Minimum Gradle version this plugin requires to run (v3.2). */
+  public static final GradleVersion MIN_GRADLE_VERSION = GradleVersion.version("3.2");
   
   /** Java Package that contains the Gradle Daemon (needed to detect it on startup). */
   private static final String GRADLE_DAEMON_PACKAGE = "org.gradle.launcher.daemon.";
