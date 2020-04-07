@@ -18,7 +18,6 @@
 
 package de.thetaphi.forbiddenapis;
 
-import java.util.Locale;
 import java.util.regex.Pattern;
 
 import org.objectweb.asm.Type;
@@ -29,9 +28,6 @@ public interface Constants {
   
   final Pattern JDK_SIG_PATTERN = Pattern.compile("(jdk\\-.*?\\-)(\\d+)(\\.\\d+)?(\\.\\d+)*");
   
-  final String DEPRECATED_WARN_INTERNALRUNTIME = String.format(Locale.ENGLISH,
-      "The setting 'internalRuntimeForbidden' was deprecated and will be removed in next version. For backwards compatibility task/mojo is using '%s' bundled signatures instead.", BS_JDK_NONPORTABLE);
-
   final Type DEPRECATED_TYPE = Type.getType(Deprecated.class);
   final String DEPRECATED_DESCRIPTOR = DEPRECATED_TYPE.getDescriptor();
 

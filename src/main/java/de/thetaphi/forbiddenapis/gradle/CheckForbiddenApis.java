@@ -133,32 +133,6 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
     this.classesDirs = classesDirs;
   }
 
-  /**
-   * Directory with the class files to check.
-   * Defaults to current sourseSet's output directory (Gradle 3 only).
-   * @deprecated use {@link #getClassesDirs()} instead. If there are more than one
-   *  {@code classesDir} set by {@link #setClassesDirs(FileCollection)}, this getter may
-   *  throw an exception!
-   */
-  @Deprecated
-  @Internal
-  public File getClassesDir() {
-    final FileCollection col = getClassesDirs();
-    return (col == null) ? null : col.getSingleFile();
-  }
-
-  /** Sets the directory where to look for classes. Overwrites any value set by {@link #setClassesDirs(FileCollection)}!
-   * @deprecated use {@link #setClassesDirs(FileCollection)} instead.
-   * @see #getClassesDir
-   */
-  @Deprecated
-  public void setClassesDir(File classesDir) {
-    if (classesDir == null) throw new NullPointerException("classesDir");
-    getLogger().warn("The 'classesDir' property on the '{}' task is deprecated. Use 'classesDirs' of type FileCollection instead!",
-        getName());
-    setClassesDirs(getProject().files(classesDir));
-  }
-
   /** Returns the pattern set to match against class files in {@link #getClassesDir()}. */
   @Internal
   public PatternSet getPatternSet() {
@@ -250,26 +224,6 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
   /** @see #getBundledSignatures */
   public void setBundledSignatures(Set<String> bundledSignatures) {
     data.bundledSignatures = bundledSignatures;
-  }
-
-  /**
-   * Forbids calls to non-portable runtime APIs (like {@code sun.misc.Unsafe}).
-   * <em>Please note:</em> This enables {@code "jdk-non-portable"} bundled signatures for backwards compatibility.
-   * Defaults to {@code false}. 
-   * @deprecated Use <a href="bundled-signatures.html">bundled signatures</a> {@code "jdk-non-portable"} or {@code "jdk-internal"} instead.
-   */
-  @Deprecated
-  @Input
-  public boolean getInternalRuntimeForbidden() {
-    return data.internalRuntimeForbidden;
-  }
-
-  /** @see #getInternalRuntimeForbidden
-   * @deprecated Use bundled signatures {@code "jdk-non-portable"} or {@code "jdk-internal"} instead.
-   */
-  @Deprecated
-  public void setInternalRuntimeForbidden(boolean internalRuntimeForbidden) {
-    data.internalRuntimeForbidden = internalRuntimeForbidden;
   }
 
   /**
@@ -574,10 +528,6 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
           for (String bs : bundledSignatures) {
             checker.addBundledSignatures(bs, bundledSigsJavaVersion);
           }
-        }
-        if (getInternalRuntimeForbidden()) {
-          log.warn(DEPRECATED_WARN_INTERNALRUNTIME);
-          checker.addBundledSignatures(BS_JDK_NONPORTABLE, null);
         }
         
         final FileCollection signaturesFiles = getSignaturesFiles();

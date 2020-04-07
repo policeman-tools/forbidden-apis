@@ -64,7 +64,6 @@ public class AntTask extends Task implements Constants {
   private Path classpath = null;
   
   private boolean failOnUnsupportedJava = false;
-  @Deprecated private boolean internalRuntimeForbidden = false;
   private boolean restrictClassFilename = true;
   private boolean failOnMissingClasses = true;
   private boolean failOnUnresolvableSignatures = true;
@@ -148,10 +147,6 @@ public class AntTask extends Task implements Constants {
               "You have to explicitly specify the version in the resource name.");
           }
           checker.addBundledSignatures(name, targetVersion);
-        }
-        if (internalRuntimeForbidden) {
-          log.warn(DEPRECATED_WARN_INTERNALRUNTIME);
-          checker.addBundledSignatures(BS_JDK_NONPORTABLE, null);
         }
         
         @SuppressWarnings("unchecked")
@@ -336,17 +331,6 @@ public class AntTask extends Task implements Constants {
    */
   public void setFailOnUnresolvableSignatures(boolean failOnUnresolvableSignatures) {
     this.failOnUnresolvableSignatures = failOnUnresolvableSignatures;
-  }
-
-  /**
-   * Forbids calls to non-portable runtime APIs (like {@code sun.misc.Unsafe}).
-   * <em>Please note:</em> This enables {@code "jdk-non-portable"} bundled signatures for backwards compatibility.
-   * Defaults to {@code false}. 
-   * @deprecated Use bundled signatures {@code "jdk-non-portable"} or {@code "jdk-internal"} instead.
-   */
-  @Deprecated
-  public void setInternalRuntimeForbidden(boolean internalRuntimeForbidden) {
-    this.internalRuntimeForbidden = internalRuntimeForbidden;
   }
 
   /** Automatically restrict resource names included to files with a name ending in '.class'.

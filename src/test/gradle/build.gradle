@@ -43,7 +43,6 @@ forbiddenApisMain {
 }
 
 forbiddenApisTest {
-  // use classesDir here to check backwards compatibility!:
-  classesDir = new File(forbiddenRootDir, 'build/test')
+  classesDirs = files(new File(forbiddenRootDir, 'build/test'))
   classpath = files(forbiddenTestClasspath.tokenize(File.pathSeparator))
 }

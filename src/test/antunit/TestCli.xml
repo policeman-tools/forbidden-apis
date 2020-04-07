@@ -42,19 +42,17 @@
       <arg value="-b"/>
       <arg value="jdk-unsafe-${jdk.version},jdk-deprecated-${jdk.version}"/>
       <arg value="--bundledsignatures"/>
-      <arg value="jdk-system-out"/>
+      <arg value="jdk-system-out,jdk-non-portable"/>
       <arg value="--includes"/>
       <arg value="Java7*.class"/>
       <arg value="--excludes"/>
       <arg value="Java7ClassReferences.class"/>
-      <arg value="--internalruntimeforbidden"/>
     </java>
     <au:assertLogContains text=" 0 error(s)."/> 
     <au:assertLogContains text="Reading bundled API signatures: jdk-deprecated-${jdk.version}"/> 
     <au:assertLogContains text="Reading bundled API signatures: jdk-unsafe-${jdk.version}"/> 
     <au:assertLogContains text="Reading bundled API signatures: jdk-system-out"/> 
     <au:assertLogContains text="Reading bundled API signatures: jdk-non-portable"/> 
-    <au:assertLogContains text="WARNING: The setting 'internalRuntimeForbidden' was deprecated"/> 
   </target>
 
   <target name="testSuppressAnnotations">

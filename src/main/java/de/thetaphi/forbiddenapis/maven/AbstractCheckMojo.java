@@ -112,16 +112,6 @@ public abstract class AbstractCheckMojo extends AbstractMojo implements Constant
   private String[] bundledSignatures;
 
   /**
-   * Forbids calls to non-portable runtime APIs (like {@code sun.misc.Unsafe}).
-   * <em>Please note:</em> This enables {@code "jdk-non-portable"} bundled signatures for backwards compatibility.
-   * @deprecated Use <a href="bundled-signatures.html">bundled signatures</a> {@code "jdk-non-portable"} or {@code "jdk-internal"} instead.
-   * @since 1.0
-   */
-  @Deprecated
-  @Parameter(required = false, defaultValue = "false")
-  private boolean internalRuntimeForbidden;
-
-  /**
    * Fail the build, if the bundled ASM library cannot read the class file format
    * of the runtime library or the runtime library cannot be discovered.
    * @since 1.0
@@ -376,10 +366,6 @@ public abstract class AbstractCheckMojo extends AbstractMojo implements Constant
           for (String bs : new LinkedHashSet<>(Arrays.asList(bundledSignatures))) {
             checker.addBundledSignatures(bs, targetVersion);
           }
-        }
-        if (internalRuntimeForbidden) {
-          log.warn(DEPRECATED_WARN_INTERNALRUNTIME);
-          checker.addBundledSignatures(BS_JDK_NONPORTABLE, null);
         }
         
         final Set<File> sigFiles = new LinkedHashSet<>();

@@ -53,7 +53,7 @@ import de.thetaphi.forbiddenapis.StdIoLogger;
 public final class CliMain implements Constants {
 
   private final Option classpathOpt, dirOpt, includesOpt, excludesOpt, signaturesfileOpt, bundledsignaturesOpt, suppressannotationsOpt,
-    internalruntimeforbiddenOpt, allowmissingclassesOpt, allowunresolvablesignaturesOpt, versionOpt, helpOpt;
+    allowmissingclassesOpt, allowunresolvablesignaturesOpt, versionOpt, helpOpt;
   private final CommandLine cmd;
   
   private static final Logger LOG = StdIoLogger.INSTANCE;
@@ -124,10 +124,6 @@ public final class CliMain implements Constants {
         .hasArgs()
         .valueSeparator(',')
         .argName("classname")
-        .build());
-    options.addOption(internalruntimeforbiddenOpt = Option.builder()
-        .desc(String.format(Locale.ENGLISH, "DEPRECATED: forbids calls to non-portable runtime APIs; use bundled signatures '%s' instead", BS_JDK_NONPORTABLE))
-        .longOpt("internalruntimeforbidden")
         .build());
     options.addOption(allowmissingclassesOpt = Option.builder()
         .desc("don't fail if a referenced class is missing on classpath")
@@ -257,10 +253,6 @@ public final class CliMain implements Constants {
         final String[] bundledSignatures = cmd.getOptionValues(bundledsignaturesOpt.getLongOpt());
         if (bundledSignatures != null) for (String bs : new LinkedHashSet<>(Arrays.asList(bundledSignatures))) {
           checker.addBundledSignatures(bs, null);
-        }
-        if (cmd.hasOption(internalruntimeforbiddenOpt.getLongOpt())) {
-          LOG.warn(DEPRECATED_WARN_INTERNALRUNTIME);
-          checker.addBundledSignatures(BS_JDK_NONPORTABLE, null);
         }
         
         final String[] signaturesFiles = cmd.getOptionValues(signaturesfileOpt.getLongOpt());
