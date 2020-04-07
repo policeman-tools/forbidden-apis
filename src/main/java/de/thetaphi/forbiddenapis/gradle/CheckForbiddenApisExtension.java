@@ -37,7 +37,6 @@ public class CheckForbiddenApisExtension {
   public List<String> signatures = new ArrayList<>();
   public Set<String> bundledSignatures = new LinkedHashSet<>(),
     suppressAnnotations = new LinkedHashSet<>();
-  @Deprecated public boolean internalRuntimeForbidden = false;
   public boolean failOnUnsupportedJava = false,
     failOnMissingClasses = true,
     failOnUnresolvableSignatures = true,

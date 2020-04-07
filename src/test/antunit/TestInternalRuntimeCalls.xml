@@ -31,17 +31,6 @@
     <au:assertLogContains level="error" text=" 2 error(s)"/> 
   </target>
   
-  <target name="testDeprecatedInternalRuntimeForbidden" if="has.sunmisc">
-    <au:expectfailure expectedMessage="Check for forbidden API calls failed, see log">
-      <forbiddenapis internalRuntimeForbidden="true" failOnMissingClasses="false">
-        <file file="OracleInternalRuntime.class"/>
-      </forbiddenapis>
-    </au:expectfailure>
-    <au:assertLogContains level="warn" text="The setting 'internalRuntimeForbidden' was deprecated"/> 
-    <au:assertLogContains level="error" text="sun.misc.BASE64Encoder [non-portable or internal runtime class]"/> 
-    <au:assertLogContains level="error" text=" 2 error(s)"/> 
-  </target>
-  
   <!-- this should work also with non-Oracle runtimes, as no heuristics: -->
   <target name="testInternalSignatures">
     <au:expectfailure expectedMessage="Check for forbidden API calls failed, see log">
