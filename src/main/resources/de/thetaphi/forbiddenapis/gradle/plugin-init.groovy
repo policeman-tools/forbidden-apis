@@ -44,30 +44,23 @@ forbiddenTask.configure {
 
 // Define our tasks (one for each SourceSet):
 project.sourceSets.all{ sourceSet ->
-  def getSourceSetClassesDirs = { sourceSet.output.hasProperty('classesDirs') ? sourceSet.output.classesDirs : project.files(sourceSet.output.classesDir) }
   String sourceSetTaskName = sourceSet.getTaskName(FORBIDDEN_APIS_TASK_NAME, null);
   def sourceSetTask = TASK_AVOIDANCE_AVAILABLE ? project.tasks.register(sourceSetTaskName, CheckForbiddenApis.class) :
           project.tasks.create(sourceSetTaskName, CheckForbiddenApis.class);
-  sourceSetTask.configure { task ->
+  sourceSetTask.configure {
     description = "Runs forbidden-apis checks on '${sourceSet.name}' classes.";
+    dependsOn(sourceSet.output);
+    outputs.upToDateWhen { true }
     conventionMapping.with{
       extensionProps.each{ key ->
         map(key, { extension[key] });
       }
-      classesDirs = { getSourceSetClassesDirs() }
+      classesDirs = { sourceSet.output.hasProperty('classesDirs') ? sourceSet.output.classesDirs : project.files(sourceSet.output.classesDir) }
       classpath = { sourceSet.compileClasspath }
       // Gradle is buggy with it's JavaVersion enum: We use majorVersion property before Java 11 (6,7,8,9,10) and for later we use toString() to be future-proof:
       targetCompatibility = { (project.targetCompatibility?.hasProperty('java11Compatible') && project.targetCompatibility?.java11Compatible) ?
         project.targetCompatibility.toString() : project.targetCompatibility?.majorVersion }
     }
-    // add dependency to compile task after evaluation, if the classesDirs collection has overlaps with our SourceSet:
-    project.afterEvaluate{
-      def sourceSetDirs = getSourceSetClassesDirs().files;
-      if (classesDirs.any{ sourceSetDirs.contains(it) }) {
-        task.dependsOn(sourceSet.output);
-      }
-    }
-    outputs.upToDateWhen { true }
   }
   forbiddenTask.configure {
     dependsOn(sourceSetTask)
