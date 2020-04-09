@@ -23,13 +23,14 @@ import groovy.util.DelegatingScript;
 import java.net.URL;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.control.customizers.ImportCustomizer;
 import org.gradle.api.GradleException;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
+import org.gradle.api.logging.Logger;
+import org.gradle.api.logging.Logging;
 import org.gradle.util.GradleVersion;
 
 /**
@@ -38,8 +39,7 @@ import org.gradle.util.GradleVersion;
  */
 public class ForbiddenApisPlugin implements Plugin<Project> {
   
-  /** Resource with Groovy script that initializes the plugin. */
-  private static final String PLUGIN_INIT_SCRIPT = "plugin-init.groovy";
+  private static final Logger LOG = Logging.getLogger(ForbiddenApisPlugin.class);
   
   /** Name of the base task that depends on one for every SourceSet. */
   public static final String FORBIDDEN_APIS_TASK_NAME = "forbiddenApis";
@@ -47,17 +47,29 @@ public class ForbiddenApisPlugin implements Plugin<Project> {
   /** Name of the extension to define defaults for all tasks of this module. */
   public static final String FORBIDDEN_APIS_EXTENSION_NAME = "forbiddenApis";
   
+  /**
+   * Default value for {@link CheckForbiddenApis#getDisableClassloadingCache}.
+   * <p>
+   * The default is {@code false}, unless the plugin detects that your build is
+   * running in the <em>Gradle Daemon</em> (which has this problem), setting the
+   * default to {@code true} as a consequence.
+   * @see CheckForbiddenApis#getDisableClassloadingCache
+   */
+  public static final boolean DEFAULT_DISABLE_CLASSLOADING_CACHE = detectAndLogGradleDaemon();
+  
   /** Minimum Gradle version this plugin requires to run (v3.2). */
   public static final GradleVersion MIN_GRADLE_VERSION = GradleVersion.version("3.2");
   
   /** Java Package that contains the Gradle Daemon (needed to detect it on startup). */
   private static final String GRADLE_DAEMON_PACKAGE = "org.gradle.launcher.daemon.";
 
-  /** Don't log info about Gradle Daemon multiple times. */
-  private static final AtomicBoolean logGradleDaemonWarning = new AtomicBoolean(true);
+  /** Resource with Groovy script that initializes the plugin. */
+  private static final String PLUGIN_INIT_SCRIPT = "plugin-init.groovy";
   
-  private static final Class<? extends DelegatingScript> compiledScript;
-  static {
+  /** Compiled class instance of the plugin init script, an instance is executed per {@link #apply(Project)} */
+  private static final Class<? extends DelegatingScript> COMPILED_SCRIPT = loadScript();
+  
+  private static Class<? extends DelegatingScript> loadScript() {
     final ImportCustomizer importCustomizer = new ImportCustomizer().addStarImports(ForbiddenApisPlugin.class.getPackage().getName());
     final CompilerConfiguration configuration = new CompilerConfiguration().addCompilationCustomizers(importCustomizer);
     configuration.setScriptBaseClass(DelegatingScript.class.getName());
@@ -66,7 +78,7 @@ public class ForbiddenApisPlugin implements Plugin<Project> {
     if (scriptUrl == null) {
       throw new RuntimeException("Cannot find resource with script: " + PLUGIN_INIT_SCRIPT);
     }
-    compiledScript = AccessController.doPrivileged(new PrivilegedAction<Class<? extends DelegatingScript>>() {
+    return AccessController.doPrivileged(new PrivilegedAction<Class<? extends DelegatingScript>>() {
       @Override
       public Class<? extends DelegatingScript> run() {
         try {
@@ -97,10 +109,10 @@ public class ForbiddenApisPlugin implements Plugin<Project> {
     return false;
   }
   
-  private static boolean detectAndLogGradleDaemon(Project project) {
+  private static boolean detectAndLogGradleDaemon() {
     final boolean daemon = isGradleDaemon();
-    if (daemon && logGradleDaemonWarning.getAndSet(false)) {
-      project.getLogger().info("You are running forbidden-apis in the Gradle Daemon; disabling classloading cache by default to work around resource leak.");
+    if (daemon) {
+      LOG.info("You are running forbidden-apis in the Gradle Daemon; disabling classloading cache by default to work around resource leak.");
     }
     return daemon;
   }
@@ -112,13 +124,12 @@ public class ForbiddenApisPlugin implements Plugin<Project> {
     }
     final DelegatingScript script;
     try {
-      script = compiledScript.newInstance();
+      script = COMPILED_SCRIPT.newInstance();
     } catch (Exception e) {
       throw new GradleException("Cannot instantiate Groovy script to apply forbiddenapis plugin.", e);
     }
     script.setDelegate(this);
     script.setProperty("project", project);
-    script.setProperty("isGradleDaemon", detectAndLogGradleDaemon(project));
     script.run();
   }
   

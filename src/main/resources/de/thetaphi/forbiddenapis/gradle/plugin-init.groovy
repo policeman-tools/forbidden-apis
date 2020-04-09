@@ -25,11 +25,7 @@ final boolean TASK_AVOIDANCE_AVAILABLE = GradleVersion.current() >= GradleVersio
 project.plugins.apply(JavaBasePlugin.class);
 
 // create Extension for defaults:
-def extension = project.extensions.create(FORBIDDEN_APIS_EXTENSION_NAME, CheckForbiddenApisExtension.class);
-extension.with{
-  signaturesFiles = project.files();
-  disableClassloadingCache |= isGradleDaemon;
-}
+def extension = project.extensions.create(FORBIDDEN_APIS_EXTENSION_NAME, CheckForbiddenApisExtension.class, project);
 def extensionProps = CheckForbiddenApisExtension.class.declaredFields.findAll{ f -> 
   int mods = f.modifiers;
   return Modifier.isPublic(mods) && !f.synthetic && !Modifier.isStatic(mods)

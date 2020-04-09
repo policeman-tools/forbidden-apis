@@ -22,6 +22,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.gradle.api.Project;
 import org.gradle.api.file.FileCollection;
 
 /**
@@ -32,7 +33,11 @@ import org.gradle.api.file.FileCollection;
  */
 public class CheckForbiddenApisExtension {
   
-  public FileCollection signaturesFiles; // initialized by plugin-init.groovy
+  public CheckForbiddenApisExtension(Project project) {
+    signaturesFiles = project.files();
+  }
+  
+  public FileCollection signaturesFiles;
   public Set<URL> signaturesURLs = new LinkedHashSet<>();
   public List<String> signatures = new ArrayList<>();
   public Set<String> bundledSignatures = new LinkedHashSet<>(),
@@ -41,6 +46,6 @@ public class CheckForbiddenApisExtension {
     failOnMissingClasses = true,
     failOnUnresolvableSignatures = true,
     ignoreFailures = false,
-    disableClassloadingCache = false;
+    disableClassloadingCache = ForbiddenApisPlugin.DEFAULT_DISABLE_CLASSLOADING_CACHE;
   
 }

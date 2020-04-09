@@ -112,7 +112,7 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
   
   private static final String NL = System.getProperty("line.separator", "\n");
   
-  private final CheckForbiddenApisExtension data = new CheckForbiddenApisExtension();
+  private final CheckForbiddenApisExtension data = new CheckForbiddenApisExtension(this.getProject());
   private final PatternSet patternSet = new PatternSet().include("**/*.class");
   private FileCollection classesDirs;
   private FileCollection classpath;

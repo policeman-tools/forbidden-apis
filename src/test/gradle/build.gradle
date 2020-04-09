@@ -31,18 +31,31 @@ apply plugin: 'de.thetaphi.forbiddenapis'
 
 sourceCompatibility = forbiddenSourceCompatibility
 
+sourceSets {
+  main {
+    compileClasspath = files(forbiddenClasspath.tokenize(File.pathSeparator))
+    java {
+      srcDirs = [new File(forbiddenRootDir, 'src/main/java')]
+    }
+  }
+  test {
+    compileClasspath = files(forbiddenTestClasspath.tokenize(File.pathSeparator))
+    java {
+      srcDirs = [new File(forbiddenRootDir, 'src/test/java')]
+    }
+  }
+}
+
 forbiddenApis {
-  bundledSignatures = [ 'jdk-unsafe', 'jdk-deprecated', 'jdk-non-portable' ]
+  bundledSignatures = [ 'jdk-unsafe', 'jdk-deprecated', 'jdk-non-portable', 'jdk-reflection' ]
+  signaturesFiles += files(new File(forbiddenRootDir, 'src/tools/signatures/mysignatures.txt'))
   failOnUnsupportedJava = false
 }
 
 forbiddenApisMain {
-  classesDirs = files(new File(forbiddenRootDir, 'build/main'))
-  classpath = files(forbiddenClasspath.tokenize(File.pathSeparator))
   bundledSignatures += 'jdk-system-out'
 }
 
 forbiddenApisTest {
-  classesDirs = files(new File(forbiddenRootDir, 'build/test'))
-  classpath = files(forbiddenTestClasspath.tokenize(File.pathSeparator))
+  // keep defaults from "forbiddenApis" above
 }
