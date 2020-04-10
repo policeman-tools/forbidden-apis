@@ -29,6 +29,7 @@ import java.util.EnumSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.Set;
 
 import org.gradle.api.DefaultTask;
@@ -128,7 +129,7 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
 
   /** @see #getClassesDirs */
   public void setClassesDirs(FileCollection classesDirs) {
-    if (classesDirs == null) throw new NullPointerException("classesDirs");
+    Objects.requireNonNull(classesDirs, "classesDirs");
     this.classesDirs = classesDirs;
   }
 
@@ -155,7 +156,7 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
 
   /** @see #getClasspath */
   public void setClasspath(FileCollection classpath) {
-    if (classpath == null) throw new NullPointerException("classpath");
+    Objects.requireNonNull(classpath, "classpath");
     this.classpath = classpath;
   }
 

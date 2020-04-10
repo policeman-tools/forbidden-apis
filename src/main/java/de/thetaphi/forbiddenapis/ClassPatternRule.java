@@ -16,6 +16,7 @@
 
 package de.thetaphi.forbiddenapis;
 
+import java.util.Objects;
 import java.util.regex.Pattern;
 
 public final class ClassPatternRule {
@@ -25,9 +26,7 @@ public final class ClassPatternRule {
   
   /** Create new rule for class glob and given printout */
   public ClassPatternRule(String glob, String message) {
-    if (glob == null) {
-      throw new NullPointerException("glob");
-    }
+    Objects.requireNonNull(glob, "glob");
     this.glob = glob;
     this.pattern = AsmUtils.glob2Pattern(glob);
     this.message = message;
