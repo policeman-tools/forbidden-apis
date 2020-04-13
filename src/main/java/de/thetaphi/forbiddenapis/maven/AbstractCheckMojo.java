@@ -435,7 +435,7 @@ public abstract class AbstractCheckMojo extends AbstractMojo implements Constant
       try {
         if (urlLoader != null) urlLoader.close();
       } catch (IOException ioe) {
-        // ignore
+        log.warn("Cannot close classloader: ".concat(ioe.toString()));
       }
     }
   }

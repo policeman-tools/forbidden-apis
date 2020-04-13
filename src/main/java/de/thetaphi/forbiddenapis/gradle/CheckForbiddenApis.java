@@ -572,7 +572,7 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
       try {
         if (urlLoader != null) urlLoader.close();
       } catch (IOException ioe) {
-        // ignore
+        log.warn("Cannot close classloader: ".concat(ioe.toString()));
       }
     }
   }
