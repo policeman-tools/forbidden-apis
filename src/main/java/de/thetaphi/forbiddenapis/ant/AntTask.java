@@ -83,7 +83,7 @@ public class AntTask extends Task implements Constants {
       @Override
       public void warn(String msg) {
         // ANT has no real log levels printed, so prefix with "WARNING":
-        log("WARNING: " + msg, Project.MSG_WARN);
+        log("WARNING: ".concat(msg), Project.MSG_WARN);
       }
       
       @Override
@@ -188,8 +188,7 @@ public class AntTask extends Task implements Constants {
         }
         if (!foundClass) {
           if (ignoreEmptyFileset) {
-            log.warn("There is no <fileset/> or other resource collection given, or the collection does not contain any class files to check.");
-            log.info("Scanned 0 class files.");
+            log.info("Resource collection of class files is empty. Scanned 0 class files.");
             return;
           } else {
             throw new BuildException("There is no <fileset/> or other resource collection given, or the collection does not contain any class files to check.");
@@ -341,7 +340,7 @@ public class AntTask extends Task implements Constants {
     this.restrictClassFilename = restrictClassFilename;
   }
 
-  /** Ignore empty fileset/resource collection and print a warning instead.
+  /** Ignore empty fileset/resource collection.
    * Defaults to {@code false}.
    */
   public void setIgnoreEmptyFileSet(boolean ignoreEmptyFileset) {

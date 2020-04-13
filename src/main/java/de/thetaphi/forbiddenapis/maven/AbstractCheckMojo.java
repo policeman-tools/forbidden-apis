@@ -336,7 +336,7 @@ public abstract class AbstractCheckMojo extends AbstractMojo implements Constant
       log.info("Scanning for classes to check...");
       final File classesDirectory = getClassesDirectory();
       if (!classesDirectory.exists()) {
-        log.warn("Classes directory does not exist, forbiddenapis check skipped: " + classesDirectory);
+        log.info("Classes directory does not exist, forbiddenapis check skipped: " + classesDirectory);
         return;
       }
       final DirectoryScanner ds = new DirectoryScanner();
@@ -348,7 +348,7 @@ public abstract class AbstractCheckMojo extends AbstractMojo implements Constant
       ds.scan();
       final String[] files = ds.getIncludedFiles();
       if (files.length == 0) {
-        log.warn(String.format(Locale.ENGLISH,
+        log.info(String.format(Locale.ENGLISH,
           "No classes found in '%s' (includes=%s, excludes=%s), forbiddenapis check skipped.",
           classesDirectory.toString(), Arrays.toString(includes), Arrays.toString(excludes)));
         return;
