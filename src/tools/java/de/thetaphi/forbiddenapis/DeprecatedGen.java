@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -114,7 +115,7 @@ public abstract class DeprecatedGen<Input> implements Opcodes {
   }
   
   protected void writeOutput(OutputStream out) throws IOException {
-    BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(out, "UTF-8"));
+    BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(out, StandardCharsets.UTF_8));
     writer.write(header);
     for (final String s : deprecated) {
       writer.write(s);

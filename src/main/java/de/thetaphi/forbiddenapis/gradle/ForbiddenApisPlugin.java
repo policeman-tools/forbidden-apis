@@ -21,6 +21,7 @@ import groovy.lang.GroovyCodeSource;
 import groovy.util.DelegatingScript;
 
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 
@@ -73,7 +74,7 @@ public class ForbiddenApisPlugin implements Plugin<Project> {
     final ImportCustomizer importCustomizer = new ImportCustomizer().addStarImports(ForbiddenApisPlugin.class.getPackage().getName());
     final CompilerConfiguration configuration = new CompilerConfiguration().addCompilationCustomizers(importCustomizer);
     configuration.setScriptBaseClass(DelegatingScript.class.getName());
-    configuration.setSourceEncoding("UTF-8");
+    configuration.setSourceEncoding(StandardCharsets.UTF_8.name());
     final URL scriptUrl = ForbiddenApisPlugin.class.getResource(PLUGIN_INIT_SCRIPT);
     if (scriptUrl == null) {
       throw new RuntimeException("Cannot find resource with script: " + PLUGIN_INIT_SCRIPT);

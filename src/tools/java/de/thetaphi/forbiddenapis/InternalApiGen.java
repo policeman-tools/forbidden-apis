@@ -21,6 +21,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.nio.charset.StandardCharsets;
 import java.security.Security;
 import java.util.Locale;
 import java.util.Set;
@@ -75,7 +76,7 @@ public final class InternalApiGen {
     parsePackages(Security.getProperty("package.access"), packages);
     // TODO: add this, too??: parsePackages(Security.getProperty("package.definition"), packages);
 
-    try (final BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(output), "UTF-8"))) {
+    try (final BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(output), StandardCharsets.UTF_8))) {
       writer.write(header);
       for (final String s : packages) {
         writer.write(s);

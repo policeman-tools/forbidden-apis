@@ -25,6 +25,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -254,7 +255,7 @@ public final class Signatures implements Constants {
   }
   
   private void parseSignaturesStream(InputStream in, boolean allowBundled, Set<String> missingClasses) throws IOException,ParseException {
-    parseSignaturesFile(new InputStreamReader(in, "UTF-8"), allowBundled, missingClasses);
+    parseSignaturesFile(new InputStreamReader(in, StandardCharsets.UTF_8), allowBundled, missingClasses);
   }
 
   private void parseSignaturesFile(Reader reader, boolean isBundled, Set<String> missingClasses) throws IOException,ParseException {
