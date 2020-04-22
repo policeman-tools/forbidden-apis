@@ -46,6 +46,7 @@ public final class CheckerSetupTest {
     assertEquals(Collections.emptyMap(), forbiddenSignatures.signatures);
     assertEquals(Collections.emptySet(), forbiddenSignatures.classPatterns);
     assertTrue(checker.hasNoSignatures());
+    assertTrue(checker.noSignaturesFilesParsed());
   }
 
   @Test
@@ -53,6 +54,8 @@ public final class CheckerSetupTest {
     checker.parseSignaturesString("java.lang.Object @ Foobar");
     assertEquals(Collections.singletonMap(Signatures.getKey("java/lang/Object"), "java.lang.Object [Foobar]"), forbiddenSignatures.signatures);
     assertEquals(Collections.emptySet(), forbiddenSignatures.classPatterns);
+    assertFalse(checker.hasNoSignatures());
+    assertFalse(checker.noSignaturesFilesParsed());
   }
   
   @Test
@@ -61,6 +64,8 @@ public final class CheckerSetupTest {
     assertEquals(Collections.emptyMap(), forbiddenSignatures.signatures);
     assertEquals(Collections.singleton(new ClassPatternRule("java.lang.**", "Foobar")),
         forbiddenSignatures.classPatterns);
+    assertFalse(checker.hasNoSignatures());
+    assertFalse(checker.noSignaturesFilesParsed());
   }
   
   @Test
@@ -69,6 +74,8 @@ public final class CheckerSetupTest {
     assertEquals(Collections.singletonMap(Signatures.getKey("java/lang/String", "CASE_INSENSITIVE_ORDER"), "java.lang.String#CASE_INSENSITIVE_ORDER [Foobar]"),
         forbiddenSignatures.signatures);
     assertEquals(Collections.emptySet(), forbiddenSignatures.classPatterns);
+    assertFalse(checker.hasNoSignatures());
+    assertFalse(checker.noSignaturesFilesParsed());
   }
 
   @Test
@@ -77,6 +84,8 @@ public final class CheckerSetupTest {
     assertEquals(Collections.singletonMap(Signatures.getKey("java/lang/Object", new Method("toString", "()Ljava/lang/String;")), "java.lang.Object#toString() [Foobar]"),
         forbiddenSignatures.signatures);
     assertEquals(Collections.emptySet(), forbiddenSignatures.classPatterns);
+    assertFalse(checker.hasNoSignatures());
+    assertFalse(checker.noSignaturesFilesParsed());
   }
   
   @Test

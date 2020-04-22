@@ -53,7 +53,7 @@ import de.thetaphi.forbiddenapis.StdIoLogger;
 public final class CliMain implements Constants {
 
   private final Option classpathOpt, dirOpt, includesOpt, excludesOpt, signaturesfileOpt, bundledsignaturesOpt, suppressannotationsOpt,
-    allowmissingclassesOpt, allowunresolvablesignaturesOpt, versionOpt, helpOpt;
+    allowmissingclassesOpt, ignoresignaturesofmissingclassesOpt, allowunresolvablesignaturesOpt, versionOpt, helpOpt;
   private final CommandLine cmd;
   
   private static final Logger LOG = StdIoLogger.INSTANCE;
@@ -129,8 +129,12 @@ public final class CliMain implements Constants {
         .desc("don't fail if a referenced class is missing on classpath")
         .longOpt("allowmissingclasses")
         .build());
+    options.addOption(ignoresignaturesofmissingclassesOpt = Option.builder()
+        .desc("if a class is missing while parsing signatures files, all methods and fields from this class are silently ignored")
+        .longOpt("ignoresignaturesofmissingclasses")
+        .build());
     options.addOption(allowunresolvablesignaturesOpt = Option.builder()
-        .desc("don't fail if a signature is not resolving")
+        .desc("DEPRECATED: don't fail if a signature is not resolving")
         .longOpt("allowunresolvablesignatures")
         .build());
 
@@ -212,7 +216,12 @@ public final class CliMain implements Constants {
     try (final URLClassLoader loader = URLClassLoader.newInstance(urls, ClassLoader.getSystemClassLoader())) {
       final EnumSet<Checker.Option> options = EnumSet.of(FAIL_ON_VIOLATION);
       if (!cmd.hasOption(allowmissingclassesOpt.getLongOpt())) options.add(FAIL_ON_MISSING_CLASSES);
-      if (!cmd.hasOption(allowunresolvablesignaturesOpt.getLongOpt())) options.add(FAIL_ON_UNRESOLVABLE_SIGNATURES);
+      if (cmd.hasOption(allowunresolvablesignaturesOpt.getLongOpt())) {
+        LOG.warn(DEPRECATED_WARN_FAIL_ON_UNRESOLVABLE_SIGNATURES);
+      } else {
+        options.add(FAIL_ON_UNRESOLVABLE_SIGNATURES);
+      }
+      if (cmd.hasOption(ignoresignaturesofmissingclassesOpt.getLongOpt())) options.add(IGNORE_SIGNATURES_OF_MISSING_CLASSES);
       final Checker checker = new Checker(LOG, loader, options);
       
       if (!checker.isSupportedJDK) {
@@ -267,10 +276,15 @@ public final class CliMain implements Constants {
       }
 
       if (checker.hasNoSignatures()) {
-        throw new ExitException(EXIT_ERR_CMDLINE, String.format(Locale.ENGLISH,
-          "No API signatures found; use parameters '--%s' and/or '--%s' to specify those!",
-          bundledsignaturesOpt.getLongOpt(), signaturesfileOpt.getLongOpt()
-        ));
+        if (checker.noSignaturesFilesParsed()) {
+          throw new ExitException(EXIT_ERR_CMDLINE, String.format(Locale.ENGLISH,
+            "No API signatures found; use parameters '--%s' and/or '--%s' to specify those!",
+            bundledsignaturesOpt.getLongOpt(), signaturesfileOpt.getLongOpt()
+          ));
+      } else {
+          LOG.info("Skipping execution because no API signatures are available.");
+          return;
+        }
       }
 
       try {

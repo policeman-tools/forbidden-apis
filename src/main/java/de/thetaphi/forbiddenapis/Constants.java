@@ -28,6 +28,9 @@ public interface Constants {
   
   final Pattern JDK_SIG_PATTERN = Pattern.compile("(jdk\\-.*?\\-)(\\d+)(\\.\\d+)?(\\.\\d+)*");
   
+  final String DEPRECATED_WARN_FAIL_ON_UNRESOLVABLE_SIGNATURES =
+      "The setting 'failOnUnresolvableSignatures' was deprecated and will be removed in next version. Use 'ignoreSignaturesOfMissingClasses' instead.";
+  
   final Type DEPRECATED_TYPE = Type.getType(Deprecated.class);
   final String DEPRECATED_DESCRIPTOR = DEPRECATED_TYPE.getDescriptor();
 
