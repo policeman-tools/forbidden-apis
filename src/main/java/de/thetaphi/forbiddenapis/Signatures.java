@@ -47,6 +47,7 @@ public final class Signatures implements Constants {
   private static final String BUNDLED_PREFIX = "@includeBundled ";
   private static final String DEFAULT_MESSAGE_PREFIX = "@defaultMessage ";
   private static final String IGNORE_UNRESOLVABLE_LINE = "@ignoreUnresolvable";
+  private static final String IGNORE_MISSING_CLASSES_LINE = "@ignoreMissingClasses";
 
   private static enum UnresolvableReporting {
     FAIL(true) {
@@ -119,7 +120,8 @@ public final class Signatures implements Constants {
   }
   
   /** Adds the method signature to the list of disallowed methods. The Signature is checked against the given ClassLoader. */
-  private void addSignature(final String line, final String defaultMessage, final UnresolvableReporting report, final Set<String> missingClasses) throws ParseException,IOException {
+  private void addSignature(final String line, final String defaultMessage, final UnresolvableReporting report,
+      final boolean localIgnoreMissingClasses, final Set<String> missingClasses) throws ParseException,IOException {
     final String clazz, field, signature;
     String message = null;
     final Method method;
@@ -175,7 +177,7 @@ public final class Signatures implements Constants {
       try {
         c = lookup.getClassFromClassLoader(clazz);
       } catch (ClassNotFoundException cnfe) {
-        if (this.ignoreSignaturesOfMissingClasses) {
+        if (this.ignoreSignaturesOfMissingClasses || localIgnoreMissingClasses) {
           return;
         }
         if (report.reportClassNotFound) {
@@ -271,6 +273,7 @@ public final class Signatures implements Constants {
     try (final BufferedReader r = new BufferedReader(reader)) {
       String line, defaultMessage = null;
       UnresolvableReporting reporter = failOnUnresolvableSignatures ? UnresolvableReporting.FAIL : UnresolvableReporting.WARNING;
+      boolean localIgnoreMissingClasses = false;
       while ((line = r.readLine()) != null) {
         line = line.trim();
         if (line.length() == 0 || line.startsWith("#"))
@@ -283,12 +286,20 @@ public final class Signatures implements Constants {
             defaultMessage = line.substring(DEFAULT_MESSAGE_PREFIX.length()).trim();
             if (defaultMessage.length() == 0) defaultMessage = null;
           } else if (line.equals(IGNORE_UNRESOLVABLE_LINE)) {
-            reporter = isBundled ? UnresolvableReporting.SILENT : UnresolvableReporting.WARNING;
+            if (isBundled) {
+              reporter = UnresolvableReporting.SILENT;
+            } else {
+              logger.warn(String.format(Locale.ENGLISH, "'%s' inside signatures files is deprecated, prefer using '%s' to ignore signatures where the class is missing.",
+                  IGNORE_UNRESOLVABLE_LINE, IGNORE_MISSING_CLASSES_LINE));
+              reporter = UnresolvableReporting.WARNING;
+            }
+          } else if (line.equals(IGNORE_MISSING_CLASSES_LINE)) {
+            localIgnoreMissingClasses = true;
           } else {
             throw new ParseException("Invalid line in signature file: " + line);
           }
         } else {
-          addSignature(line, defaultMessage, reporter, missingClasses);
+          addSignature(line, defaultMessage, reporter, localIgnoreMissingClasses, missingClasses);
         }
       }
     }
