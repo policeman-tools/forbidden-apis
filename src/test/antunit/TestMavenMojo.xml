@@ -96,6 +96,30 @@
     <au:assertLogContains text="Field not found while parsing signature: java.lang.String#forbiddenFoobarField [signature ignored]"/> 
   </target>
   
+  <target name="testIgnoreSignaturesOfMissingClasses2">
+    <artifact:mvn pom="${antunit.fake-pom}" mavenVersion="${maven.version}" failonerror="true" fork="${maven.fork}">
+      <arg value="-s"/><arg file="${maven.local.settings}"/>
+      <arg value="${groupId}:${artifactId}:${version}:check"/>
+      <syspropertyset refid="injected-properties"/>
+      <sysproperty key="antunit.signatures" value="foo.bar.ForbiddenApis#testMethod()"/>
+      <sysproperty key="antunit.ignoreSignaturesOfMissingClasses" value="true"/>
+    </artifact:mvn>
+    <au:assertLogContains text=" 0 error(s)."/> 
+  </target>
+  
+  <target name="testIgnoreSignaturesOfMissingClasses2DoesNotPassMissingMethod">
+    <au:expectfailure>
+      <artifact:mvn pom="${antunit.fake-pom}" mavenVersion="${maven.version}" failonerror="true" fork="${maven.fork}">
+        <arg value="-s"/><arg file="${maven.local.settings}"/>
+        <arg value="${groupId}:${artifactId}:${version}:check"/>
+        <syspropertyset refid="injected-properties"/>
+        <sysproperty key="antunit.signatures" value="foo.bar.ForbiddenApis#testMethod()&#10;java.lang.String#forbiddenFoobarMethod()&#10;java.lang.String#forbiddenFoobarField"/>
+        <sysproperty key="antunit.ignoreSignaturesOfMissingClasses" value="true"/>
+      </artifact:mvn>
+    </au:expectfailure>
+    <au:assertLogContains text="Parsing signatures failed: Method not found while parsing signature: java.lang.String#forbiddenFoobarMethod()"/> 
+  </target>
+  
   <target name="testMissingTargetVersion">
     <au:expectfailure>
       <artifact:mvn pom="${antunit.fake-pom}" mavenVersion="${maven.version}" failonerror="true" fork="${maven.fork}">

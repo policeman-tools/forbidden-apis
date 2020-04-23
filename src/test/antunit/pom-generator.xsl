@@ -47,6 +47,7 @@
             <version>${version}</version>
             <configuration>
               <failOnUnresolvableSignatures>${antunit.failOnUnresolvableSignatures}</failOnUnresolvableSignatures>
+              <ignoreSignaturesOfMissingClasses>${antunit.ignoreSignaturesOfMissingClasses}</ignoreSignaturesOfMissingClasses>
               <failOnViolation>${antunit.failOnViolation}</failOnViolation>
               <bundledSignatures>
                 <bundledSignature>jdk-unsafe</bundledSignature>

@@ -37,6 +37,7 @@
               <artifactId>${artifactId}</artifactId>
               <version>${version}</version>
               <type>jar</type>
+              <!-- TODO: This currently prints a warning about @ignoreUnresolvable -->
               <path>de/thetaphi/forbiddenapis/signatures/jdk-deprecated-${jdk.version}.txt</path>
             </signaturesArtifact>
           </signaturesArtifacts>
