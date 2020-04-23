@@ -127,13 +127,13 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
     return classesDirs;
   }
 
-  /** @see #getClassesDirs */
+  /** @see #getClassesDirs() */
   public void setClassesDirs(FileCollection classesDirs) {
     Objects.requireNonNull(classesDirs, "classesDirs");
     this.classesDirs = classesDirs;
   }
 
-  /** Returns the pattern set to match against class files in {@link #getClassesDir()}. */
+  /** Returns the pattern set to match against class files in {@link #getClassesDirs()}. */
   @Internal
   public PatternSet getPatternSet() {
     return patternSet;
