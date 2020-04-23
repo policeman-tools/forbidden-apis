@@ -46,6 +46,7 @@ public class CheckForbiddenApisExtension {
     failOnMissingClasses = true,
     failOnUnresolvableSignatures = true,
     ignoreFailures = false,
+    ignoreSignaturesOfMissingClasses = false,
     disableClassloadingCache = ForbiddenApisPlugin.DEFAULT_DISABLE_CLASSLOADING_CACHE;
   
 }

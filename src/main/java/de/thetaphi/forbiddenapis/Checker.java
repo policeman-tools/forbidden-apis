@@ -54,6 +54,7 @@ public final class Checker implements RelatedClassLookup, Constants {
     FAIL_ON_MISSING_CLASSES,
     FAIL_ON_VIOLATION,
     FAIL_ON_UNRESOLVABLE_SIGNATURES,
+    IGNORE_SIGNATURES_OF_MISSING_CLASSES,
     DISABLE_CLASSLOADING_CACHE
   }
 
@@ -339,6 +340,11 @@ public final class Checker implements RelatedClassLookup, Constants {
   /** Returns if there are any signatures. */
   public boolean hasNoSignatures() {
     return forbiddenSignatures.hasNoSignatures();
+  }
+  
+  /** Returns if no signatures files / inline signatures were parsed */
+  public boolean noSignaturesFilesParsed() {
+    return forbiddenSignatures.noSignaturesFilesParsed();
   }
   
   /** Parses and adds a class from the given stream to the list of classes to check. Closes the stream when parsed (on Exception, too)! Does not log anything. */

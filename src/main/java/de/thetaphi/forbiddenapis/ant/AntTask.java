@@ -67,6 +67,7 @@ public class AntTask extends Task implements Constants {
   private boolean restrictClassFilename = true;
   private boolean failOnMissingClasses = true;
   private boolean failOnUnresolvableSignatures = true;
+  private boolean ignoreSignaturesOfMissingClasses = false;
   private boolean failOnViolation = true;
   private boolean ignoreEmptyFileset = false;
   private String targetVersion = null;
@@ -108,7 +109,12 @@ public class AntTask extends Task implements Constants {
       final EnumSet<Checker.Option> options = EnumSet.noneOf(Checker.Option.class);
       if (failOnMissingClasses) options.add(FAIL_ON_MISSING_CLASSES);
       if (failOnViolation) options.add(FAIL_ON_VIOLATION);
-      if (failOnUnresolvableSignatures) options.add(FAIL_ON_UNRESOLVABLE_SIGNATURES);
+      if (failOnUnresolvableSignatures) {
+        options.add(FAIL_ON_UNRESOLVABLE_SIGNATURES);
+      } else {
+        log.warn(DEPRECATED_WARN_FAIL_ON_UNRESOLVABLE_SIGNATURES);
+      }
+      if (ignoreSignaturesOfMissingClasses) options.add(IGNORE_SIGNATURES_OF_MISSING_CLASSES);
       if (disableClassloadingCache) options.add(DISABLE_CLASSLOADING_CACHE);
       final Checker checker = new Checker(log, loader, options);
       
@@ -169,7 +175,12 @@ public class AntTask extends Task implements Constants {
       }
         
       if (checker.hasNoSignatures()) {
-        throw new BuildException("No API signatures found; use signaturesFile=, <signatures*/>, <bundledSignatures/> or inner text to define those!");
+        if (checker.noSignaturesFilesParsed()) {
+          throw new BuildException("No signatures were added to task; use signaturesFile=, <signatures*/>, <bundledSignatures/> or inner text to define those!");
+        } else {
+          log.info("Skipping execution because no API signatures are available.");
+          return;
+        }
       }
 
       log.info("Loading classes to check...");
@@ -325,13 +336,34 @@ public class AntTask extends Task implements Constants {
 
   /**
    * Fail the build if a signature is not resolving. If this parameter is set to
-   * to false, then such signatures are silently ignored.
-   * Defaults to {@code true}. 
+   * to false, then such signatures are ignored. Defaults to {@code true}.
+   * <p>When disabling this setting, the task still prints a warning to inform the user about
+   * broken signatures. This cannot be disabled. There is a second setting
+   * {@link #setIgnoreMissingSignaturesClasses()} that can be used to silently ignore
+   * signatures that refer to methods or field in classes that are not on classpath,
+   * e.g. This is useful in multi-module builds where a common set of signatures is used,
+   * that are not part of every sub-modules dependencies.
+   * @see #setIgnoreMissingSignaturesClasses()
+   * @deprecated Use {@link #setIgnoreSignaturesOfMissingClasses(boolean)} instead.
    */
+  @Deprecated
   public void setFailOnUnresolvableSignatures(boolean failOnUnresolvableSignatures) {
     this.failOnUnresolvableSignatures = failOnUnresolvableSignatures;
   }
 
+  /**
+   * If a class is missing while parsing signatures files, all methods and fields from this
+   * class are silently ignored. This is useful in multi-module
+   * projects where only some modules have the dependency to which the signature file(s) apply.
+   * This settings prints no warning at all, so verify the signatures at least once with
+   * full dependencies.
+   * Defaults to {@code false}.
+   * @since 3.0
+   */
+  public void setIgnoreSignaturesOfMissingClasses(boolean ignoreSignaturesOfMissingClasses) {
+    this.ignoreSignaturesOfMissingClasses = ignoreSignaturesOfMissingClasses;
+  }
+  
   /** Automatically restrict resource names included to files with a name ending in '.class'.
    * This makes filesets easier, as the includes="**&#47;*.class" is not needed.
    * Defaults to {@code true}.

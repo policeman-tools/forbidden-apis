@@ -113,7 +113,15 @@ and the system classloader, not ANT's class loader.</p>
   <td>failOnUnresolvableSignatures</td>
   <td><code>boolean</code></td>
   <td><code>true</code></td>
-  <td>Fail the build if a signature is not resolving. If this parameter is set to <code>false</code>, then such signatures are silently ignored.</td>
+  <td>Fail the build if a signature is not resolving. If this parameter is set to
+   to false, then such signatures are ignored.<br>
+   When disabling this setting, the task still prints a warning to inform the user about
+   broken signatures. This cannot be disabled. There is a second setting
+   <code>ignoreSignaturesOfMissingClasses</code> that can be used to silently ignore
+   signatures that refer to methods or field in classes that are not on classpath,
+   e.g. This is useful in multi-module builds where a common set of signatures is used,
+   that are not part of every sub-modules dependencies.<br>
+  <strong>Deprecated.</strong> Use <code>ignoreSignaturesOfMissingClasses</code> instead.</td>
 </tr>
 
 <tr>
@@ -135,6 +143,17 @@ and the system classloader, not ANT's class loader.</p>
   <td><code>boolean</code></td>
   <td><code>false</code></td>
   <td>Ignore empty fileset/resource collection and print a warning instead.</td>
+</tr>
+
+<tr>
+  <td>ignoreSignaturesOfMissingClasses</td>
+  <td><code>boolean</code></td>
+  <td><code>false</code></td>
+  <td>If a class is missing while parsing signatures files, all methods and fields from this
+   class are silently ignored. This is useful in multi-module
+   projects where only some modules have the dependency to which the signature file(s) apply.
+   This settings prints no warning at all, so verify the signatures at least once with
+   full dependencies.</td>
 </tr>
 
 <tr>

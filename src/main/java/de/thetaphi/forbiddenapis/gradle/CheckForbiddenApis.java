@@ -258,18 +258,45 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
 
   /**
    * Fail the build if a signature is not resolving. If this parameter is set to
-   * to false, then such signatures are silently ignored. This is useful in multi-module Maven
-   * projects where only some modules have the dependency to which the signature file(s) apply.
-   * Defaults to {@code true}.
+   * to false, then such signatures are ignored. Defaults to {@code true}.
+   * <p>When disabling this setting, the task still prints a warning to inform the user about
+   * broken signatures. This cannot be disabled. There is a second setting
+   * {@link #getIgnoreSignaturesOfMissingClasses()} that can be used to silently ignore
+   * signatures that refer to methods or field in classes that are not on classpath,
+   * e.g. This is useful in multi-module Gradle builds where a common set of signatures is used,
+   * that are not part of every sub-modules dependencies.
+   * @see #getIgnoreSignaturesOfMissingClasses()
+   * @deprecated Use {@link #getIgnoreSignaturesOfMissingClasses()} instead.
    */
   @Input
+  @Deprecated
   public boolean getFailOnUnresolvableSignatures() {
     return data.failOnUnresolvableSignatures;
   }
 
   /** @see #getFailOnUnresolvableSignatures */
+  @Deprecated
   public void setFailOnUnresolvableSignatures(boolean failOnUnresolvableSignatures) {
     data.failOnUnresolvableSignatures = failOnUnresolvableSignatures;
+  }
+
+  /**
+   * If a class is missing while parsing signatures files, all methods and fields from this
+   * class are silently ignored. This is useful in multi-module Gradle
+   * projects where only some modules have the dependency to which the signature file(s) apply.
+   * This settings prints no warning at all, so verify the signatures at least once with
+   * full dependencies.
+   * Defaults to {@code false}.
+   * @since 3.0
+   */
+  @Input
+  public boolean getIgnoreSignaturesOfMissingClasses() {
+    return data.ignoreSignaturesOfMissingClasses;
+  }
+
+  /** @see #getFailOnUnresolvableSignatures */
+  public void setIgnoreSignaturesOfMissingClasses(boolean ignoreSignaturesOfMissingClasses) {
+    data.ignoreSignaturesOfMissingClasses = ignoreSignaturesOfMissingClasses;
   }
 
   /**
@@ -492,7 +519,12 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
       final EnumSet<Checker.Option> options = EnumSet.noneOf(Checker.Option.class);
       if (getFailOnMissingClasses()) options.add(FAIL_ON_MISSING_CLASSES);
       if (!getIgnoreFailures()) options.add(FAIL_ON_VIOLATION);
-      if (getFailOnUnresolvableSignatures()) options.add(FAIL_ON_UNRESOLVABLE_SIGNATURES);
+      if (getFailOnUnresolvableSignatures()) {
+        options.add(FAIL_ON_UNRESOLVABLE_SIGNATURES);
+      } else {
+        log.warn(DEPRECATED_WARN_FAIL_ON_UNRESOLVABLE_SIGNATURES);
+      }
+      if (getIgnoreSignaturesOfMissingClasses()) options.add(IGNORE_SIGNATURES_OF_MISSING_CLASSES);
       if (getDisableClassloadingCache()) options.add(DISABLE_CLASSLOADING_CACHE);
       final Checker checker = new Checker(log, loader, options);
       
@@ -552,8 +584,8 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
       }
 
       if (checker.hasNoSignatures()) {
-        if (options.contains(FAIL_ON_UNRESOLVABLE_SIGNATURES)) {
-          throw new InvalidUserDataException("No API signatures found; use properties 'signatures', 'bundledSignatures', 'signaturesURLs', and/or 'signaturesFiles' to define those!");
+        if (checker.noSignaturesFilesParsed()) {
+          throw new InvalidUserDataException("No signatures were added to task; use properties 'signatures', 'bundledSignatures', 'signaturesURLs', and/or 'signaturesFiles' to define those!");
         } else {
           log.info("Skipping execution because no API signatures are available.");
           return;

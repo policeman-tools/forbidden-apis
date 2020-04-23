@@ -95,8 +95,8 @@
       foo.bar.ForbiddenApis#testMethod() @ should be ignored
       java.lang.String#forbiddenFoobarMethod() @ should be ignored
       java.lang.String#forbiddenFoobarField @ should be ignored
-      java.awt.Color @ Color is disallowed, thats not bad, because ANT has no colors... (this was just added to don't fail because of missing signatures)
     </forbiddenapis>
+    <au:assertLogContains level="warning" text="'@ignoreUnresolvable' inside signatures files is deprecated, prefer using '@ignoreMissingClasses' to ignore signatures where the class is missing."/> 
     <au:assertLogContains level="warning" text="Some signatures were ignored because the following classes were not found on classpath:"/> 
     <au:assertLogContains level="warning" text="  foo.bar.ForbiddenApis"/> 
     <au:assertLogContains level="warning" text="Method not found while parsing signature: java.lang.String#forbiddenFoobarMethod() [signature ignored]"/> 
@@ -109,12 +109,65 @@
       foo.bar.ForbiddenApis#testMethod() @ should be ignored
       java.lang.String#forbiddenFoobarMethod() @ should be ignored
       java.lang.String#forbiddenFoobarField @ should be ignored
-      java.awt.Color @ Color is disallowed, thats not bad, because ANT has no colors... (this was just added to don't fail because of missing signatures)
     </forbiddenapis>
+    <au:assertLogContains level="warning" text="The setting 'failOnUnresolvableSignatures' was deprecated and will be removed in next version. Use 'ignoreSignaturesOfMissingClasses' instead."/> 
     <au:assertLogContains level="warning" text="Some signatures were ignored because the following classes were not found on classpath:"/> 
     <au:assertLogContains level="warning" text="  foo.bar.ForbiddenApis"/> 
     <au:assertLogContains level="warning" text="Method not found while parsing signature: java.lang.String#forbiddenFoobarMethod() [signature ignored]"/> 
     <au:assertLogContains level="warning" text="Field not found while parsing signature: java.lang.String#forbiddenFoobarField [signature ignored]"/> 
+  </target>
+  
+  <target name="testIgnoreSignaturesOfMissingClasses">
+    <forbiddenapis classpathref="path.all">
+      <fileset refid="main.classes"/>
+      @ignoreMissingClasses
+      foo.bar.ForbiddenApis#testMethod() @ should be ignored
+      foo.bar.ForbiddenApis#field @ should be ignored
+      foo.bar.ForbiddenApis @ should be ignored
+    </forbiddenapis>
+    <au:assertLogContains level="info" text="Skipping execution because no API signatures are available."/> 
+  </target>
+  
+  <target name="testIgnoreSignaturesOfMissingClassesAttribute">
+    <forbiddenapis classpathref="path.all" ignoreSignaturesOfMissingClasses="true">
+      <fileset refid="main.classes"/>
+      foo.bar.ForbiddenApis#testMethod() @ should be ignored
+      foo.bar.ForbiddenApis#field @ should be ignored
+      foo.bar.ForbiddenApis @ should be ignored
+    </forbiddenapis>
+    <au:assertLogContains level="info" text="Skipping execution because no API signatures are available."/> 
+  </target>
+  
+  <target name="testIgnoreSignaturesOfMissingClassesAttributeButFailOnMissingMethod">
+    <au:expectfailure expectedMessage="Method not found while parsing signature: java.lang.String#forbiddenFoobarMethod()">
+      <forbiddenapis classpathref="path.all" ignoreSignaturesOfMissingClasses="true">
+        <fileset refid="main.classes"/>
+        foo.bar.ForbiddenApis#testMethod() @ should be ignored
+        java.lang.String#forbiddenFoobarMethod() @ should not be ignored
+        java.lang.String#forbiddenFoobarField @ should not be ignored
+      </forbiddenapis>
+    </au:expectfailure>
+  </target>
+  
+  <target name="testIgnoreSignaturesOfMissingClassesInSeparateResources">
+    <au:expectfailure expectedMessage="Parsing signatures failed: Class 'foo.bar.ForbiddenApis2' not found on classpath while parsing signature: foo.bar.ForbiddenApis2#testMethod()">
+      <forbiddenapis classpathref="path.all">
+        <fileset refid="main.classes"/>
+        <signatures>
+          <string>
+            @ignoreMissingClasses
+            foo.bar.ForbiddenApis#testMethod() @ should be ignored
+            foo.bar.ForbiddenApis#field @ should be ignored
+            foo.bar.ForbiddenApis @ should be ignored
+          </string>
+          <string>
+            foo.bar.ForbiddenApis2#testMethod() @ should fail
+            foo.bar.ForbiddenApis2#field @ should fail
+            foo.bar.ForbiddenApis2 @ should fail
+          </string>
+        </signatures>
+      </forbiddenapis>
+    </au:expectfailure>
   </target>
   
 </project>
