@@ -585,7 +585,7 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
 
       if (checker.hasNoSignatures()) {
         if (checker.noSignaturesFilesParsed()) {
-          throw new InvalidUserDataException("No API signatures found; use properties 'signatures', 'bundledSignatures', 'signaturesURLs', and/or 'signaturesFiles' to define those!");
+          throw new InvalidUserDataException("No signatures were added to task; use properties 'signatures', 'bundledSignatures', 'signaturesURLs', and/or 'signaturesFiles' to define those!");
         } else {
           log.info("Skipping execution because no API signatures are available.");
           return;

@@ -176,7 +176,7 @@ public class AntTask extends Task implements Constants {
         
       if (checker.hasNoSignatures()) {
         if (checker.noSignaturesFilesParsed()) {
-          throw new BuildException("No API signatures found; use signaturesFile=, <signatures*/>, <bundledSignatures/> or inner text to define those!");
+          throw new BuildException("No signatures were added to task; use signaturesFile=, <signatures*/>, <bundledSignatures/> or inner text to define those!");
         } else {
           log.info("Skipping execution because no API signatures are available.");
           return;

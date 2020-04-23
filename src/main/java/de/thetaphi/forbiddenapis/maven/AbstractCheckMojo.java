@@ -438,7 +438,7 @@ public abstract class AbstractCheckMojo extends AbstractMojo implements Constant
 
       if (checker.hasNoSignatures()) {
         if (checker.noSignaturesFilesParsed()) {
-          throw new MojoExecutionException("No API signatures found; use parameters 'signatures', 'bundledSignatures', 'signaturesFiles',  and/or 'signaturesArtifacts' to define those!");
+          throw new MojoExecutionException("No signatures were added to mojo; use parameters 'signatures', 'bundledSignatures', 'signaturesFiles',  and/or 'signaturesArtifacts' to define those!");
         } else {
           log.info("Skipping execution because no API signatures are available.");
           return;
