@@ -335,7 +335,7 @@ public abstract class AbstractCheckMojo extends AbstractMojo implements Constant
       if (failOnUnresolvableSignatures) {
         options.add(FAIL_ON_UNRESOLVABLE_SIGNATURES);
       } else {
-        // no warning needed, Maven does this automatically based on @deprecated annotation
+        log.warn(DEPRECATED_WARN_FAIL_ON_UNRESOLVABLE_SIGNATURES);
       }
       if (ignoreSignaturesOfMissingClasses) options.add(IGNORE_SIGNATURES_OF_MISSING_CLASSES);
       if (disableClassloadingCache) options.add(DISABLE_CLASSLOADING_CACHE);
