@@ -20,16 +20,10 @@ import java.lang.reflect.Modifier;
 import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.util.GradleVersion;
 
-final boolean TASK_AVOIDANCE_AVAILABLE = GradleVersion.current() >= GradleVersion.version("4.9");
-
 project.plugins.apply(JavaBasePlugin.class);
 
 // create Extension for defaults:
 def extension = project.extensions.create(FORBIDDEN_APIS_EXTENSION_NAME, CheckForbiddenApisExtension.class, project);
-def extensionProps = CheckForbiddenApisExtension.class.declaredFields.findAll{ f -> 
-  int mods = f.modifiers;
-  return Modifier.isPublic(mods) && !f.synthetic && !Modifier.isStatic(mods)
-}*.name;
 
 // Create a convenience task for all checks (this does not conflict with extension, as it has higher priority in DSL):
 def forbiddenTask = TASK_AVOIDANCE_AVAILABLE ? project.tasks.register(FORBIDDEN_APIS_TASK_NAME) : project.tasks.create(FORBIDDEN_APIS_TASK_NAME)
@@ -48,7 +42,7 @@ project.sourceSets.all{ sourceSet ->
     dependsOn(sourceSet.output);
     outputs.upToDateWhen { true }
     conventionMapping.with{
-      extensionProps.each{ key ->
+      FORBIDDEN_APIS_EXTENSION_PROPS.each{ key ->
         map(key, { extension[key] });
       }
       classesDirs = { sourceSet.output.hasProperty('classesDirs') ? sourceSet.output.classesDirs : project.files(sourceSet.output.classesDir) }

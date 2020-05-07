@@ -20,10 +20,15 @@ import groovy.lang.GroovyClassLoader;
 import groovy.lang.GroovyCodeSource;
 import groovy.util.DelegatingScript;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.control.customizers.ImportCustomizer;
@@ -61,6 +66,12 @@ public class ForbiddenApisPlugin implements Plugin<Project> {
   /** Minimum Gradle version this plugin requires to run (v3.2). */
   public static final GradleVersion MIN_GRADLE_VERSION = GradleVersion.version("3.2");
   
+  /** True, if this version of Gradle supports task avoidance API (&gt;=v4.9). */
+  public static final boolean TASK_AVOIDANCE_AVAILABLE = GradleVersion.current().compareTo(GradleVersion.version("4.9")) >= 0;
+
+  /** All properties that our ForbiddenApisExtension provides. Used by plugin init script to create convention mapping. */
+  public static final List<String> FORBIDDEN_APIS_EXTENSION_PROPS = determineExtensionProps();
+  
   /** Java Package that contains the Gradle Daemon (needed to detect it on startup). */
   private static final String GRADLE_DAEMON_PACKAGE = "org.gradle.launcher.daemon.";
 
@@ -95,6 +106,17 @@ public class ForbiddenApisPlugin implements Plugin<Project> {
         }
       }
     });
+  }
+  
+  private static List<String> determineExtensionProps() {
+    final List<String> props = new ArrayList<>();
+    for (final Field f : CheckForbiddenApisExtension.class.getDeclaredFields()) {
+      final int mods = f.getModifiers();
+      if (Modifier.isPublic(mods) && !f.isSynthetic() && !Modifier.isStatic(mods)) {
+        props.add(f.getName());
+      }
+    }
+    return Collections.unmodifiableList(props);
   }
   
   private static boolean isGradleDaemon() {
