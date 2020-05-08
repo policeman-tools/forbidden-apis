@@ -16,9 +16,7 @@
 
 /** Initializes the plugin and binds it to project lifecycle. */
 
-import java.lang.reflect.Modifier;
 import org.gradle.api.plugins.JavaBasePlugin;
-import org.gradle.util.GradleVersion;
 
 project.plugins.apply(JavaBasePlugin.class);
 
