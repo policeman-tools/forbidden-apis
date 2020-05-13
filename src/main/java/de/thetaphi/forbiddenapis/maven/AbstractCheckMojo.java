@@ -186,6 +186,14 @@ public abstract class AbstractCheckMojo extends AbstractMojo implements Constant
   private String targetVersion;
 
   /**
+   * The default compiler release version used to expand references to bundled JDK signatures.
+   * E.g., if you use "jdk-deprecated", it will expand to this version.
+   * This setting should be identical to the release version used in the compiler plugin starting with Java 9.
+   */
+  @Parameter(required = false, defaultValue = "${maven.compiler.release}")
+  private String releaseVersion;
+
+  /**
    * List of patterns matching all class files to be parsed from the classesDirectory.
    * Can be changed to e.g. exclude several files (using excludes).
    * The default is a single include with pattern '**&#47;*.class'
@@ -248,7 +256,7 @@ public abstract class AbstractCheckMojo extends AbstractMojo implements Constant
 
   /** gets overridden for test, because it uses testTargetVersion as optional name to override */
   protected String getTargetVersion() {
-    return targetVersion;
+    return (releaseVersion != null) ? releaseVersion : targetVersion;
   }
   
   private File resolveSignaturesArtifact(SignaturesArtifact signaturesArtifact) throws ArtifactResolutionException, ArtifactNotFoundException {
@@ -385,7 +393,8 @@ public abstract class AbstractCheckMojo extends AbstractMojo implements Constant
           String targetVersion = getTargetVersion();
           if ("".equals(targetVersion)) targetVersion = null;
           if (targetVersion == null) {
-            log.warn("The 'targetVersion' parameter or '${maven.compiler.target}' property is missing. " +
+            log.warn("The 'targetVersion' and 'targetRelease' parameters or " +
+              "'${maven.compiler.target}' and '${maven.compiler.release}' properties are missing. " +
               "Trying to read bundled JDK signatures without compiler target. " +
               "You have to explicitly specify the version in the resource name.");
           }
