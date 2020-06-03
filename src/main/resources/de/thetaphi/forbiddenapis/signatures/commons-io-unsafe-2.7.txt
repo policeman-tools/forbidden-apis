@@ -14,15 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-@ignoreUnresolvable
+@includeBundled commons-io-unsafe-2.6
 
 @defaultMessage Uses default charset
-org.apache.commons.io.CopyUtils#copy(byte[],java.io.Writer)
-org.apache.commons.io.CopyUtils#copy(java.io.InputStream,java.io.Writer)
-org.apache.commons.io.CopyUtils#copy(java.io.Reader,java.io.OutputStream)
-org.apache.commons.io.CopyUtils#copy(java.lang.String,java.io.OutputStream)
-org.apache.commons.io.IOUtils#toByteArray(java.io.Reader)
-org.apache.commons.io.IOUtils#toByteArray(java.lang.String)
-org.apache.commons.io.IOUtils#toString(byte[])
-org.apache.commons.io.IOUtils#toString(java.io.InputStream)
-org.apache.commons.io.output.ByteArrayOutputStream#toString()
+org.apache.commons.io.output.AbstractByteArrayOutputStream#toString()
