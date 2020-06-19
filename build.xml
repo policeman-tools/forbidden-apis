@@ -309,7 +309,9 @@
     </copy>
     <property name="maven.deploy.pom" location="${maven-build-dir}/pom-deploy.xml"/>
     <property name="maven.local.settings" location="${maven-build-dir}/settings.xml"/>
-    <artifact:pom id="maven.deploy.pom" file="${maven.deploy.pom}"/>
+    <artifact:pom id="maven.deploy.pom" file="${maven.deploy.pom}">
+      <remoteRepository refid="mvn.maven-central.backup" />
+    </artifact:pom>
   </target>
   
   <target name="-maven-uptodate"> 
