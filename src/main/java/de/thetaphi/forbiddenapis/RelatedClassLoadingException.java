@@ -33,6 +33,11 @@ final class RelatedClassLoadingException extends RuntimeException {
     this.className = className;
   }
   
+  public RelatedClassLoadingException(RuntimeException e, String className) {
+    super(e);
+    this.className = className;
+  }
+  
   public Exception getException() {
     return (Exception) getCause();
   }

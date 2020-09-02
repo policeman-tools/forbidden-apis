@@ -24,6 +24,7 @@ import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.regex.Pattern;
 
 import org.objectweb.asm.ClassReader;
@@ -180,6 +181,14 @@ public final class AsmUtils {
     final byte[] bytecode = readStream(in);
     if (false) patchClassMajorVersion(bytecode, Opcodes.V15 + 1, Opcodes.V15);
     return new ClassReader(bytecode);
+  }
+  
+  /** Returns true, if the given {@link RuntimeException} was caused by ASM's ClassReader */
+  public static boolean isExceptionInAsmClassReader(RuntimeException re) {
+    // Because of javac bugs some class files are broken and cause RuntimeExceptions like AIOOBE
+    // We analyze stack trace if this is caused by ASM's ClassReader and not our code:
+    final StackTraceElement[] stack = re.getStackTrace();
+    return stack.length > 0 && Objects.equals(ClassReader.class.getName(), stack[0].getClassName());
   }
 
 }
