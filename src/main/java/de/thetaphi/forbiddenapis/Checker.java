@@ -309,6 +309,11 @@ public final class Checker implements RelatedClassLookup, Constants {
       }
     } catch (IOException ioe) {
       throw new RelatedClassLoadingException(ioe, Type.getObjectType(internalNameOrig).getClassName());
+    } catch (RuntimeException re) {
+      if (AsmUtils.isExceptionInAsmClassReader(re)) {
+        throw new RelatedClassLoadingException(re, Type.getObjectType(internalNameOrig).getClassName());
+      }
+      throw re;
     }
   }
   
@@ -419,8 +424,23 @@ public final class Checker implements RelatedClassLookup, Constants {
       }
       msg.append(": ").append(cause);
       msg.append(" (while looking up details about referenced class '").append(rcle.getClassName()).append("')");
-      assert cause != null && (cause instanceof IOException || cause instanceof ClassNotFoundException);
+      assert cause != null && (cause instanceof IOException || cause instanceof ClassNotFoundException || cause instanceof RuntimeException);
       throw new ForbiddenApiException(msg.toString(), cause);
+    } catch (RuntimeException re) {
+      if (AsmUtils.isExceptionInAsmClassReader(re)) {
+        final StringBuilder msg = new StringBuilder()
+            .append("Failed to parse class '")
+            .append(className)
+            .append('\'');
+        final String source = scanner.getSourceFile();
+        if (source != null) {
+          msg.append(" (").append(source).append(')');
+        }
+        msg.append(": ").append(re);
+        throw new ForbiddenApiException(msg.toString(), re);
+      }
+      // else rethrow (it's occuring in our code):
+      throw re;
     }
     final List<ForbiddenViolation> violations = scanner.getSortedViolations();
     final Pattern splitter = Pattern.compile(Pattern.quote(ForbiddenViolation.SEPARATOR));
