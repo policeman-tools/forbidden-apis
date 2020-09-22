@@ -52,7 +52,7 @@ final class ClassSignature implements Constants {
     final Set<Method> methods = new HashSet<>();
     final Set<String> fields = new HashSet<>();
     final Set<String> signaturePolymorphicMethods = new HashSet<>();
-    classReader.accept(new ClassVisitor(Opcodes.ASM8) {
+    classReader.accept(new ClassVisitor(Opcodes.ASM9) {
       @Override
       public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
         final Method m = new Method(name, desc);

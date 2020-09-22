@@ -64,7 +64,7 @@ public final class ClassScanner extends ClassVisitor implements Constants {
   boolean classSuppressed = false;
   
   public ClassScanner(RelatedClassLookup lookup, Signatures forbiddenSignatures, final Pattern suppressAnnotations) {
-    super(Opcodes.ASM8);
+    super(Opcodes.ASM9);
     this.lookup = lookup;
     this.forbiddenSignatures = forbiddenSignatures;
     this.suppressAnnotations = suppressAnnotations;
@@ -250,7 +250,7 @@ public final class ClassScanner extends ClassVisitor implements Constants {
     if (classSuppressed) {
       return null;
     }
-    return new FieldVisitor(Opcodes.ASM8) {
+    return new FieldVisitor(Opcodes.ASM9) {
       final boolean isDeprecated = (access & Opcodes.ACC_DEPRECATED) != 0;
       {
         // only check signature, if field is not synthetic
@@ -295,7 +295,7 @@ public final class ClassScanner extends ClassVisitor implements Constants {
     if (classSuppressed) {
       return null;
     }
-    return new MethodVisitor(Opcodes.ASM8) {
+    return new MethodVisitor(Opcodes.ASM9) {
       private final Method myself = new Method(name, desc);
       private final boolean isDeprecated = (access & Opcodes.ACC_DEPRECATED) != 0;
       private int lineNo = -1;
@@ -538,7 +538,7 @@ public final class ClassScanner extends ClassVisitor implements Constants {
     if (classSuppressed) {
       return null;
     }
-    return new RecordComponentVisitor(Opcodes.ASM8) {
+    return new RecordComponentVisitor(Opcodes.ASM9) {
       {
         reportRecordComponentViolation(checkDescriptor(desc), "record component declaration");
       }
