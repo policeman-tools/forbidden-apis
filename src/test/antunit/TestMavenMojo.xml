@@ -129,7 +129,7 @@
         <sysproperty key="maven.compiler.target" value=""/>
       </artifact:mvn>
     </au:expectfailure>
-    <au:assertLogContains text="The 'targetVersion' parameter or '${maven.compiler.target}' property is missing."/> 
+    <au:assertLogContains text="The 'targetVersion' and 'targetRelease' parameters or '${maven.compiler.target}' and '${maven.compiler.release}' properties are missing."/> 
     <au:assertLogContains text="Bundled signatures resource not found"/> 
   </target>
   
