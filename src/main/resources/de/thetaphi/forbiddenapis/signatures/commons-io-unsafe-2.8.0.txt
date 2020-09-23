@@ -15,3 +15,17 @@
 # limitations under the License.
 
 @includeBundled commons-io-unsafe-2.7
+
+@defaultMessage All FileUtils methods transform internally to/from local datetime, so they all depend on local timezone
+org.apache.commons.io.FileUtils#isFileNewer(java.io.File,java.time.chrono.ChronoLocalDate)
+org.apache.commons.io.FileUtils#isFileNewer(java.io.File,java.time.chrono.ChronoLocalDate,java.time.LocalTime)
+org.apache.commons.io.FileUtils#isFileNewer(java.io.File,java.time.chrono.ChronoLocalDateTime)
+org.apache.commons.io.FileUtils#isFileNewer(java.io.File,java.time.chrono.ChronoLocalDateTime,java.time.ZoneId)
+org.apache.commons.io.FileUtils#isFileNewer(java.io.File,java.time.chrono.ChronoZonedDateTime)
+org.apache.commons.io.FileUtils#isFileNewer(java.io.File,java.time.Instant)
+org.apache.commons.io.FileUtils#isFileOlder(java.io.File,java.time.chrono.ChronoLocalDate)
+org.apache.commons.io.FileUtils#isFileOlder(java.io.File,java.time.chrono.ChronoLocalDate,java.time.LocalTime)
+org.apache.commons.io.FileUtils#isFileOlder(java.io.File,java.time.chrono.ChronoLocalDateTime)
+org.apache.commons.io.FileUtils#isFileOlder(java.io.File,java.time.chrono.ChronoLocalDateTime,java.time.ZoneId)
+org.apache.commons.io.FileUtils#isFileOlder(java.io.File,java.time.chrono.ChronoZonedDateTime)
+org.apache.commons.io.FileUtils#isFileOlder(java.io.File,java.time.Instant)
