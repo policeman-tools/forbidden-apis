@@ -61,10 +61,11 @@ public final class TestCheckMojo extends AbstractCheckMojo {
 
   /**
    * The default compiler release version used to expand references to bundled JDK signatures.
-   * This setting falls back to "targetVersion" if undefined. This can be used to override
+   * This setting falls back to "releaseVersion" if undefined. This can be used to override
    * the release version solely used for tests.
    * E.g., if you use "jdk-deprecated", it will expand to this version.
    * This setting should be identical to the release version used in the compiler plugin.
+   * If given, this setting is used in preference to {@link #testTargetVersion}.
    */
   @Parameter(required = false, defaultValue = "${maven.compiler.testRelease}")
   private String testReleaseVersion;

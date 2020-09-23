@@ -189,6 +189,7 @@ public abstract class AbstractCheckMojo extends AbstractMojo implements Constant
    * The default compiler release version used to expand references to bundled JDK signatures.
    * E.g., if you use "jdk-deprecated", it will expand to this version.
    * This setting should be identical to the release version used in the compiler plugin starting with Java 9.
+   * If given, this setting is used in preference to {@link #targetVersion}.
    */
   @Parameter(required = false, defaultValue = "${maven.compiler.release}")
   private String releaseVersion;
