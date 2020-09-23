@@ -66,6 +66,7 @@ public final class TestCheckMojo extends AbstractCheckMojo {
    * E.g., if you use "jdk-deprecated", it will expand to this version.
    * This setting should be identical to the release version used in the compiler plugin.
    * If given, this setting is used in preference to {@link #testTargetVersion}.
+   * @since 3.1
    */
   @Parameter(required = false, defaultValue = "${maven.compiler.testRelease}")
   private String testReleaseVersion;
