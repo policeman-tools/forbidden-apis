@@ -36,7 +36,7 @@ import org.objectweb.asm.commons.Method;
 final class ClassSignature implements Constants {
   private ClassReader reader;
   
-  public final boolean isRuntimeClass;
+  public final boolean isRuntimeClass, isNonPortableRuntime;
   public final Set<Method> methods;
   public final Set<String> fields, signaturePolymorphicMethods;
   public final String className, superName;
@@ -76,6 +76,7 @@ final class ClassSignature implements Constants {
     this.methods = createSet(methods);
     this.fields = createSet(fields);
     this.signaturePolymorphicMethods = createSet(signaturePolymorphicMethods);
+    this.isNonPortableRuntime = this.determineNonPortableRuntime();
   }
 
   /** Alternative ctor that can be used to build the information via reflection from an already loaded class. Useful for Java 9 Jigsaw. */
@@ -112,19 +113,28 @@ final class ClassSignature implements Constants {
     this.methods = createSet(methods);
     this.fields = createSet(fields);
     this.signaturePolymorphicMethods = createSet(signaturePolymorphicMethods);
+    this.isNonPortableRuntime = this.determineNonPortableRuntime();
   }
   
   private static <T> Set<T> createSet(Set<? extends T> s) {
     return s.isEmpty() ? Collections.<T>emptySet() : Collections.<T>unmodifiableSet(s);
   }
+  
+  private boolean determineNonPortableRuntime() {
+    return isRuntimeClass && !AsmUtils.isPortableRuntimeClass(getBinaryClassName());
+  }
 
   public ClassReader getReader() {
     if (reader == null)
-      throw new IllegalStateException("'" + Type.getObjectType(className).getClassName() + "' has no ClassReader, because it was already checked or is only loaded as related class.");
+      throw new IllegalStateException("'" + getBinaryClassName() + "' has no ClassReader, because it was already checked or is only loaded as related class.");
     try {
       return reader;
     } finally {
       reader = null;
     }
+  }
+  
+  public String getBinaryClassName() {
+    return Type.getObjectType(className).getClassName();
   }
 }

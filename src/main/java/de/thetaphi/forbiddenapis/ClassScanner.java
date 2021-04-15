@@ -99,7 +99,7 @@ public final class ClassScanner extends ClassVisitor implements Constants {
     if (deep && forbidNonPortableRuntime) {
       final String binaryClassName = type.getClassName();
       final ClassSignature c = lookup.lookupRelatedClass(type.getInternalName(), origInternalName);
-      if (c != null && c.isRuntimeClass && !AsmUtils.isPortableRuntimeClass(binaryClassName)) {
+      if (c != null && c.isNonPortableRuntime) {
         return String.format(Locale.ENGLISH,
           "Forbidden %s use: %s [non-portable or internal runtime class]",
           what, binaryClassName
