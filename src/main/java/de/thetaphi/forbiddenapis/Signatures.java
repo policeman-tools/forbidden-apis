@@ -173,7 +173,7 @@ public final class Signatures implements Constants {
       }
       classPatterns.add(new ClassPatternRule(clazz, message));
     } else {
-      final ClassSignature c;
+      final ClassMetadata c;
       try {
         c = lookup.getClassFromClassLoader(clazz);
       } catch (ClassNotFoundException cnfe) {

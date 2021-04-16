@@ -33,7 +33,7 @@ import org.objectweb.asm.commons.Method;
 
 /** Utility class that is used to get an overview of all fields and implemented
  * methods of a class. It make the signatures available as Sets. */
-final class ClassSignature implements Constants {
+final class ClassMetadata implements Constants {
   private ClassReader reader;
   
   public final boolean isRuntimeClass, isNonPortableRuntime, isInterface;
@@ -43,7 +43,7 @@ final class ClassSignature implements Constants {
   public final String[] interfaces;
   
   /** Builds the information from an ASM ClassReader */
-  public ClassSignature(final ClassReader classReader, boolean isRuntimeClass, boolean withReader) {
+  public ClassMetadata(final ClassReader classReader, boolean isRuntimeClass, boolean withReader) {
     this.reader = withReader ? classReader : null;
     this.isRuntimeClass = isRuntimeClass;
     this.className = classReader.getClassName();
@@ -81,7 +81,7 @@ final class ClassSignature implements Constants {
   }
 
   /** Alternative ctor that can be used to build the information via reflection from an already loaded class. Useful for Java 9 Jigsaw. */
-  public ClassSignature(final Class<?> clazz, boolean isRuntimeClass) {
+  public ClassMetadata(final Class<?> clazz, boolean isRuntimeClass) {
     this.reader = null; // no reader available!
     this.isRuntimeClass = isRuntimeClass;
     this.className = Type.getType(clazz).getInternalName();

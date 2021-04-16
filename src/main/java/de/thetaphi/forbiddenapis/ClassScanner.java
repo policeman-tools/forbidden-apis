@@ -43,7 +43,7 @@ import org.objectweb.asm.commons.Method;
 
 public final class ClassScanner extends ClassVisitor implements Constants {
   private final boolean forbidNonPortableRuntime;
-  final ClassSignature metadata;
+  final ClassMetadata metadata;
   final RelatedClassLookup lookup;
   final List<ForbiddenViolation> violations = new ArrayList<>();
   
@@ -64,7 +64,7 @@ public final class ClassScanner extends ClassVisitor implements Constants {
   final BitSet suppressedGroups = new BitSet();
   boolean classSuppressed = false;
   
-  public ClassScanner(ClassSignature metadata, RelatedClassLookup lookup, Signatures forbiddenSignatures, final Pattern suppressAnnotations) {
+  public ClassScanner(ClassMetadata metadata, RelatedClassLookup lookup, Signatures forbiddenSignatures, final Pattern suppressAnnotations) {
     super(Opcodes.ASM9);
     this.metadata = metadata;
     this.lookup = lookup;
@@ -100,7 +100,7 @@ public final class ClassScanner extends ClassVisitor implements Constants {
     }
     if (deep && forbidNonPortableRuntime) {
       final String binaryClassName = type.getClassName();
-      final ClassSignature c = lookup.lookupRelatedClass(type.getInternalName(), origInternalName);
+      final ClassMetadata c = lookup.lookupRelatedClass(type.getInternalName(), origInternalName);
       if (c != null && c.isNonPortableRuntime) {
         return String.format(Locale.ENGLISH,
           "Forbidden %s use: %s [non-portable or internal runtime class]",
@@ -119,10 +119,10 @@ public final class ClassScanner extends ClassVisitor implements Constants {
   static interface AncestorVisitor {
     final String STOP = new String("STOP");
     
-    String visit(ClassSignature c, String origName, boolean isInterfaceOfAncestor, boolean previousInRuntime);
+    String visit(ClassMetadata c, String origName, boolean isInterfaceOfAncestor, boolean previousInRuntime);
   }
   
-  String visitAncestors(ClassSignature cls, AncestorVisitor visitor, boolean visitSelf, boolean visitInterfacesFirst) {
+  String visitAncestors(ClassMetadata cls, AncestorVisitor visitor, boolean visitSelf, boolean visitInterfacesFirst) {
     if (visitSelf) {
       final String result = visitor.visit(cls, cls.className, cls.isInterface, cls.isRuntimeClass);
       if (result != null && result != AncestorVisitor.STOP) {
@@ -132,9 +132,9 @@ public final class ClassScanner extends ClassVisitor implements Constants {
     return visitAncestorsRecursive(cls, cls.className, visitor, cls.isRuntimeClass, visitInterfacesFirst);
   }
   
-  private String visitSuperclassRecursive(ClassSignature cls, String origName, AncestorVisitor visitor, boolean previousInRuntime, boolean visitInterfacesFirst) {
+  private String visitSuperclassRecursive(ClassMetadata cls, String origName, AncestorVisitor visitor, boolean previousInRuntime, boolean visitInterfacesFirst) {
     if (cls.superName != null) {
-      final ClassSignature c = lookup.lookupRelatedClass(cls.superName, origName);
+      final ClassMetadata c = lookup.lookupRelatedClass(cls.superName, origName);
       if (c != null) {
         String result = visitor.visit(c, origName, false, previousInRuntime);
         if (result != AncestorVisitor.STOP) {
@@ -151,10 +151,10 @@ public final class ClassScanner extends ClassVisitor implements Constants {
     return null;
   }
   
-  private String visitInterfacesRecursive(ClassSignature cls, String origName, AncestorVisitor visitor, boolean previousInRuntime, boolean visitInterfacesFirst) {
+  private String visitInterfacesRecursive(ClassMetadata cls, String origName, AncestorVisitor visitor, boolean previousInRuntime, boolean visitInterfacesFirst) {
     if (cls.interfaces != null) {
       for (String intf : cls.interfaces) {
-        final ClassSignature c = lookup.lookupRelatedClass(intf, origName);
+        final ClassMetadata c = lookup.lookupRelatedClass(intf, origName);
         if (c == null) continue;
         String result = visitor.visit(c, origName, true, previousInRuntime);
         if (result != AncestorVisitor.STOP) {
@@ -171,7 +171,7 @@ public final class ClassScanner extends ClassVisitor implements Constants {
     return null;
   }
   
-  private String visitAncestorsRecursive(ClassSignature cls, String origName, AncestorVisitor visitor, boolean previousInRuntime, boolean visitInterfacesFirst) {
+  private String visitAncestorsRecursive(ClassMetadata cls, String origName, AncestorVisitor visitor, boolean previousInRuntime, boolean visitInterfacesFirst) {
     String result;
     if (visitInterfacesFirst) {
       result = visitInterfacesRecursive(cls, origName, visitor, previousInRuntime, visitInterfacesFirst);
@@ -195,7 +195,7 @@ public final class ClassScanner extends ClassVisitor implements Constants {
   // TODO: convert to lambda method with method reference
   private final AncestorVisitor classRelationAncestorVisitor = new AncestorVisitor() {
     @Override
-    public String visit(ClassSignature c, String origName, boolean isInterfaceOfAncestor, boolean previousInRuntime) {
+    public String visit(ClassMetadata c, String origName, boolean isInterfaceOfAncestor, boolean previousInRuntime) {
       if (previousInRuntime && c.isNonPortableRuntime) {
         return null; // something inside the JVM is extending internal class/interface
       }
@@ -213,7 +213,7 @@ public final class ClassScanner extends ClassVisitor implements Constants {
           if (violation != null) {
             return violation;
           }
-          final ClassSignature c = lookup.lookupRelatedClass(internalName, internalName);
+          final ClassMetadata c = lookup.lookupRelatedClass(internalName, internalName);
           return (c == null) ? null : visitAncestors(c, classRelationAncestorVisitor, false, false);
         case Type.ARRAY:
           type = type.getElementType();
@@ -393,13 +393,13 @@ public final class ClassScanner extends ClassVisitor implements Constants {
         if (CONSTRUCTOR_METHOD_NAME.equals(method.getName())) {
           return null; // don't look into superclasses or interfaces to find constructors!
         }
-        final ClassSignature c = lookup.lookupRelatedClass(owner, owner);
+        final ClassMetadata c = lookup.lookupRelatedClass(owner, owner);
         if (c == null) {
           return null;
         }
         return visitAncestors(c, new AncestorVisitor() {
           @Override
-          public String visit(ClassSignature c, String origName, boolean isInterfaceOfAncestor, boolean previousInRuntime) {
+          public String visit(ClassMetadata c, String origName, boolean isInterfaceOfAncestor, boolean previousInRuntime) {
             final Method lookupMethod;
             if (c.signaturePolymorphicMethods.contains(method.getName())) {
               // convert the invoked descriptor to a signature polymorphic one for the lookup
@@ -439,13 +439,13 @@ public final class ClassScanner extends ClassVisitor implements Constants {
         if (violation != null) {
           return violation;
         }
-        final ClassSignature c = lookup.lookupRelatedClass(owner, owner);
+        final ClassMetadata c = lookup.lookupRelatedClass(owner, owner);
         if (c == null) {
           return null;
         }
         return visitAncestors(c, new AncestorVisitor() {
           @Override
-          public String visit(ClassSignature c, String origName, boolean isInterfaceOfAncestor, boolean previousInRuntime) {
+          public String visit(ClassMetadata c, String origName, boolean isInterfaceOfAncestor, boolean previousInRuntime) {
             if (!c.fields.contains(field)) {
               return null;
             }

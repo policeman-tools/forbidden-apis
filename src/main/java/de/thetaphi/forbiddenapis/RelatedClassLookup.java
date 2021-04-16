@@ -19,6 +19,6 @@ package de.thetaphi.forbiddenapis;
 import java.io.IOException;
 
 public interface RelatedClassLookup {
-  ClassSignature lookupRelatedClass(String internalName, String internalNameOrig);
-  ClassSignature getClassFromClassLoader(String clazz) throws ClassNotFoundException,IOException;
+  ClassMetadata lookupRelatedClass(String internalName, String internalNameOrig);
+  ClassMetadata getClassFromClassLoader(String clazz) throws ClassNotFoundException,IOException;
 }

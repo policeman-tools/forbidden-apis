@@ -97,7 +97,7 @@ public final class CheckerSetupTest {
   @Test
   public void testRuntimeClassSignatures() throws Exception {
     String internalName = "java/lang/String";
-    ClassSignature cs = checker.lookupRelatedClass(internalName, internalName);
+    ClassMetadata cs = checker.lookupRelatedClass(internalName, internalName);
     assertTrue(cs.isRuntimeClass);
     assertTrue(cs.signaturePolymorphicMethods.isEmpty());
   }
@@ -105,7 +105,7 @@ public final class CheckerSetupTest {
   @Test
   public void testSignaturePolymorphic() throws Exception {
     String internalName = "java/lang/invoke/MethodHandle";
-    ClassSignature cs = checker.lookupRelatedClass(internalName, internalName);
+    ClassMetadata cs = checker.lookupRelatedClass(internalName, internalName);
     assertTrue(cs.signaturePolymorphicMethods.contains("invoke"));
     assertTrue(cs.signaturePolymorphicMethods.contains("invokeExact"));
     // System.out.println(cs.signaturePolymorphicMethods);
