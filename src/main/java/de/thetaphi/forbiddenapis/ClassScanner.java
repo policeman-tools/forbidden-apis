@@ -26,6 +26,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.regex.Pattern;
 
 import org.objectweb.asm.AnnotationVisitor;
@@ -42,6 +43,7 @@ import org.objectweb.asm.commons.Method;
 
 public final class ClassScanner extends ClassVisitor implements Constants {
   private final boolean forbidNonPortableRuntime;
+  final ClassSignature metadata;
   final RelatedClassLookup lookup;
   final List<ForbiddenViolation> violations = new ArrayList<>();
   
@@ -53,7 +55,6 @@ public final class ClassScanner extends ClassVisitor implements Constants {
   private String source = null;
   private boolean isDeprecated = false;
   private boolean done = false;
-  String internalMainClassName = null;
   int currentGroupId = 0;
   
   // Mapping from a (possible) lambda Method to groupId of declaring method
@@ -63,8 +64,9 @@ public final class ClassScanner extends ClassVisitor implements Constants {
   final BitSet suppressedGroups = new BitSet();
   boolean classSuppressed = false;
   
-  public ClassScanner(RelatedClassLookup lookup, Signatures forbiddenSignatures, final Pattern suppressAnnotations) {
+  public ClassScanner(ClassSignature metadata, RelatedClassLookup lookup, Signatures forbiddenSignatures, final Pattern suppressAnnotations) {
     super(Opcodes.ASM9);
+    this.metadata = metadata;
     this.lookup = lookup;
     this.forbiddenSignatures = forbiddenSignatures;
     this.suppressAnnotations = suppressAnnotations;
@@ -92,9 +94,9 @@ public final class ClassScanner extends ClassVisitor implements Constants {
     if (type.getSort() != Type.OBJECT) {
       return null; // we don't know this type, just pass!
     }
-    final String printout = forbiddenSignatures.checkType(type);
-    if (printout != null) {
-      return String.format(Locale.ENGLISH, "Forbidden %s use: %s", what, printout);
+    final String violation = forbiddenSignatures.checkType(type, what);
+    if (violation != null) {
+      return violation;
     }
     if (deep && forbidNonPortableRuntime) {
       final String binaryClassName = type.getClassName();
@@ -113,31 +115,90 @@ public final class ClassScanner extends ClassVisitor implements Constants {
     return checkClassUse(Type.getObjectType(internalName), what, true, origInternalName);
   }
   
-  private String checkClassDefinition(String origName, String superName, String[] interfaces) {
-    if (superName != null) {
-      String violation = checkClassUse(superName, "class", origName);
-      if (violation != null) {
-        return violation;
-      }
-      final ClassSignature c = lookup.lookupRelatedClass(superName, origName);
-      if (c != null && (violation = checkClassDefinition(origName, c.superName, c.interfaces)) != null) {
-        return violation;
+  // TODO: @FunctionalInterface from Java 8 on
+  static interface AncestorVisitor {
+    final String STOP = new String("STOP");
+    
+    String visit(ClassSignature c, String origName, boolean isInterfaceOfAncestor, boolean previousInRuntime);
+  }
+  
+  String visitAncestors(ClassSignature cls, AncestorVisitor visitor, boolean visitSelf, boolean visitInterfacesFirst) {
+    if (visitSelf) {
+      final String result = visitor.visit(cls, cls.className, cls.isInterface, cls.isRuntimeClass);
+      if (result != null && result != AncestorVisitor.STOP) {
+        return result;
       }
     }
-    if (interfaces != null) {
-      for (String intf : interfaces) {
-        String violation = checkClassUse(intf, "interface", origName);
-        if (violation != null) {
-          return violation;
-        }
-        final ClassSignature c = lookup.lookupRelatedClass(intf, origName);
-        if (c != null && (violation = checkClassDefinition(origName, c.superName, c.interfaces)) != null) {
-          return violation;
+    return visitAncestorsRecursive(cls, cls.className, visitor, cls.isRuntimeClass, visitInterfacesFirst);
+  }
+  
+  private String visitSuperclassRecursive(ClassSignature cls, String origName, AncestorVisitor visitor, boolean previousInRuntime, boolean visitInterfacesFirst) {
+    if (cls.superName != null) {
+      final ClassSignature c = lookup.lookupRelatedClass(cls.superName, origName);
+      if (c != null) {
+        String result = visitor.visit(c, origName, false, previousInRuntime);
+        if (result != AncestorVisitor.STOP) {
+          if (result != null) {
+            return result;
+          }
+          result = visitAncestorsRecursive(c, origName, visitor, cls.isRuntimeClass, visitInterfacesFirst);
+          if (result != null) {
+            return result;
+          }
         }
       }
     }
     return null;
   }
+  
+  private String visitInterfacesRecursive(ClassSignature cls, String origName, AncestorVisitor visitor, boolean previousInRuntime, boolean visitInterfacesFirst) {
+    if (cls.interfaces != null) {
+      for (String intf : cls.interfaces) {
+        final ClassSignature c = lookup.lookupRelatedClass(intf, origName);
+        if (c == null) continue;
+        String result = visitor.visit(c, origName, true, previousInRuntime);
+        if (result != AncestorVisitor.STOP) {
+          if (result != null) {
+            return result;
+          }
+          result = visitAncestorsRecursive(c, origName, visitor, cls.isRuntimeClass, visitInterfacesFirst);
+          if (result != null) {
+            return result;
+          }
+        }
+      }
+    }
+    return null;
+  }
+  
+  private String visitAncestorsRecursive(ClassSignature cls, String origName, AncestorVisitor visitor, boolean previousInRuntime, boolean visitInterfacesFirst) {
+    String result;
+    if (visitInterfacesFirst) {
+      result = visitInterfacesRecursive(cls, origName, visitor, previousInRuntime, visitInterfacesFirst);
+      if (result != null) {
+        return result;
+      }
+    }
+    result = visitSuperclassRecursive(cls, origName, visitor, previousInRuntime, visitInterfacesFirst);
+    if (result != null) {
+      return result;
+    }
+    if (!visitInterfacesFirst) {
+      result = visitInterfacesRecursive(cls, origName, visitor, previousInRuntime, visitInterfacesFirst);
+      if (result != null) {
+        return result;
+      }
+    }
+    return null;
+  }
+  
+  // TODO: convert to lambda method with method reference
+  private final AncestorVisitor classRelationAncestorVisitor = new AncestorVisitor() {
+    @Override
+    public String visit(ClassSignature c, String origName, boolean isInterfaceOfAncestor, boolean previousInRuntime) {
+      return checkClassUse(c.className, isInterfaceOfAncestor ? "interface" : "class", origName);
+    }
+  };
   
   String checkType(Type type) {
     while (type != null) {
@@ -150,8 +211,7 @@ public final class ClassScanner extends ClassVisitor implements Constants {
             return violation;
           }
           final ClassSignature c = lookup.lookupRelatedClass(internalName, internalName);
-          if (c == null) return null;
-          return checkClassDefinition(internalName, c.superName, c.interfaces);
+          return (c == null) ? null : visitAncestors(c, classRelationAncestorVisitor, false, false);
         case Type.ARRAY:
           type = type.getElementType();
           break;
@@ -212,9 +272,11 @@ public final class ClassScanner extends ClassVisitor implements Constants {
   
   @Override
   public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
-    this.internalMainClassName = name;
+    if (!Objects.equals(name, metadata.className)) {
+      throw new AssertionError("Wrong class parsed: " + name);
+    }
     this.isDeprecated = (access & Opcodes.ACC_DEPRECATED) != 0;
-    reportClassViolation(checkClassDefinition(name, superName, interfaces), "class declaration");
+    reportClassViolation(visitAncestors(metadata, classRelationAncestorVisitor, false, false), "class declaration");
     if (this.isDeprecated) {
       classSuppressed |= suppressAnnotations.matcher(DEPRECATED_TYPE.getClassName()).matches();
       reportClassViolation(checkType(DEPRECATED_TYPE), "deprecation on class declaration");
@@ -310,91 +372,94 @@ public final class ClassScanner extends ClassVisitor implements Constants {
           reportMethodViolation(checkType(DEPRECATED_TYPE), "deprecation on method declaration");
         }
       }
-      
-      private String checkMethodAccess(String owner, Method method) {
-        String violation = checkClassUse(owner, "class/interface", owner);
-        if (violation != null) {
-          return violation;
-        }
+            
+      private String checkMethodAccess(String owner, final Method method) {
         if  (CLASS_CONSTRUCTOR_METHOD_NAME.equals(method.getName())) {
           // we don't check for violations on class constructors
           return null;
         }
-        return checkMethodAccessRecursion(owner, method, true, owner);
-      }
-      
-      private String checkMethodAccessRecursion(String owner, Method method, boolean checkClassUse, String origOwner) {
-        String printout = forbiddenSignatures.checkMethod(owner, method);
-        if (printout != null) {
-          return "Forbidden method invocation: " + printout;
-        }
-        final ClassSignature c = lookup.lookupRelatedClass(owner, origOwner);
-        if (c != null) {
-          if (c.signaturePolymorphicMethods.contains(method.getName())) {
-            // convert the invoked descriptor to a signature polymorphic one for the lookup
-            final Method lookupMethod = new Method(method.getName(), SIGNATURE_POLYMORPHIC_DESCRIPTOR);
-            printout = forbiddenSignatures.checkMethod(owner, lookupMethod);
-            if (printout != null) {
-              return "Forbidden method invocation: " + printout;
-            }
-          }
-          String violation;
-          if (checkClassUse && c.methods.contains(method)) {
-            violation = checkClassUse(owner, "class/interface", origOwner);
-            if (violation != null) {
-              return violation;
-            }
-          }
-          if (CONSTRUCTOR_METHOD_NAME.equals(method.getName())) {
-            return null; // don't look into superclasses or interfaces to find constructors!
-          }
-          if (c.superName != null && (violation = checkMethodAccessRecursion(c.superName, method, true, origOwner)) != null) {
-            return violation;
-          }
-          // JVM spec says: interfaces after superclasses
-          if (c.interfaces != null) {
-            for (String intf : c.interfaces) {
-              // for interfaces we don't check the class use (it is too strict, if just the interface is implemented, but nothing more!):
-              if (intf != null && (violation = checkMethodAccessRecursion(intf, method, false, origOwner)) != null) {
-                return violation;
-              }
-            }
-          }
-        }
-        return null;
-      }
-      
-      private String checkFieldAccess(String owner, String field) {
-        return checkFieldAccessRecursion(owner, field, owner);
-      }
-      
-      private String checkFieldAccessRecursion(String owner, String field, String origOwner) {
-        String violation = checkClassUse(owner, "class/interface", origOwner);
+        String violation = checkClassUse(owner, "class/interface", owner);
         if (violation != null) {
           return violation;
         }
-        final String printout = forbiddenSignatures.checkField(owner, field);
-        if (printout != null) {
-          return "Forbidden field access: " + printout;
+        // do a quick check that works without a ClassSignature (a more thorough check is done later):
+        violation = forbiddenSignatures.checkMethod(owner, method);
+        if (violation != null) {
+          return violation;
         }
-        final ClassSignature c = lookup.lookupRelatedClass(owner, origOwner);
-        // if we have seen the field already, no need to look into superclasses (fields cannot override)
-        if (c != null && !c.fields.contains(field)) {
-          if (c.interfaces != null) {
-            for (String intf : c.interfaces) {
-              if (intf != null && (violation = checkFieldAccessRecursion(intf, field, origOwner)) != null) {
+        if (CONSTRUCTOR_METHOD_NAME.equals(method.getName())) {
+          return null; // don't look into superclasses or interfaces to find constructors!
+        }
+        final ClassSignature c = lookup.lookupRelatedClass(owner, owner);
+        if (c == null) {
+          return null;
+        }
+        return visitAncestors(c, new AncestorVisitor() {
+          @Override
+          public String visit(ClassSignature c, String origName, boolean isInterfaceOfAncestor, boolean previousInRuntime) {
+            final Method lookupMethod;
+            if (c.signaturePolymorphicMethods.contains(method.getName())) {
+              // convert the invoked descriptor to a signature polymorphic one for the lookup
+              lookupMethod = new Method(method.getName(), SIGNATURE_POLYMORPHIC_DESCRIPTOR);
+            } else {
+              lookupMethod = method;
+            }
+            if (!c.methods.contains(lookupMethod)) {
+              return null;
+            }
+            String violation = forbiddenSignatures.checkMethod(c.className, lookupMethod);
+            if (violation != null) {
+              return violation;
+            }
+            // for interfaces we don't check the class use (it is too strict, if just the interface is implemented, but nothing more!):
+            if (!isInterfaceOfAncestor) {
+              violation = checkClassUse(c.className, "class", origName);
+              if (violation != null) {
                 return violation;
               }
             }
+            return null;
           }
-          // JVM spec says: superclasses after interfaces
-          if (c.superName != null && (violation = checkFieldAccessRecursion(c.superName, field, origOwner)) != null) {
-            return violation;
-          }
-        }
-        return null;
+        }, true, false /* JVM spec says: interfaces after superclasses */);
       }
 
+      private String checkFieldAccess(String owner, final String field) {
+        String violation = checkClassUse(owner, "class/interface", owner);
+        if (violation != null) {
+          return violation;
+        }
+        // do a quick check that works without a ClassSignature (a more thorough check is done later):
+        violation = forbiddenSignatures.checkField(owner, field);
+        if (violation != null) {
+          return violation;
+        }
+        final ClassSignature c = lookup.lookupRelatedClass(owner, owner);
+        if (c == null) {
+          return null;
+        }
+        return visitAncestors(c, new AncestorVisitor() {
+          @Override
+          public String visit(ClassSignature c, String origName, boolean isInterfaceOfAncestor, boolean previousInRuntime) {
+            if (!c.fields.contains(field)) {
+              return null;
+            }
+            String violation = forbiddenSignatures.checkField(c.className, field);
+            if (violation != null) {
+              return violation;
+            }
+            // for interfaces we don't check the class use (it is too strict, if just the interface is implemented, but nothing more!):
+            if (!isInterfaceOfAncestor) {
+              violation = checkClassUse(c.className, "class", origName);
+              if (violation != null) {
+                return violation;
+              }
+            }
+            // we found the field and as those are not virtual, there is no need to go up in class hierarchy:
+            return STOP;
+          }
+        }, true, true /* JVM spec says: superclasses after interfaces */);
+      }
+      
       private String checkHandle(Handle handle, boolean checkLambdaHandle) {
         switch (handle.getTag()) {
           case Opcodes.H_GETFIELD:
@@ -408,7 +473,7 @@ public final class ClassScanner extends ClassVisitor implements Constants {
           case Opcodes.H_NEWINVOKESPECIAL:
           case Opcodes.H_INVOKEINTERFACE:
             final Method m = new Method(handle.getName(), handle.getDesc());
-            if (checkLambdaHandle && handle.getOwner().equals(internalMainClassName) && handle.getName().startsWith(LAMBDA_METHOD_NAME_PREFIX)) {
+            if (checkLambdaHandle && handle.getOwner().equals(metadata.className) && handle.getName().startsWith(LAMBDA_METHOD_NAME_PREFIX)) {
               // as described in <http://cr.openjdk.java.net/~briangoetz/lambda/lambda-translation.html>,
               // we will record this metafactory call as "lambda" invokedynamic,
               // so we can assign the called lambda with the same groupId like *this* method:

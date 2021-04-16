@@ -36,7 +36,7 @@ import org.objectweb.asm.commons.Method;
 final class ClassSignature implements Constants {
   private ClassReader reader;
   
-  public final boolean isRuntimeClass, isNonPortableRuntime;
+  public final boolean isRuntimeClass, isNonPortableRuntime, isInterface;
   public final Set<Method> methods;
   public final Set<String> fields, signaturePolymorphicMethods;
   public final String className, superName;
@@ -49,6 +49,7 @@ final class ClassSignature implements Constants {
     this.className = classReader.getClassName();
     this.superName = classReader.getSuperName();
     this.interfaces = classReader.getInterfaces();
+    this.isInterface = (classReader.getAccess() & Opcodes.ACC_INTERFACE) != 0;
     final Set<Method> methods = new HashSet<>();
     final Set<String> fields = new HashSet<>();
     final Set<String> signaturePolymorphicMethods = new HashSet<>();
@@ -91,6 +92,7 @@ final class ClassSignature implements Constants {
     for (int i = 0; i < interfClasses.length; i++) {
       this.interfaces[i] = Type.getType(interfClasses[i]).getInternalName();
     }
+    this.isInterface = clazz.isInterface();
     final Set<Method> methods = new HashSet<>();
     final Set<String> fields = new HashSet<>();
     final Set<String> signaturePolymorphicMethods = new HashSet<>();

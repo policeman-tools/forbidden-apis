@@ -361,8 +361,8 @@ public final class Checker implements RelatedClassLookup, Constants {
       throw new IllegalArgumentException(String.format(Locale.ENGLISH,
           "The class file format of '%s' is too recent to be parsed by ASM.", name));
     }
-    final String binaryName = Type.getObjectType(reader.getClassName()).getClassName();
-    classesToCheck.put(binaryName, new ClassSignature(reader, false, true));
+    final ClassSignature metadata = new ClassSignature(reader, false, true);
+    classesToCheck.put(metadata.getBinaryClassName(), metadata);
   }
   
   /** Parses and adds a class from the given file to the list of classes to check. Does not log anything. */
@@ -407,11 +407,11 @@ public final class Checker implements RelatedClassLookup, Constants {
   }
   
   /** Parses a class and checks for valid method invocations */
-  private int checkClass(final ClassReader reader, Pattern suppressAnnotationsPattern) throws ForbiddenApiException {
-    final String className = Type.getObjectType(reader.getClassName()).getClassName();
-    final ClassScanner scanner = new ClassScanner(this, forbiddenSignatures, suppressAnnotationsPattern); 
+  private int checkClass(ClassSignature c, Pattern suppressAnnotationsPattern) throws ForbiddenApiException {
+    final String className = c.getBinaryClassName();
+    final ClassScanner scanner = new ClassScanner(c, this, forbiddenSignatures, suppressAnnotationsPattern); 
     try {
-      reader.accept(scanner, ClassReader.SKIP_FRAMES);
+      c.getReader().accept(scanner, ClassReader.SKIP_FRAMES);
     } catch (RelatedClassLoadingException rcle) {
       final Exception cause = rcle.getException();
       final StringBuilder msg = new StringBuilder()
@@ -457,7 +457,7 @@ public final class Checker implements RelatedClassLookup, Constants {
     int errors = 0;
     final Pattern suppressAnnotationsPattern = AsmUtils.glob2Pattern(suppressAnnotations.toArray(new String[suppressAnnotations.size()]));
     for (final ClassSignature c : classesToCheck.values()) {
-      errors += checkClass(c.getReader(), suppressAnnotationsPattern);
+      errors += checkClass(c, suppressAnnotationsPattern);
     }
     
     final String message = String.format(Locale.ENGLISH, 

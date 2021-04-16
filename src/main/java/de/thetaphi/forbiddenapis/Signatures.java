@@ -345,29 +345,35 @@ public final class Signatures implements Constants {
     return this.forbidNonPortableRuntime;
   }
   
-  public String checkType(Type type) {
+  private static String formatTypePrintout(String printout, String what) {
+    return String.format(Locale.ENGLISH, "Forbidden %s use: %s", what, printout);
+  }
+  
+  public String checkType(Type type, String what) {
     if (type.getSort() != Type.OBJECT) {
       return null; // we don't know this type, just pass!
     }
     final String printout = signatures.get(getKey(type.getInternalName()));
     if (printout != null) {
-      return printout;
+      return formatTypePrintout(printout, what);
     }
     final String binaryClassName = type.getClassName();
     for (final ClassPatternRule r : classPatterns) {
       if (r.matches(binaryClassName)) {
-        return r.getPrintout(binaryClassName);
+        return formatTypePrintout(r.getPrintout(binaryClassName), what);
       }
     }
     return null;
   }
   
   public String checkMethod(String internalClassName, Method method) {
-    return signatures.get(getKey(internalClassName, method));
+    final String printout = signatures.get(getKey(internalClassName, method));
+    return (printout == null) ? null : "Forbidden method invocation: ".concat(printout);
   }
   
   public String checkField(String internalClassName, String field) {
-    return signatures.get(getKey(internalClassName, field));
+    final String printout = signatures.get(getKey(internalClassName, field));
+    return (printout == null) ? null : "Forbidden field access: ".concat(printout);
   }
   
   public static String fixTargetVersion(String name) throws ParseException {
