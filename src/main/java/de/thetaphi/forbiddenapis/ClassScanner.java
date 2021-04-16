@@ -196,6 +196,9 @@ public final class ClassScanner extends ClassVisitor implements Constants {
   private final AncestorVisitor classRelationAncestorVisitor = new AncestorVisitor() {
     @Override
     public String visit(ClassSignature c, String origName, boolean isInterfaceOfAncestor, boolean previousInRuntime) {
+      if (previousInRuntime && c.isNonPortableRuntime) {
+        return null; // something inside the JVM is extending internal class/interface
+      }
       return checkClassUse(c.className, isInterfaceOfAncestor ? "interface" : "class", origName);
     }
   };
@@ -407,6 +410,9 @@ public final class ClassScanner extends ClassVisitor implements Constants {
             if (!c.methods.contains(lookupMethod)) {
               return null;
             }
+            if (previousInRuntime && c.isNonPortableRuntime) {
+              return null; // something inside the JVM is extending internal class/interface
+            }
             String violation = forbiddenSignatures.checkMethod(c.className, lookupMethod);
             if (violation != null) {
               return violation;
@@ -442,6 +448,10 @@ public final class ClassScanner extends ClassVisitor implements Constants {
           public String visit(ClassSignature c, String origName, boolean isInterfaceOfAncestor, boolean previousInRuntime) {
             if (!c.fields.contains(field)) {
               return null;
+            }
+            // we found the field: from now on we use STOP to exit, because fields are not virtual!
+            if (previousInRuntime && c.isNonPortableRuntime) {
+              return STOP; // something inside the JVM is extending internal class/interface
             }
             String violation = forbiddenSignatures.checkField(c.className, field);
             if (violation != null) {
