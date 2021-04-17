@@ -29,14 +29,14 @@ All signatures are versioned against the specified JDK version: </p>
 <li><strong><tt>jdk-unsafe-*</tt>:</strong> Signatures
 of &quot;unsafe&quot; methods that use default charset, default locale, or default timezone. For server applications it is very
 stupid to call those methods, as the results will definitely not what the user wants
-(for Java <tt>*</tt> = 1.7, 1.8, 9, 10, 11, 12, 13, 14, 15; Ant / Maven / Gradle automatically add the compile Java version).</li>
+(for Java <tt>*</tt> = 1.7, 1.8, 9, 10, 11, 12, 13, 14, 15, 16; Ant / Maven / Gradle automatically add the compile Java version).</li>
 
 <li><strong><tt>jdk-deprecated-*</tt>:</strong> This disallows all deprecated
-methods from the JDK (for Java <tt>*</tt> = 1.7, 1.8, 9, 10, 11, 12, 13, 14, 15; Ant / Maven / Gradle automatically add the compile Java version).</li>
+methods from the JDK (for Java <tt>*</tt> = 1.7, 1.8, 9, 10, 11, 12, 13, 14, 15, 16; Ant / Maven / Gradle automatically add the compile Java version).</li>
 
 <li><strong><tt>jdk-internal-*</tt>:</strong> Lists all internal packages of the JDK as of <code>Security.getProperty(&quot;package.access&quot;)</code>.
 Calling those methods will always trigger security manager and is completely forbidden from Java 9 on
-(for Java <tt>*</tt> = 1.7, 1.8, 9, 10, 11, 12, 13, 14, 15; Ant / Maven / Gradle automatically add the compile Java version, <em>since forbiddenapis v2.1</em>).</li>
+(for Java <tt>*</tt> = 1.7, 1.8, 9, 10, 11, 12, 13, 14, 15, 16; Ant / Maven / Gradle automatically add the compile Java version, <em>since forbiddenapis v2.1</em>).</li>
 
 <li><strong><tt>jdk-non-portable</tt>:</strong> Signatures of all non-portable (like <code>com.sun.management.HotSpotDiagnosticMXBean</code>)
 or internal runtime APIs (like <code>sun.misc.Unsafe</code>). This is a superset of <tt>jdk-internal</tt>.<br>
