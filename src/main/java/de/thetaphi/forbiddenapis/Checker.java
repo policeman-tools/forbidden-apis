@@ -70,9 +70,9 @@ public final class Checker implements RelatedClassLookup, Constants {
   final EnumSet<Option> options;
   
   /** Classes to check: key is the binary name (dotted) */
-  final Map<String,ClassSignature> classesToCheck = new HashMap<>();
+  final Map<String,ClassMetadata> classesToCheck = new HashMap<>();
   /** Cache of loaded classes: key is the binary name (dotted) */
-  final Map<String,ClassSignature> classpathClassCache = new HashMap<>();
+  final Map<String,ClassMetadata> classpathClassCache = new HashMap<>();
   
   final Signatures forbiddenSignatures;
   
@@ -185,7 +185,7 @@ public final class Checker implements RelatedClassLookup, Constants {
   }
   
   /** Loads the class from Java9's module system and uses reflection to get methods and fields. */
-  private ClassSignature loadClassFromJigsaw(String classname) throws IOException {
+  private ClassMetadata loadClassFromJigsaw(String classname) throws IOException {
     if (method_Class_getModule == null || method_Module_getName == null) {
       return null; // not Jigsaw Module System
     }
@@ -200,7 +200,7 @@ public final class Checker implements RelatedClassLookup, Constants {
       return null; // not found
     }
     
-    return new ClassSignature(clazz, AsmUtils.isRuntimeModule(moduleName));
+    return new ClassMetadata(clazz, AsmUtils.isRuntimeModule(moduleName));
   }
   
   private boolean isRuntimePath(URL url) throws IOException {
@@ -233,9 +233,9 @@ public final class Checker implements RelatedClassLookup, Constants {
   
   /** Reads a class (binary name) from the given {@link ClassLoader}. If not found there, falls back to the list of classes to be checked. */
   @Override
-  public ClassSignature getClassFromClassLoader(final String clazz) throws ClassNotFoundException,IOException {
+  public ClassMetadata getClassFromClassLoader(final String clazz) throws ClassNotFoundException,IOException {
     if (classpathClassCache.containsKey(clazz)) {
-      final ClassSignature c = classpathClassCache.get(clazz);
+      final ClassMetadata c = classpathClassCache.get(clazz);
       if (c == null) {
         throw new ClassNotFoundException(clazz);
       }
@@ -255,7 +255,7 @@ public final class Checker implements RelatedClassLookup, Constants {
           // if class is too new for this JVM, we try to load it as Class<?> via Jigsaw
           // (only if it's a runtime class):
           if (isRuntimeClass) {
-            final ClassSignature c = loadClassFromJigsaw(clazz);
+            final ClassMetadata c = loadClassFromJigsaw(clazz);
             if (c != null) {
               classpathClassCache.put(clazz, c);
               return c;
@@ -265,18 +265,18 @@ public final class Checker implements RelatedClassLookup, Constants {
               "The class file format of '%s' (loaded from location '%s') is too recent to be parsed by ASM.",
               clazz, url.toExternalForm()));
         }
-        final ClassSignature c = new ClassSignature(cr, isRuntimeClass, false);
+        final ClassMetadata c = new ClassMetadata(cr, isRuntimeClass, false);
         classpathClassCache.put(clazz, c);
         return c;
       } else {
-        final ClassSignature c = loadClassFromJigsaw(clazz);
+        final ClassMetadata c = loadClassFromJigsaw(clazz);
         if (c != null) {
           classpathClassCache.put(clazz, c);
           return c;
         }
       }
       // try to get class from our list of classes we are checking:
-      final ClassSignature c = classesToCheck.get(clazz);
+      final ClassMetadata c = classesToCheck.get(clazz);
       if (c != null) {
         classpathClassCache.put(clazz, c);
         return c;
@@ -288,7 +288,7 @@ public final class Checker implements RelatedClassLookup, Constants {
   }
   
   @Override
-  public ClassSignature lookupRelatedClass(String internalName, String internalNameOrig) {
+  public ClassMetadata lookupRelatedClass(String internalName, String internalNameOrig) {
     final Type type = Type.getObjectType(internalName);
     if (type.getSort() != Type.OBJECT) {
       return null;
@@ -361,8 +361,8 @@ public final class Checker implements RelatedClassLookup, Constants {
       throw new IllegalArgumentException(String.format(Locale.ENGLISH,
           "The class file format of '%s' is too recent to be parsed by ASM.", name));
     }
-    final String binaryName = Type.getObjectType(reader.getClassName()).getClassName();
-    classesToCheck.put(binaryName, new ClassSignature(reader, false, true));
+    final ClassMetadata metadata = new ClassMetadata(reader, false, true);
+    classesToCheck.put(metadata.getBinaryClassName(), metadata);
   }
   
   /** Parses and adds a class from the given file to the list of classes to check. Does not log anything. */
@@ -407,11 +407,11 @@ public final class Checker implements RelatedClassLookup, Constants {
   }
   
   /** Parses a class and checks for valid method invocations */
-  private int checkClass(final ClassReader reader, Pattern suppressAnnotationsPattern) throws ForbiddenApiException {
-    final String className = Type.getObjectType(reader.getClassName()).getClassName();
-    final ClassScanner scanner = new ClassScanner(this, forbiddenSignatures, suppressAnnotationsPattern); 
+  private int checkClass(ClassMetadata c, Pattern suppressAnnotationsPattern) throws ForbiddenApiException {
+    final String className = c.getBinaryClassName();
+    final ClassScanner scanner = new ClassScanner(c, this, forbiddenSignatures, suppressAnnotationsPattern); 
     try {
-      reader.accept(scanner, ClassReader.SKIP_FRAMES);
+      c.getReader().accept(scanner, ClassReader.SKIP_FRAMES);
     } catch (RelatedClassLoadingException rcle) {
       final Exception cause = rcle.getException();
       final StringBuilder msg = new StringBuilder()
@@ -456,8 +456,8 @@ public final class Checker implements RelatedClassLookup, Constants {
     logger.info("Scanning classes for violations...");
     int errors = 0;
     final Pattern suppressAnnotationsPattern = AsmUtils.glob2Pattern(suppressAnnotations.toArray(new String[suppressAnnotations.size()]));
-    for (final ClassSignature c : classesToCheck.values()) {
-      errors += checkClass(c.getReader(), suppressAnnotationsPattern);
+    for (final ClassMetadata c : classesToCheck.values()) {
+      errors += checkClass(c, suppressAnnotationsPattern);
     }
     
     final String message = String.format(Locale.ENGLISH, 
