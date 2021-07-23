@@ -64,6 +64,7 @@
       <equals arg1="${-cleaned.specification.version}" arg2="14"/>
       <equals arg1="${-cleaned.specification.version}" arg2="15"/>
       <equals arg1="${-cleaned.specification.version}" arg2="16"/>
+      <equals arg1="${-cleaned.specification.version}" arg2="17"/>
     </or>
   </condition>
   
@@ -158,6 +159,7 @@
       <equals arg1="${build.java.runtime}" arg2="14"/>
       <equals arg1="${build.java.runtime}" arg2="15"/>
       <equals arg1="${build.java.runtime}" arg2="16"/>
+      <equals arg1="${build.java.runtime}" arg2="17"/>
     </or>
   </condition>
 
