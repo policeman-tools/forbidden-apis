@@ -16,6 +16,7 @@
 
 @defaultMessage Uses default charset
 java.io.ByteArrayOutputStream#toString()
+java.io.DataOutput#writeBytes(java.lang.String)
 java.io.FileReader#<init>(java.io.File)
 java.io.FileReader#<init>(java.io.FileDescriptor)
 java.io.FileReader#<init>(java.lang.String)
