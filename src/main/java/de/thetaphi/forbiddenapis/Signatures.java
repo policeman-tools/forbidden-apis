@@ -125,6 +125,7 @@ public final class Signatures implements Constants {
     final String clazz, field, signature;
     String message = null;
     final Method method;
+    boolean ignoreMethodArguments = false;
     int p = line.indexOf('@');
     if (p >= 0) {
       signature = line.substring(0, p).trim();
@@ -139,9 +140,15 @@ public final class Signatures implements Constants {
     p = signature.indexOf('#');
     if (p >= 0) {
       clazz = signature.substring(0, p);
-      final String s = signature.substring(p + 1);
-      p = s.indexOf('(');
+      String methodOrField = signature.substring(p + 1);
+      p = methodOrField.indexOf('(');
       if (p >= 0) {
+        String s = methodOrField;
+        if (methodOrField.substring(p).equals("(**)")) {
+          // We will ignore method arguments and match everything with the same name
+          s = signature.substring(0, p) + "()";
+          ignoreMethodArguments = true;
+        }
         if (p == 0) {
           throw new ParseException("Invalid method signature (method name missing): " + signature);
         }
@@ -153,7 +160,7 @@ public final class Signatures implements Constants {
         }
         field = null;
       } else {
-        field = s;
+        field = methodOrField;
         method = null;
       }
     } else {
@@ -192,7 +199,7 @@ public final class Signatures implements Constants {
         // list all methods with this signature:
         boolean found = false;
         for (final Method m : c.methods) {
-          if (m.getName().equals(method.getName()) && Arrays.equals(m.getArgumentTypes(), method.getArgumentTypes())) {
+          if (m.getName().equals(method.getName()) && (ignoreMethodArguments || Arrays.equals(m.getArgumentTypes(), method.getArgumentTypes()))) {
             found = true;
             signatures.put(getKey(c.className, m), printout);
             // don't break when found, as there may be more covariant overrides!
