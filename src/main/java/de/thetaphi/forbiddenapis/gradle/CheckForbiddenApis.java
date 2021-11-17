@@ -148,7 +148,6 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
    * A {@link FileCollection} used to configure the classpath.
    * Defaults to current sourseSet's compile classpath.
    */
-  @InputFiles
   @CompileClasspath
   public FileCollection getClasspath() {
     return classpath;
