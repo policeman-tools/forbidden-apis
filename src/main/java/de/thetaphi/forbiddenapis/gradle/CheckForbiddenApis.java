@@ -39,7 +39,7 @@ import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.FileTree;
 import org.gradle.api.file.FileTreeElement;
 import org.gradle.api.specs.Spec;
-import org.gradle.api.tasks.Classpath;
+import org.gradle.api.tasks.CompileClasspath;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Internal;
@@ -148,8 +148,7 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
    * A {@link FileCollection} used to configure the classpath.
    * Defaults to current sourseSet's compile classpath.
    */
-  @InputFiles
-  @Classpath
+  @CompileClasspath
   public FileCollection getClasspath() {
     return classpath;
   }
