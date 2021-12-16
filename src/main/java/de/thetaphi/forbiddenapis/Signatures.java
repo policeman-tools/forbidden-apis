@@ -34,6 +34,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.Method;
@@ -48,6 +49,9 @@ public final class Signatures implements Constants {
   private static final String DEFAULT_MESSAGE_PREFIX = "@defaultMessage ";
   private static final String IGNORE_UNRESOLVABLE_LINE = "@ignoreUnresolvable";
   private static final String IGNORE_MISSING_CLASSES_LINE = "@ignoreMissingClasses";
+  private static final String WILDCARD_ARGS = "**";
+  private static final Pattern PATTERN_WILDCARD_ARGS = Pattern.compile(String.format(Locale.ROOT, "%s\\s*%s\\s*%s",
+      Pattern.quote("("), Pattern.quote(WILDCARD_ARGS), Pattern.quote(")")));
 
   private static enum UnresolvableReporting {
     FAIL(true) {
@@ -139,21 +143,26 @@ public final class Signatures implements Constants {
     p = signature.indexOf('#');
     if (p >= 0) {
       clazz = signature.substring(0, p);
-      final String s = signature.substring(p + 1);
-      p = s.indexOf('(');
+      final String methodOrField = signature.substring(p + 1);
+      p = methodOrField.indexOf('(');
       if (p >= 0) {
         if (p == 0) {
           throw new ParseException("Invalid method signature (method name missing): " + signature);
         }
-        // we ignore the return type, its just to match easier (so return type is void):
-        try {
-          method = Method.getMethod("void " + s, true);
-        } catch (IllegalArgumentException iae) {
-          throw new ParseException("Invalid method signature: " + signature);
+        if (PATTERN_WILDCARD_ARGS.matcher(methodOrField.substring(p)).matches()) {
+          // we create a method instance with the special descriptor string "**", which gets detected later:
+          method = new Method(methodOrField.substring(0, p).trim(), WILDCARD_ARGS);
+        } else {
+          // we ignore the return type, it just allows the parser to succeed (so return type is void):
+          try {
+            method = Method.getMethod("void ".concat(methodOrField), true);
+          } catch (IllegalArgumentException iae) {
+            throw new ParseException("Invalid method signature: " + signature);
+          }
         }
         field = null;
       } else {
-        field = s;
+        field = methodOrField;
         method = null;
       }
     } else {
@@ -192,7 +201,8 @@ public final class Signatures implements Constants {
         // list all methods with this signature:
         boolean found = false;
         for (final Method m : c.methods) {
-          if (m.getName().equals(method.getName()) && Arrays.equals(m.getArgumentTypes(), method.getArgumentTypes())) {
+          if (m.getName().equals(method.getName()) && 
+              (WILDCARD_ARGS.equals(method.getDescriptor()) || Arrays.equals(m.getArgumentTypes(), method.getArgumentTypes()))) {
             found = true;
             signatures.put(getKey(c.className, m), printout);
             // don't break when found, as there may be more covariant overrides!

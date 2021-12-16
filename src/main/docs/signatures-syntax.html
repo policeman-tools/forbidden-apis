@@ -41,9 +41,10 @@ of signatures are supported:</p>
   <li><em>A field of a class:</em> <code>package.Class#fieldName</code></li>
   <li><em>A method signature:</em> It consists of a binary class name, followed by <code>#</code>
   and a method name including method parameters: <code>java.lang.String#concat(java.lang.String)</code>
-  &ndash; All method parameters need to use fully qualified class names!
-  To refer to instance constructors, use the method name <code>&lt;init&gt;</code>,
-  e.g. <code>java.lang.Integer#&lt;init&gt;(int)</code>.</li>
+  &ndash; All method parameters need to use fully qualified class names! Instead of
+  method parameters, the special wildcard string <code>**</code> may be used to add all variants
+  of a method, regardless of their parameter types. To refer to instance constructors, use the
+  method name <code>&lt;init&gt;</code>, e.g. <code>java.lang.Integer#&lt;init&gt;(int)</code>.</li>
 </ul>
 
 <p>The error message displayed when the signature matches can be given at the end of each
