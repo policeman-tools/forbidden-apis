@@ -89,6 +89,62 @@ public final class CheckerSetupTest {
   }
   
   @Test
+  public void testMethodSignatureWS() throws Exception {
+    checker.parseSignaturesString("java.lang.Object#toString( ) @ Foobar");
+    assertEquals(Collections.singletonMap(Signatures.getKey("java/lang/Object", new Method("toString", "()Ljava/lang/String;")), "java.lang.Object#toString( ) [Foobar]"),
+        forbiddenSignatures.signatures);
+    assertEquals(Collections.emptySet(), forbiddenSignatures.classPatterns);
+    assertFalse(checker.hasNoSignatures());
+    assertFalse(checker.noSignaturesFilesParsed());
+  }
+  
+  @Test
+  public void testWildcardMethodSignature() throws Exception {
+    checker.parseSignaturesString("java.lang.String#copyValueOf(**) @ Foobar");
+    
+    // For Java 7 it should at least contain those 2 signatures:
+    assertTrue(forbiddenSignatures.signatures.containsKey(Signatures.getKey("java/lang/String", new Method("copyValueOf", "([C)Ljava/lang/String;"))));
+    assertTrue(forbiddenSignatures.signatures.containsKey(Signatures.getKey("java/lang/String", new Method("copyValueOf", "([CII)Ljava/lang/String;"))));
+    
+    assertEquals(Collections.emptySet(), forbiddenSignatures.classPatterns);
+    assertFalse(checker.hasNoSignatures());
+    assertFalse(checker.noSignaturesFilesParsed());
+  }
+  
+  @Test
+  public void testWildcardMethodSignatureWS() throws Exception {
+    checker.parseSignaturesString("java.lang.String#copyValueOf( ** \t ) @ Foobar");
+    
+    // For Java 7 it should at least contain those 2 signatures:
+    assertTrue(forbiddenSignatures.signatures.containsKey(Signatures.getKey("java/lang/String", new Method("copyValueOf", "([C)Ljava/lang/String;"))));
+    assertTrue(forbiddenSignatures.signatures.containsKey(Signatures.getKey("java/lang/String", new Method("copyValueOf", "([CII)Ljava/lang/String;"))));
+    
+    assertEquals(Collections.emptySet(), forbiddenSignatures.classPatterns);
+    assertFalse(checker.hasNoSignatures());
+    assertFalse(checker.noSignaturesFilesParsed());
+  }
+  
+  @Test
+  public void testWildcardMethodSignatureNoArgs() throws Exception {
+    checker.parseSignaturesString("java.lang.Object#toString(**) @ Foobar");
+    assertEquals(Collections.singletonMap(Signatures.getKey("java/lang/Object", new Method("toString", "()Ljava/lang/String;")), "java.lang.Object#toString(**) [Foobar]"),
+        forbiddenSignatures.signatures);
+    assertEquals(Collections.emptySet(), forbiddenSignatures.classPatterns);
+    assertFalse(checker.hasNoSignatures());
+    assertFalse(checker.noSignaturesFilesParsed());
+  }
+  
+  @Test
+  public void testWildcardMethodSignatureNotExist() throws Exception {
+    try {
+      checker.parseSignaturesString("java.lang.Object#foobarNotExist(**) @ Foobar");
+      fail("Should fail to parse because method does not exist");
+    } catch (ParseException pe) {
+      assertEquals("Method not found while parsing signature: java.lang.Object#foobarNotExist(**)", pe.getMessage());
+    }
+  }
+  
+  @Test
   public void testEmptyCtor() throws Exception {
     Checker chk = new Checker(StdIoLogger.INSTANCE, ClassLoader.getSystemClassLoader());
     assertEquals(EnumSet.noneOf(Checker.Option.class), chk.options);
