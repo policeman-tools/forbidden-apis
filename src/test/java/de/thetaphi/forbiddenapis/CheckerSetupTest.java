@@ -90,8 +90,8 @@ public final class CheckerSetupTest {
   
   @Test
   public void testMethodSignatureWS() throws Exception {
-    checker.parseSignaturesString("java.lang.Object#toString( ) @ Foobar");
-    assertEquals(Collections.singletonMap(Signatures.getKey("java/lang/Object", new Method("toString", "()Ljava/lang/String;")), "java.lang.Object#toString( ) [Foobar]"),
+    checker.parseSignaturesString("java.lang.Object# toString\t ( ) @ Foobar");
+    assertEquals(Collections.singletonMap(Signatures.getKey("java/lang/Object", new Method("toString", "()Ljava/lang/String;")), "java.lang.Object# toString\t ( ) [Foobar]"),
         forbiddenSignatures.signatures);
     assertEquals(Collections.emptySet(), forbiddenSignatures.classPatterns);
     assertFalse(checker.hasNoSignatures());
@@ -113,7 +113,7 @@ public final class CheckerSetupTest {
   
   @Test
   public void testWildcardMethodSignatureWS() throws Exception {
-    checker.parseSignaturesString("java.lang.String#copyValueOf( ** \t ) @ Foobar");
+    checker.parseSignaturesString("java.lang.String#copyValueOf ( ** \t ) @ Foobar");
     
     // For Java 7 it should at least contain those 2 signatures:
     assertTrue(forbiddenSignatures.signatures.containsKey(Signatures.getKey("java/lang/String", new Method("copyValueOf", "([C)Ljava/lang/String;"))));
