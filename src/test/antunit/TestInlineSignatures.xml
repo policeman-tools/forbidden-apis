@@ -67,6 +67,16 @@
     <au:assertLogContains level="error" text="java.lang.String#substring(int,int) [You are crazy that you disallow substrings]"/> 
   </target>
   
+  <target name="testForbiddenWildcardMethodWithMessage">
+    <au:expectfailure expectedMessage="Check for forbidden API calls failed, see log">
+      <forbiddenapis classpathref="path.all">
+        <fileset refid="main.classes"/>
+        java.lang.String#substring(**) @ You are crazy that you disallow all substrings
+      </forbiddenapis>
+    </au:expectfailure>
+    <au:assertLogContains level="error" text="java.lang.String#substring(**) [You are crazy that you disallow all substrings]"/> 
+  </target>
+  
   <target name="testForbiddenFieldWithMessage">
     <au:expectfailure expectedMessage="Check for forbidden API calls failed, see log">
       <forbiddenapis classpathref="path.all">
