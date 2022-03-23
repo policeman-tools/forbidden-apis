@@ -118,6 +118,7 @@
   <property name="signatures.dir" location="src/main/resources/de/thetaphi/forbiddenapis/signatures"/>
   <property name="groovy-tools.dir" location="src/tools/groovy"/>
   <property name="gradle-test-build-dir" location="build/test-gradle"/>
+  <property name="gradle-test-user-dir" location="build/tmp-gradle"/>
   <property name="gradle-publish-build-dir" location="build/gradle-plugin-portal"/>
   <property name="maven-build-dir" location="build/maven"/>
   <property name="documentation-dir" location="build/docs"/>
@@ -617,6 +618,7 @@
   
   <target name="test-gradle" depends="compile,compile-test,jar,-gradle-unsupported" if="gradle.supported" description="Runs a basic Gradle project to check ourselves">
     <mkdir dir="${gradle-test-build-dir}"/>
+    <mkdir dir="${gradle-test-user-dir}"/>
     <copy todir="${gradle-test-build-dir}">
       <fileset dir="src/test/gradle"/>
     </copy>
@@ -635,6 +637,8 @@
       <arg value="--info"/>
       <arg value="--stacktrace"/>
       <arg value="--no-daemon"/>
+      <arg value="--gradle-user-home"/>
+      <arg file="${gradle-test-user-dir}"/>
       <arg value="forbiddenApis"/>
     </exec>
   </target>
