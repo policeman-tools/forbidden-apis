@@ -30,6 +30,10 @@ forbiddenTask.configure {
   group = JavaBasePlugin.VERIFICATION_GROUP;
 }
 
+// Gradle is buggy with it's JavaVersion enum: We use majorVersion property before Java 11 (6,7,8,9,10) and for later we use toString() to be future-proof:
+Closure targetCompatibilityGetter = { (project.targetCompatibility?.hasProperty('java11Compatible') && project.targetCompatibility?.java11Compatible) ?
+    project.targetCompatibility.toString() : project.targetCompatibility?.majorVersion };
+
 // Define our tasks (one for each SourceSet):
 project.sourceSets.all{ sourceSet ->
   String sourceSetTaskName = sourceSet.getTaskName(FORBIDDEN_APIS_TASK_NAME, null);
@@ -45,9 +49,7 @@ project.sourceSets.all{ sourceSet ->
       }
       classesDirs = { sourceSet.output.hasProperty('classesDirs') ? sourceSet.output.classesDirs : project.files(sourceSet.output.classesDir) }
       classpath = { sourceSet.compileClasspath }
-      // Gradle is buggy with it's JavaVersion enum: We use majorVersion property before Java 11 (6,7,8,9,10) and for later we use toString() to be future-proof:
-      targetCompatibility = { (project.targetCompatibility?.hasProperty('java11Compatible') && project.targetCompatibility?.java11Compatible) ?
-        project.targetCompatibility.toString() : project.targetCompatibility?.majorVersion }
+      targetCompatibility = targetCompatibilityGetter
     }
   }
   forbiddenTask.configure {
