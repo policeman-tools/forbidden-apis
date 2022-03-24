@@ -40,11 +40,14 @@ import org.gradle.api.file.FileTree;
 import org.gradle.api.file.FileTreeElement;
 import org.gradle.api.specs.Spec;
 import org.gradle.api.tasks.CompileClasspath;
+import org.gradle.api.tasks.IgnoreEmptyDirectories;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.ParallelizableTask;
+import org.gradle.api.tasks.PathSensitive;
+import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.SkipWhenEmpty;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.VerificationTask;
@@ -465,6 +468,8 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
   /** Returns the classes to check. */
   @InputFiles
   @SkipWhenEmpty
+  @IgnoreEmptyDirectories
+  @PathSensitive(PathSensitivity.RELATIVE)
   public FileTree getClassFiles() {
     return getClassesDirs().getAsFileTree().matching(getPatternSet());
   }
