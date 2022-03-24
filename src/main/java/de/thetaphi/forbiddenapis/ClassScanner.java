@@ -257,8 +257,7 @@ public final class ClassScanner extends ClassVisitor implements Constants {
   
   String checkAnnotationDescriptor(Type type, boolean visible) {
     // for annotations, we don't need to look into super-classes, interfaces,...
-    // -> we just check if its disallowed or internal runtime (only if visible)!
-    return checkClassUse(type, "annotation", visible, type.getInternalName());
+    return checkClassUse(type, "annotation", false, type.getInternalName());
   }
   
   void maybeSuppressCurrentGroup(Type annotation) {
