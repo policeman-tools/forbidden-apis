@@ -87,7 +87,7 @@ public final class ClassScanner extends ClassVisitor implements Constants {
     return source;
   }
   
-  String checkClassUse(Type type, String what, boolean deep, String origInternalName) {
+  String checkClassUse(Type type, String what, boolean isAnnotation, String origInternalName) {
     while (type.getSort() == Type.ARRAY) {
       type = type.getElementType(); // unwrap array
     }
@@ -98,7 +98,8 @@ public final class ClassScanner extends ClassVisitor implements Constants {
     if (violation != null) {
       return violation;
     }
-    if (deep && forbidNonPortableRuntime) {
+    // try best to check for non portable runtime
+    if (forbidNonPortableRuntime) try {
       final String binaryClassName = type.getClassName();
       final ClassMetadata c = lookup.lookupRelatedClass(type.getInternalName(), origInternalName);
       if (c != null && c.isNonPortableRuntime) {
@@ -107,12 +108,15 @@ public final class ClassScanner extends ClassVisitor implements Constants {
           what, binaryClassName
         );
       }
+    } catch (RelatedClassLoadingException e) {
+      // only throw exception if it is not an annotation
+      if (false == isAnnotation) throw e;
     }
     return null;
   }
   
   String checkClassUse(String internalName, String what, String origInternalName) {
-    return checkClassUse(Type.getObjectType(internalName), what, true, origInternalName);
+    return checkClassUse(Type.getObjectType(internalName), what, false, origInternalName);
   }
   
   // TODO: @FunctionalInterface from Java 8 on
@@ -209,7 +213,7 @@ public final class ClassScanner extends ClassVisitor implements Constants {
       switch (type.getSort()) {
         case Type.OBJECT:
           final String internalName = type.getInternalName();
-          violation = checkClassUse(type, "class/interface", true, internalName);
+          violation = checkClassUse(type, "class/interface", false, internalName);
           if (violation != null) {
             return violation;
           }
@@ -257,7 +261,7 @@ public final class ClassScanner extends ClassVisitor implements Constants {
   
   String checkAnnotationDescriptor(Type type, boolean visible) {
     // for annotations, we don't need to look into super-classes, interfaces,...
-    return checkClassUse(type, "annotation", false, type.getInternalName());
+    return checkClassUse(type, "annotation", true, type.getInternalName());
   }
   
   void maybeSuppressCurrentGroup(Type annotation) {
