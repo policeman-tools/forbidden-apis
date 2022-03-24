@@ -414,7 +414,7 @@
     <ivy:cachefileset setid="fileset.bundle" conf="bundle" log="${ivy.logging}"/>
     <mkdir dir="dist"/>
     <jarjar destfile="${jar-file}">
-      <zipfileset dir="build/main"/>
+      <zipfileset dir="build/main" excludes="org/gradle/**"/>
       <restrict>
         <name name="**/*.class" handledirsep="true"/>
         <not>

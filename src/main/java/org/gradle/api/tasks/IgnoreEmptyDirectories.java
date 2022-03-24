@@ -31,6 +31,7 @@ import de.thetaphi.forbiddenapis.gradle.CheckForbiddenApis;
  * and directories that contain only empty directories will have no effect on the
  * resulting snapshot.
  * <p>Copy of Gradle 6.8 annotation to allow compilation of {@link CheckForbiddenApis}.
+ * It is excluded from the JAR file (runtime annotations are still optional at runtime).
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
