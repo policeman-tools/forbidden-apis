@@ -50,6 +50,8 @@ java.util.Scanner#<init>(java.nio.channels.ReadableByteChannel)
 java.util.Scanner#<init>(java.nio.file.Path)
 
 @defaultMessage Uses default locale
+java.beans.beancontext.BeanContextSupport#<init>()
+java.beans.beancontext.BeanContextSupport#<init>(java.beans.beancontext.BeanContext)
 java.io.PrintStream#format(java.lang.String,java.lang.Object[])
 java.io.PrintStream#printf(java.lang.String,java.lang.Object[])
 java.io.PrintWriter#format(java.lang.String,java.lang.Object[])
@@ -102,6 +104,8 @@ java.util.ResourceBundle#getBundle(java.lang.String)
 java.util.ResourceBundle#getBundle(java.lang.String,java.util.ResourceBundle$Control)
 java.util.TimeZone#getDisplayName()
 java.util.TimeZone#getDisplayName(boolean,int)
+javax.imageio.ImageWriteParam#<init>()
+javax.imageio.plugins.bmp.BMPImageWriteParam#<init>()
 
 @defaultMessage Uses default locale or time zone
 java.util.Calendar#<init>()
