@@ -14,6 +14,8 @@
 
 # These methods and classes should not be used by server classes (unsafe, no charset, no locale,...):
 
-# We only include 1.8 for now.
 # TODO: Scan Java 9 API for additional locale/charset/... violations!
 @includeBundled jdk-unsafe-1.8
+
+@defaultMessage Uses default locale
+java.util.ResourceBundle#getBundle(java.lang.String,java.lang.Module)
