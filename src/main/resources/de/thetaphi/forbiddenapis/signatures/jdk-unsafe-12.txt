@@ -14,6 +14,8 @@
 
 # These methods and classes should not be used by server classes (unsafe, no charset, no locale,...):
 
-# We only include 11 for now.
 # TODO: Scan Java 12 API for additional locale/charset/... violations!
 @includeBundled jdk-unsafe-11
+
+@defaultMessage Uses default locale
+java.text.NumberFormat#getCompactNumberInstance()
