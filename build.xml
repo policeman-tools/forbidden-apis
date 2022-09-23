@@ -66,6 +66,7 @@
       <equals arg1="${-cleaned.specification.version}" arg2="16"/>
       <equals arg1="${-cleaned.specification.version}" arg2="17"/>
       <equals arg1="${-cleaned.specification.version}" arg2="18"/>
+      <equals arg1="${-cleaned.specification.version}" arg2="19"/>
     </or>
   </condition>
   
@@ -163,6 +164,7 @@
       <equals arg1="${build.java.runtime}" arg2="16"/>
       <equals arg1="${build.java.runtime}" arg2="17"/>
       <equals arg1="${build.java.runtime}" arg2="18"/>
+      <equals arg1="${build.java.runtime}" arg2="19"/>
     </or>
   </condition>
 
@@ -354,7 +356,7 @@
   <target name="-get-cli-help" depends="compile" unless="cli-help">
     <local name="-cli-help"/>
     <java classname="${cli-classname}" classpathref="path.main-run"
-      failonerror="true" fork="false" outputproperty="-cli-help">
+      failonerror="true" fork="true" outputproperty="-cli-help">
       <arg value="--help"/>
     </java>
     <!-- fix the line endings & command line (cannot be done in java task directly! -->
@@ -690,7 +692,7 @@
   <target name="generate-internal" depends="compile-tools" description="Generates internal API signature lists for current JDK">
     <mkdir dir="${signatures.dir}"/>
     <property name="internal.output.file" location="${signatures.dir}/jdk-internal-${build.java.runtime}.txt"/>
-    <java classpathref="path.tools-run" classname="de.thetaphi.forbiddenapis.InternalApiGen" fork="false">
+    <java classpathref="path.tools-run" classname="de.thetaphi.forbiddenapis.InternalApiGen" fork="true">
       <arg value="${build.java.runtime}"/>
       <arg file="${internal.output.file}"/>
     </java>

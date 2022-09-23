@@ -179,7 +179,7 @@ public final class AsmUtils {
   @SuppressWarnings("unused")
   public static ClassReader readAndPatchClass(InputStream in) throws IOException {
     final byte[] bytecode = readStream(in);
-    if (false) patchClassMajorVersion(bytecode, Opcodes.V17 + 1, Opcodes.V17);
+    if (false) patchClassMajorVersion(bytecode, Opcodes.V19 + 1, Opcodes.V19);
     return new ClassReader(bytecode);
   }
   
