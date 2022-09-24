@@ -523,6 +523,7 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
     } catch (MalformedURLException mfue) {
       throw new InvalidUserDataException("Failed to build classpath URLs.", mfue);
     }
+    log.debug("Classpath: " + humanClasspath);
 
     URLClassLoader urlLoader = null;
     final ClassLoader loader = (urls.length > 0) ?
@@ -540,7 +541,7 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
       }
       if (getIgnoreSignaturesOfMissingClasses()) options.add(IGNORE_SIGNATURES_OF_MISSING_CLASSES);
       if (getDisableClassloadingCache()) options.add(DISABLE_CLASSLOADING_CACHE);
-      final Checker checker = new Checker(log, loader, humanClasspath.toString(), options);
+      final Checker checker = new Checker(log, loader, options);
       
       if (!checker.isSupportedJDK) {
         final String msg = String.format(Locale.ENGLISH, 

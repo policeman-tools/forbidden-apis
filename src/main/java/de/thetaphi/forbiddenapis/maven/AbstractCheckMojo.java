@@ -342,6 +342,7 @@ public abstract class AbstractCheckMojo extends AbstractMojo implements Constant
     } catch (MalformedURLException e) {
       throw new MojoExecutionException("Failed to build classpath.", e);
     }
+    log.debug("Classpath: " + humanClasspath);
 
     URLClassLoader urlLoader = null;
     final ClassLoader loader = (urls.length > 0) ?
@@ -359,7 +360,7 @@ public abstract class AbstractCheckMojo extends AbstractMojo implements Constant
       }
       if (ignoreSignaturesOfMissingClasses) options.add(IGNORE_SIGNATURES_OF_MISSING_CLASSES);
       if (disableClassloadingCache) options.add(DISABLE_CLASSLOADING_CACHE);
-      final Checker checker = new Checker(log, loader, humanClasspath.toString(), options);
+      final Checker checker = new Checker(log, loader, options);
       
       if (!checker.isSupportedJDK) {
         final String msg = String.format(Locale.ENGLISH, 

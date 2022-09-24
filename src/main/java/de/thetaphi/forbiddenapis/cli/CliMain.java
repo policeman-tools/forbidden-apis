@@ -196,22 +196,16 @@ public final class CliMain implements Constants {
     // parse classpath given as argument; add -d to classpath, too
     final String[] classpath = cmd.getOptionValues(classpathOpt.getLongOpt());
     final URL[] urls;
-    final CharSequence humanClasspath;
     try {
       if (classpath == null) {
         urls = new URL[] { classesDirectory.toURI().toURL() };
-        humanClasspath = classesDirectory.toString();
       } else {
         urls = new URL[classpath.length + 1];
         int i = 0;
-        final StringBuilder sb = new StringBuilder();
         for (final String cpElement : classpath) {
           urls[i++] = new File(cpElement).toURI().toURL();
-          sb.append(cpElement).append(File.pathSeparatorChar);
         }
         urls[i++] = classesDirectory.toURI().toURL();
-        sb.append(classesDirectory.toString());
-        humanClasspath = sb;
         assert i == urls.length;
       }
     } catch (MalformedURLException mfue) {
@@ -228,7 +222,7 @@ public final class CliMain implements Constants {
         options.add(FAIL_ON_UNRESOLVABLE_SIGNATURES);
       }
       if (cmd.hasOption(ignoresignaturesofmissingclassesOpt.getLongOpt())) options.add(IGNORE_SIGNATURES_OF_MISSING_CLASSES);
-      final Checker checker = new Checker(LOG, loader, humanClasspath.toString(), options);
+      final Checker checker = new Checker(LOG, loader, options);
       
       if (!checker.isSupportedJDK) {
         throw new ExitException(EXIT_UNSUPPORTED_JDK, String.format(Locale.ENGLISH, 

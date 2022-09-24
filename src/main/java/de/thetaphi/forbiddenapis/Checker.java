@@ -66,7 +66,6 @@ public final class Checker implements RelatedClassLookup, Constants {
   final Logger logger;
   
   final ClassLoader loader;
-  final String humanClasspath;
   final java.lang.reflect.Method method_Class_getModule, method_Module_getName;
   final EnumSet<Option> options;
   
@@ -80,14 +79,13 @@ public final class Checker implements RelatedClassLookup, Constants {
   /** descriptors (not internal names) of all annotations that suppress */
   final Set<String> suppressAnnotations = new LinkedHashSet<>();
     
-  public Checker(Logger logger, ClassLoader loader, String humanClasspath, Option... options) {
-    this(logger, loader, humanClasspath, (options.length == 0) ? EnumSet.noneOf(Option.class) : EnumSet.copyOf(Arrays.asList(options)));
+  public Checker(Logger logger, ClassLoader loader, Option... options) {
+    this(logger, loader, (options.length == 0) ? EnumSet.noneOf(Option.class) : EnumSet.copyOf(Arrays.asList(options)));
   }
   
-  public Checker(Logger logger, ClassLoader loader, String humanClasspath, EnumSet<Option> options) {
+  public Checker(Logger logger, ClassLoader loader, EnumSet<Option> options) {
     this.logger = logger;
     this.loader = loader;
-    this.humanClasspath = (humanClasspath == null || humanClasspath.isEmpty()) ? null : humanClasspath;
     this.options = options;
     this.start = System.currentTimeMillis();
     
@@ -321,11 +319,6 @@ public final class Checker implements RelatedClassLookup, Constants {
       }
       throw re;
     }
-  }
-  
-  @Override
-  public String getHumanClasspath() {
-    return humanClasspath;
   }
   
   /** Reads a list of bundled API signatures from classpath. */

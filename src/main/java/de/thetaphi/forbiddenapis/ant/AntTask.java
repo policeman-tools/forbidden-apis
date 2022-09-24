@@ -105,6 +105,7 @@ public class AntTask extends Task implements Constants {
         classpath.setProject(getProject());
         loader = antLoader = getProject().createClassLoader(ClassLoader.getSystemClassLoader(), classpath);
         antLoader.setParentFirst(true); // use default classloader delegation
+        log.debug("Classpath: " + classpath.toString());
       } else {
         loader = ClassLoader.getSystemClassLoader();
       }
@@ -121,7 +122,7 @@ public class AntTask extends Task implements Constants {
       }
       if (ignoreSignaturesOfMissingClasses) options.add(IGNORE_SIGNATURES_OF_MISSING_CLASSES);
       if (disableClassloadingCache) options.add(DISABLE_CLASSLOADING_CACHE);
-      final Checker checker = new Checker(log, loader, (classpath == null) ? null : classpath.toString(), options);
+      final Checker checker = new Checker(log, loader, options);
       
       if (!checker.isSupportedJDK) {
         final String msg = String.format(Locale.ENGLISH, 
