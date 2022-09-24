@@ -91,6 +91,11 @@ public class AntTask extends Task implements Constants {
       public void info(String msg) {
         log(msg, Project.MSG_INFO);
       }
+      
+      @Override
+      public void debug(String msg) {
+        log(msg, Project.MSG_DEBUG);
+      }
     };
     
     AntClassLoader antLoader = null;
@@ -116,7 +121,7 @@ public class AntTask extends Task implements Constants {
       }
       if (ignoreSignaturesOfMissingClasses) options.add(IGNORE_SIGNATURES_OF_MISSING_CLASSES);
       if (disableClassloadingCache) options.add(DISABLE_CLASSLOADING_CACHE);
-      final Checker checker = new Checker(log, loader, options);
+      final Checker checker = new Checker(log, loader, (classpath == null) ? null : classpath.toString(), options);
       
       if (!checker.isSupportedJDK) {
         final String msg = String.format(Locale.ENGLISH, 

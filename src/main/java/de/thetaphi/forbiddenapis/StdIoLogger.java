@@ -38,4 +38,9 @@ public final class StdIoLogger implements Logger {
     System.out.println(msg);
   }
   
+  @Override
+  public void debug(String msg) {
+    // no reporting of debug messages
+  }
+  
 }

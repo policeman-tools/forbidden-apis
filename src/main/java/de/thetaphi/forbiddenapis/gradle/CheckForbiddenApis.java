@@ -498,16 +498,26 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
       public void info(String msg) {
         getLogger().info(msg);
       }
+      
+      @Override
+      public void debug(String msg) {
+        getLogger().debug(msg);
+      }
     };
     
     final Set<File> cpElements = new LinkedHashSet<>();
     cpElements.addAll(classpath.getFiles());
     cpElements.addAll(classesDirs.getFiles());
     final URL[] urls = new URL[cpElements.size()];
+    final StringBuilder humanClasspath = new StringBuilder();
     try {
       int i = 0;
       for (final File cpElement : cpElements) {
         urls[i++] = cpElement.toURI().toURL();
+        if (humanClasspath.length() > 0) {
+          humanClasspath.append(File.pathSeparatorChar);
+        }
+        humanClasspath.append(cpElement);
       }
       assert i == urls.length;
     } catch (MalformedURLException mfue) {
@@ -530,7 +540,7 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
       }
       if (getIgnoreSignaturesOfMissingClasses()) options.add(IGNORE_SIGNATURES_OF_MISSING_CLASSES);
       if (getDisableClassloadingCache()) options.add(DISABLE_CLASSLOADING_CACHE);
-      final Checker checker = new Checker(log, loader, options);
+      final Checker checker = new Checker(log, loader, humanClasspath.toString(), options);
       
       if (!checker.isSupportedJDK) {
         final String msg = String.format(Locale.ENGLISH, 

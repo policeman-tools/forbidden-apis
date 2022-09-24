@@ -21,4 +21,5 @@ import java.io.IOException;
 public interface RelatedClassLookup {
   ClassMetadata lookupRelatedClass(String internalName, String internalNameOrig);
   ClassMetadata getClassFromClassLoader(String clazz) throws ClassNotFoundException,IOException;
+  String getHumanClasspath();
 }

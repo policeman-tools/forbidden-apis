@@ -304,6 +304,11 @@ public abstract class AbstractCheckMojo extends AbstractMojo implements Constant
       public void info(String msg) {
         getLog().info(msg);
       }
+      
+      @Override
+      public void debug(String msg) {
+        getLog().debug(msg);
+      }
     };
     
     if (skip) {
@@ -323,10 +328,15 @@ public abstract class AbstractCheckMojo extends AbstractMojo implements Constant
     
     final List<String> cp = getClassPathElements();
     final URL[] urls = new URL[cp.size()];
+    final StringBuilder humanClasspath = new StringBuilder();
     try {
       int i = 0;
       for (final String cpElement : cp) {
         urls[i++] = new File(cpElement).toURI().toURL();
+        if (humanClasspath.length() > 0) {
+          humanClasspath.append(File.pathSeparatorChar);
+        }
+        humanClasspath.append(cpElement);
       }
       assert i == urls.length;
     } catch (MalformedURLException e) {
@@ -349,7 +359,7 @@ public abstract class AbstractCheckMojo extends AbstractMojo implements Constant
       }
       if (ignoreSignaturesOfMissingClasses) options.add(IGNORE_SIGNATURES_OF_MISSING_CLASSES);
       if (disableClassloadingCache) options.add(DISABLE_CLASSLOADING_CACHE);
-      final Checker checker = new Checker(log, loader, options);
+      final Checker checker = new Checker(log, loader, humanClasspath.toString(), options);
       
       if (!checker.isSupportedJDK) {
         final String msg = String.format(Locale.ENGLISH, 

@@ -35,7 +35,7 @@ public final class CheckerSetupTest {
   
   @Before
   public void setUp() {
-    checker = new Checker(StdIoLogger.INSTANCE, ClassLoader.getSystemClassLoader(), FAIL_ON_MISSING_CLASSES, FAIL_ON_VIOLATION, FAIL_ON_UNRESOLVABLE_SIGNATURES);
+    checker = new Checker(StdIoLogger.INSTANCE, ClassLoader.getSystemClassLoader(), null, FAIL_ON_MISSING_CLASSES, FAIL_ON_VIOLATION, FAIL_ON_UNRESOLVABLE_SIGNATURES);
     assumeTrue("This test only works with a supported JDK (see docs)", checker.isSupportedJDK);
     assertEquals(EnumSet.of(FAIL_ON_MISSING_CLASSES, FAIL_ON_VIOLATION, FAIL_ON_UNRESOLVABLE_SIGNATURES), checker.options);
     forbiddenSignatures = checker.forbiddenSignatures;
@@ -146,7 +146,7 @@ public final class CheckerSetupTest {
   
   @Test
   public void testEmptyCtor() throws Exception {
-    Checker chk = new Checker(StdIoLogger.INSTANCE, ClassLoader.getSystemClassLoader());
+    Checker chk = new Checker(StdIoLogger.INSTANCE, ClassLoader.getSystemClassLoader(), null);
     assertEquals(EnumSet.noneOf(Checker.Option.class), chk.options);
   }
   

@@ -66,6 +66,7 @@ public final class Checker implements RelatedClassLookup, Constants {
   final Logger logger;
   
   final ClassLoader loader;
+  final String humanClasspath;
   final java.lang.reflect.Method method_Class_getModule, method_Module_getName;
   final EnumSet<Option> options;
   
@@ -79,13 +80,14 @@ public final class Checker implements RelatedClassLookup, Constants {
   /** descriptors (not internal names) of all annotations that suppress */
   final Set<String> suppressAnnotations = new LinkedHashSet<>();
     
-  public Checker(Logger logger, ClassLoader loader, Option... options) {
-    this(logger, loader, (options.length == 0) ? EnumSet.noneOf(Option.class) : EnumSet.copyOf(Arrays.asList(options)));
+  public Checker(Logger logger, ClassLoader loader, String humanClasspath, Option... options) {
+    this(logger, loader, humanClasspath, (options.length == 0) ? EnumSet.noneOf(Option.class) : EnumSet.copyOf(Arrays.asList(options)));
   }
   
-  public Checker(Logger logger, ClassLoader loader, EnumSet<Option> options) {
+  public Checker(Logger logger, ClassLoader loader, String humanClasspath, EnumSet<Option> options) {
     this.logger = logger;
     this.loader = loader;
+    this.humanClasspath = (humanClasspath == null || humanClasspath.isEmpty()) ? null : humanClasspath;
     this.options = options;
     this.start = System.currentTimeMillis();
     
@@ -101,6 +103,7 @@ public final class Checker implements RelatedClassLookup, Constants {
       method_Module_getName = method_Class_getModule
           .getReturnType().getMethod("getName");
       isSupportedJDK = true;
+      logger.debug("Detected Java 9 or later with module system.");
     } catch (NoSuchMethodException e) {
       method_Class_getModule = method_Module_getName = null;
     }
@@ -116,6 +119,7 @@ public final class Checker implements RelatedClassLookup, Constants {
         if (objectClassURL != null && "jrt".equalsIgnoreCase(objectClassURL.getProtocol())) {
           // this is Java 9+ allowing direct access to .class file resources - we do not need to deal with modules!
           isSupportedJDK = true;
+          logger.debug("Detected Java 9 or later with JRT file system.");
         } else {
           String javaHome = System.getProperty("java.home");
           if (javaHome != null) {
@@ -146,7 +150,9 @@ public final class Checker implements RelatedClassLookup, Constants {
             }
           }
           isSupportedJDK = !runtimePaths.isEmpty();
-          if (!isSupportedJDK) {
+          if (isSupportedJDK) {
+            logger.debug("Detected classical classpath-based JDK @ " + runtimePaths);
+          } else {
             logger.warn("Boot classpath appears to be empty or ${java.home} not defined; marking runtime as not suppported.");
           }
         }
@@ -315,6 +321,11 @@ public final class Checker implements RelatedClassLookup, Constants {
       }
       throw re;
     }
+  }
+  
+  @Override
+  public String getHumanClasspath() {
+    return humanClasspath;
   }
   
   /** Reads a list of bundled API signatures from classpath. */

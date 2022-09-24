@@ -190,6 +190,9 @@ public final class Signatures implements Constants {
           return;
         }
         if (report.reportClassNotFound) {
+          if (report != UnresolvableReporting.SILENT && lookup.getHumanClasspath() != null) {
+            logger.debug("Classpath: " + lookup.getHumanClasspath());
+          }
           report.parseFailed(logger, String.format(Locale.ENGLISH, "Class '%s' not found on classpath", cnfe.getMessage()), signature);
         } else {
           missingClasses.add(clazz);
@@ -230,6 +233,9 @@ public final class Signatures implements Constants {
   private void reportMissingSignatureClasses(Set<String> missingClasses) {
     if (missingClasses.isEmpty()) {
       return;
+    }
+    if (lookup.getHumanClasspath() != null) {
+      logger.debug("Classpath: " + lookup.getHumanClasspath());
     }
     logger.warn("Some signatures were ignored because the following classes were not found on classpath:");
     final StringBuilder sb = new StringBuilder();
