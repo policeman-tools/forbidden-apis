@@ -101,6 +101,7 @@ public final class Checker implements RelatedClassLookup, Constants {
       method_Module_getName = method_Class_getModule
           .getReturnType().getMethod("getName");
       isSupportedJDK = true;
+      logger.debug("Detected Java 9 or later with module system.");
     } catch (NoSuchMethodException e) {
       method_Class_getModule = method_Module_getName = null;
     }
@@ -116,6 +117,7 @@ public final class Checker implements RelatedClassLookup, Constants {
         if (objectClassURL != null && "jrt".equalsIgnoreCase(objectClassURL.getProtocol())) {
           // this is Java 9+ allowing direct access to .class file resources - we do not need to deal with modules!
           isSupportedJDK = true;
+          logger.debug("Detected Java 9 or later with JRT file system.");
         } else {
           String javaHome = System.getProperty("java.home");
           if (javaHome != null) {
@@ -146,7 +148,9 @@ public final class Checker implements RelatedClassLookup, Constants {
             }
           }
           isSupportedJDK = !runtimePaths.isEmpty();
-          if (!isSupportedJDK) {
+          if (isSupportedJDK) {
+            logger.debug("Detected classical classpath-based JDK @ " + runtimePaths);
+          } else {
             logger.warn("Boot classpath appears to be empty or ${java.home} not defined; marking runtime as not suppported.");
           }
         }

@@ -91,6 +91,11 @@ public class AntTask extends Task implements Constants {
       public void info(String msg) {
         log(msg, Project.MSG_INFO);
       }
+      
+      @Override
+      public void debug(String msg) {
+        log(msg, Project.MSG_DEBUG);
+      }
     };
     
     AntClassLoader antLoader = null;
@@ -100,6 +105,7 @@ public class AntTask extends Task implements Constants {
         classpath.setProject(getProject());
         loader = antLoader = getProject().createClassLoader(ClassLoader.getSystemClassLoader(), classpath);
         antLoader.setParentFirst(true); // use default classloader delegation
+        log.debug("Classpath: " + classpath.toString());
       } else {
         loader = ClassLoader.getSystemClassLoader();
       }
