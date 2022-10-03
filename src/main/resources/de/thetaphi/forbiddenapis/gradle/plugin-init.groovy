@@ -42,6 +42,8 @@ project.sourceSets.all{ sourceSet ->
   String sourceSetTaskName = sourceSet.getTaskName(FORBIDDEN_APIS_TASK_NAME, null);
   def sourceSetTask = TASK_AVOIDANCE_AVAILABLE ? project.tasks.register(sourceSetTaskName, CheckForbiddenApis.class) :
           project.tasks.create(sourceSetTaskName, CheckForbiddenApis.class);
+  def templateClassesDirs = project.files();
+  def templateClasspath = project.files();
   sourceSetTask.configure {
     description = "Runs forbidden-apis checks on '${sourceSet.name}' classes.";
     dependsOn(sourceSet.output);
@@ -60,9 +62,7 @@ project.sourceSets.all{ sourceSet ->
           return extension[key]
         })
       }
-      ConfigurableFileCollection templateClassesDirs = project.files();
       classesDirs = { templateClassesDirs.from(sourceSet.output.hasProperty('classesDirs') ? sourceSet.output.classesDirs : sourceSet.output.classesDir) }
-      ConfigurableFileCollection templateClasspath = project.files();
       classpath = { templateClasspath.from(sourceSet.compileClasspath) }
       targetCompatibility = targetCompatibilityGetter
     }
