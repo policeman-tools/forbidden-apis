@@ -17,6 +17,7 @@
 /** Initializes the plugin and binds it to project lifecycle. */
 
 import org.gradle.api.plugins.JavaBasePlugin;
+import org.gradle.api.file.ConfigurableFileCollection;
 
 project.plugins.apply(JavaBasePlugin.class);
 
@@ -43,12 +44,24 @@ project.sourceSets.all{ sourceSet ->
     description = "Runs forbidden-apis checks on '${sourceSet.name}' classes.";
     dependsOn(sourceSet.output);
     outputs.upToDateWhen { true }
+    def taskData = internalTaskData()
     conventionMapping.with{
       FORBIDDEN_APIS_EXTENSION_PROPS.each{ key ->
-        map(key, { extension[key] });
+        map(key, { 
+          def item = taskData[key]
+          if (item instanceof ConfigurableFileCollection) {
+            return item.from(extension[key])
+          } else if (item instanceof Collection) {
+            item.addAll(extension[key])
+            return item
+          }
+          return extension[key]
+        })
       }
-      classesDirs = { sourceSet.output.hasProperty('classesDirs') ? sourceSet.output.classesDirs : project.files(sourceSet.output.classesDir) }
-      classpath = { sourceSet.compileClasspath }
+      ConfigurableFileCollection templateClassesDirs = project.files();
+      classesDirs = { templateClassesDirs.from(sourceSet.output.hasProperty('classesDirs') ? sourceSet.output.classesDirs : sourceSet.output.classesDir) }
+      ConfigurableFileCollection templateClasspath = project.files();
+      classpath = { templateClasspath.from(sourceSet.compileClasspath) }
       targetCompatibility = targetCompatibilityGetter
     }
   }
