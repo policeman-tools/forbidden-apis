@@ -16,6 +16,8 @@
 
 /** Initializes the plugin and binds it to project lifecycle. */
 
+package de.thetaphi.forbiddenapis.gradle;
+
 import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.api.file.ConfigurableFileCollection;
 
