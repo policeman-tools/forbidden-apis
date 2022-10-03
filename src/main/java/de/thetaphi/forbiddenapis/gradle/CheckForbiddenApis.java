@@ -121,6 +121,11 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
   private FileCollection classpath;
   private String targetCompatibility;
   
+  /** Gives access to internal data of plugin to plugin-init.groovy */
+  CheckForbiddenApisExtension internalTaskData() {
+    return data;
+  }
+
   /**
    * Directories with the class files to check.
    * Defaults to current sourseSet's output directory (Gradle 3) or output directories (Gradle 4.0+).

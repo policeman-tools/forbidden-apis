@@ -38,6 +38,12 @@ sourceSets {
       srcDirs = [new File(forbiddenRootDir, 'src/main/java')]
     }
   }
+  main2 {
+    compileClasspath = files(forbiddenClasspath.tokenize(File.pathSeparator))
+    java {
+      srcDirs = [new File(forbiddenRootDir, 'src/main/java')]
+    }
+  }
   test {
     compileClasspath = files(forbiddenTestClasspath.tokenize(File.pathSeparator))
     java {
@@ -53,6 +59,10 @@ forbiddenApis {
 }
 
 forbiddenApisMain {
+  bundledSignatures.add('jdk-internal')
+}
+
+forbiddenApisMain2 {
   bundledSignatures += 'jdk-system-out'
 }
 

@@ -102,7 +102,7 @@ public class ForbiddenApisPlugin implements Plugin<Project> {
               loader.parseClass(csrc, false).asSubclass(DelegatingScript.class);
           return clazz;
         } catch (Exception e) {
-          throw new RuntimeException("Cannot compile Groovy script: " + PLUGIN_INIT_SCRIPT);
+          throw new RuntimeException("Cannot compile Groovy script: " + PLUGIN_INIT_SCRIPT, e);
         }
       }
     });
