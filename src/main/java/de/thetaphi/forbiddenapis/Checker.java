@@ -74,6 +74,10 @@ public final class Checker implements RelatedClassLookup, Constants {
   /** Cache of loaded classes: key is the binary name (dotted) */
   final Map<String,ClassMetadata> classpathClassCache = new HashMap<>();
   
+  /** Related classes (binary name, dotted) which were not found while looking up
+   * class metadata [referenced (super)classes, interfaces,...] */
+  final Set<String> missingClasses = new TreeSet<>();
+  
   final Signatures forbiddenSignatures;
   
   /** descriptors (not internal names) of all annotations that suppress */
@@ -305,10 +309,7 @@ public final class Checker implements RelatedClassLookup, Constants {
       if (options.contains(Option.FAIL_ON_MISSING_CLASSES)) {
         throw new RelatedClassLoadingException(cnfe, origClassName);
       } else {
-        logger.warn(String.format(Locale.ENGLISH,
-          "Class '%s' cannot be loaded (while looking up details about referenced class '%s'). Please fix the classpath!",
-          type.getClassName(), origClassName
-        ));
+        missingClasses.add(type.getClassName());
         return null;
       }
     } catch (IOException ioe) {
@@ -462,6 +463,11 @@ public final class Checker implements RelatedClassLookup, Constants {
     final Pattern suppressAnnotationsPattern = AsmUtils.glob2Pattern(suppressAnnotations.toArray(new String[suppressAnnotations.size()]));
     for (final ClassMetadata c : classesToCheck.values()) {
       errors += checkClass(c, suppressAnnotationsPattern);
+    }
+    
+    if (!missingClasses.isEmpty() ) {
+      logger.warn("While scanning classes to check, the following referenced classes were not found on classpath (this may miss some violations):");
+      logger.warn(AsmUtils.formatClassesAbbreviated(missingClasses));
     }
     
     final String message = String.format(Locale.ENGLISH, 

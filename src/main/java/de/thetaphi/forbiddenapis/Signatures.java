@@ -232,20 +232,7 @@ public final class Signatures implements Constants {
       return;
     }
     logger.warn("Some signatures were ignored because the following classes were not found on classpath:");
-    final StringBuilder sb = new StringBuilder();
-    int count = 0;
-    for (String s : missingClasses) {
-      sb.append(count == 0 ? "  " : ", ").append(s);
-      count++;
-      if (sb.length() >= 70) {
-        int remaining = missingClasses.size() - count;
-        if (remaining > 0) {
-          sb.append(",... (and ").append(remaining).append(" more).");
-        }
-        break;
-      }
-    }
-    logger.warn(sb.toString());
+    logger.warn(AsmUtils.formatClassesAbbreviated(missingClasses));
   }
 
   private void addBundledSignatures(String name, String jdkTargetVersion, boolean logging, Set<String> missingClasses) throws IOException,ParseException {
