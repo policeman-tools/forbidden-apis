@@ -23,6 +23,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.Collection;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.regex.Pattern;
@@ -189,6 +190,24 @@ public final class AsmUtils {
     // We analyze stack trace if this is caused by ASM's ClassReader and not our code:
     final StackTraceElement[] stack = re.getStackTrace();
     return stack.length > 0 && Objects.equals(ClassReader.class.getName(), stack[0].getClassName());
+  }
+  
+  /** Formats a list of classes, abbreviated, with 2 spaces in front (for logging) */
+  public static String formatClassesAbbreviated(Collection<String> missingClasses) {
+    final StringBuilder sb = new StringBuilder();
+    int count = 0;
+    for (String s : missingClasses) {
+      sb.append(count == 0 ? "  " : ", ").append(s);
+      count++;
+      if (sb.length() >= 70) {
+        int remaining = missingClasses.size() - count;
+        if (remaining > 0) {
+          sb.append(",... (and ").append(remaining).append(" more).");
+        }
+        break;
+      }
+    }
+    return sb.toString();
   }
 
 }
