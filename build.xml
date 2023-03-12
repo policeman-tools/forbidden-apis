@@ -220,7 +220,13 @@
       <equals arg1="${ivy.version}" arg2="${ivy.install.version}"/>
     </condition>
     <echo level="warn" taskname="check-ivy" message="${ivy.version-message}"/>
-    <ivy:cachepath pathid="path.main-build" conf="build" log="${ivy.logging}"/>
+    <ivy:cachepath pathid="-path.main-build1" conf="build" log="${ivy.logging}"/>
+    <ivy:cachepath pathid="-path.main-build2" conf="buildgradle" log="${ivy.logging}"/>
+    <path id="path.main-build">
+      <!-- order is important as the gradle JAR contains lots of outdated stuff, so should be last! -->
+      <path refid="-path.main-build1"/>
+      <path refid="-path.main-build2"/>
+    </path>
     <ivy:cachepath pathid="path.main-bundle" conf="bundle" log="${ivy.logging}"/>
     <ivy:cachepath pathid="path.test" conf="test" log="${ivy.logging}"/>
     <ivy:cachepath pathid="path.jarjar" conf="jarjar" log="${ivy.logging}"/>
@@ -255,6 +261,7 @@
     <taskdef name="jarjar" classname="com.tonicsystems.jarjar.JarJarTask" classpathref="path.jarjar"/>
     <taskdef uri="antlib:org.apache.maven.artifact.ant" classpathref="path.tasks"/>
     <taskdef name="groovy" classname="org.codehaus.groovy.ant.Groovy" classpathref="path.tasks"/>
+    <taskdef name="groovyc" classname="org.codehaus.groovy.ant.Groovyc" classpathref="path.tasks"/>
     <typedef uri="antlib:org.apache.rat.anttasks" classpathref="path.tasks"/>
     <artifact:remoteRepository id="mvn.maven-central.backup" url="${ivy.maven-central.backup}"/>
     <!-- Make sure we downloaded Maven, so artifact:mvn can bootstrap itsself -->
@@ -282,8 +289,15 @@
     </sequential>
   </macrodef>
 
-  <target name="compile" depends="-init" description="Compile">
+  <target name="compile" depends="-install-tasks" description="Compile main">
     <compile module="main" classpathref="path.main-build"/>
+    <groovyc srcdir="src/main/groovy" destdir="build/main"
+      indy="true" targetBytecode="${jdk.version}" encoding="${build.encoding}">
+      <classpath>
+        <path refid="path.main-build"/>
+        <pathelement path="build/main"/>
+      </classpath>
+    </groovyc>
   </target>
 
   <target name="compile-tools" depends="compile" description="Compile tools">

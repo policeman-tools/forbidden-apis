@@ -22,8 +22,9 @@
 ]>
 <ivy-module version="2.0">
   <info organisation="de.thetaphi" module="forbiddenapis"/>
-  <configurations defaultconfmapping="build-&gt;*;bundle-&gt;*;test-&gt;*;buildtools-&gt;*;jarjar-&gt;*">
+  <configurations defaultconfmapping="build-&gt;*;buildgradle-&gt;*;bundle-&gt;*;test-&gt;*;buildtools-&gt;*;jarjar-&gt;*">
      <conf name="build" transitive="false" visibility="private" />
+     <conf name="buildgradle" transitive="false" visibility="private" />
      <conf name="bundle" transitive="false" visibility="private" />
      <conf name="test" transitive="false" visibility="private" />
      <conf name="buildtools" transitive="false" visibility="private" />
@@ -35,10 +36,10 @@
     <dependency org="org.apache.maven" name="maven-plugin-api" rev="&maven.version;" conf="build"/>
     <dependency org="org.apache.maven" name="maven-artifact" rev="&maven.version;" conf="build"/>
     <dependency org="org.apache.maven.plugin-tools" name="maven-plugin-annotations" rev="3.4" conf="build"/>
-    <dependency org="dev.gradleplugins" name="gradle-api" rev="&gradle.version;" conf="build"/>
     <dependency org="org.slf4j" name="slf4j-api" rev="1.7.7" conf="build"/>
+    <dependency org="dev.gradleplugins" name="gradle-api" rev="&gradle.version;" conf="buildgradle"/>
     <!-- Gradle also needs Groovy, but we need it as build tool, too: -->
-    <dependency org="org.codehaus.groovy" name="groovy-all" rev="2.4.17" conf="build,buildtools"/>
+    <dependency org="org.codehaus.groovy" name="groovy-all" rev="2.4.21" conf="build,buildtools"/>
     <!-- ASM minimal (latest version) required: -->
     <dependency org="org.ow2.asm" name="asm" rev="&asm.version;" conf="build,bundle,buildtools"/>
     <dependency org="org.ow2.asm" name="asm-commons" rev="&asm.version;" conf="build,bundle,buildtools"/>
