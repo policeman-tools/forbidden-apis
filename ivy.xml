@@ -35,10 +35,7 @@
     <dependency org="org.apache.maven" name="maven-plugin-api" rev="&maven.version;" conf="build"/>
     <dependency org="org.apache.maven" name="maven-artifact" rev="&maven.version;" conf="build"/>
     <dependency org="org.apache.maven.plugin-tools" name="maven-plugin-annotations" rev="3.4" conf="build"/>
-    <dependency org="org.gradle" name="gradle-core" rev="&gradle.version;" conf="build"/>
-    <dependency org="org.gradle" name="gradle-base-services" rev="&gradle.version;" conf="build"/>
-    <dependency org="org.gradle" name="gradle-base-services-groovy" rev="&gradle.version;" conf="build"/>
-    <dependency org="org.gradle" name="gradle-logging" rev="&gradle.version;" conf="build"/>
+    <dependency org="dev.gradleplugins" name="gradle-api" rev="&gradle.version;" conf="build"/>
     <dependency org="org.slf4j" name="slf4j-api" rev="1.7.7" conf="build"/>
     <!-- Gradle also needs Groovy, but we need it as build tool, too: -->
     <dependency org="org.codehaus.groovy" name="groovy-all" rev="2.4.17" conf="build,buildtools"/>

@@ -23,11 +23,9 @@
   <include url="${ivy.default.settings.dir}/ivysettings-main-chain.xml"/>
   
   <resolvers>
-    <ibiblio name="gradle" root="https://repo.gradle.org/gradle/libs-releases-local" m2compatible="true" />
     <ibiblio name="maven-http-backup" root="${ivy.maven-central.backup}" m2compatible="true" />
     <chain name="default" returnFirst="true" checkmodified="true" changingPattern=".*SNAPSHOT">
       <resolver ref="maven-http-backup" /><!-- use HTTP with Java 7 -->
-      <resolver ref="gradle" />
     </chain>
   </resolvers>
 </ivysettings>
