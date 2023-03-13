@@ -294,8 +294,8 @@
     <groovyc srcdir="src/main/groovy" destdir="build/main"
       indy="true" targetBytecode="${jdk.version}" encoding="${build.encoding}">
       <classpath>
-        <path refid="path.main-build"/>
         <pathelement path="build/main"/>
+        <path refid="path.main-build"/>
       </classpath>
     </groovyc>
   </target>
