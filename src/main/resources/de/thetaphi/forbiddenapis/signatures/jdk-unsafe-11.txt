@@ -17,3 +17,5 @@
 # We only include 10 for now.
 # TODO: Scan Java 11 API for additional locale/charset/... violations!
 @includeBundled jdk-unsafe-10
+
+java.net.http.HttpResponse$BodySubscribers#ofFile(**) @ Method is buggy in all Java versions till 20 (does not write all bytes)
