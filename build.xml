@@ -67,6 +67,7 @@
       <equals arg1="${-cleaned.specification.version}" arg2="17"/>
       <equals arg1="${-cleaned.specification.version}" arg2="18"/>
       <equals arg1="${-cleaned.specification.version}" arg2="19"/>
+      <equals arg1="${-cleaned.specification.version}" arg2="20"/>
     </or>
   </condition>
   
@@ -165,6 +166,7 @@
       <equals arg1="${build.java.runtime}" arg2="17"/>
       <equals arg1="${build.java.runtime}" arg2="18"/>
       <equals arg1="${build.java.runtime}" arg2="19"/>
+      <!-- Java 20 for testing is no longer supported as Java 7 support was removed as compile target -->
     </or>
   </condition>
 
