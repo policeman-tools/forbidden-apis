@@ -84,7 +84,7 @@ public final class CliMain implements Constants {
     final Options options = new Options();
     options.addOptionGroup(required);
     options.addOption(debugOpt = Option.builder()
-        .desc("enable debug logging")
+        .desc("enable debug logging (stderr)")
         .longOpt("debug")
         .build());
     options.addOption(classpathOpt = Option.builder("c")
