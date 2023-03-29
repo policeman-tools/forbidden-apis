@@ -19,9 +19,14 @@ package de.thetaphi.forbiddenapis;
 @SuppressForbidden
 public final class StdIoLogger implements Logger {
   
-  public static final Logger INSTANCE = new StdIoLogger();
+  public static final Logger INSTANCE = new StdIoLogger(false);
+  public static final Logger INSTANCE_DEBUG = new StdIoLogger(true);
   
-  private StdIoLogger() {}
+  private final boolean debug;
+  
+  private StdIoLogger(boolean debug) {
+    this.debug = debug;
+  }
   
   @Override
   public void error(String msg) {
@@ -40,7 +45,8 @@ public final class StdIoLogger implements Logger {
   
   @Override
   public void debug(String msg) {
-    // no reporting of debug messages
+    if (debug) {
+      System.out.println("DEBUG: " + msg);
+    }
   }
-  
 }

@@ -309,6 +309,9 @@ public final class Checker implements RelatedClassLookup, Constants {
       if (options.contains(Option.FAIL_ON_MISSING_CLASSES)) {
         throw new RelatedClassLoadingException(cnfe, origClassName);
       } else {
+        logger.debug(String.format(Locale.ENGLISH,
+            "Class '%s' cannot be loaded (while looking up details about referenced class '%s').",
+            type.getClassName(), origClassName));
         missingClasses.add(type.getClassName());
         return null;
       }

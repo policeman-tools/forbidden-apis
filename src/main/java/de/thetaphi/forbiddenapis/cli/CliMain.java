@@ -52,11 +52,10 @@ import de.thetaphi.forbiddenapis.StdIoLogger;
  */
 public final class CliMain implements Constants {
 
+  private final Logger logger;
   private final Option classpathOpt, dirOpt, includesOpt, excludesOpt, signaturesfileOpt, bundledsignaturesOpt, suppressannotationsOpt,
-    allowmissingclassesOpt, ignoresignaturesofmissingclassesOpt, allowunresolvablesignaturesOpt, versionOpt, helpOpt;
+    allowmissingclassesOpt, ignoresignaturesofmissingclassesOpt, allowunresolvablesignaturesOpt, versionOpt, helpOpt, debugOpt;
   private final CommandLine cmd;
-  
-  private static final Logger LOG = StdIoLogger.INSTANCE;
   
   public static final int EXIT_SUCCESS = 0;
   public static final int EXIT_VIOLATION = 1;
@@ -84,6 +83,10 @@ public final class CliMain implements Constants {
         
     final Options options = new Options();
     options.addOptionGroup(required);
+    options.addOption(debugOpt = Option.builder()
+        .desc("enable debug logging")
+        .longOpt("debug")
+        .build());
     options.addOption(classpathOpt = Option.builder("c")
         .desc("class search path of directories and zip/jar files")
         .longOpt("classpath")
@@ -140,6 +143,8 @@ public final class CliMain implements Constants {
 
     try {
       this.cmd = new DefaultParser().parse(options, args);
+      final boolean debugLogging = cmd.hasOption(debugOpt.getLongOpt());
+      this.logger = debugLogging ? StdIoLogger.INSTANCE_DEBUG : StdIoLogger.INSTANCE;
       if (cmd.hasOption(helpOpt.getLongOpt())) {
         printHelp(options);
         throw new ExitException(EXIT_SUCCESS);
@@ -156,7 +161,7 @@ public final class CliMain implements Constants {
   
   private void printVersion() {
     final Package pkg = this.getClass().getPackage();
-    LOG.info(String.format(Locale.ENGLISH,
+    logger.info(String.format(Locale.ENGLISH,
       "%s %s",
       pkg.getImplementationTitle(), pkg.getImplementationVersion()
     ));
@@ -211,18 +216,20 @@ public final class CliMain implements Constants {
     } catch (MalformedURLException mfue) {
       throw new ExitException(EXIT_ERR_OTHER, "The given classpath is invalid: " + mfue);
     }
-    // System.err.println("Classpath: " + Arrays.toString(urls));
+    logger.debug("Classpath: " + Arrays.toString(urls));
 
     try (final URLClassLoader loader = URLClassLoader.newInstance(urls, ClassLoader.getSystemClassLoader())) {
       final EnumSet<Checker.Option> options = EnumSet.of(FAIL_ON_VIOLATION);
       if (!cmd.hasOption(allowmissingclassesOpt.getLongOpt())) options.add(FAIL_ON_MISSING_CLASSES);
       if (cmd.hasOption(allowunresolvablesignaturesOpt.getLongOpt())) {
-        LOG.warn(DEPRECATED_WARN_FAIL_ON_UNRESOLVABLE_SIGNATURES);
+        logger.warn(DEPRECATED_WARN_FAIL_ON_UNRESOLVABLE_SIGNATURES);
       } else {
         options.add(FAIL_ON_UNRESOLVABLE_SIGNATURES);
       }
-      if (cmd.hasOption(ignoresignaturesofmissingclassesOpt.getLongOpt())) options.add(IGNORE_SIGNATURES_OF_MISSING_CLASSES);
-      final Checker checker = new Checker(LOG, loader, options);
+      if (cmd.hasOption(ignoresignaturesofmissingclassesOpt.getLongOpt())) {
+        options.add(IGNORE_SIGNATURES_OF_MISSING_CLASSES);
+      }
+      final Checker checker = new Checker(logger, loader, options);
       
       if (!checker.isSupportedJDK) {
         throw new ExitException(EXIT_UNSUPPORTED_JDK, String.format(Locale.ENGLISH, 
@@ -235,7 +242,7 @@ public final class CliMain implements Constants {
         checker.addSuppressAnnotation(a);
       }
       
-      LOG.info("Scanning for classes to check...");
+      logger.info("Scanning for classes to check...");
       if (!classesDirectory.exists()) {
         throw new ExitException(EXIT_ERR_OTHER, "Directory with class files does not exist: " + classesDirectory);
       }
@@ -282,7 +289,7 @@ public final class CliMain implements Constants {
             bundledsignaturesOpt.getLongOpt(), signaturesfileOpt.getLongOpt()
           ));
       } else {
-          LOG.info("Skipping execution because no API signatures are available.");
+          logger.info("Skipping execution because no API signatures are available.");
           return;
         }
       }
@@ -308,7 +315,7 @@ public final class CliMain implements Constants {
       new CliMain(args).run();
     } catch (ExitException e) {
       if (e.getMessage() != null) {
-        LOG.error(e.getMessage());
+        StdIoLogger.INSTANCE.error(e.getMessage());
       }
       if (e.exitCode != 0) {
         System.exit(e.exitCode);
