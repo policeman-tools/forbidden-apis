@@ -46,7 +46,7 @@ public final class StdIoLogger implements Logger {
   @Override
   public void debug(String msg) {
     if (debug) {
-      System.out.println("DEBUG: " + msg);
+      System.err.println("DEBUG: " + msg);
     }
   }
 }
