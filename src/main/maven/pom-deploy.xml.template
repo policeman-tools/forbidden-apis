@@ -76,4 +76,8 @@
       <timezone>-5</timezone>
     </developer>
   </developers>
+
+  <prerequisites>
+    <maven>${injected.maven.version}</maven>
+  </prerequisites>
 </project>

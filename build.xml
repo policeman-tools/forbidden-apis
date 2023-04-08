@@ -672,6 +672,7 @@
         <exclude name="**/jdk-deprecated-*.txt"/>
         <exclude name="**/jdk-internal-*.txt"/>
         <exclude name="**/*.iml"/>
+      	<exclude name="**/.*"/>
       </fileset>
     </rat:report>
     <!-- now print the output, for review -->
