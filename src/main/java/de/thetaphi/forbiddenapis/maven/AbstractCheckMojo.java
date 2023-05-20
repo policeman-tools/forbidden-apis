@@ -16,40 +16,45 @@
 
 package de.thetaphi.forbiddenapis.maven;
 
-import static de.thetaphi.forbiddenapis.Checker.Option.*;
-
-import org.apache.maven.artifact.Artifact;
-import org.apache.maven.artifact.factory.ArtifactFactory;
-import org.apache.maven.artifact.repository.ArtifactRepository;
-import org.apache.maven.artifact.resolver.ArtifactNotFoundException;
-import org.apache.maven.artifact.resolver.ArtifactResolutionException;
-import org.apache.maven.artifact.resolver.ArtifactResolver;
-import org.apache.maven.plugin.AbstractMojo;
-import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugins.annotations.Component;
-import org.apache.maven.plugins.annotations.Parameter;
-import org.codehaus.plexus.util.DirectoryScanner;
-
-import de.thetaphi.forbiddenapis.Checker;
-import de.thetaphi.forbiddenapis.Constants;
-import de.thetaphi.forbiddenapis.ForbiddenApiException;
-import de.thetaphi.forbiddenapis.Logger;
-import de.thetaphi.forbiddenapis.ParseException;
+import static de.thetaphi.forbiddenapis.Checker.Option.DISABLE_CLASSLOADING_CACHE;
+import static de.thetaphi.forbiddenapis.Checker.Option.FAIL_ON_MISSING_CLASSES;
+import static de.thetaphi.forbiddenapis.Checker.Option.FAIL_ON_UNRESOLVABLE_SIGNATURES;
+import static de.thetaphi.forbiddenapis.Checker.Option.FAIL_ON_VIOLATION;
+import static de.thetaphi.forbiddenapis.Checker.Option.IGNORE_SIGNATURES_OF_MISSING_CLASSES;
 
 import java.io.File;
 import java.io.IOException;
 import java.lang.annotation.RetentionPolicy;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URLClassLoader;
-import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+
+import org.apache.maven.plugin.AbstractMojo;
+import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugins.annotations.Component;
+import org.apache.maven.plugins.annotations.Parameter;
+import org.codehaus.plexus.util.DirectoryScanner;
+import org.eclipse.aether.RepositorySystem;
+import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.repository.RemoteRepository;
+import org.eclipse.aether.resolution.ArtifactRequest;
+import org.eclipse.aether.resolution.ArtifactResolutionException;
+import org.eclipse.aether.resolution.ArtifactResult;
+
+import de.thetaphi.forbiddenapis.Checker;
+import de.thetaphi.forbiddenapis.Constants;
+import de.thetaphi.forbiddenapis.ForbiddenApiException;
+import de.thetaphi.forbiddenapis.Logger;
+import de.thetaphi.forbiddenapis.ParseException;
 
 /**
  * Base class for forbiddenapis Mojos.
@@ -242,18 +247,15 @@ public abstract class AbstractCheckMojo extends AbstractMojo implements Constant
   /** The project packaging (pom, jar, etc.). */
   @Parameter(defaultValue = "${project.packaging}", readonly = true, required = true)
   private String packaging;
-  
-  @Component
-  private ArtifactFactory artifactFactory;
 
   @Component
-  private ArtifactResolver artifactResolver;
-  
-  @Parameter(defaultValue = "${project.remoteArtifactRepositories}", readonly = true, required = true)
-  private List<ArtifactRepository> remoteRepositories;
+  private RepositorySystem repoSystem;
 
-  @Parameter(defaultValue = "${localRepository}", readonly = true, required = true)
-  private ArtifactRepository localRepository;
+  @Parameter(defaultValue = "${repositorySystemSession}", readonly = true, required = true)
+  private RepositorySystemSession repoSession;
+
+  @Parameter(defaultValue = "${project.remoteProjectRepositories}", readonly = true, required = true)
+  private List<RemoteRepository> projectRepos;
 
   /** provided by the concrete Mojos for compile and test classes processing */
   protected abstract List<String> getClassPathElements();
@@ -266,15 +268,11 @@ public abstract class AbstractCheckMojo extends AbstractMojo implements Constant
     return (releaseVersion != null) ? releaseVersion : targetVersion;
   }
   
-  private File resolveSignaturesArtifact(SignaturesArtifact signaturesArtifact) throws ArtifactResolutionException, ArtifactNotFoundException {
-    final Artifact artifact = signaturesArtifact.createArtifact(artifactFactory);
-    artifactResolver.resolve(artifact, this.remoteRepositories, this.localRepository);
-    final File f = artifact.getFile();
-    // Can this ever be false? Be sure. Found the null check also in other Maven code, so be safe!
-    if (f == null) {
-      throw new ArtifactNotFoundException("Artifact does not resolve to a file.", artifact);
-    }
-    return f;
+  private File resolveSignaturesArtifact(SignaturesArtifact signaturesArtifact) throws ArtifactResolutionException {
+    final Artifact artifact = signaturesArtifact.createArtifact();
+    ArtifactRequest req = new ArtifactRequest(artifact, projectRepos, null);
+    ArtifactResult resolutionResult = repoSystem.resolveArtifact(repoSession, req);
+    return resolutionResult.getArtifact().getFile();
   }
   
   private String encodeUrlPath(String path) {
@@ -459,8 +457,6 @@ public abstract class AbstractCheckMojo extends AbstractMojo implements Constant
         throw new MojoExecutionException("Parsing signatures failed: " + pe.getMessage(), pe);
       } catch (ArtifactResolutionException e) {
         throw new MojoExecutionException("Problem while resolving Maven artifact.", e);
-      } catch (ArtifactNotFoundException e) {
-        throw new MojoExecutionException("Maven artifact does not exist.", e);
       }
 
       if (checker.hasNoSignatures()) {

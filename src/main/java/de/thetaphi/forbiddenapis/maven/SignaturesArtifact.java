@@ -16,8 +16,8 @@
 
 package de.thetaphi.forbiddenapis.maven;
 
-import org.apache.maven.artifact.Artifact;
-import org.apache.maven.artifact.factory.ArtifactFactory;
+import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.artifact.DefaultArtifact;
 
 /**
  * Defines coordinates of a Maven artifact that provides signatures files.
@@ -51,10 +51,10 @@ public final class SignaturesArtifact {
   public String path;
   
   /** Used by the mojo to fetch the artifact */
-  Artifact createArtifact(ArtifactFactory artifactFactory) {
+  Artifact createArtifact() {
     if (groupId == null || artifactId == null || version == null || type == null) {
       throw new NullPointerException("signaturesArtifact is missing some properties. Required are: groupId, artifactId, version, type");
     }
-    return artifactFactory.createArtifactWithClassifier(groupId, artifactId, version, type, classifier);
+    return new DefaultArtifact(groupId, artifactId, classifier, type, version);
   }
 }
