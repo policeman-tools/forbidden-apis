@@ -55,6 +55,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
+        <version>${injected.maven-compiler-plugin.version}</version>
         <configuration>
           <!-- hack to disable compilation by providing no source files: -->
           <excludes>
