@@ -44,7 +44,7 @@
             <extractor>java-annotations</extractor>
           </extractors>
           <externalJavadocBaseUrls>
-            <externalJavadocBaseUrl>https://docs.oracle.com/javase/8/docs/api/</externalJavadocBaseUrl>
+            <externalJavadocBaseUrl>https://docs.oracle.com/javase/7/docs/api/</externalJavadocBaseUrl>
           </externalJavadocBaseUrls>
         </configuration>
       </plugin>
