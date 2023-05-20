@@ -35,7 +35,6 @@ import de.thetaphi.forbiddenapis.Constants;
 import de.thetaphi.forbiddenapis.ForbiddenApiException;
 import de.thetaphi.forbiddenapis.Logger;
 import de.thetaphi.forbiddenapis.ParseException;
-import de.thetaphi.forbiddenapis.maven.TestCheckMojo;
 
 import java.io.File;
 import java.io.IOException;
