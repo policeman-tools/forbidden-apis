@@ -142,8 +142,8 @@ public abstract class AbstractCheckMojo extends AbstractMojo implements Constant
    * signatures that refer to methods or field in classes that are not on classpath,
    * e.g. This is useful in multi-module Maven builds where a common set of signatures is used,
    * that are not part of every sub-modules dependencies.
-   * @see #ignoreSignaturesOfMissingClasses)
-   * @deprecated The setting 'failOnUnresolvableSignatures' was deprecated and will be removed in next version. Use 'ignoreSignaturesOfMissingClasses' instead.
+   * @see #ignoreSignaturesOfMissingClasses
+   * @deprecated The setting {@code failOnUnresolvableSignatures} was deprecated and will be removed in next version. Use {@link #ignoreSignaturesOfMissingClasses} instead.
    * @since 1.4
    */
   @Deprecated
@@ -201,9 +201,11 @@ public abstract class AbstractCheckMojo extends AbstractMojo implements Constant
   private String releaseVersion;
 
   /**
-   * List of patterns matching all class files to be parsed from the classesDirectory.
-   * Can be changed to e.g. exclude several files (using excludes).
-   * The default is a single include with pattern '**&#47;*.class'
+   * List of <a href="https://ant.apache.org/manual/dirtasks.html#patterns">Ant patterns</a> which must match all relative class paths to be considered.
+   * All relative class paths matching one or more of the given patterns and not matching any of the ones from {@link #excludes} are considered.
+   * The given paths are relative to {@code classesDirectory}.
+   * Can be changed to e.g. exclude several files (using {@link #excludes}).
+   * The default is a single include with pattern {@code **&#47;*.class}.
    * @see #excludes
    * @since 1.0
    */
@@ -211,7 +213,10 @@ public abstract class AbstractCheckMojo extends AbstractMojo implements Constant
   private String[] includes;
 
   /**
-   * List of patterns matching class files to be excluded from checking.
+   * List of <a href="https://ant.apache.org/manual/dirtasks.html#patterns">Ant patterns</a>.
+   * All relative class paths matching one or more of the given patterns are skipped.
+   * The given paths are relative to {@code classesDirectory}.
+   *
    * @see #includes
    * @since 1.0
    */
