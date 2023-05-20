@@ -593,12 +593,6 @@
     <property name="antunit.project.rootdir" location="."/>
     <property name="antunit.main.classes" location="build/main"/>
     <property name="antunit.tools.classes" location="build/tools"/>
-    <property name="antunit.maven3.version" value="3.0.5"/>
-    <!-- Make sure we downloaded Maven 3, so artifact:mvn can bootstrap itsself -->
-    <artifact:dependencies pathId="apache-maven3-dependencies" pathType="jar" type="pom,jar">
-      <dependency groupId="org.apache.maven" artifactId="apache-maven" version="${antunit.maven3.version}" type="pom" />
-      <remoteRepository refid="mvn.maven-central.backup" />
-    </artifact:dependencies>
     <au:antunit>
       <fileset dir="src/test/antunit" includes="Test*.xml"/>
       <au:plainlistener/>

@@ -23,7 +23,7 @@
     <propertyref name="artifactId"/>
   </propertyset>
 
-  <target name="testMyselfMaven2">
+  <target name="testMyself">
     <artifact:mvn pom="${antunit.fake-pom}" mavenVersion="${maven.version}" failonerror="true" fork="${maven.fork}">
       <arg value="-s"/><arg file="${maven.local.settings}"/>
       <arg value="${groupId}:${artifactId}:${version}:check"/>
@@ -34,7 +34,7 @@
     <au:assertLogContains text="Reading bundled API signatures: jdk-unsafe-${jdk.version}"/> 
   </target>
   
-  <target name="testMyselfMaven2NewJavaVersion">
+  <target name="testMyselfNewJavaVersion">
     <artifact:mvn pom="${antunit.fake-pom}" mavenVersion="${maven.version}" failonerror="true" fork="${maven.fork}">
       <arg value="-s"/><arg file="${maven.local.settings}"/>
       <arg value="${groupId}:${artifactId}:${version}:check"/>
@@ -46,7 +46,7 @@
     <au:assertLogContains text="Reading bundled API signatures: jdk-unsafe-1.7"/> 
   </target>
   
-  <target name="testInlineSignaturesMaven2">
+  <target name="testInlineSignatures">
     <au:expectfailure>
       <artifact:mvn pom="${antunit.fake-pom}" mavenVersion="${maven.version}" failonerror="true" fork="${maven.fork}">
         <arg value="-s"/><arg file="${maven.local.settings}"/>
@@ -69,7 +69,7 @@
     <au:assertLogContains text="You are crazy that you disallow strings"/>
   </target>
   
-  <target name="testFailOnUnresolveableSignaturesMaven2">
+  <target name="testFailOnUnresolveableSignatures">
     <au:expectfailure>
       <artifact:mvn pom="${antunit.fake-pom}" mavenVersion="${maven.version}" failonerror="true" fork="${maven.fork}">
         <arg value="-s"/><arg file="${maven.local.settings}"/>
@@ -82,7 +82,7 @@
     <au:assertLogContains text="Parsing signatures failed: Class 'foo.bar.ForbiddenApis' not found on classpath while parsing signature: foo.bar.ForbiddenApis#testMethod()"/> 
   </target>
   
-  <target name="testPassOnUnresolveableSignaturesMaven2">
+  <target name="testPassOnUnresolveableSignatures">
     <artifact:mvn pom="${antunit.fake-pom}" mavenVersion="${maven.version}" failonerror="true" fork="${maven.fork}">
       <arg value="-s"/><arg file="${maven.local.settings}"/>
       <arg value="${groupId}:${artifactId}:${version}:check"/>
@@ -133,7 +133,7 @@
     <au:assertLogContains text="Bundled signatures resource not found"/> 
   </target>
   
-  <target name="testIncludesExcludes-SuppressedAnnotations-Maven2">
+  <target name="testIncludesExcludes-SuppressedAnnotations">
     <artifact:mvn pom="pom-InclExclSuppress.xml" mavenVersion="${maven.version}" failonerror="true" fork="${maven.fork}">
       <syspropertyset refid="injected-properties"/>
       <arg value="-s"/><arg file="${maven.local.settings}"/>
@@ -143,29 +143,8 @@
     <au:assertLogContains text=" Scanned 1 "/> 
   </target>
   
-  <target name="testMyselfMaven3">
-    <artifact:mvn pom="${antunit.fake-pom}" mavenVersion="${antunit.maven3.version}" failonerror="true" fork="${maven.fork}">
-      <arg value="-s"/><arg file="${maven.local.settings}"/>
-      <arg value="${groupId}:${artifactId}:${version}:check"/>
-      <syspropertyset refid="injected-properties"/>
-    </artifact:mvn>
-    <au:assertLogContains text=" 0 error(s)."/> 
-    <au:assertLogContains text="Reading bundled API signatures: jdk-deprecated-${jdk.version}"/> 
-    <au:assertLogContains text="Reading bundled API signatures: jdk-unsafe-${jdk.version}"/> 
-  </target>
-
-  <target name="testSigArtifacts-Maven2">
+  <target name="testSigArtifacts-">
     <artifact:mvn pom="pom-sigArtifacts.xml" mavenVersion="${maven.version}" failonerror="true" fork="${maven.fork}">
-      <syspropertyset refid="injected-properties"/>
-      <arg value="-s"/><arg file="${maven.local.settings}"/>
-      <arg value="${groupId}:${artifactId}:${version}:check"/>
-    </artifact:mvn>
-    <au:assertLogContains text=" 0 error(s)."/> 
-    <au:assertLogContains text="Reading API signatures: jar:file:"/> 
-  </target>
-  
-  <target name="testSigArtifacts-Maven3">
-    <artifact:mvn pom="pom-sigArtifacts.xml" mavenVersion="${antunit.maven3.version}" failonerror="true" fork="${maven.fork}">
       <syspropertyset refid="injected-properties"/>
       <arg value="-s"/><arg file="${maven.local.settings}"/>
       <arg value="${groupId}:${artifactId}:${version}:check"/>
