@@ -105,8 +105,9 @@
   <property file="build.properties" />
 
   <property name="jdk.version" value="1.7"/>
-  <property name="maven.version" value="3.2.5"/>
-  <property name="maven-plugin-plugin.version" value="3.6.4"/>
+  <property name="min.maven.version" value="3.1.0"/>
+  <property name="maven.version" value="3.1.1"/><!-- used for testing -->
+  <property name="maven-plugin-plugin.version" value="3.4"/>
   <property name="maven-compiler-plugin.version" value="3.8.1"/>
   
   <!-- with fork=false this somehow takes endless to download the internet, so let's fork - and slow down in an other way (startup) -->
@@ -185,6 +186,7 @@
     <filter token="GROUPID" value="${groupId}"/>
     <filter token="ARTIFACTID" value="${artifactId}"/>
     <filter token="DESCRIPTION" value="${description}"/>
+    <filter token="MAVEN_MIN_VERSION" value="${maven.min.version}"/>
     <filter token="REPO" value="${ivy.maven-central.backup}"/>
   </filterset>
 

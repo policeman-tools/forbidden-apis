@@ -15,8 +15,8 @@
  * limitations under the License.
 -->
 <!DOCTYPE ivy-module [
-  <!ENTITY maven.version "3.5.0">
-  <!ENTITY resolver.version "1.0.3">
+  <!ENTITY maven.api.version "3.1.0">
+  <!ENTITY aether.api.version "0.9.0.M2">
   <!ENTITY gradle.version "3.4">
   <!ENTITY asm.version "9.5">
   <!ENTITY jarjar.asm.version "5.2">
@@ -34,9 +34,8 @@
   <dependencies>
     <!-- we compile against the minimum ANT / Maven / Gradle versions: -->
     <dependency org="org.apache.ant" name="ant" rev="1.7.0" conf="build"/>
-    <dependency org="org.apache.maven" name="maven-plugin-api" rev="&maven.version;" conf="build"/>
-    <dependency org="org.apache.maven.resolver" name="maven-resolver-api" rev="&resolver.version;" conf="build"/>
-    <dependency org="org.apache.maven.resolver" name="maven-resolver-util" rev="&resolver.version;" conf="build"/>
+    <dependency org="org.apache.maven" name="maven-plugin-api" rev="&maven.api.version;" conf="build"/>
+    <dependency org="org.eclipse.aether" name="aether-api" rev="&aether.api.version;" conf="build"/>
     <dependency org="org.apache.maven.plugin-tools" name="maven-plugin-annotations" rev="3.4" conf="build"/>
     <dependency org="org.slf4j" name="slf4j-api" rev="1.7.7" conf="build"/>
     <dependency org="dev.gradleplugins" name="gradle-api" rev="&gradle.version;" conf="buildgradle"/>

@@ -78,6 +78,6 @@
   </developers>
 
   <prerequisites>
-    <maven>${injected.maven.version}</maven>
+    <maven>@MAVEN_MIN_VERSION@</maven>
   </prerequisites>
 </project>
