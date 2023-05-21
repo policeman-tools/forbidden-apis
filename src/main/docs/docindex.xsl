@@ -49,6 +49,7 @@
         <h2>Apache Ant</h2>
         <p><a href="ant-task.html">Task Documentation</a></p>
         <h2>Apache Maven: Mojo Goals</h2>
+        <p>The minimum required version of Apache Maven is 3.1.0 (since forbiddenapis v3.6); previous versions also run with Maven 2.x.</p>
         <ul>
           <xsl:apply-templates select="mojos/mojo"/>
         </ul>

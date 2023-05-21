@@ -205,7 +205,7 @@ public abstract class AbstractCheckMojo extends AbstractMojo implements Constant
    * All relative class paths matching one or more of the given patterns and not matching any of the ones from {@link #excludes} are considered.
    * The given paths are relative to {@code classesDirectory}.
    * Can be changed to e.g. exclude several files (using {@link #excludes}).
-   * The default is a single include with pattern {@code **&#47;*.class}.
+   * The default is a single include with pattern <code>**&#47;*.class</code>.
    * @see #excludes
    * @since 1.0
    */
