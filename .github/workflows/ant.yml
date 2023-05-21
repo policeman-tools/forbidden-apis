@@ -20,4 +20,4 @@ jobs:
         java-version: '8'
         distribution: 'temurin'
     - name: Build and test with Ant
-      run: ant -noinput -buildfile build.xml test
+      run: ant -noinput -buildfile build.xml test -Dgradle.exe=gradle
