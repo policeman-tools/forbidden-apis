@@ -14,6 +14,8 @@
 
 # These methods and classes should not be used by server classes (unsafe, no charset, no locale,...):
 
-# We only include 20 for now.
 # TODO: Scan Java 21 API for additional locale/charset/... violations!
-@includeBundled jdk-unsafe-20
+@includeBundled jdk-unsafe-10
+# 11-20 removed (see https://github.com/policeman-tools/forbidden-apis/issues/214)
+@includeBundled incr-jdk-unsafe-12
+@includeBundled incr-jdk-unsafe-15

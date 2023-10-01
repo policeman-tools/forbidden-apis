@@ -14,6 +14,8 @@
 
 # These methods and classes should not be used by server classes (unsafe, no charset, no locale,...):
 
-# We only include 17 for now.
 # TODO: Scan Java 18 API for additional locale/charset/... violations!
-@includeBundled jdk-unsafe-17
+@includeBundled jdk-unsafe-10
+@includeBundled incr-jdk-unsafe-11-till-20
+@includeBundled incr-jdk-unsafe-12
+@includeBundled incr-jdk-unsafe-15
