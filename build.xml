@@ -195,7 +195,7 @@
     <filter token="GROUPID" value="${groupId}"/>
     <filter token="ARTIFACTID" value="${artifactId}"/>
     <filter token="DESCRIPTION" value="${description}"/>
-    <filter token="MAVEN_MIN_VERSION" value="${maven.min.version}"/>
+    <filter token="MAVEN_MIN_VERSION" value="${min.maven.version}"/>
     <filter token="REPO" value="${ivy.maven-central.backup}"/>
   </filterset>
 
