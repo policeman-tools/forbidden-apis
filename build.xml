@@ -68,6 +68,7 @@
       <equals arg1="${-cleaned.specification.version}" arg2="18"/>
       <equals arg1="${-cleaned.specification.version}" arg2="19"/>
       <equals arg1="${-cleaned.specification.version}" arg2="20"/>
+      <equals arg1="${-cleaned.specification.version}" arg2="21"/>
     </or>
   </condition>
   
@@ -168,7 +169,15 @@
       <equals arg1="${build.java.runtime}" arg2="17"/>
       <equals arg1="${build.java.runtime}" arg2="18"/>
       <equals arg1="${build.java.runtime}" arg2="19"/>
-      <!-- Java 20 for testing is no longer supported as Java 7 support was removed as compile target -->
+      <!-- Java 20+ for testing is no longer supported as Java 7 support was removed as compile target -->
+    </or>
+  </condition>
+
+  <condition property="forbiddenchecks.supported">
+    <or>
+      <isset property="tests.supported"/>
+      <equals arg1="${build.java.runtime}" arg2="20"/>
+      <equals arg1="${build.java.runtime}" arg2="21"/>
     </or>
   </condition>
 
@@ -532,7 +541,7 @@
 
   <target name="test" depends="-check-myself,-check-bundled-signatures,test-junit,-test-antunit,test-gradle,-runtime-unsupported" description="Run tests"/>
 
-  <target name="check-bundled-signatures" depends="-check-bundled-signatures,-runtime-unsupported"
+  <target name="check-bundled-signatures" depends="-check-bundled-signatures,-forbiddenchecks-unsupported"
     description="Checks bundled signatures file corresponding to the current JVM. Run after every update!"/>
     
   <target name="-install-forbiddenapi-task" depends="compile" unless="installed.forbiddenapi-task">
@@ -557,7 +566,7 @@
     </forbiddenapis>
   </target>
 
-  <target name="-check-bundled-signatures" depends="-install-forbiddenapi-task" if="tests.supported">
+  <target name="-check-bundled-signatures" depends="-install-forbiddenapi-task" if="forbiddenchecks.supported">
     <forbiddenapis failOnUnsupportedJava="true" ignoreEmptyFileset="true" targetVersion="${build.java.runtime}">
       <signatures>
         <bundled name="jdk-unsafe"/>
@@ -695,6 +704,10 @@
   
   <target name="-runtime-unsupported" unless="tests.supported">
     <echo level="warn" message="Test suite / bundled signatures checker was not executed, because the used JVM version is unsupported: ${build.java.info}"/>
+  </target>
+  
+  <target name="-forbiddenchecks-unsupported" unless="forbiddenchecks.supported">
+    <echo level="warn" message="Bundled signatures checker was not executed, because the used JVM version is unsupported: ${build.java.info}"/>
   </target>
   
   <target name="generate-deprecated" depends="compile-tools,-install-tasks" description="Generates deprecated API signature lists for current JDK">
