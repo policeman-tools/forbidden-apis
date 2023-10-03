@@ -52,14 +52,14 @@
   
   <ciManagement>
     <system>Jenkins</system>
-    <url>http://jenkins.thetaphi.de/job/Forbidden-APIs/</url>
+    <url>https://jenkins.thetaphi.de/job/Forbidden-APIs/</url>
   </ciManagement>
 
   <developers>
     <developer>
       <id>uschindler</id>
       <name>Uwe Schindler</name>
-      <url>http://www.thetaphi.de/</url>
+      <url>https://www.thetaphi.de/</url>
       <roles>
         <role>architect</role>
         <role>developer</role>
