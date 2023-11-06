@@ -434,7 +434,7 @@ public final class ClassScanner extends ClassVisitor implements Constants {
         }, true, false /* JVM spec says: interfaces after superclasses */);
       }
 
-      private String checkFieldAccess(String owner, final String field, final boolean callIsVirtual) {
+      private String checkFieldAccess(String owner, final String field) {
         String violation = checkClassUse(owner, "class/interface", owner);
         if (violation != null) {
           return violation;
@@ -454,10 +454,9 @@ public final class ClassScanner extends ClassVisitor implements Constants {
             if (!c.fields.contains(field)) {
               return null;
             }
-            // is we have a virtual call, look into superclasses, otherwise stop:
-            final String notFoundRet = callIsVirtual ? null : AncestorVisitor.STOP;
+            // we found the field: from now on we use STOP to exit, because fields are not virtual!
             if (previousInRuntime && c.isNonPortableRuntime) {
-              return notFoundRet; // something inside the JVM is extending internal class/interface
+              return STOP; // something inside the JVM is extending internal class/interface
             }
             String violation = forbiddenSignatures.checkField(c.className, field);
             if (violation != null) {
@@ -470,7 +469,8 @@ public final class ClassScanner extends ClassVisitor implements Constants {
                 return violation;
               }
             }
-            return notFoundRet;
+            // we found the field and as those are not virtual, there is no need to go up in class hierarchy:
+            return STOP;
           }
         }, true, true /* JVM spec says: superclasses after interfaces */);
       }
@@ -479,10 +479,9 @@ public final class ClassScanner extends ClassVisitor implements Constants {
         switch (handle.getTag()) {
           case Opcodes.H_GETFIELD:
           case Opcodes.H_PUTFIELD:
-            return checkFieldAccess(handle.getOwner(), handle.getName(), true);
           case Opcodes.H_GETSTATIC:
           case Opcodes.H_PUTSTATIC:
-            return checkFieldAccess(handle.getOwner(), handle.getName(), false);
+            return checkFieldAccess(handle.getOwner(), handle.getName());
           case Opcodes.H_INVOKEVIRTUAL:
           case Opcodes.H_INVOKESTATIC:
           case Opcodes.H_INVOKESPECIAL:
@@ -560,8 +559,7 @@ public final class ClassScanner extends ClassVisitor implements Constants {
       
       @Override
       public void visitFieldInsn(int opcode, String owner, String name, String desc) {
-        final boolean callIsVirtual = (opcode == Opcodes.GETFIELD) || (opcode == Opcodes.PUTFIELD);
-        reportMethodViolation(checkFieldAccess(owner, name, callIsVirtual), "method body");
+        reportMethodViolation(checkFieldAccess(owner, name), "method body");
       }
       
       @Override
