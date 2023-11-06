@@ -393,9 +393,6 @@ public final class ClassScanner extends ClassVisitor implements Constants {
         if (violation != null) {
           return violation;
         }
-        if (!callIsVirtual) {
-          return null; // don't look into superclasses or interfaces for static or special calls (like ctors)
-        }
         final ClassMetadata c = lookup.lookupRelatedClass(owner, owner);
         if (c == null) {
           return null;
@@ -413,8 +410,10 @@ public final class ClassScanner extends ClassVisitor implements Constants {
             if (!c.methods.contains(lookupMethod)) {
               return null;
             }
+            // is we have a virtual call, look into superclasses, otherwise stop:
+            final String notFoundRet = callIsVirtual ? null : AncestorVisitor.STOP;
             if (previousInRuntime && c.isNonPortableRuntime) {
-              return null; // something inside the JVM is extending internal class/interface
+              return notFoundRet; // something inside the JVM is extending internal class/interface
             }
             String violation = forbiddenSignatures.checkMethod(c.className, lookupMethod);
             if (violation != null) {
@@ -427,7 +426,7 @@ public final class ClassScanner extends ClassVisitor implements Constants {
                 return violation;
               }
             }
-            return null;
+            return notFoundRet;
           }
         }, true, false /* JVM spec says: interfaces after superclasses */);
       }
@@ -442,9 +441,6 @@ public final class ClassScanner extends ClassVisitor implements Constants {
         if (violation != null) {
           return violation;
         }
-        if (!callIsVirtual) {
-          return null; // don't look into superclasses or interfaces for static field lookups
-        }
         final ClassMetadata c = lookup.lookupRelatedClass(owner, owner);
         if (c == null) {
           return null;
@@ -455,9 +451,10 @@ public final class ClassScanner extends ClassVisitor implements Constants {
             if (!c.fields.contains(field)) {
               return null;
             }
-            // we found the field: from now on we use STOP to exit, because fields are not virtual!
+            // is we have a virtual call, look into superclasses, otherwise stop:
+            final String notFoundRet = callIsVirtual ? null : AncestorVisitor.STOP;
             if (previousInRuntime && c.isNonPortableRuntime) {
-              return STOP; // something inside the JVM is extending internal class/interface
+              return notFoundRet; // something inside the JVM is extending internal class/interface
             }
             String violation = forbiddenSignatures.checkField(c.className, field);
             if (violation != null) {
@@ -470,8 +467,7 @@ public final class ClassScanner extends ClassVisitor implements Constants {
                 return violation;
               }
             }
-            // we found the field and as those are not virtual, there is no need to go up in class hierarchy:
-            return STOP;
+            return notFoundRet;
           }
         }, true, true /* JVM spec says: superclasses after interfaces */);
       }
