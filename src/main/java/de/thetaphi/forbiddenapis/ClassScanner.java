@@ -393,6 +393,9 @@ public final class ClassScanner extends ClassVisitor implements Constants {
         if (violation != null) {
           return violation;
         }
+        if (CONSTRUCTOR_METHOD_NAME.equals(method.getName())) {
+          return null; // don't look into superclasses or interfaces to find constructors!
+        }
         final ClassMetadata c = lookup.lookupRelatedClass(owner, owner);
         if (c == null) {
           return null;
