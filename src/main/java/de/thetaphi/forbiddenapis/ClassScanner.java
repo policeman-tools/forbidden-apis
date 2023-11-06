@@ -379,7 +379,7 @@ public final class ClassScanner extends ClassVisitor implements Constants {
         }
       }
             
-      private String checkMethodAccess(String owner, final Method method) {
+      private String checkMethodAccess(String owner, final Method method, final boolean callIsVirtual) {
         if  (CLASS_CONSTRUCTOR_METHOD_NAME.equals(method.getName())) {
           // we don't check for violations on class constructors
           return null;
@@ -393,8 +393,8 @@ public final class ClassScanner extends ClassVisitor implements Constants {
         if (violation != null) {
           return violation;
         }
-        if (CONSTRUCTOR_METHOD_NAME.equals(method.getName())) {
-          return null; // don't look into superclasses or interfaces to find constructors!
+        if (!callIsVirtual) {
+          return null; // don't look into superclasses or interfaces for static or special calls (like ctors)
         }
         final ClassMetadata c = lookup.lookupRelatedClass(owner, owner);
         if (c == null) {
@@ -432,7 +432,7 @@ public final class ClassScanner extends ClassVisitor implements Constants {
         }, true, false /* JVM spec says: interfaces after superclasses */);
       }
 
-      private String checkFieldAccess(String owner, final String field) {
+      private String checkFieldAccess(String owner, final String field, final boolean callIsVirtual) {
         String violation = checkClassUse(owner, "class/interface", owner);
         if (violation != null) {
           return violation;
@@ -441,6 +441,9 @@ public final class ClassScanner extends ClassVisitor implements Constants {
         violation = forbiddenSignatures.checkField(owner, field);
         if (violation != null) {
           return violation;
+        }
+        if (!callIsVirtual) {
+          return null; // don't look into superclasses or interfaces for static field lookups
         }
         final ClassMetadata c = lookup.lookupRelatedClass(owner, owner);
         if (c == null) {
@@ -477,9 +480,10 @@ public final class ClassScanner extends ClassVisitor implements Constants {
         switch (handle.getTag()) {
           case Opcodes.H_GETFIELD:
           case Opcodes.H_PUTFIELD:
+            return checkFieldAccess(handle.getOwner(), handle.getName(), true);
           case Opcodes.H_GETSTATIC:
           case Opcodes.H_PUTSTATIC:
-            return checkFieldAccess(handle.getOwner(), handle.getName());
+            return checkFieldAccess(handle.getOwner(), handle.getName(), false);
           case Opcodes.H_INVOKEVIRTUAL:
           case Opcodes.H_INVOKESTATIC:
           case Opcodes.H_INVOKESPECIAL:
@@ -492,7 +496,8 @@ public final class ClassScanner extends ClassVisitor implements Constants {
               // so we can assign the called lambda with the same groupId like *this* method:
               lambdas.put(m, currentGroupId);
             }
-            return checkMethodAccess(handle.getOwner(), m);
+            final boolean callIsVirtual = (handle.getTag() == Opcodes.H_INVOKEVIRTUAL) || (handle.getTag() == Opcodes.H_INVOKEINTERFACE);
+            return checkMethodAccess(handle.getOwner(), m, callIsVirtual);
         }
         return null;
       }
@@ -550,12 +555,14 @@ public final class ClassScanner extends ClassVisitor implements Constants {
       
       @Override
       public void visitMethodInsn(int opcode, String owner, String name, String desc, boolean itf) {
-        reportMethodViolation(checkMethodAccess(owner, new Method(name, desc)), "method body");
+        final boolean callIsVirtual = (opcode == Opcodes.INVOKEVIRTUAL) || (opcode == Opcodes.INVOKEINTERFACE);
+        reportMethodViolation(checkMethodAccess(owner, new Method(name, desc), callIsVirtual), "method body");
       }
       
       @Override
       public void visitFieldInsn(int opcode, String owner, String name, String desc) {
-        reportMethodViolation(checkFieldAccess(owner, name), "method body");
+        final boolean callIsVirtual = (opcode == Opcodes.GETFIELD) || (opcode == Opcodes.PUTFIELD);
+        reportMethodViolation(checkFieldAccess(owner, name, callIsVirtual), "method body");
       }
       
       @Override
