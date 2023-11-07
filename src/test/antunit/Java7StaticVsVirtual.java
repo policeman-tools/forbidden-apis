@@ -25,20 +25,41 @@ public class Java7StaticVsVirtual {
   public static void main(String[] args) {
     X.valueOf(data).toString();  // Line 26 -- the only violation for static BitSet#valueOf(**)
     Y.valueOf(data).toString();  // Line 27 -- should pass
-    (new Z()).go();
+    Z.valueOf(data).toString();  // Line 28 -- should pass
+    Integer.toString(Y.a); // Line 29 -- violation (static field access)
+    Integer.toString(Z.a); // Line 30 -- should pass (hidden)
+    new X().get(0);  // Line 31 -- violation (virtual methods detected regardles how they are called)
+    new Y().get(0);  // Line 32 -- violation (virtual methods detected regardles how they are called)
+    new Z().get(0);  // Line 33 -- violation (virtual methods detected regardles how they are called)
+    Integer.toString(new Y().b);  // Line 34 -- violation
+    Integer.toString(new Z().b);  // Line 35 -- should pass (hidden)
   }
 
   public static class X extends BitSet { }
 
   public static class Y extends X {
+    public static int a;
+    public int b;
+    
     public static BitSet valueOf(long[] longs) {
       return new BitSet();
+    }
+    
+    @Override
+    public boolean get(int bit) {
+      return false;
     }
   }
 
   public static class Z extends Y {
-    public String go() {
+    public static int a; // hides field in superclass
+    public int b; // hides field in superclass
+
+    public String goStatic() {
       return valueOf(data).toString();  // Line 41 -- should pass
+    }
+    public boolean goVirtual() {
+      return get(0);  // Line 59 -- violation (virtual methods detected regardles how they are called)
     }
   }
 }

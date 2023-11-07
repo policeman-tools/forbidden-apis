@@ -24,8 +24,39 @@
       </forbiddenapis>
     </au:expectfailure>
     <au:assertLogContains level="error" text="Forbidden method invocation: java.util.BitSet#valueOf(**) [Forbidden static method]"/>
-    <au:assertLogContains level="error" text=" in Java7StaticVsVirtual (Java7StaticVsVirtual.java:26)"/>
+    <au:assertLogContains level="error" text="(Java7StaticVsVirtual.java:26)"/>
+    <au:assertLogDoesntContain level="error" text="(Java7StaticVsVirtual.java:27)"/>
+    <au:assertLogDoesntContain level="error" text="(Java7StaticVsVirtual.java:28)"/>
+    <au:assertLogDoesntContain level="error" text="(Java7StaticVsVirtual.java:41)"/>
     <au:assertLogContains level="error" text=" 1 error(s)"/> 
+  </target>
+  
+  <target name="testVirtual">
+    <au:expectfailure expectedMessage="Check for forbidden API calls failed, see log">
+      <forbiddenapis>
+        <fileset file="Java7StaticVsVirtual*.class"/>
+        java.util.BitSet#get(int) @ Forbidden virtual method
+      </forbiddenapis>
+    </au:expectfailure>
+    <au:assertLogContains level="error" text="Forbidden method invocation: java.util.BitSet#get(int) [Forbidden virtual method]"/>
+    <au:assertLogContains level="error" text=" 4 error(s)"/> 
+  </target>
+  
+  <target name="testFields">
+    <au:expectfailure expectedMessage="Check for forbidden API calls failed, see log">
+      <forbiddenapis classpath=".">
+        <fileset file="Java7StaticVsVirtual*.class"/>
+        Java7StaticVsVirtual$Y#a @ Forbidden static field
+        Java7StaticVsVirtual$Y#b @ Forbidden instance field        
+      </forbiddenapis>
+    </au:expectfailure>
+    <au:assertLogContains level="error" text="Forbidden field access: Java7StaticVsVirtual$Y#a [Forbidden static field]"/>
+    <au:assertLogContains level="error" text="(Java7StaticVsVirtual.java:29)"/> 
+    <au:assertLogDoesntContain level="error" text="(Java7StaticVsVirtual.java:30)"/> 
+    <au:assertLogContains level="error" text="Forbidden field access: Java7StaticVsVirtual$Y#b [Forbidden instance field]"/>
+    <au:assertLogContains level="error" text="(Java7StaticVsVirtual.java:34)"/> 
+    <au:assertLogDoesntContain level="error" text="(Java7StaticVsVirtual.java:35)"/> 
+    <au:assertLogContains level="error" text=" 2 error(s)"/> 
   </target>
   
 </project>
