@@ -129,7 +129,10 @@ public final class ClassScanner extends ClassVisitor implements Constants {
   String visitAncestors(ClassMetadata cls, AncestorVisitor visitor, boolean visitSelf, boolean visitInterfacesFirst) {
     if (visitSelf) {
       final String result = visitor.visit(cls, cls.className, cls.isInterface, cls.isRuntimeClass);
-      if (result != null && result != AncestorVisitor.STOP) {
+      if (result == AncestorVisitor.STOP) {
+        return null;
+      }
+      if (result != null) {
         return result;
       }
     }
