@@ -23,8 +23,8 @@ public class Java7StaticVsVirtual {
   public static final long[] data = new long[] {1, 2, 3, 4};
   
   public static void main(String[] args) {
-    X.valueOf(data).toString();  // Line 26
-    Y.valueOf(data).toString();  // Line 27
+    X.valueOf(data).toString();  // Line 26 -- the only violation for static BitSet#valueOf(**)
+    Y.valueOf(data).toString();  // Line 27 -- should pass
     (new Z()).go();
   }
 
@@ -38,7 +38,7 @@ public class Java7StaticVsVirtual {
 
   public static class Z extends Y {
     public String go() {
-      return valueOf(data).toString();  // Line 41
+      return valueOf(data).toString();  // Line 41 -- should pass
     }
   }
 }
