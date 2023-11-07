@@ -129,7 +129,10 @@ public final class ClassScanner extends ClassVisitor implements Constants {
   String visitAncestors(ClassMetadata cls, AncestorVisitor visitor, boolean visitSelf, boolean visitInterfacesFirst) {
     if (visitSelf) {
       final String result = visitor.visit(cls, cls.className, cls.isInterface, cls.isRuntimeClass);
-      if (result != null && result != AncestorVisitor.STOP) {
+      if (result == AncestorVisitor.STOP) {
+        return null;
+      }
+      if (result != null) {
         return result;
       }
     }
@@ -379,7 +382,7 @@ public final class ClassScanner extends ClassVisitor implements Constants {
         }
       }
             
-      private String checkMethodAccess(String owner, final Method method) {
+      private String checkMethodAccess(String owner, final Method method, final boolean callIsVirtual) {
         if  (CLASS_CONSTRUCTOR_METHOD_NAME.equals(method.getName())) {
           // we don't check for violations on class constructors
           return null;
@@ -413,8 +416,10 @@ public final class ClassScanner extends ClassVisitor implements Constants {
             if (!c.methods.contains(lookupMethod)) {
               return null;
             }
+            // is we have a virtual call, look into superclasses, otherwise stop:
+            final String notFoundRet = callIsVirtual ? null : AncestorVisitor.STOP;
             if (previousInRuntime && c.isNonPortableRuntime) {
-              return null; // something inside the JVM is extending internal class/interface
+              return notFoundRet; // something inside the JVM is extending internal class/interface
             }
             String violation = forbiddenSignatures.checkMethod(c.className, lookupMethod);
             if (violation != null) {
@@ -427,7 +432,7 @@ public final class ClassScanner extends ClassVisitor implements Constants {
                 return violation;
               }
             }
-            return null;
+            return notFoundRet;
           }
         }, true, false /* JVM spec says: interfaces after superclasses */);
       }
@@ -492,7 +497,8 @@ public final class ClassScanner extends ClassVisitor implements Constants {
               // so we can assign the called lambda with the same groupId like *this* method:
               lambdas.put(m, currentGroupId);
             }
-            return checkMethodAccess(handle.getOwner(), m);
+            final boolean callIsVirtual = (handle.getTag() == Opcodes.H_INVOKEVIRTUAL) || (handle.getTag() == Opcodes.H_INVOKEINTERFACE);
+            return checkMethodAccess(handle.getOwner(), m, callIsVirtual);
         }
         return null;
       }
@@ -550,7 +556,8 @@ public final class ClassScanner extends ClassVisitor implements Constants {
       
       @Override
       public void visitMethodInsn(int opcode, String owner, String name, String desc, boolean itf) {
-        reportMethodViolation(checkMethodAccess(owner, new Method(name, desc)), "method body");
+        final boolean callIsVirtual = (opcode == Opcodes.INVOKEVIRTUAL) || (opcode == Opcodes.INVOKEINTERFACE);
+        reportMethodViolation(checkMethodAccess(owner, new Method(name, desc), callIsVirtual), "method body");
       }
       
       @Override
