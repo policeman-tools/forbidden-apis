@@ -56,10 +56,10 @@ public class Java7StaticVsVirtual {
     public int b; // hides field in superclass
 
     public String goStatic() {
-      return valueOf(data).toString();  // Line 41 -- should pass
+      return valueOf(data).toString();  // Line 59 -- should pass
     }
     public boolean goVirtual() {
-      return get(0);  // Line 59 -- violation (virtual methods detected regardles how they are called)
+      return get(0);  // Line 62 -- violation (virtual methods detected regardles how they are called)
     }
   }
 }

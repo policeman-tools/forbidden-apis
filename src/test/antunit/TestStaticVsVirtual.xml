@@ -36,6 +36,10 @@
       </forbiddenapis>
     </au:expectfailure>
     <au:assertLogContains level="error" text="Forbidden method invocation: java.util.BitSet#get(int) [Forbidden virtual method]"/>
+    <au:assertLogContains level="error" text="(Java7StaticVsVirtual.java:31)"/>
+    <au:assertLogContains level="error" text="(Java7StaticVsVirtual.java:32)"/>
+    <au:assertLogContains level="error" text="(Java7StaticVsVirtual.java:33)"/>
+    <au:assertLogContains level="error" text="(Java7StaticVsVirtual.java:62)"/>
     <au:assertLogContains level="error" text=" 4 error(s)"/> 
   </target>
   
