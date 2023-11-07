@@ -18,7 +18,7 @@
 
   <target name="testStatic">
     <au:expectfailure expectedMessage="Check for forbidden API calls failed, see log">
-      <forbiddenapis failOnMissingClasses="false">
+      <forbiddenapis>
         <fileset file="Java7StaticVsVirtual*.class"/>
         java.util.BitSet#valueOf(**) @ Forbidden static method
       </forbiddenapis>
