@@ -1,4 +1,4 @@
-commons-io-unsafe-2.14.0.txt# (C) Copyright Uwe Schindler (Generics Policeman) and others.
+# (C) Copyright Uwe Schindler (Generics Policeman) and others.
 # Parts of this work are licensed to the Apache Software Foundation (ASF)
 # under one or more contributor license agreements.
 #
