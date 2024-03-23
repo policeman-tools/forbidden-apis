@@ -29,7 +29,16 @@ buildscript {
 apply plugin: 'java'
 apply plugin: 'de.thetaphi.forbiddenapis'
 
-sourceCompatibility = forbiddenSourceCompatibility
+if (project.extensions.findByName('java')) {
+
+  java {
+    sourceCompatibility = JavaVersion.toVersion(forbiddenSourceCompatibility)
+  }
+  
+} else {
+  // TODO: Remove this after Gradle 4.10
+  sourceCompatibility = JavaVersion.toVersion(forbiddenSourceCompatibility)
+}
 
 sourceSets {
   main {
