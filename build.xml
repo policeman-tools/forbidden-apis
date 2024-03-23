@@ -111,6 +111,9 @@
   <property name="maven-plugin-plugin.version" value="3.4"/>
   <property name="maven-compiler-plugin.version" value="3.8.1"/>
   
+  <!-- extra properties (prefixed by "gradle." added to gradle.properties during testing: -->
+  <property name="gradle.org.gradle.warning.mode" value="all"/>
+  
   <!-- with fork=false this somehow takes endless to download the internet, so let's fork - and slow down in an other way (startup) -->
   <property name="maven.fork" value="true"/>
   

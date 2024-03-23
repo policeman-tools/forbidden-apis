@@ -46,9 +46,12 @@ public class ForbiddenApisPlugin extends ForbiddenApisPluginBase {
       group = JavaBasePlugin.VERIFICATION_GROUP;
     }
 
+    // retrieve Java Extension, if it is not available fallback to project convention:
+    def javaExtension = project.extensions.findByName('java') ?: project
+
     // Gradle is buggy with it's JavaVersion enum: We use majorVersion property before Java 11 (6,7,8,9,10) and for later we use toString() to be future-proof:
-    Closure targetCompatibilityGetter = { (project.targetCompatibility?.hasProperty('java11Compatible') && project.targetCompatibility?.java11Compatible) ?
-        project.targetCompatibility.toString() : project.targetCompatibility?.majorVersion };
+    Closure targetCompatibilityGetter = { (javaExtension.targetCompatibility?.hasProperty('java11Compatible') && javaExtension.targetCompatibility?.java11Compatible) ?
+        javaExtension.targetCompatibility.toString() : javaExtension.targetCompatibility?.majorVersion };
 
     // Define our tasks (one for each SourceSet):
     project.sourceSets.all{ sourceSet ->
