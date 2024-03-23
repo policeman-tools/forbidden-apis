@@ -69,6 +69,7 @@
       <equals arg1="${-cleaned.specification.version}" arg2="19"/>
       <equals arg1="${-cleaned.specification.version}" arg2="20"/>
       <equals arg1="${-cleaned.specification.version}" arg2="21"/>
+      <equals arg1="${-cleaned.specification.version}" arg2="22"/>
     </or>
   </condition>
   
@@ -181,6 +182,7 @@
       <isset property="tests.supported"/>
       <equals arg1="${build.java.runtime}" arg2="20"/>
       <equals arg1="${build.java.runtime}" arg2="21"/>
+      <equals arg1="${build.java.runtime}" arg2="22"/>
     </or>
   </condition>
 
