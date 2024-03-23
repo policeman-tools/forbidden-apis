@@ -29,7 +29,9 @@ buildscript {
 apply plugin: 'java'
 apply plugin: 'de.thetaphi.forbiddenapis'
 
-sourceCompatibility = forbiddenSourceCompatibility
+java {
+  sourceCompatibility = forbiddenSourceCompatibility
+}
 
 sourceSets {
   main {

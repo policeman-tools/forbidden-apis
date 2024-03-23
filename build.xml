@@ -660,6 +660,7 @@
       <arg value="--rerun-tasks"/>
       <arg value="--info"/>
       <arg value="--stacktrace"/>
+      <arg line="--warning-mode all" />
       <arg value="--no-daemon"/>
       <arg value="--gradle-user-home"/>
       <arg file="${gradle-test-user-dir}"/>
