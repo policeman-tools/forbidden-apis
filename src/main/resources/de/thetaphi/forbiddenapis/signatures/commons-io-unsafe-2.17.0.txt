@@ -14,4 +14,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-@includeBundled commons-io-unsafe-2.15.1
+@includeBundled commons-io-unsafe-2.16.1
