@@ -598,10 +598,6 @@
     <xslt in="src/test/antunit/dummy.xml" out="build/test-maven/fake-pom.xml"
       style="src/test/antunit/pom-generator.xsl" force="true"
     >
-      <!-- necessary to make Ant build also work when triggered within Eclipse: https://bugs.eclipse.org/bugs/show_bug.cgi?id=520437-->
-      <factory>
-        <feature name="http://www.oracle.com/xml/jaxp/properties/enableExtensionFunctions" value="true"/>
-      </factory>
       <outputproperty name="indent" value="yes"/>
       <param name="jarfiles" expression="${path.main-build.xslstr}"/>
     </xslt>
