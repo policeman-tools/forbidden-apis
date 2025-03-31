@@ -20,15 +20,22 @@ package de.thetaphi.forbiddenapis.ant;
 
 import static de.thetaphi.forbiddenapis.Checker.Option.*;
 
-import org.apache.maven.plugins.annotations.Parameter;
+import java.io.File;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.EnumSet;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.Locale;
+
 import org.apache.tools.ant.AntClassLoader;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.ProjectComponent;
 import org.apache.tools.ant.Task;
-import org.apache.tools.ant.types.Path;
 import org.apache.tools.ant.types.FileList;
 import org.apache.tools.ant.types.FileSet;
+import org.apache.tools.ant.types.Path;
 import org.apache.tools.ant.types.Reference;
 import org.apache.tools.ant.types.Resource;
 import org.apache.tools.ant.types.ResourceCollection;
@@ -41,15 +48,6 @@ import de.thetaphi.forbiddenapis.Constants;
 import de.thetaphi.forbiddenapis.ForbiddenApiException;
 import de.thetaphi.forbiddenapis.Logger;
 import de.thetaphi.forbiddenapis.ParseException;
-
-import java.io.IOException;
-import java.io.File;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.EnumSet;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.Locale;
 
 /**
  * Task to check if a set of class files contains calls to forbidden APIs

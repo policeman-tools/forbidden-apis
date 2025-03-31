@@ -448,16 +448,17 @@ private Collection<String> getKeys(final UnresolvableReporting report, final boo
   }
 
   private ViolationSeverity getSeverityForKey(String key) {
-    return severityPerSignature.getOrDefault(key, failOnViolation ? ViolationSeverity.ERROR : ViolationSeverity.WARNING);
+    final ViolationSeverity severity = severityPerSignature.get(key);
+    return (severity != null) ? severity : (failOnViolation ? ViolationSeverity.ERROR : ViolationSeverity.WARNING);
   }
 
   private ViolationSeverity getSeverityForClassName(String className) {
-      for (final Map.Entry<Pattern, ViolationSeverity> e : severityPerClassPattern.entrySet()) {
-          if (e.getKey().matcher(className).matches()) {
-              return e.getValue();
-          }
+    for (final Map.Entry<Pattern, ViolationSeverity> e : severityPerClassPattern.entrySet()) {
+      if (e.getKey().matcher(className).matches()) {
+        return e.getValue();
       }
-      return failOnViolation ? ViolationSeverity.ERROR : ViolationSeverity.WARNING;
+    }
+    return failOnViolation ? ViolationSeverity.ERROR : ViolationSeverity.WARNING;
   }
 
   public static String fixTargetVersion(String name) throws ParseException {

@@ -25,7 +25,6 @@ import java.lang.annotation.RetentionPolicy;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -33,7 +32,6 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
 
-import org.apache.maven.plugins.annotations.Parameter;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.GradleException;
 import org.gradle.api.InvalidUserDataException;

@@ -46,8 +46,6 @@ import java.util.regex.Pattern;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.Type;
 
-import de.thetaphi.forbiddenapis.Checker.ViolationSeverity;
-
 /**
  * Forbidden APIs checker class.
  */
