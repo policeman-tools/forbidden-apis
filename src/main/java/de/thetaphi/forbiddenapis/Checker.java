@@ -370,11 +370,11 @@ public final class Checker implements RelatedClassLookup, Constants {
     forbiddenSignatures.setSignaturesSeverity(signatures, severity);
   }
   
-  /** Parses and adds a class from the given stream to the list of classes to check. Closes the stream when parsed (on Exception, too)! Does not log anything. */
-  public void addClassToCheck(final InputStream in, String name) throws IOException {
+  /** Parses and adds a class from the given stream to the list of classes to check. Does not log anything. */
+  public void streamReadClassToCheck(final InputStream in, String name) throws IOException {
     final ClassReader reader;
-    try (final InputStream in_ = in) {
-      reader = AsmUtils.readAndPatchClass(in_);
+    try {
+      reader = AsmUtils.readAndPatchClass(in);
     } catch (IllegalArgumentException iae) {
       throw new IllegalArgumentException(String.format(Locale.ENGLISH,
           "The class file format of '%s' is too recent to be parsed by ASM.", name));
@@ -383,9 +383,21 @@ public final class Checker implements RelatedClassLookup, Constants {
     classesToCheck.put(metadata.getBinaryClassName(), metadata);
   }
   
+  /** Parses and adds a class from the given stream to the list of classes to check. Closes the stream when parsed (on Exception, too)!
+   * Does not log anything.
+   * @deprecated Do not use anymore, use {@link #streamReadClassToCheck(InputStream,String)} */
+  @Deprecated
+  public void addClassToCheck(final InputStream in, String name) throws IOException {
+    try (InputStream _in = in) {
+      streamReadClassToCheck(_in, name);
+    }
+  }
+  
   /** Parses and adds a class from the given file to the list of classes to check. Does not log anything. */
   public void addClassToCheck(File f) throws IOException {
-    addClassToCheck(new FileInputStream(f), f.toString());
+    try (InputStream in = new FileInputStream(f)) {
+      streamReadClassToCheck(in, f.toString());
+    }
   }
 
   /** Parses and adds a multiple class files. */
