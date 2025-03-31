@@ -53,6 +53,14 @@ public final class InternalApiGen {
       .append("@defaultMessage non-public internal runtime class in Java ").append(javaVersion).append(NL)
       .append(NL)
       .toString();
+    try {
+      int v = Integer.parseInt(javaVersion);
+      if (v >= 24) {
+        throw new IllegalArgumentException("InternalApiGen only works till Java 23, for later versions use the generated file from Java 23.");
+      }
+    } catch (NumberFormatException nfe) {
+      // pass
+    }
   }
   
   private void parsePackages(String packagesStr, Set<String> packages) {
