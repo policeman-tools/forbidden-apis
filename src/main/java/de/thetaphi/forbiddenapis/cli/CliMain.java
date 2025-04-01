@@ -31,6 +31,7 @@ import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.LinkedHashSet;
 import java.util.Locale;
+import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -303,7 +304,7 @@ public final class CliMain implements Constants {
             
       logger.info("Scanning for classes to check...");
       if (!classesDirectory.exists()) {
-        throw new ExitException(EXIT_ERR_OTHER, "Directory with class files does not exist: " + classesDirectory);
+        throw new ExitException(EXIT_ERR_OTHER, "Directory or zip/jar file with class files does not exist: " + classesDirectory);
       }
 
       String[] includes = cmd.getOptionValues(includesOpt.getLongOpt());
@@ -331,29 +332,29 @@ public final class CliMain implements Constants {
         } catch (IOException ioe) {
           throw new ExitException(EXIT_ERR_OTHER, "Failed to load one of the given class files: " + ioe);
         }
-      } else if (classesDirectory.getName().endsWith(".jar") || classesDirectory.getName().endsWith(".zip")) {
+      } else if (classesDirectory.getName().matches("(?i).*\\.(zip|jar)")) {
         int filesFound = 0;
         try (final ZipInputStream zipin = new ZipInputStream(new FileInputStream(classesDirectory))) {
           ZipEntry entry;
           while ((entry = zipin.getNextEntry()) != null) {
             if (entry.isDirectory()) continue;
-            // cleanup name in the zip file (fix trailing slash and windows separators):
-            final String name = entry.getName().replace('\\', '/').replaceFirst("^/+", "");
+            // ZIP files sometimes contain leading extra slash, remove it after normalization:
+            final String normalizedName = normalizePath(entry.getName()).replaceFirst("^" + Pattern.quote(File.separator), "");
           next:
-            for (String ipattern : includes) {
-              if (SelectorUtils.match(ipattern, name)) {
+            for (final String ipattern : includes) {
+              if (SelectorUtils.matchPath(normalizePattern(ipattern), normalizedName)) {
                 if (excludes != null) {
-                  for (String epattern : excludes) {
-                    if (SelectorUtils.match(epattern, name)) {
+                  for (final String epattern : excludes) {
+                    if (SelectorUtils.matchPath(normalizePattern(epattern), normalizedName)) {
                       break next;
                     }
                   }
                 }
                 try {
-                  checker.streamReadClassToCheck(zipin, name);
+                  checker.streamReadClassToCheck(zipin, entry.getName());
                   filesFound++;
                 } catch (IOException ioe) {
-                  throw new ExitException(EXIT_ERR_OTHER, String.format(Locale.ENGLISH, "Failed to load class file '%s' from jar/zip: %s", name, ioe));
+                  throw new ExitException(EXIT_ERR_OTHER, String.format(Locale.ENGLISH, "Failed to load class file '%s' from jar/zip: %s", entry.getName(), ioe));
                 }
                 break next;
               }
@@ -377,6 +378,18 @@ public final class CliMain implements Constants {
     } catch (IOException ioe) {
       throw new ExitException(EXIT_ERR_OTHER, "General IO problem: " + ioe);
     }
+  }
+  
+  private static String normalizePattern(String pattern) {
+    pattern = normalizePath(pattern);
+    if (pattern.endsWith(File.separator)) {
+      pattern += "**";
+    }
+    return pattern;
+  }
+  
+  private static String normalizePath(String name) {
+    return name.trim().replace('/', File.separatorChar).replace('\\', File.separatorChar);
   }
   
   public static void main(String... args) {
