@@ -339,7 +339,8 @@ public final class CliMain implements Constants {
           while ((entry = zipin.getNextEntry()) != null) {
             if (entry.isDirectory()) continue;
             // ZIP files sometimes contain leading extra slash, remove it after normalization:
-            final String normalizedName = normalizePath(entry.getName()).replaceFirst("^" + Pattern.quote(File.separator), "");
+            final String normalizedName = normalizePath(entry.getName())
+                .replaceFirst("^" + Pattern.quote(File.separator), "");
           next:
             for (final String ipattern : includes) {
               if (SelectorUtils.matchPath(normalizePattern(ipattern), normalizedName)) {
@@ -354,7 +355,8 @@ public final class CliMain implements Constants {
                   checker.streamReadClassToCheck(zipin, entry.getName());
                   filesFound++;
                 } catch (IOException ioe) {
-                  throw new ExitException(EXIT_ERR_OTHER, String.format(Locale.ENGLISH, "Failed to load class file '%s' from jar/zip: %s", entry.getName(), ioe));
+                  throw new ExitException(EXIT_ERR_OTHER, String.format(Locale.ENGLISH,
+                      "Failed to load class file '%s' from jar/zip: %s", entry.getName(), ioe));
                 }
                 break next;
               }
