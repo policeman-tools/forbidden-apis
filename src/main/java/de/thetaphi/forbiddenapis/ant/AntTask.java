@@ -22,6 +22,7 @@ import static de.thetaphi.forbiddenapis.Checker.Option.*;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.Iterator;
@@ -209,7 +210,9 @@ public class AntTask extends Task implements Constants {
           if (restrictClassFilename && name != null && !name.endsWith(".class")) {
             continue;
           }
-          checker.addClassToCheck(r.getInputStream(), r.getName());
+          try (InputStream in = r.getInputStream()) {
+            checker.streamReadClassToCheck(in, r.getName());
+          }
           foundClass = true;
         }
         if (!foundClass) {

@@ -19,17 +19,21 @@ package de.thetaphi.forbiddenapis.cli;
 import static de.thetaphi.forbiddenapis.Checker.Option.*;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.JarURLConnection;
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.net.URLConnection;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.LinkedHashSet;
 import java.util.Locale;
-import java.net.JarURLConnection;
-import java.net.URLConnection;
-import java.net.URLClassLoader;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.net.MalformedURLException;
+import java.util.regex.Pattern;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;
@@ -38,6 +42,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionGroup;
 import org.apache.commons.cli.Options;
 import org.codehaus.plexus.util.DirectoryScanner;
+import org.codehaus.plexus.util.SelectorUtils;
 
 import de.thetaphi.forbiddenapis.AsmUtils;
 import de.thetaphi.forbiddenapis.Checker;
@@ -68,7 +73,7 @@ public final class CliMain implements Constants {
     final OptionGroup required = new OptionGroup();
     required.setRequired(true);
     required.addOption(dirOpt = Option.builder("d")
-        .desc("directory with class files to check for forbidden api usage; this directory is also added to classpath")
+        .desc("directory (or jar file) with class files to check for forbidden api usage; this directory is also added to classpath")
         .longOpt("dir")
         .hasArg()
         .argName("directory")
@@ -215,7 +220,7 @@ public final class CliMain implements Constants {
   
   public void run() throws ExitException {
     final File classesDirectory = new File(cmd.getOptionValue(dirOpt.getLongOpt())).getAbsoluteFile();
-    
+
     // parse classpath given as argument; add -d to classpath, too
     final String[] classpath = cmd.getOptionValues(classpathOpt.getLongOpt());
     final URL[] urls;
@@ -260,29 +265,6 @@ public final class CliMain implements Constants {
         checker.addSuppressAnnotation(a);
       }
       
-      logger.info("Scanning for classes to check...");
-      if (!classesDirectory.exists()) {
-        throw new ExitException(EXIT_ERR_OTHER, "Directory with class files does not exist: " + classesDirectory);
-      }
-      String[] includes = cmd.getOptionValues(includesOpt.getLongOpt());
-      if (includes == null || includes.length == 0) {
-        includes = new String[] { "**/*.class" };
-      }
-      final String[] excludes = cmd.getOptionValues(excludesOpt.getLongOpt());
-      final DirectoryScanner ds = new DirectoryScanner();
-      ds.setBasedir(classesDirectory);
-      ds.setCaseSensitive(true);
-      ds.setIncludes(includes);
-      ds.setExcludes(excludes);
-      ds.addDefaultExcludes();
-      ds.scan();
-      final String[] files = ds.getIncludedFiles();
-      if (files.length == 0) {
-        throw new ExitException(EXIT_ERR_OTHER, String.format(Locale.ENGLISH,
-          "No classes found in directory %s (includes=%s, excludes=%s).",
-          classesDirectory, Arrays.toString(includes), Arrays.toString(excludes)));
-      }
-      
       try {
         final String[] bundledSignatures = cmd.getOptionValues(bundledsignaturesOpt.getLongOpt());
         if (bundledSignatures != null) for (String bs : new LinkedHashSet<>(Arrays.asList(bundledSignatures))) {
@@ -319,11 +301,75 @@ public final class CliMain implements Constants {
           return;
         }
       }
+            
+      logger.info("Scanning for classes to check...");
+      if (!classesDirectory.exists()) {
+        throw new ExitException(EXIT_ERR_OTHER, "Directory or zip/jar file with class files does not exist: " + classesDirectory);
+      }
 
-      try {
-        checker.addClassesToCheck(classesDirectory, files);
-      } catch (IOException ioe) {
-        throw new ExitException(EXIT_ERR_OTHER, "Failed to load one of the given class files: " + ioe);
+      String[] includes = cmd.getOptionValues(includesOpt.getLongOpt());
+      if (includes == null || includes.length == 0) {
+        includes = new String[] { "**/*.class" };
+      }
+      final String[] excludes = cmd.getOptionValues(excludesOpt.getLongOpt());
+      
+      if (classesDirectory.isDirectory()) {
+        final DirectoryScanner ds = new DirectoryScanner();
+        ds.setBasedir(classesDirectory);
+        ds.setCaseSensitive(true);
+        ds.setIncludes(includes);
+        ds.setExcludes(excludes);
+        ds.addDefaultExcludes();
+        ds.scan();
+        final String[] files = ds.getIncludedFiles();
+        if (files.length == 0) {
+          throw new ExitException(EXIT_ERR_OTHER, String.format(Locale.ENGLISH,
+            "No classes found in directory %s (includes=%s, excludes=%s).",
+            classesDirectory, Arrays.toString(includes), Arrays.toString(excludes)));
+        }
+        try {
+          checker.addClassesToCheck(classesDirectory, files);
+        } catch (IOException ioe) {
+          throw new ExitException(EXIT_ERR_OTHER, "Failed to load one of the given class files: " + ioe);
+        }
+      } else if (classesDirectory.getName().matches("(?i).*\\.(zip|jar)")) {
+        int filesFound = 0;
+        try (final ZipInputStream zipin = new ZipInputStream(new FileInputStream(classesDirectory))) {
+          ZipEntry entry;
+          while ((entry = zipin.getNextEntry()) != null) {
+            if (entry.isDirectory()) continue;
+            // ZIP files sometimes contain leading extra slash, remove it after normalization:
+            final String normalizedName = normalizePath(entry.getName())
+                .replaceFirst("^" + Pattern.quote(File.separator), "");
+          next:
+            for (final String ipattern : includes) {
+              if (SelectorUtils.matchPath(normalizePattern(ipattern), normalizedName)) {
+                if (excludes != null) {
+                  for (final String epattern : excludes) {
+                    if (SelectorUtils.matchPath(normalizePattern(epattern), normalizedName)) {
+                      break next;
+                    }
+                  }
+                }
+                try {
+                  checker.streamReadClassToCheck(zipin, entry.getName());
+                  filesFound++;
+                } catch (IOException ioe) {
+                  throw new ExitException(EXIT_ERR_OTHER, String.format(Locale.ENGLISH,
+                      "Failed to load class file '%s' from jar/zip: %s", entry.getName(), ioe));
+                }
+                break next;
+              }
+            }
+          }
+        }
+        if (filesFound == 0) {
+          throw new ExitException(EXIT_ERR_OTHER, String.format(Locale.ENGLISH,
+            "No classes found in jar/zip file %s (includes=%s, excludes=%s).",
+            classesDirectory, Arrays.toString(includes), Arrays.toString(excludes)));
+        }
+      } else {
+        throw new ExitException(EXIT_ERR_OTHER, "Classes directory parameter is neither a directory or a jar/zip file.");
       }
 
       try {
@@ -334,6 +380,18 @@ public final class CliMain implements Constants {
     } catch (IOException ioe) {
       throw new ExitException(EXIT_ERR_OTHER, "General IO problem: " + ioe);
     }
+  }
+  
+  private static String normalizePattern(String pattern) {
+    pattern = normalizePath(pattern);
+    if (pattern.endsWith(File.separator)) {
+      pattern += "**";
+    }
+    return pattern;
+  }
+  
+  private static String normalizePath(String name) {
+    return name.trim().replace('/', File.separatorChar).replace('\\', File.separatorChar);
   }
   
   public static void main(String... args) {

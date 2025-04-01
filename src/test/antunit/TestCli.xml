@@ -86,4 +86,24 @@
     <au:assertLogContains text="java.lang.String#substring(int,int) [You are crazy that you disallow substrings]"/> 
   </target>
 
+  <target name="testJarInsteadDir">
+    <java jar="${jar-file}" failonerror="true" fork="true">
+      <arg value="-c"/>
+      <arg value="${cp}"/>
+      <arg value="-d"/>
+      <arg file="${jar-file}"/>
+      <arg value="-b"/>
+      <arg value="jdk-unsafe-${jdk.version},jdk-deprecated-${jdk.version},jdk-non-portable"/>
+      <arg value="--includes"/>
+      <arg value="de/thetaphi/forbiddenapis/cli/*.class"/>
+      <arg value="--excludes"/>
+      <arg value="**/ExitException.class"/>
+    </java>
+    <au:assertLogContains text=" 0 error(s)."/> 
+    <au:assertLogContains text="Scanned 1 class file"/> 
+    <au:assertLogContains text="Reading bundled API signatures: jdk-deprecated-${jdk.version}"/> 
+    <au:assertLogContains text="Reading bundled API signatures: jdk-unsafe-${jdk.version}"/> 
+    <au:assertLogContains text="Reading bundled API signatures: jdk-non-portable"/> 
+  </target>
+
 </project>
