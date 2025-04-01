@@ -232,7 +232,7 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
     data.bundledSignatures = bundledSignatures;
   }
   /**
-   *Aa list of forbidden API signatures for which violations should not be reported at all (i.e. neither fail the build nor appear in the logs). This takes precedence over {@link #getFailOnViolation()} and {@link #getSignaturesWithSeverityWarn()}.
+   *Aa list of forbidden API signatures for which violations should not be reported at all (i.e. neither fail the build nor appear in the logs). This takes precedence over {@link #getIgnoreFailures()} and {@link #getSignaturesWithSeverityWarn()}.
    * In order to be effective the signature must be given in either {@link #getSignaturesFiles()}, {@link #getBundledSignatures()}, or {@link #getSignatures}.
    * @since 3.9
    */
@@ -248,7 +248,7 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
   }
   
   /**
-   * A list of forbidden API signatures for which violations should lead to a warning only (i.e. not fail the build). This takes precedence over {@link #getFailOnViolation()}.
+   * A list of forbidden API signatures for which violations should lead to a warning only (i.e. not fail the build). This takes precedence over {@link #getIgnoreFailures()}.
    * In order to be effective the signature must be given in either {@link #getSignaturesFiles()}, {@link #getBundledSignatures()}, or {@link #getSignatures}.
    * @since 3.9
    */
@@ -258,7 +258,7 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
     return data.signaturesWithSeverityWarn;
   }
 
-  /** @see #getSignaturesWithSeverityWarj */
+  /** @see #getSignaturesWithSeverityWarn */
   public void setSignaturesWithSeverityWarn(Set<String> signatures) {
     data.signaturesWithSeverityWarn = signatures;
   }
