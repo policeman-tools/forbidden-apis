@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ * (C) Copyright Uwe Schindler (Generics Policeman) and others.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+-->
+<project xmlns:au="antlib:org.apache.ant.antunit">
+
+  <fileset id="main.classes" dir="${antunit.main.classes}"/>
+  
+  <target name="testOverrideGeneral">
+    <forbiddenapis classpathref="path.all" targetVersion="${jdk.version}">
+      <fileset refid="main.classes"/>
+      <bundledSignatures name="jdk-unsafe"/>
+      java.util.Locale#ENGLISH @ We are speaking chinese here!
+      java.lang.** @ You are crazy that you disallow all java.lang
+      java.io.** @ You are crazy that you disallow all java.io
+      <severityOverride severity="warning">java.util.Locale#ENGLISH</severityOverride>
+      <severityOverride severity="debug">
+        java.lang.**
+        java.io.**
+      </severityOverride>
+    </forbiddenapis>
+    <au:assertLogContains level="info" text="Reading bundled API signatures: jdk-unsafe-${jdk.version}"/>
+    <au:assertLogContains level="info" text="Adjusting severity to WARNING for 1 signatures..."/>
+    <au:assertLogContains level="info" text="Adjusting severity to DEBUG for 2 signatures..."/>
+    <au:assertLogContains level="warning" text="java.util.Locale#ENGLISH [We are speaking chinese here!]"/>
+    <au:assertLogContains level="debug" text="java.lang.String [You are crazy that you disallow all java.lang]"/> 
+    <au:assertLogContains level="debug" text="java.lang.StringBuilder [You are crazy that you disallow all java.lang]"/> 
+    <au:assertLogContains level="debug" text="java.io.InputStream [You are crazy that you disallow all java.io]"/> 
+    <au:assertLogContains level="info" text=" 0 error(s)."/>
+  </target>
+  
+  <target name="testOverrideInSignaturesElement">
+    <forbiddenapis classpathref="path.all" targetVersion="${jdk.version}">
+      <fileset refid="main.classes"/>
+      <signatures>
+        <string>java.util.Locale#ENGLISH @ We are speaking chinese here!</string>
+        <string>java.lang.** @ You are crazy that you disallow all java.lang</string>
+        <bundled name="jdk-unsafe"/>
+        <severityOverride severity="warning">java.util.Locale#ENGLISH</severityOverride>
+        <severityOverride severity="debug">java.lang.**</severityOverride>
+      </signatures>
+    </forbiddenapis>
+    <au:assertLogContains level="info" text="Reading bundled API signatures: jdk-unsafe-${jdk.version}"/>
+    <au:assertLogContains level="info" text="Adjusting severity to WARNING for 1 signatures..."/>
+    <au:assertLogContains level="info" text="Adjusting severity to DEBUG for 1 signatures..."/>
+    <au:assertLogContains level="warning" text="java.util.Locale#ENGLISH [We are speaking chinese here!]"/>
+    <au:assertLogContains level="debug" text="java.lang.String [You are crazy that you disallow all java.lang]"/> 
+    <au:assertLogContains level="debug" text="java.lang.StringBuilder [You are crazy that you disallow all java.lang]"/> 
+    <au:assertLogContains level="info" text=" 0 error(s)."/>
+  </target>
+  
+  <target name="testDoNothingOverride">
+    <au:expectfailure expectedMessage="Check for forbidden API calls failed, see log">
+      <forbiddenapis classpathref="path.all">
+        <fileset refid="main.classes"/>
+        java.lang.String#substring(int,int) @ You are crazy that you disallow substrings
+        <severityOverride severity="error">java.lang.String#substring(int,int)</severityOverride>
+      </forbiddenapis>
+    </au:expectfailure>
+    <au:assertLogContains level="info" text="Adjusting severity to ERROR for 1 signatures..."/>
+    <au:assertLogContains level="error" text="java.lang.String#substring(int,int) [You are crazy that you disallow substrings]"/> 
+  </target>
+  
+</project>
