@@ -60,7 +60,7 @@ public final class Checker implements RelatedClassLookup, Constants {
   }
 
   public enum ViolationSeverity {
-      ERROR, WARNING, INFO, DEBUG, SUPPRESS
+    ERROR, WARNING, INFO, DEBUG, SUPPRESS
   }
 
   public final boolean isSupportedJDK;

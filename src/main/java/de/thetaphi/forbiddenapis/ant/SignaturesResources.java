@@ -31,4 +31,9 @@ public final class SignaturesResources extends Resources {
     return task.createBundledSignatures();
   }
   
+  // we also allow to add a severity override in the <signatures/> element. Cool ne?
+  public SeverityOverrideType createSeverityOverride() {
+    return task.createSeverityOverride();
+  }
+  
 }

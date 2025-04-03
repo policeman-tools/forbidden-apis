@@ -23,10 +23,10 @@ import static de.thetaphi.forbiddenapis.Checker.Option.*;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.Iterator;
-import java.util.LinkedHashSet;
 import java.util.Locale;
 
 import org.apache.tools.ant.AntClassLoader;
@@ -60,10 +60,9 @@ public class AntTask extends Task implements Constants {
 
   private final Union classFiles = new Union();
   private final Union apiSignatures = new Union();
-  private final Collection<BundledSignaturesType> bundledSignatures = new LinkedHashSet<>();
-  private final Collection<SuppressAnnotationType> suppressAnnotations = new LinkedHashSet<>();
-  private final Collection<String> signaturesWithSeverityWarn = new LinkedHashSet<>();;
-  private final Collection<String> signaturesWithSeveritySuppress = new LinkedHashSet<>();;
+  private final Collection<BundledSignaturesType> bundledSignatures = new ArrayList<>();
+  private final Collection<SuppressAnnotationType> suppressAnnotations = new ArrayList<>();
+  private final Collection<SeverityOverrideType> severityOverrides = new ArrayList<>();
 
   private Path classpath = null;
   
@@ -178,11 +177,12 @@ public class AntTask extends Task implements Constants {
             checker.parseSignaturesFile(r.getInputStream(), r.toString());
           }
         }
-        if (!signaturesWithSeverityWarn.isEmpty()) {
-          checker.setSignaturesSeverity(signaturesWithSeverityWarn, Checker.ViolationSeverity.WARNING);
-        }
-        if (!signaturesWithSeveritySuppress.isEmpty()) {
-          checker.setSignaturesSeverity(signaturesWithSeveritySuppress, Checker.ViolationSeverity.SUPPRESS);
+        
+        for (SeverityOverrideType override : severityOverrides) {
+          if (override.severity == null) {
+            throw new BuildException("Severity must be given as argument of <severityOverride/> element.");
+          }
+          checker.setSignaturesSeverity(override.getSignatures(), override.severity);
         }
       } catch (IOException ioe) {
         throw new BuildException("IO problem while reading files with API signatures: " + ioe.getMessage(), ioe);
@@ -302,20 +302,18 @@ public class AntTask extends Task implements Constants {
   }
   
   /** 
-   * A list of forbidden API signatures for which violations should not be reported at all (i.e. neither fail the build nor appear in the logs). This takes precedence over {@link #failOnViolation} and {@link #signaturesWithSeverityWarn}.
-   * In order to be effective the signature must be given in either {@link #bundledSignatures}, {@link #signaturesFiles}, {@link #signaturesArtifacts}, or {@link #signatures}.
+   * Adds an override for forbidden API signatures for which violations should not be reported at all (i.e. neither fail the build nor appear in the logs).
+   * Each signature must be listed in a separate XML element (in text) and a {@code priority} attribute.
+   * This takes precedence over {@link #failOnViolation}.
+   * In order to be effective the signature must be given in one of the signatures elements (e.g., it can be used to disable a bundled signature which
+   * is not yet ready to be enforced).
    * @since 3.9
    */
-  public void setSignaturesWithSeverityWarn(String signature) {
-      signaturesWithSeverityWarn.add(signature);
-  }
-
-  /** A list of forbidden API signatures for which violations should not be reported at all (i.e. neither fail the build nor appear in the logs). This takes precedence over {@link #failOnViolation} and {@link #signaturesWithSeverityWarn}.
-   * In order to be effective the signature must be given in either {@link #bundledSignatures}, {@link #signaturesFiles}, {@link #signaturesArtifacts}, or {@link #signatures}.
-   * @since 3.9
-   */
-  public void setSignaturesWithSeveritySuppress(String signature) {
-    signaturesWithSeveritySuppress.add(signature);
+  public SeverityOverrideType createSeverityOverride() {
+    final SeverityOverrideType s = new SeverityOverrideType();
+    s.setProject(getProject());
+    severityOverrides.add(s);
+    return s;
   }
 
   /** Creates a instance of an annotation class name that suppresses error reporting in classes/methods/fields. */

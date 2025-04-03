@@ -74,20 +74,6 @@ and the system classloader, not ANT's class loader.</p>
 </tr>
 
 <tr>
-  <td>signaturesWithSeveritySuppress</td>
-  <td><code>String</code></td>
-  <td></td>
-  <td>A forbidden API signature for which violations should not be reported at all (i.e. neither fail the build nor appear in the logs). This takes precedence over<code>failOnViolation</code> and <code>signaturesWithSeverityWarn</code>.</td>
-</tr>
-
-<tr>
-  <td>signaturesWithSeverityWarn</td>
-  <td><code>String</code></td>
-  <td></td>
-  <td>A forbidden API signature for which violations should be reported as warnings (i.e. not fail the build). This takes precedence over<code>failOnViolation</code>.</td>
-</tr>
-
-<tr>
   <td>classpath</td>
   <td><code>Path</code></td>
   <td></td>
@@ -217,6 +203,11 @@ code to suppress errors. Those annotations must have at least
 <code>RetentionPolicy#CLASS</code>. They can be applied to classes, their methods, or fields. By default, <code>@de.thetaphi.forbiddenapis.SuppressForbidden</code>
 can always be used, but needs the <code>forbidden-apis.jar</code> file in classpath of compiled project, which may not be wanted. Instead of a full class name, a glob
   pattern may be used (e.g., <code>**.SuppressForbidden</code>).</p>
+  
+<p>You can include multiple <code>&lt;severityOverride severity=&quot;(ERROR|WARNING|INFO|DEBUG|SUPPRESS)&quot;&gt;...signature...&lt;severityOverride&gt;</code> elements to
+override problem severity of certain signatures (i.e. not fail the build). This takes precedence over <code>failOnViolation</code>. If several signatures should get the same
+severity you can separate them by newlines. It is also possible to separate them into different elements. Each signature must be specified in exactly the same way like in the
+original signatures files!</p>
 
 </body>
 </html>

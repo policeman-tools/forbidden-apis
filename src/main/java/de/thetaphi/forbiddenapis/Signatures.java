@@ -173,7 +173,7 @@ public final class Signatures implements Constants {
     }
   }
 
-private Collection<String> getKeys(final UnresolvableReporting report, final boolean localIgnoreMissingClasses, final Set<String> missingClasses,
+  private Collection<String> getKeys(final UnresolvableReporting report, final boolean localIgnoreMissingClasses, final Set<String> missingClasses,
         final String signature) throws ParseException, IOException {
     final String clazz;
     final String field;
@@ -374,9 +374,9 @@ private Collection<String> getKeys(final UnresolvableReporting report, final boo
     return numberOfFiles == 0;
   }
   
-  public void setSignaturesSeverity(Collection<String> signature, ViolationSeverity severity) throws ParseException, IOException {
-    logger.info("Adjusting severity to " + severity + " for signatures...");
-    for (String s : signature) {
+  public void setSignaturesSeverity(Collection<String> signatures, ViolationSeverity severity) throws ParseException, IOException {
+    logger.info("Adjusting severity to " + severity + " for " + signatures.size() + " signatures...");
+    for (String s : signatures) {
       setSignatureSeverity(s, severity);
     }
   }
