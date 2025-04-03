@@ -34,6 +34,7 @@ import java.util.Set;
 
 import org.gradle.api.DefaultTask;
 import org.gradle.api.GradleException;
+import org.gradle.api.Incubating;
 import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.FileTree;
@@ -231,34 +232,39 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
   public void setBundledSignatures(Set<String> bundledSignatures) {
     data.bundledSignatures = bundledSignatures;
   }
+  
   /**
-   *Aa list of forbidden API signatures for which violations should not be reported at all (i.e. neither fail the build nor appear in the logs). This takes precedence over {@link #getIgnoreFailures()} and {@link #getSignaturesWithSeverityWarn()}.
+   * A set of forbidden API signatures for which violations should not be reported at all (i.e. neither fail the build nor appear in the logs). This takes precedence over {@link #getIgnoreFailures()} and {@link #getSignaturesWithSeverityWarn()}.
    * In order to be effective the signature must be given in either {@link #getSignaturesFiles()}, {@link #getBundledSignatures()}, or {@link #getSignatures}.
    * @since 3.9
    */
   @Input
   @Optional
+  @Incubating
   public Set<String> getSignaturesWithSeveritySuppress() {
     return data.signaturesWithSeveritySuppress;
   }
 
   /** @see #getSignaturesWithSeveritySuppress */
+  @Incubating
   public void setSignaturesWithSeveritySuppress(Set<String> signatures) {
     data.signaturesWithSeveritySuppress = signatures;
   }
   
   /**
-   * A list of forbidden API signatures for which violations should lead to a warning only (i.e. not fail the build). This takes precedence over {@link #getIgnoreFailures()}.
+   * A set of forbidden API signatures for which violations should lead to a warning only (i.e. not fail the build). This takes precedence over {@link #getIgnoreFailures()}.
    * In order to be effective the signature must be given in either {@link #getSignaturesFiles()}, {@link #getBundledSignatures()}, or {@link #getSignatures}.
    * @since 3.9
    */
   @Input
   @Optional
+  @Incubating  
   public Set<String> getSignaturesWithSeverityWarn() {
     return data.signaturesWithSeverityWarn;
   }
 
   /** @see #getSignaturesWithSeverityWarn */
+  @Incubating
   public void setSignaturesWithSeverityWarn(Set<String> signatures) {
     data.signaturesWithSeverityWarn = signatures;
   }
