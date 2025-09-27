@@ -72,6 +72,7 @@
       <equals arg1="${-cleaned.specification.version}" arg2="22"/>
       <equals arg1="${-cleaned.specification.version}" arg2="23"/>
       <equals arg1="${-cleaned.specification.version}" arg2="24"/>
+      <equals arg1="${-cleaned.specification.version}" arg2="25"/>
     </or>
   </condition>
   
