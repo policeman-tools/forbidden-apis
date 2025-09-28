@@ -150,12 +150,7 @@
   <property name="jar-file" location="dist/${artifactId}-${version}.jar" />
   <property name="sources-jar-file" location="dist/${artifactId}-${version}-sources.jar" />
   <property name="documentation-file" location="dist/${artifactId}-${version}-docs.zip" />
-
-  <!-- defined maven snapshots and staging repository id and url -->
-  <property name="maven-snapshots-repository-id" value="sonatype-nexus-snapshots" />
-  <property name="maven-snapshots-repository-url" value="https://oss.sonatype.org/content/repositories/snapshots/" />
-  <property name="maven-staging-repository-id" value="sonatype-nexus-staging" />
-  <property name="maven-staging-repository-url" value="https://oss.sonatype.org/service/local/staging/deploy/maven2/" />
+  <property name="fake-javadoc-file" location="dist/${artifactId}-${version}-javadoc.jar" />
 
   <!-- GPG settings -->
   <property name="gpg.exe" value="gpg" />
@@ -447,6 +442,12 @@
     <zip destfile="${documentation-file}" encoding="${build.encoding}">
       <zipfileset dir="${documentation-dir}" prefix="${artifactId}-${version}"/>
     </zip>
+    <zip destfile="${fake-javadoc-file}" encoding="${build.encoding}">
+      <mappedresources>
+        <string>The forbiddenapis plugin provides no Javadocs. The full user documentation for Ant/Maven/Gradle usage is provided by the artifact with classifier 'docs' and type 'zip'.&#10;</string>
+        <mergemapper to="README.txt"/>
+      </mappedresources>
+    </zip>
   </target>
 
   <target name="jar" depends="compile,-install-tasks,maven-descriptor" description="Create the binary JAR">
@@ -499,11 +500,15 @@
   <target name="stage" depends="-stage.snapshots,-stage.release" description="Create the distribution"/>
   
   <target name="-stage.snapshots" depends="dist" if="isSnapshot">
+    <!--
     <artifact:deploy file="${jar-file}">
       <pom refid="maven.deploy.pom"/>
-      <attach file="${sources-jar-file}" classifier="sources"/>
+      <attach file="${sources-jar-file}" classifier="sources" type="jar"/>
+      <attach file="${fake-javadoc-file}" classifier="javadoc" type="jar"/>
       <attach file="${documentation-file}" classifier="docs" type="zip"/>
     </artifact:deploy>
+    -->
+    <echo level="warn" message="Deploying Maven Snapshots to Sonatype is currently not supported. Working on a fix with support..."/>
   </target>
   
   <target name="sign-artifacts" depends="dist" unless="isSnapshot">
@@ -538,12 +543,14 @@
   <target name="-stage.release" depends="sign-artifacts" unless="isSnapshot">
     <artifact:deploy file="${jar-file}">
       <pom refid="maven.deploy.pom"/>
-      <attach file="${sources-jar-file}" classifier="sources"/>
+      <attach file="${sources-jar-file}" classifier="sources" type="jar"/>
+      <attach file="${fake-javadoc-file}" classifier="javadoc" type="jar"/>
       <attach file="${documentation-file}" classifier="docs" type="zip"/>
       <!-- signatures: -->
       <attach file="${pom-file}.asc" type="pom.asc"/>
       <attach file="${jar-file}.asc" type="jar.asc"/>
       <attach file="${sources-jar-file}.asc" classifier="sources" type="jar.asc"/>
+      <attach file="${fake-javadoc-file}.asc" classifier="javadoc" type="jar.asc"/>
       <attach file="${documentation-file}.asc" classifier="docs" type="zip.asc"/>
     </artifact:deploy>
   </target>
