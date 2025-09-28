@@ -19,5 +19,9 @@ jobs:
       with:
         java-version: '8'
         distribution: 'temurin'
+    - name: Setup Gradle 8 (to work with JDK 8)
+      uses: gradle/actions/setup-gradle@v4
+      with:
+        gradle-version: '8.14.3'
     - name: Build and test with Ant
       run: ant -noinput -buildfile build.xml test -Dgradle.exe=gradle
