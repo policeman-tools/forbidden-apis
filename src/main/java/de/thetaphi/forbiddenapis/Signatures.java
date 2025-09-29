@@ -25,6 +25,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -36,6 +37,7 @@ import java.util.LinkedHashSet;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -57,6 +59,21 @@ public final class Signatures implements Constants {
   private static final String WILDCARD_ARGS = "**";
   private static final Pattern PATTERN_WILDCARD_ARGS = Pattern.compile(String.format(Locale.ROOT, "%s\\s*%s\\s*%s",
       Pattern.quote("("), Pattern.quote(WILDCARD_ARGS), Pattern.quote(")")));
+  
+  public static final SortedSet<String> BUNDLED_SIGNATURES_NAMES;
+  static {
+    try (final InputStream in = Checker.class.getResourceAsStream("signatures/list");
+        final BufferedReader reader = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8))) {
+      final SortedSet<String> names = new TreeSet<String>();
+      String name;
+      while ((name = reader.readLine()) != null) {
+        names.add(name);
+      }
+      BUNDLED_SIGNATURES_NAMES = Collections.unmodifiableSortedSet(names);
+    } catch (IOException ioe) {
+      throw new RuntimeException(ioe);
+    }
+  }
 
   private static enum UnresolvableReporting {
     FAIL(true) {
@@ -272,30 +289,34 @@ public final class Signatures implements Constants {
     logger.warn(AsmUtils.formatClassesAbbreviated(missingClasses));
   }
 
-  private void addBundledSignatures(String name, String jdkTargetVersion, boolean logging, Set<String> missingClasses) throws IOException,ParseException {
+  private void addBundledSignatures(String name, String jdkTargetVersion, boolean readExternal, Set<String> missingClasses) throws IOException,ParseException {
     if (!name.matches("[A-Za-z0-9\\-\\.]+")) {
       throw new ParseException("Invalid bundled signature reference: " + name);
     }
     if (BS_JDK_NONPORTABLE.equals(name)) {
-      if (logging) logger.info("Reading bundled API signatures: " + name);
+      if (readExternal) logger.info("Reading bundled API signatures: " + name);
       numberOfFiles++;
       forbidNonPortableRuntime = true;
       return;
     }
-    name = fixTargetVersion(name);
-    // use Checker.class hardcoded (not getClass) so we have a fixed package name:
-    InputStream in = Checker.class.getResourceAsStream("signatures/" + name + ".txt");
-    // automatically expand the compiler version in here (for jdk-* signatures without version):
-    if (in == null && jdkTargetVersion != null && name.startsWith("jdk-") && !name.matches(".*?\\-\\d+(\\.\\d+)*")) {
-      name = name + "-" + jdkTargetVersion;
+    if (readExternal) {
       name = fixTargetVersion(name);
-      in = Checker.class.getResourceAsStream("signatures/" + name + ".txt");
+      // automatically expand the compiler version in here (for jdk-* signatures without version):
+      if (!BUNDLED_SIGNATURES_NAMES.contains(name) && jdkTargetVersion != null && name.startsWith("jdk-") && !name.matches(".*?\\-\\d+(\\.\\d+)*")) {
+        name = name + "-" + jdkTargetVersion;
+        name = fixTargetVersion(name);
+      }
+      if (!BUNDLED_SIGNATURES_NAMES.contains(name)) {
+        throw new FileNotFoundException("Bundled signatures resource not found: " + name);
+      }
+      logger.info("Reading bundled API signatures: " + name);
     }
-    if (in == null) {
+    // use Checker.class hardcoded (not getClass) so we have a fixed package name:
+    final URL url = Checker.class.getResource("signatures/" + name + ".txt");
+    if (url == null) {
       throw new FileNotFoundException("Bundled signatures resource not found: " + name);
     }
-    if (logging) logger.info("Reading bundled API signatures: " + name);
-    parseSignaturesStream(in, true, missingClasses);
+    parseSignaturesStream(url.openStream(), true, missingClasses);
   }
   
   private void parseSignaturesStream(InputStream in, boolean isBundled, Set<String> missingClasses) throws IOException,ParseException {
