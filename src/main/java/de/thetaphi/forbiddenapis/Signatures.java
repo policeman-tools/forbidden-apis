@@ -36,8 +36,9 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Locale;
 import java.util.Map;
+import java.util.NavigableSet;
+import java.util.Objects;
 import java.util.Set;
-import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -60,16 +61,16 @@ public final class Signatures implements Constants {
   private static final Pattern PATTERN_WILDCARD_ARGS = Pattern.compile(String.format(Locale.ROOT, "%s\\s*%s\\s*%s",
       Pattern.quote("("), Pattern.quote(WILDCARD_ARGS), Pattern.quote(")")));
   
-  public static final SortedSet<String> BUNDLED_SIGNATURES_NAMES;
+  public static final NavigableSet<String> BUNDLED_SIGNATURES_NAMES;
   static {
     try (final InputStream in = Checker.class.getResourceAsStream("signatures/list");
         final BufferedReader reader = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8))) {
-      final SortedSet<String> names = new TreeSet<String>();
+      final NavigableSet<String> names = new TreeSet<String>(VersionCompare.BUNDLED_SIGNATURES_COMPARATOR);
       String name;
       while ((name = reader.readLine()) != null) {
         names.add(name);
       }
-      BUNDLED_SIGNATURES_NAMES = Collections.unmodifiableSortedSet(names);
+      BUNDLED_SIGNATURES_NAMES = Collections.unmodifiableNavigableSet(names);
     } catch (IOException ioe) {
       throw new RuntimeException(ioe);
     }
@@ -302,10 +303,20 @@ public final class Signatures implements Constants {
     if (readExternal) {
       name = fixTargetVersion(name);
       // automatically expand the compiler version in here (for jdk-* signatures without version):
-      if (!BUNDLED_SIGNATURES_NAMES.contains(name) && jdkTargetVersion != null && name.startsWith("jdk-") && !name.matches(".*?\\-\\d+(\\.\\d+)*")) {
+      if (!BUNDLED_SIGNATURES_NAMES.contains(name) && jdkTargetVersion != null && name.startsWith("jdk-") && !ENDS_WITH_VERSION_PATTERN.matcher(name).matches()) {
         name = name + "-" + jdkTargetVersion;
         name = fixTargetVersion(name);
       }
+      // downgrade the version number to next lower signatures file:
+      final Matcher m = ENDS_WITH_VERSION_PATTERN.matcher(name);
+      if (m.matches()) {
+        final String s = BUNDLED_SIGNATURES_NAMES.floor(name);
+        if (s != null && !Objects.equals(s, name) && s.startsWith(m.group(1)) && ENDS_WITH_VERSION_PATTERN.matcher(s).matches()) {
+          logger.warn("Bundled signatures '" + name + "' not found, choosing next lower or equivalent available resource: " + s);
+          name = s;
+        }
+      }
+      // check name again:
       if (!BUNDLED_SIGNATURES_NAMES.contains(name)) {
         throw new FileNotFoundException("Bundled signatures resource not found: " + name);
       }

@@ -27,6 +27,7 @@ public interface Constants {
   final String BS_JDK_NONPORTABLE = "jdk-non-portable";
   
   final Pattern JDK_SIG_PATTERN = Pattern.compile("(jdk\\-.*?\\-)(\\d+)(\\.\\d+)?(\\.\\d+)*");
+  final Pattern ENDS_WITH_VERSION_PATTERN = Pattern.compile("(.*?)\\-(\\d+(\\.\\d+)*)");
   
   final String DEPRECATED_WARN_FAIL_ON_UNRESOLVABLE_SIGNATURES =
       "The setting 'failOnUnresolvableSignatures' was deprecated and will be removed in next version. Use 'ignoreSignaturesOfMissingClasses' instead.";
