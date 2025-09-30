@@ -316,6 +316,14 @@
         <path refid="path.main-build"/>
       </classpath>
     </groovyc>
+    <pathconvert property="bundled-signatures-list" pathsep="&#10;">
+      <fileset dir="${signatures.dir}" includes="*.txt" excludes="incr-*"/>
+      <chainedmapper>
+        <flattenmapper />
+        <globmapper from="*.txt" to="*"/>
+      </chainedmapper>
+    </pathconvert>
+    <echo file="build/main/de/thetaphi/forbiddenapis/signatures/list" encoding="${build.encoding}">${bundled-signatures-list}</echo>
   </target>
 
   <target name="compile-tools" depends="compile" description="Compile tools">
