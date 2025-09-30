@@ -60,7 +60,8 @@ public final class Signatures implements Constants {
   private static final Pattern PATTERN_WILDCARD_ARGS = Pattern.compile(String.format(Locale.ROOT, "%s\\s*%s\\s*%s",
       Pattern.quote("("), Pattern.quote(WILDCARD_ARGS), Pattern.quote(")")));
   
-  public static final NavigableSet<String> BUNDLED_SIGNATURES_NAMES;
+  // not public yet because its modifiable (Java 7 misses Collections#unmodifiableNavigableSet):
+  private static final NavigableSet<String> BUNDLED_SIGNATURES_NAMES;
   static {
     try (final InputStream in = Checker.class.getResourceAsStream("signatures/list");
         final BufferedReader reader = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8))) {
@@ -69,7 +70,7 @@ public final class Signatures implements Constants {
       while ((name = reader.readLine()) != null) {
         names.add(name);
       }
-      BUNDLED_SIGNATURES_NAMES = Collections.unmodifiableNavigableSet(names);
+      BUNDLED_SIGNATURES_NAMES = names;
     } catch (IOException ioe) {
       throw new RuntimeException(ioe);
     }
