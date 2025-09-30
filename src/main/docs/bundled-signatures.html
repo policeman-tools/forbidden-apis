@@ -43,7 +43,7 @@ or internal runtime APIs (like <code>sun.misc.Unsafe</code>). This is a superset
 <em>Internally this is implemented using heuristics:</em> Any reference to an API that is part of the Java runtime (<tt>rt.jar</tt>, extensions,
 Java 9+ <tt>java.*</tt> / <tt>jdk.*</tt> core modules) and is <strong>not</strong> part of the Java SE specification packages
 (mainly <tt>java</tt>, <tt>javax</tt>, but also <tt>org.ietf.jgss</tt>, <tt>org.omg</tt>, <tt>org.w3c.dom</tt>, and <tt>org.xml.sax</tt>) is forbidden
-(any java version, no specific JDK version, <em>since forbiddenapis v2.1).</li>
+(any java version, no specific JDK version, <em>since forbiddenapis v2.1</em>).</li>
 
 <li><strong><tt>jdk-system-out</tt>:</strong> On server-side applications or libraries used by other programs, printing to
 <tt>System.out</tt> or <tt>System.err</tt> is discouraged and should be avoided (any java version, no specific JDK version).</li>
@@ -53,9 +53,16 @@ and likely will not work anymore on runtime classes in Java 9 or later (any java
 
 <li><strong><tt>commons-io-unsafe-*</tt>:</strong> If your application uses the famous <i>Apache Common-IO</i> library,
 this adds signatures of all methods that depend on default charset
-(for versions <tt>*</tt> = 1.0, 1.1, 1.2, 1.3, 1.4, 2.0, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8.0, 2.9.0, 2.10.0, 2.11.0, 2.12.0, 2.13.0, 2.14.0, 2.15.0, 2.15.1, 2.16.0, 2.16.1, 2.17.0, 2.18.0).</li>
+(for versions <tt>*</tt> = 1.0,..., 2.8.0,..., 2.20.0).</li>
 
 </ul>
+
+<p>You can specify newer JDK versions but this will lead to a warning that the signatures were downgraded. This may fail to detect all
+deprecated APIs with <tt>jdk-deprecated-*</tt>, but it should be OK till an update is available.
+Please do not open issues about adding new JDK versions! This will be done regularily due to maintenance releases. Only open new
+issues if the classfile format version is no longer supported by forbiddenapis and parsing class files leads to an error.</p>
+
+<p>The same applies to <tt>commons-io-unsafe-*</tt>.</p>
 
 </body>
 </html>
