@@ -36,4 +36,23 @@
     <forbiddenapis bundledSignatures="${commons-io-signature}" ignoreEmptyFileset="true" classpathref="commons-io.classpath" targetVersion="${jdk.version}"/>
   </target>
   
+  <target name="testVersionDowngradeAndEquivalence">
+    <ivy:cachepath organisation="commons-io" module="commons-io" revision="2.10.0"
+      inline="true" conf="master" type="jar" pathid="commons-io.classpath" log="${ivy.logging}"/> 
+    <ac:foreach param="commons-version" target="-check-version-equivalent" inheritall="true" inheritrefs="true" delimiter="/" list="2.10.00/2.10/2.010"/>
+    <ac:foreach param="commons-version" target="-check-version-downgrade" inheritall="true" inheritrefs="true" delimiter="/" list="2.10.1/2.010.1/2.10.02"/>
+  </target>
+  
+  <target name="-check-version-equivalent">
+    <forbiddenapis bundledSignatures="commons-io-unsafe-${commons-version}" ignoreEmptyFileset="true" classpathref="commons-io.classpath" targetVersion="${jdk.version}"/>
+    <au:assertLogContains level="info" text="Reading bundled API signatures: commons-io-unsafe-2.10.0"/> 
+    <au:assertLogDoesntContain level="warning" text="choosing next lower available signature"/> 
+  </target>
+  
+  <target name="-check-version-downgrade">
+    <forbiddenapis bundledSignatures="commons-io-unsafe-${commons-version}" ignoreEmptyFileset="true" classpathref="commons-io.classpath" targetVersion="${jdk.version}"/>
+    <au:assertLogContains level="info" text="Reading bundled API signatures: commons-io-unsafe-2.10.0"/> 
+    <au:assertLogContains level="warning" text="Bundled signatures 'commons-io-unsafe-${commons-version}' not found, choosing next lower available signature: commons-io-unsafe-2.10.0"/> 
+  </target>
+  
 </project>
