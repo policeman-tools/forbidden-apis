@@ -25,6 +25,20 @@ final class VersionCompare {
   
   private static final Pattern DOT_SPLITTER_PATTERN = Pattern.compile("\\.");
 
+  public static final Comparator<String> VERSION_COMPARATOR = new Comparator<String>() {
+    @Override
+    public int compare(String version1, String version2) {
+      return compareVersions(version1, version2);
+    }
+  };
+
+  public static final Comparator<String> BUNDLED_SIGNATURES_COMPARATOR = new Comparator<String>() {
+    @Override
+    public int compare(String bs1, String bs2) {
+      return compareBundledSignatures(bs1, bs2);
+    }
+  };
+
   private VersionCompare() {}
   
   public static int compareVersions(String version1, String version2) {
@@ -43,28 +57,18 @@ final class VersionCompare {
     return 0;
   }
   
-  public static Comparator<String> VERSION_COMPARATOR = new Comparator<String>() {
-    @Override
-    public int compare(String version1, String version2) {
-      return compareVersions(version1, version2);
-    }
-  };
-
-  public static Comparator<String> BUNDLED_SIGNATURES_COMPARATOR = new Comparator<String>() {
-    @Override
-    public int compare(String bs1, String bs2) {
-      final Matcher m1 = Constants.ENDS_WITH_VERSION_PATTERN.matcher(bs1),
-          m2 = Constants.ENDS_WITH_VERSION_PATTERN.matcher(bs2);
-      if (m1.matches() && m2.matches()) {
-        final int prefixCmp = m1.group(1).compareTo(m2.group(1));
-        if (prefixCmp != 0) {
-          return prefixCmp;
-        }
-        return compareVersions(m1.group(2), m2.group(2));
-      } else {
-        return bs1.compareTo(bs2);
+  public static int compareBundledSignatures(String bs1, String bs2) {
+    final Matcher m1 = Constants.ENDS_WITH_VERSION_PATTERN.matcher(bs1),
+        m2 = Constants.ENDS_WITH_VERSION_PATTERN.matcher(bs2);
+    if (m1.matches() && m2.matches()) {
+      final int prefixCmp = m1.group(1).compareTo(m2.group(1));
+      if (prefixCmp != 0) {
+        return prefixCmp;
       }
+      return compareVersions(m1.group(2), m2.group(2));
+    } else {
+      return bs1.compareTo(bs2);
     }
-  };
+  }
 
 }

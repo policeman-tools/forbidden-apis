@@ -37,7 +37,6 @@ import java.util.LinkedHashSet;
 import java.util.Locale;
 import java.util.Map;
 import java.util.NavigableSet;
-import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
@@ -311,8 +310,11 @@ public final class Signatures implements Constants {
       final Matcher m = ENDS_WITH_VERSION_PATTERN.matcher(name);
       if (m.matches()) {
         final String s = BUNDLED_SIGNATURES_NAMES.floor(name);
-        if (s != null && !Objects.equals(s, name) && s.startsWith(m.group(1)) && ENDS_WITH_VERSION_PATTERN.matcher(s).matches()) {
-          logger.warn("Bundled signatures '" + name + "' not found, choosing next lower or equivalent available resource: " + s);
+        if (s != null && s.startsWith(m.group(1)) && ENDS_WITH_VERSION_PATTERN.matcher(s).matches()) {
+          if (VersionCompare.compareBundledSignatures(s, name) != 0) {
+            logger.warn("Bundled signatures '" + name + "' not found, choosing next lower available signature: " + s);
+          }
+          // Assign the found name (normalized, e.g. the "0" version components removed):
           name = s;
         }
       }
