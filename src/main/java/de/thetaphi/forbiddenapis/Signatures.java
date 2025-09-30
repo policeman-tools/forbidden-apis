@@ -310,13 +310,13 @@ public final class Signatures implements Constants {
       // downgrade the version number to next lower signatures file:
       final Matcher m = ENDS_WITH_VERSION_PATTERN.matcher(name);
       if (m.matches()) {
-        final String s = BUNDLED_SIGNATURES_NAMES.floor(name);
-        if (s != null && s.startsWith(m.group(1)) && ENDS_WITH_VERSION_PATTERN.matcher(s).matches()) {
-          if (VersionCompare.compareBundledSignatures(s, name) != 0) {
-            logger.warn("Bundled signatures '" + name + "' not found, choosing next lower available signature: " + s);
+        final String closest = BUNDLED_SIGNATURES_NAMES.floor(name);
+        if (closest != null && closest.startsWith(m.group(1)) && ENDS_WITH_VERSION_PATTERN.matcher(closest).matches()) {
+          if (VersionCompare.compareBundledSignatures(closest, name) != 0) {
+            logger.warn("Bundled signatures '" + name + "' not found, choosing next lower available signature: " + closest);
           }
           // Assign the found name (normalized, e.g. the "0" version components removed):
-          name = s;
+          name = closest;
         }
       }
       // check name again:

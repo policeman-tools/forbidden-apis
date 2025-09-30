@@ -28,7 +28,7 @@ final class VersionCompare {
   public static final Comparator<String> VERSION_COMPARATOR = new Comparator<String>() {
     @Override
     public int compare(String version1, String version2) {
-      return compareVersions(version1, version2);
+      return compareVersion(version1, version2);
     }
   };
 
@@ -41,7 +41,7 @@ final class VersionCompare {
 
   private VersionCompare() {}
   
-  public static int compareVersions(String version1, String version2) {
+  public static int compareVersion(String version1, String version2) {
     final String[] version1Splits = DOT_SPLITTER_PATTERN.split(version1),
         version2Splits = DOT_SPLITTER_PATTERN.split(version2);
     final int maxLengthOfVersionSplits = Math.max(version1Splits.length, version2Splits.length);
@@ -65,7 +65,7 @@ final class VersionCompare {
       if (prefixCmp != 0) {
         return prefixCmp;
       }
-      return compareVersions(m1.group(2), m2.group(2));
+      return compareVersion(m1.group(2), m2.group(2));
     } else {
       return bs1.compareTo(bs2);
     }
