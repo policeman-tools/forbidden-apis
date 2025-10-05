@@ -42,6 +42,7 @@
       inline="true" conf="master" type="jar" pathid="commons-io.classpath" log="${ivy.logging}"/> 
     <ac:foreach param="commons-version" target="-check-version-equivalent" inheritall="true" inheritrefs="true" delimiter="/" list="2.10.00/2.10/2.010"/>
     <ac:foreach param="commons-version" target="-check-version-downgrade" inheritall="true" inheritrefs="true" delimiter="/" list="2.10.1/2.010.1/2.10.02"/>
+    <ac:foreach param="commons-version" target="-check-version-notfound" inheritall="true" inheritrefs="true" delimiter="/" list="9.x/x.y/0.x/"/>
   </target>
   
   <target name="-check-version-equivalent">
@@ -54,6 +55,12 @@
     <forbiddenapis bundledSignatures="commons-io-unsafe-${commons-version}" ignoreEmptyFileset="true" classpathref="commons-io.classpath" targetVersion="${jdk.version}"/>
     <au:assertLogContains level="info" text="Reading bundled API signatures: commons-io-unsafe-2.10.0"/> 
     <au:assertLogContains level="warning" text="Bundled signatures 'commons-io-unsafe-${commons-version}' not found, choosing next lower available signature: commons-io-unsafe-2.10.0"/> 
+  </target>
+  
+  <target name="-check-version-notfound">
+    <au:expectfailure expectedMessage="IO problem while reading files with API signatures: Bundled signatures resource not found: commons-io-unsafe-${commons-version}">
+      <forbiddenapis bundledSignatures="commons-io-unsafe-${commons-version}" ignoreEmptyFileset="true" classpathref="commons-io.classpath" targetVersion="${jdk.version}"/>
+    </au:expectfailure>
   </target>
   
 </project>
