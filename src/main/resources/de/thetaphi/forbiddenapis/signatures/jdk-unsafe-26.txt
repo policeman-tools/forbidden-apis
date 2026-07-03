@@ -14,5 +14,5 @@
 
 # These methods and classes should not be used by server classes (unsafe, no charset, no locale,...):
 
-# TODO: Scan Java 25 API for additional locale/charset/... violations!
-@includeBundled jdk-unsafe-24
+# TODO: Scan Java 26 API for additional locale/charset/... violations!
+@includeBundled jdk-unsafe-25
