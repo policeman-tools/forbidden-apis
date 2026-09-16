@@ -600,6 +600,13 @@ public final class ClassScanner extends ClassVisitor implements Constants {
         }
       }
       
+      @Override
+      public void visitTryCatchBlock(Label start, Label end, Label handler, String type) {
+        if (type != null) {
+          reportMethodViolation(checkClassUse(type, "exception", type), "catch in method body");
+        }
+      }
+      
       private String getHumanReadableMethodSignature() {
         final Type[] args = Type.getType(myself.getDescriptor()).getArgumentTypes();
         final StringBuilder sb = new StringBuilder(myself.getName()).append('(');
