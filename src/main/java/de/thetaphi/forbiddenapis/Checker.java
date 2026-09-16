@@ -32,6 +32,7 @@ import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -531,6 +532,6 @@ public final class Checker implements RelatedClassLookup, Constants {
     for (final ClassMetadata c : classesToCheck.values()) {
       overallChecks.add(checkClass(c, suppressAnnotationsPattern));
     }
-    return overallChecks;
+    return Collections.unmodifiableList(overallChecks);
   }
 }
