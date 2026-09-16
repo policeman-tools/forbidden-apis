@@ -29,8 +29,10 @@ import java.net.JarURLConnection;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -437,7 +439,7 @@ public final class Checker implements RelatedClassLookup, Constants {
   }
   
   /** Parses a class and checks for valid method invocations */
-  private int checkClass(ClassMetadata c, Pattern suppressAnnotationsPattern) throws ForbiddenApiException {
+  private CheckerResult checkClass(ClassMetadata c, Pattern suppressAnnotationsPattern) throws ForbiddenApiException {
     final String className = c.getBinaryClassName();
     final ClassScanner scanner = new ClassScanner(c, this, forbiddenSignatures, suppressAnnotationsPattern, options.contains(Option.FAIL_ON_VIOLATION)); 
     try {
@@ -472,41 +474,40 @@ public final class Checker implements RelatedClassLookup, Constants {
       // else rethrow (it's occuring in our code):
       throw re;
     }
-    final List<ForbiddenViolation> violations = scanner.getSortedViolations();
-    final Pattern splitter = Pattern.compile(Pattern.quote(ForbiddenViolation.SEPARATOR));
-    int numErrors = 0;
-    for (final ForbiddenViolation v : violations) {
-      if (v.severity == ViolationSeverity.ERROR) {
-        numErrors++;
-      }
-      for (final String line : splitter.split(v.format(className, scanner.getSourceFile()))) {
-        switch (v.severity) {
-        case DEBUG:
-          logger.debug(line);
-          break;
-        case INFO:
-          logger.info(line);
-          break;
-        case WARNING:
-          logger.warn(line);
-          break;
-        case ERROR:
-          logger.error(line);
-          break;
-        default:
-          break;
-        }
-      }
-    }
-    return numErrors;
+    return new CheckerResult(className, scanner.getSourceFile(), scanner.getSortedViolations());
   }
   
   public void run() throws ForbiddenApiException {
     logger.info("Scanning classes for violations...");
     int errors = 0;
-    final Pattern suppressAnnotationsPattern = AsmUtils.glob2Pattern(suppressAnnotations.toArray(new String[suppressAnnotations.size()]));
-    for (final ClassMetadata c : classesToCheck.values()) {
-      errors += checkClass(c, suppressAnnotationsPattern);
+
+    final List<CheckerResult> scanResults = runWithResults();
+    final Pattern splitter = Pattern.compile(Pattern.quote(ForbiddenViolation.SEPARATOR));
+
+    for (CheckerResult scanResult : scanResults) {
+      for (ForbiddenViolation violation : scanResult.getViolations()) {
+        if (violation.severity == ViolationSeverity.ERROR) {
+          errors++;
+        }
+        for (final String line : splitter.split(violation.format(scanResult.getClassName(), scanResult.getSourceFile()))) {
+          switch (violation.severity) {
+            case DEBUG:
+              logger.debug(line);
+              break;
+            case INFO:
+              logger.info(line);
+              break;
+            case WARNING:
+              logger.warn(line);
+              break;
+            case ERROR:
+              logger.error(line);
+              break;
+            default:
+              break;
+          }
+        }
+      }
     }
     
     if (!missingClasses.isEmpty() ) {
@@ -523,5 +524,14 @@ public final class Checker implements RelatedClassLookup, Constants {
     } else {
       logger.info(message);
     }
+  }
+
+  public List<CheckerResult> runWithResults() throws ForbiddenApiException {
+    final List<CheckerResult> overallChecks = new ArrayList<>();
+    final Pattern suppressAnnotationsPattern = AsmUtils.glob2Pattern(suppressAnnotations.toArray(new String[0]));
+    for (final ClassMetadata c : classesToCheck.values()) {
+      overallChecks.add(checkClass(c, suppressAnnotationsPattern));
+    }
+    return Collections.unmodifiableList(overallChecks);
   }
 }
