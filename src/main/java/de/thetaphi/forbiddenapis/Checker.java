@@ -29,7 +29,19 @@ import java.net.JarURLConnection;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.NavigableSet;
+import java.util.Set;
+import java.util.StringTokenizer;
+import java.util.TreeSet;
 import java.util.regex.Pattern;
 
 import org.objectweb.asm.ClassReader;
@@ -426,7 +438,7 @@ public final class Checker implements RelatedClassLookup, Constants {
   }
   
   /** Parses a class and checks for valid method invocations */
-  private ScanResult checkClass(ClassMetadata c, Pattern suppressAnnotationsPattern) throws ForbiddenApiException {
+  private CheckerResult checkClass(ClassMetadata c, Pattern suppressAnnotationsPattern) throws ForbiddenApiException {
     final String className = c.getBinaryClassName();
     final ClassScanner scanner = new ClassScanner(c, this, forbiddenSignatures, suppressAnnotationsPattern, options.contains(Option.FAIL_ON_VIOLATION)); 
     try {
@@ -461,17 +473,17 @@ public final class Checker implements RelatedClassLookup, Constants {
       // else rethrow (it's occuring in our code):
       throw re;
     }
-    return new ScanResult(className, scanner.getSourceFile(), scanner.getSortedViolations());
+    return new CheckerResult(className, scanner.getSourceFile(), scanner.getSortedViolations());
   }
   
   public void run() throws ForbiddenApiException {
     logger.info("Scanning classes for violations...");
     int errors = 0;
 
-    List<ScanResult> scanResults = runWithResults();
+    final List<CheckerResult> scanResults = runWithResults();
     final Pattern splitter = Pattern.compile(Pattern.quote(ForbiddenViolation.SEPARATOR));
 
-    for (ScanResult scanResult : scanResults) {
+    for (CheckerResult scanResult : scanResults) {
       for (ForbiddenViolation violation : scanResult.getViolations()) {
         if (violation.severity == ViolationSeverity.ERROR) {
           errors++;
@@ -513,8 +525,8 @@ public final class Checker implements RelatedClassLookup, Constants {
     }
   }
 
-  public List<ScanResult> runWithResults() throws ForbiddenApiException {
-    List<ScanResult> overallChecks = new ArrayList<>();
+  public List<CheckerResult> runWithResults() throws ForbiddenApiException {
+    final List<CheckerResult> overallChecks = new ArrayList<>();
     final Pattern suppressAnnotationsPattern = AsmUtils.glob2Pattern(suppressAnnotations.toArray(new String[0]));
     for (final ClassMetadata c : classesToCheck.values()) {
       overallChecks.add(checkClass(c, suppressAnnotationsPattern));
