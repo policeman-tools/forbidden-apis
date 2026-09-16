@@ -26,6 +26,7 @@ import java.nio.ByteOrder;
 import java.util.Collection;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Pattern;
 
 import org.objectweb.asm.ClassReader;
@@ -49,6 +50,11 @@ public final class AsmUtils {
    * specific to the JDK will, by convention, share the 'jdk.' name prefix.
    */
   private static final Pattern RUNTIME_MODULES_PATTERN = makePkgPrefixPattern("java", "jdk");
+  
+  /** Maximum classfile version the bundled ASM can handle. */
+  public static final int LATEST_CLASS_VERSION = Opcodes.V27;
+ 
+  private static final AtomicBoolean CLASS_DOWNGRADE_LOGGED = new AtomicBoolean();
   
   private static Pattern makePkgPrefixPattern(String... prefixes) {
     final StringBuilder sb = new StringBuilder();
@@ -157,13 +163,6 @@ public final class AsmUtils {
     }
   }
   
-  private static void patchClassMajorVersion(byte[] bytecode, int versionFrom, int versionTo) {
-    final ByteBuffer buf = ByteBuffer.wrap(bytecode).order(ByteOrder.BIG_ENDIAN);
-    if (buf.getShort(6) == versionFrom) {
-      buf.putShort(6, (short) versionTo);
-    }
-  }
-  
   /** This method is used to read the whole stream into byte array. This allows patching. */
   private static byte[] readStream(final InputStream in) throws IOException {
     final ByteArrayOutputStream bos = new ByteArrayOutputStream();
@@ -175,12 +174,19 @@ public final class AsmUtils {
     return bos.toByteArray();
   }
   
-  /** Utility method to load class files of later Java versions by patching them, so ASM can read them. Does nothing at the moment. */
+  /** Utility method to load class files of later Java versions by patching them, so ASM can read them. */
   @SuppressForbidden
-  @SuppressWarnings("unused")
-  public static ClassReader readAndPatchClass(InputStream in) throws IOException {
+  public static ClassReader readAndPatchClass(InputStream in, Logger logger) throws IOException {
     final byte[] bytecode = readStream(in);
-    if (false) patchClassMajorVersion(bytecode, Opcodes.V23 + 1, Opcodes.V23);
+    final ByteBuffer buf = ByteBuffer.wrap(bytecode).order(ByteOrder.BIG_ENDIAN);
+    final short version = buf.getShort(6);
+    if (version > LATEST_CLASS_VERSION) {
+      if (logger != null && CLASS_DOWNGRADE_LOGGED.getAndSet(true) == false) {
+        logger.warn("Found a class file which is too modern (major version " + version +
+            ") for bundled ASM version. Try downgrading before parse (that may fail)...");
+      }
+      buf.putShort(6, (short) LATEST_CLASS_VERSION);
+    }
     return new ClassReader(bytecode);
   }
   

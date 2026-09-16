@@ -68,7 +68,7 @@ public abstract class DeprecatedGen<Input> implements Opcodes {
   }
   
   protected void parseClass(InputStream in) throws IOException {
-    final ClassReader reader = AsmUtils.readAndPatchClass(in);
+    final ClassReader reader = AsmUtils.readAndPatchClass(in, null);
     final String className =  Type.getObjectType(reader.getClassName()).getClassName();
     // exclude internal classes like Unsafe,... and non-public classes!
     // Note: reader.getAccess() does no indicate if class is deprecated, as this is a special

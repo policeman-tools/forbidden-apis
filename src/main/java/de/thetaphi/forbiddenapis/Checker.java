@@ -264,7 +264,7 @@ public final class Checker implements RelatedClassLookup, Constants {
         }
         final ClassReader cr;
         try (final InputStream in = conn.getInputStream()) {
-          cr = AsmUtils.readAndPatchClass(in);
+          cr = AsmUtils.readAndPatchClass(in, logger);
         } catch (IllegalArgumentException iae) {
           // if class is too new for this JVM, we try to load it as Class<?> via Jigsaw
           // (only if it's a runtime class):
@@ -375,7 +375,7 @@ public final class Checker implements RelatedClassLookup, Constants {
   public void streamReadClassToCheck(final InputStream in, String name) throws IOException {
     final ClassReader reader;
     try {
-      reader = AsmUtils.readAndPatchClass(in);
+      reader = AsmUtils.readAndPatchClass(in, logger);
     } catch (IllegalArgumentException iae) {
       throw new IllegalArgumentException(String.format(Locale.ENGLISH,
           "The class file format of '%s' is too recent to be parsed by ASM.", name));
