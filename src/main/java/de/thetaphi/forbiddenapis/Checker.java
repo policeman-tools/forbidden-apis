@@ -481,15 +481,15 @@ public final class Checker implements RelatedClassLookup, Constants {
     logger.info("Scanning classes for violations...");
     int errors = 0;
 
-    final List<CheckerResult> scanResults = runWithResults();
+    final List<CheckerResult> results = runWithResults();
     final Pattern splitter = Pattern.compile(Pattern.quote(ForbiddenViolation.SEPARATOR));
 
-    for (CheckerResult scanResult : scanResults) {
-      for (ForbiddenViolation violation : scanResult.getViolations()) {
+    for (CheckerResult result : results) {
+      for (ForbiddenViolation violation : result.getViolations()) {
         if (violation.severity == ViolationSeverity.ERROR) {
           errors++;
         }
-        for (final String line : splitter.split(violation.format(scanResult.getClassName(), scanResult.getSourceFile()))) {
+        for (final String line : splitter.split(violation.format(result.getClassName(), result.getSourceFile()))) {
           switch (violation.severity) {
             case DEBUG:
               logger.debug(line);
@@ -527,11 +527,11 @@ public final class Checker implements RelatedClassLookup, Constants {
   }
 
   public List<CheckerResult> runWithResults() throws ForbiddenApiException {
-    final List<CheckerResult> overallChecks = new ArrayList<>();
+    final List<CheckerResult> results = new ArrayList<>();
     final Pattern suppressAnnotationsPattern = AsmUtils.glob2Pattern(suppressAnnotations.toArray(new String[0]));
     for (final ClassMetadata c : classesToCheck.values()) {
-      overallChecks.add(checkClass(c, suppressAnnotationsPattern));
+      results.add(checkClass(c, suppressAnnotationsPattern));
     }
-    return Collections.unmodifiableList(overallChecks);
+    return Collections.unmodifiableList(results);
   }
 }
