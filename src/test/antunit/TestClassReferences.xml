@@ -30,4 +30,29 @@
     <au:assertLogContains level="error" text=" 11 error(s)"/> 
   </target>
   
+  <target name="testNewOperator">
+    <au:expectfailure expectedMessage="Check for forbidden API calls failed, see log">
+      <forbiddenapis>
+        <file file="Java7ClassReferences.class"/>
+        java.lang.Integer::new @ Forbidden instantiation of Integer class
+        java.lang.Number::new @ This should not match
+      </forbiddenapis>
+    </au:expectfailure>
+    <au:assertLogContains level="error" text="Forbidden class instantiation: java.lang.Integer::new [Forbidden instantiation of Integer class]"/> 
+    <au:assertLogDoesntContain level="error" text="Forbidden class instantiation: java.lang.Number::new"/> 
+    <au:assertLogContains level="error" text=" 1 error(s)"/> 
+  </target>
+  
+  <target name="testNewOperatorDoesntDetectSuper">
+    <au:expectfailure expectedMessage="Check for forbidden API calls failed, see log">
+      <forbiddenapis classpath=".">
+        <fileset file="Java7StaticVsVirtual*.class"/>
+        Java7StaticVsVirtual$X::new @ Forbidden instantiation of X
+      </forbiddenapis>
+    </au:expectfailure>
+    <au:assertLogContains level="error" text="Forbidden class instantiation: Java7StaticVsVirtual$X::new [Forbidden instantiation of X]"/>
+    <au:assertLogContains level="error" text="(Java7StaticVsVirtual.java:31)"/>
+    <au:assertLogContains level="error" text=" 1 error(s)"/> 
+  </target>
+
 </project>
