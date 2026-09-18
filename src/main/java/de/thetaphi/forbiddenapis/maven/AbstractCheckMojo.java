@@ -55,6 +55,7 @@ import de.thetaphi.forbiddenapis.Constants;
 import de.thetaphi.forbiddenapis.ForbiddenApiException;
 import de.thetaphi.forbiddenapis.Logger;
 import de.thetaphi.forbiddenapis.ParseException;
+import de.thetaphi.forbiddenapis.ViolationSeverity;
 
 /**
  * Base class for forbiddenapis Mojos.
@@ -468,10 +469,10 @@ public abstract class AbstractCheckMojo extends AbstractMojo implements Constant
           checker.parseSignaturesString(sig);
         }
         if (signaturesWithSeverityWarn != null) {
-          checker.setSignaturesSeverity(Arrays.asList(signaturesWithSeverityWarn), Checker.ViolationSeverity.WARNING);
+          checker.setSignaturesSeverity(Arrays.asList(signaturesWithSeverityWarn), ViolationSeverity.WARNING);
         }
         if (signaturesWithSeveritySuppress != null) {
-          checker.setSignaturesSeverity(Arrays.asList(signaturesWithSeveritySuppress), Checker.ViolationSeverity.SUPPRESS);
+          checker.setSignaturesSeverity(Arrays.asList(signaturesWithSeveritySuppress), ViolationSeverity.SUPPRESS);
         }
       } catch (IOException ioe) {
         throw new MojoExecutionException("IO problem while reading files with API signatures.", ioe);

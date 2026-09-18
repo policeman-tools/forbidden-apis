@@ -21,12 +21,7 @@ import java.util.Locale;
 
 import org.objectweb.asm.commons.Method;
 
-import de.thetaphi.forbiddenapis.Checker.ViolationSeverity;
-
 public final class ForbiddenViolation implements Comparable<ForbiddenViolation> {
-  
-  /** Separator used to allow multiple description lines per violation. */
-  public static final String SEPARATOR = "\n";
   
   private int groupId;
   public final Method targetMethod;
@@ -57,9 +52,8 @@ public final class ForbiddenViolation implements Comparable<ForbiddenViolation> 
   }
   
   @SuppressWarnings("resource")
-  public String format(String className, String source) {
-    final StringBuilder sb = new StringBuilder(description);
-    sb.append(SEPARATOR).append("  in ").append(className);
+  public String formatLocationInfo(String className, String source) {
+    final StringBuilder sb = new StringBuilder("  in ").append(className);
     if (source != null) {
       if (lineNo >= 0) {
         new Formatter(sb, Locale.ENGLISH).format(" (%s:%d)", source, lineNo).flush();
