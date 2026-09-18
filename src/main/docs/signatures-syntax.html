@@ -32,7 +32,7 @@ of signatures are supported:</p>
 
 <ul>
   <li><em>Class reference:</em> A binary/fully-qualified class name (including package). You may
-  use the output of <a href="https://docs.oracle.com/javase/6/docs/api/java/lang/Class.html#getName()">
+  use the output of <a href="https://docs.oracle.com/javase/7/docs/api/java/lang/Class.html#getName()">
   Class.getName()</a>. Be sure to use correct name for inner
   classes! Example: <code>java.lang.String</code></li>
   <li><em>A package/class glob pattern:</em> To forbid all classes from a package, you may use
@@ -45,6 +45,14 @@ of signatures are supported:</p>
   method parameters, the special wildcard string <code>**</code> may be used to add all variants
   of a method, regardless of their parameter types. To refer to instance constructors, use the
   method name <code>&lt;init&gt;</code>, e.g. <code>java.lang.Integer#&lt;init&gt;(int)</code>.</li>
+  <li><em>Instantiation of a class:</em> In many cases, if you want to forbid instantiation of a class
+  through a specific constructor, it is enough to list the method name <code>&lt;init&gt;</code>
+  (see above). The downside is that it will also catch the super call explicitly or implicitly
+  done from subclass constructors. To prevent any instantiation of a specific class (and not)
+  its subclasses, you can use the classname followed by <code>::new</code> as signature:
+  <code>package.Class::new</code></li> &ndash;  This will only trigger on the <code>NEW</code>
+  bytecode instead of a method call to the constructor. Please keep in mind that it is not
+  possible to add arguments!</li>
 </ul>
 
 <p>The error message displayed when the signature matches can be given at the end of each

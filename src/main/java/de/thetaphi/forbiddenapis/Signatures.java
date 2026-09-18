@@ -145,6 +145,10 @@ public final class Signatures implements Constants {
     this.failOnViolation = failOnViolation;
   }
   
+  static boolean isKey(String key) {
+    return key.startsWith("c\000") || key.startsWith("f\000") || key.startsWith("m\000") || key.startsWith("n\000");
+  }
+  
   static String getKey(String internalClassName) {
     return "c\000" + internalClassName;
   }
@@ -155,6 +159,10 @@ public final class Signatures implements Constants {
   
   static String getKey(String internalClassName, Method method) {
     return "m\000" + internalClassName + '\000' + method;
+  }
+  
+  static String getKey4New(String internalClassName) {
+    return "n\000" + internalClassName;
   }
   
   /** Adds the method signature to the list of disallowed methods. The Signature is checked against the given ClassLoader. */
@@ -181,7 +189,7 @@ public final class Signatures implements Constants {
     Collection<String> keys = getKeys(report, localIgnoreMissingClasses, missingClasses, signature);
     if (keys != null) {
         for (String key : keys) {
-            if (key.startsWith("c\000") || key.startsWith("f\000") || key.startsWith("m\000")) {
+            if (isKey(key)) {
                 signatures.put(key, printout);
             }
             else {
@@ -196,10 +204,12 @@ public final class Signatures implements Constants {
     final String clazz;
     final String field;
     final Method method;
+    final boolean isNew;
     int p;
     p = signature.indexOf('#');
     if (p >= 0) {
       clazz = signature.substring(0, p);
+      isNew = false;
       final String methodOrField = signature.substring(p + 1);
       p = methodOrField.indexOf('(');
       if (p >= 0) {
@@ -222,16 +232,22 @@ public final class Signatures implements Constants {
         field = methodOrField;
         method = null;
       }
+    } else if (signature.endsWith("::new")) {
+      clazz = signature.substring(0, signature.length() - 5);
+      isNew = true;
+      method = null;
+      field = null;
     } else {
       clazz = signature;
+      isNew = false;
       method = null;
       field = null;
     }
     
     // check class & method/field signature, if it is really existent (in classpath), but we don't really load the class into JVM:
     if (AsmUtils.isGlob(clazz)) {
-      if (method != null || field != null) {
-        throw new ParseException(String.format(Locale.ENGLISH, "Class level glob pattern cannot be combined with methods/fields: %s", signature));
+      if (method != null || field != null || isNew) {
+        throw new ParseException(String.format(Locale.ENGLISH, "Class level glob pattern cannot be combined with methods/fields/new: %s", signature));
       }
       return Collections.singleton(clazz);
     } else {
@@ -276,7 +292,7 @@ public final class Signatures implements Constants {
       } else {
         assert field == null && method == null;
         // only add the signature as class name
-        keys.add(getKey(c.className));
+        keys.add(isNew ? getKey4New(c.className) : getKey(c.className));
       }
       return keys;
     }
@@ -420,7 +436,7 @@ public final class Signatures implements Constants {
     Collection<String> keys = getKeys(UnresolvableReporting.SILENT, false, new HashSet<String>(), signature);
     if (keys != null) {
       for (String key : keys) {
-        if (key.startsWith("c\000") || key.startsWith("f\000") || key.startsWith("m\000")) {
+        if (isKey(key)) {
           severityPerSignature.put(key, severity);
         } else {
           severityPerClassPattern.put(AsmUtils.glob2Pattern(key), severity);
@@ -474,6 +490,12 @@ public final class Signatures implements Constants {
     final String key = getKey(internalClassName, method);
     final String printout = signatures.get(key);
     return (printout == null) ? null : new ViolationResult("Forbidden method invocation: ".concat(printout), getSeverityForKey(key));
+  }
+  
+  public ViolationResult checkNew(String internalClassName) {
+    final String key = getKey4New(internalClassName);
+    final String printout = signatures.get(key);
+    return (printout == null) ? null : new ViolationResult("Forbidden class instantiation: ".concat(printout), getSeverityForKey(key));
   }
   
   public ViolationResult checkField(String internalClassName, String field) {

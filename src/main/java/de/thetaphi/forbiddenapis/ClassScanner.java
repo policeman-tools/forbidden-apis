@@ -576,8 +576,17 @@ public final class ClassScanner extends ClassVisitor implements Constants {
       
       @Override
       public void visitTypeInsn(int opcode, String type) {
-        if (opcode == Opcodes.ANEWARRAY) {
-          reportMethodViolation(checkType(Type.getObjectType(type)), "method body");
+        switch (opcode) {
+          case Opcodes.ANEWARRAY:
+            reportMethodViolation(checkType(Type.getObjectType(type)), "method body");
+            break;
+          case Opcodes.NEW:
+            // for new operator, we don't check class use, because if the constructor
+            // is invoked later it will catched by <init> method. This solely tries to
+            // match "::new" signatures for explicit NEW operators (not when superclass
+            // ctor is called).
+            reportMethodViolation(forbiddenSignatures.checkNew(type), "method body");
+            break;
         }
       }
       
