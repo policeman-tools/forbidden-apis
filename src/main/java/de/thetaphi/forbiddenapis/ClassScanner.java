@@ -146,9 +146,9 @@ public final class ClassScanner extends ClassVisitor implements Constants, Repor
         case Type.METHOD:
           boolean result = false;
           if (inspectMethodTypes) {
-            result |= checkType(reporter, type.getReturnType(), inspectMethodTypes);
+            result |= checkType(reporter, type.getReturnType(), false);
             for (final Type t : type.getArgumentTypes()) {
-              result |= checkType(reporter, t, inspectMethodTypes);
+              result |= checkType(reporter, t, false);
             }
           }
           return result;
