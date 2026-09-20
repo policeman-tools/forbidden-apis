@@ -51,6 +51,7 @@ import de.thetaphi.forbiddenapis.ForbiddenApiException;
 import de.thetaphi.forbiddenapis.Logger;
 import de.thetaphi.forbiddenapis.ParseException;
 import de.thetaphi.forbiddenapis.StdIoLogger;
+import de.thetaphi.forbiddenapis.ViolationSeverity;
 
 /**
  * CLI class with a static main() method
@@ -278,11 +279,11 @@ public final class CliMain implements Constants {
         }
         final String[] signaturesWithSeverityWarn = cmd.getOptionValues(signatureswithseveritywarnOpt.getLongOpt());
         if (signaturesWithSeverityWarn != null) {
-          checker.setSignaturesSeverity(Arrays.asList(signaturesWithSeverityWarn), Checker.ViolationSeverity.WARNING);
+          checker.setSignaturesSeverity(Arrays.asList(signaturesWithSeverityWarn), ViolationSeverity.WARNING);
         }
         final String[] signaturesWithSeveritySuppress = cmd.getOptionValues(signatureswithseveritysuppressOpt.getLongOpt());
         if (signaturesWithSeveritySuppress != null) {
-          checker.setSignaturesSeverity(Arrays.asList(signaturesWithSeveritySuppress), Checker.ViolationSeverity.SUPPRESS);
+          checker.setSignaturesSeverity(Arrays.asList(signaturesWithSeveritySuppress), ViolationSeverity.SUPPRESS);
         }
       } catch (IOException ioe) {
         throw new ExitException(EXIT_ERR_OTHER, "IO problem while reading files with API signatures: " + ioe);

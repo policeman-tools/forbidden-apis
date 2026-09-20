@@ -61,10 +61,6 @@ public final class Checker implements RelatedClassLookup, Constants {
     DISABLE_CLASSLOADING_CACHE
   }
 
-  public enum ViolationSeverity {
-    ERROR, WARNING, INFO, DEBUG, SUPPRESS
-  }
-
   public final boolean isSupportedJDK;
   
   private final long start;
@@ -482,14 +478,13 @@ public final class Checker implements RelatedClassLookup, Constants {
     int errors = 0;
 
     final List<CheckerResult> results = runWithResults();
-    final Pattern splitter = Pattern.compile(Pattern.quote(ForbiddenViolation.SEPARATOR));
 
     for (CheckerResult result : results) {
       for (ForbiddenViolation violation : result.getViolations()) {
         if (violation.severity == ViolationSeverity.ERROR) {
           errors++;
         }
-        for (final String line : splitter.split(violation.format(result.getClassName(), result.getSourceFile()))) {
+        for (final String line : Arrays.asList(violation.description, violation.formatLocationInfo(result.getClassName(), result.getSourceFile()))) {
           switch (violation.severity) {
             case DEBUG:
               logger.debug(line);

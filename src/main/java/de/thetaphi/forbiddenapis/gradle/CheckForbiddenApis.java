@@ -60,6 +60,7 @@ import de.thetaphi.forbiddenapis.Constants;
 import de.thetaphi.forbiddenapis.ForbiddenApiException;
 import de.thetaphi.forbiddenapis.Logger;
 import de.thetaphi.forbiddenapis.ParseException;
+import de.thetaphi.forbiddenapis.ViolationSeverity;
 
 /**
  * <h3>ForbiddenApis Gradle Task (requires at least Gradle v3.2)</h3>
@@ -636,11 +637,11 @@ public class CheckForbiddenApis extends DefaultTask implements PatternFilterable
         }
         Set<String> signaturesWithSeverityWarn = getSignaturesWithSeverityWarn();
         if (signaturesWithSeverityWarn != null && !signaturesWithSeverityWarn.isEmpty()) {
-            checker.setSignaturesSeverity(signaturesWithSeverityWarn, Checker.ViolationSeverity.WARNING);
+            checker.setSignaturesSeverity(signaturesWithSeverityWarn, ViolationSeverity.WARNING);
         }
         Set<String> signaturesWithSeveritySuppress = getSignaturesWithSeveritySuppress();
         if (signaturesWithSeveritySuppress != null && !signaturesWithSeveritySuppress.isEmpty()) {
-          checker.setSignaturesSeverity(signaturesWithSeveritySuppress, Checker.ViolationSeverity.SUPPRESS);
+          checker.setSignaturesSeverity(signaturesWithSeveritySuppress, ViolationSeverity.SUPPRESS);
         }
       } catch (IOException ioe) {
         throw new GradleException("IO problem while reading files with API signatures.", ioe);

@@ -23,7 +23,7 @@ import java.util.Locale;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.ProjectComponent;
 
-import de.thetaphi.forbiddenapis.Checker.ViolationSeverity;
+import de.thetaphi.forbiddenapis.ViolationSeverity;
 
 public final class SeverityOverrideType extends ProjectComponent {
 

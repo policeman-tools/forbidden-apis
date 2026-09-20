@@ -46,7 +46,6 @@ import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.Method;
 
 import de.thetaphi.forbiddenapis.Checker.Option;
-import de.thetaphi.forbiddenapis.Checker.ViolationSeverity;
 
 /** Utility class that is used to get an overview of all fields and implemented
  * methods of a class. It make the signatures available as Sets. */
@@ -454,54 +453,54 @@ public final class Signatures implements Constants {
     return String.format(Locale.ENGLISH, "Forbidden %s use: %s", what, printout);
   }
   
-  /**
-   * Represents a violation (usage of a forbidden method/field/class).
-   * Encapsulates both message and severity.
-   */
-  public static class ViolationResult {
-      public final String message;
-      public final ViolationSeverity severity;
-
-      public ViolationResult(String message, ViolationSeverity severity) {
-          this.message = message;
-          this.severity = severity;
-      }
-  }
-
-  public ViolationResult checkType(Type type, String what) {
+  public boolean checkType(Reporter reporter, Type type, String what) {
     if (type.getSort() != Type.OBJECT) {
-      return null; // we don't know this type, just pass!
+      return false; // we don't know this type, just pass!
     }
     final String key = getKey(type.getInternalName());
-    final String printout = signatures.get(getKey(type.getInternalName()));
+    final String printout = signatures.get(key);
     if (printout != null) {
-      return new ViolationResult(formatTypePrintout(printout, what), getSeverityForKey(key));
+      reporter.report(formatTypePrintout(printout, what), getSeverityForKey(key));
+      return true;
     }
     final String binaryClassName = type.getClassName();
     for (final ClassPatternRule r : classPatterns) {
       if (r.matches(binaryClassName)) {
-        return new ViolationResult(formatTypePrintout(r.getPrintout(binaryClassName), what), getSeverityForClassName(binaryClassName));
+        reporter.report(formatTypePrintout(r.getPrintout(binaryClassName), what), getSeverityForClassName(binaryClassName));
+        return true;
       }
     }
-    return null;
+    return false;
   }
   
-  public ViolationResult checkMethod(String internalClassName, Method method) {
+  public boolean checkMethod(Reporter reporter, String internalClassName, Method method) {
     final String key = getKey(internalClassName, method);
     final String printout = signatures.get(key);
-    return (printout == null) ? null : new ViolationResult("Forbidden method invocation: ".concat(printout), getSeverityForKey(key));
+    if (printout != null) {
+      reporter.report("Forbidden method invocation: ".concat(printout), getSeverityForKey(key));
+      return true;
+    }
+    return false;
   }
   
-  public ViolationResult checkNew(String internalClassName) {
+  public boolean checkNew(Reporter reporter, String internalClassName) {
     final String key = getKey4New(internalClassName);
     final String printout = signatures.get(key);
-    return (printout == null) ? null : new ViolationResult("Forbidden class instantiation: ".concat(printout), getSeverityForKey(key));
+    if (printout != null) {
+      reporter.report("Forbidden class instantiation: ".concat(printout), getSeverityForKey(key));
+      return true;
+    }
+    return false;
   }
   
-  public ViolationResult checkField(String internalClassName, String field) {
+  public boolean checkField(Reporter reporter, String internalClassName, String field) {
     final String key = getKey(internalClassName, field);
     final String printout = signatures.get(key);
-    return (printout == null) ? null : new ViolationResult("Forbidden field access: ".concat(printout), getSeverityForKey(key));
+    if (printout != null) {
+      reporter.report("Forbidden field access: ".concat(printout), getSeverityForKey(key));
+      return true;
+    }
+    return false;
   }
 
   private ViolationSeverity getSeverityForKey(String key) {
