@@ -48,11 +48,11 @@ of signatures are supported:</p>
   <li><em>Instantiation of a class:</em> In many cases, if you want to forbid instantiation of a class
   through a specific constructor, it is enough to list the method name <code>&lt;init&gt;</code>
   (see above). The downside is that it will also catch the super call explicitly or implicitly
-  done from subclass constructors. To prevent any instantiation of a specific class (and not)
-  its subclasses, you can use the classname followed by <code>::new</code> as signature:
-  <code>package.Class::new</code></li> &ndash;  This will only trigger on the <code>NEW</code>
-  bytecode instead of a method call to the constructor. Please keep in mind that it is not
-  possible to add arguments!</li>
+  done from subclass constructors. To prevent any instantiation of a specific class (and not
+  its subclasses), you can use the classname followed by <code>::new</code> as signature:
+  <code>package.Class::new</code> &ndash;  This will only trigger on the <code>NEW</code>
+  bytecode and constructor references instead of a direct method call to the constructor.
+  Please keep in mind that it is not possible to add arguments!</li>
 </ul>
 
 <p>The error message displayed when the signature matches can be given at the end of each
