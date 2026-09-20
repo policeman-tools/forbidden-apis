@@ -132,7 +132,7 @@ public final class ClassScanner extends ClassVisitor implements Constants, Repor
     return checkClassUse(reporter, Type.getObjectType(internalName), what, false, origInternalName);
   }
   
-  boolean checkType(Reporter reporter, Type type) {
+  boolean checkType(Reporter reporter, Type type, boolean inspectMethodParameters) {
     while (type != null) {
       switch (type.getSort()) {
         case Type.OBJECT:
@@ -144,9 +144,12 @@ public final class ClassScanner extends ClassVisitor implements Constants, Repor
           type = type.getElementType();
           break;
         case Type.METHOD:
-          boolean result = checkType(reporter, type.getReturnType());
-          for (final Type t : type.getArgumentTypes()) {
-            result |= checkType(reporter, t);
+          boolean result = false;
+          if (inspectMethodParameters) {
+            result |= checkType(reporter, type.getReturnType(), inspectMethodParameters);
+            for (final Type t : type.getArgumentTypes()) {
+              result |= checkType(reporter, t, inspectMethodParameters);
+            }
           }
           return result;
         default:
@@ -156,8 +159,8 @@ public final class ClassScanner extends ClassVisitor implements Constants, Repor
     return false;
   }
   
-  boolean checkDescriptor(Reporter reporter, String desc) {
-    return checkType(reporter, Type.getType(desc));
+  boolean checkDescriptor(Reporter reporter, String desc, boolean inspectMethodParameters) {
+    return checkType(reporter, Type.getType(desc), inspectMethodParameters);
   }
   
   boolean checkAnnotationDescriptor(Reporter reporter, Type type, boolean visible) {
@@ -192,7 +195,7 @@ public final class ClassScanner extends ClassVisitor implements Constants, Repor
     if (this.isDeprecated) {
       classSuppressed |= suppressAnnotations.matcher(DEPRECATED_TYPE.getClassName()).matches();
       location("deprecation on class declaration");
-      checkType(this, DEPRECATED_TYPE);
+      checkType(this, DEPRECATED_TYPE, false);
     }
   }
   
@@ -281,7 +284,7 @@ public final class ClassScanner extends ClassVisitor implements Constants, Repor
       super(Opcodes.ASM9);
       this.name = name;
       location("record component declaration");
-      checkDescriptor(this, desc);
+      checkDescriptor(this, desc, false);
     }
     
     @Override
@@ -324,12 +327,12 @@ public final class ClassScanner extends ClassVisitor implements Constants, Repor
       // only check signature, if field is not synthetic
       if ((access & Opcodes.ACC_SYNTHETIC) == 0) {
         location("field declaration");
-        checkDescriptor(this, desc);
+        checkDescriptor(this, desc, false);
       }
       if (this.isDeprecated) {
         maybeSuppressCurrentGroup(DEPRECATED_TYPE);
         location("deprecation on field declaration");
-        checkType(this, DEPRECATED_TYPE);
+        checkType(this, DEPRECATED_TYPE, false);
       }
     }
     
@@ -378,12 +381,12 @@ public final class ClassScanner extends ClassVisitor implements Constants, Repor
       // only check signature, if method is not synthetic
       if ((access & Opcodes.ACC_SYNTHETIC) == 0) {
         location("method declaration");
-        checkDescriptor(this, desc);
+        checkDescriptor(this, desc, true);
       }
       if (this.isDeprecated) {
         maybeSuppressCurrentGroup(DEPRECATED_TYPE);
         location("deprecation on method declaration");
-        checkType(this, DEPRECATED_TYPE);
+        checkType(this, DEPRECATED_TYPE, false);
       }
     }
     
@@ -476,17 +479,23 @@ public final class ClassScanner extends ClassVisitor implements Constants, Repor
       }.visitAncestors(c, true, true /* JVM spec says: superclasses after interfaces */);
     }
     
+    @SuppressWarnings("fallthrough")
     private boolean checkHandle(Handle handle, boolean checkLambdaHandle) {
+      boolean result = false;
       switch (handle.getTag()) {
         case Opcodes.H_GETFIELD:
         case Opcodes.H_PUTFIELD:
         case Opcodes.H_GETSTATIC:
         case Opcodes.H_PUTSTATIC:
-          return checkFieldAccess(handle.getOwner(), handle.getName());
+          result |= checkFieldAccess(handle.getOwner(), handle.getName());
+          break;
+        case Opcodes.H_NEWINVOKESPECIAL:
+          // newInvokeSpecial is a combination of NEW opcode followed by invokespecial on ctor, so we need to ADDITIONALLY check NEW opcode:
+          result |= forbiddenSignatures.checkNew(this, handle.getOwner());
+          /* FALLTHROUGH */
         case Opcodes.H_INVOKEVIRTUAL:
         case Opcodes.H_INVOKESTATIC:
         case Opcodes.H_INVOKESPECIAL:
-        case Opcodes.H_NEWINVOKESPECIAL:
         case Opcodes.H_INVOKEINTERFACE:
           final Method m = new Method(handle.getName(), handle.getDesc());
           if (checkLambdaHandle && handle.getOwner().equals(metadata.className) && handle.getName().startsWith(LAMBDA_METHOD_NAME_PREFIX)) {
@@ -496,14 +505,15 @@ public final class ClassScanner extends ClassVisitor implements Constants, Repor
             lambdas.put(m, currentGroupId);
           }
           final boolean callIsVirtual = (handle.getTag() == Opcodes.H_INVOKEVIRTUAL) || (handle.getTag() == Opcodes.H_INVOKEINTERFACE);
-          return checkMethodAccess(handle.getOwner(), m, callIsVirtual);
+          result |= checkMethodAccess(handle.getOwner(), m, callIsVirtual);
+          break;
       }
-      return false;
+      return result;
     }
     
     private boolean checkConstant(Object cst, boolean checkLambdaHandle) {
       if (cst instanceof Type) {
-        return checkType(this, (Type) cst);
+        return checkType(this, (Type) cst, false);
       } else if (cst instanceof Handle) {
         return checkHandle((Handle) cst, checkLambdaHandle);
       }
@@ -576,7 +586,7 @@ public final class ClassScanner extends ClassVisitor implements Constants, Repor
       location("method body");
       switch (opcode) {
         case Opcodes.ANEWARRAY:
-          checkType(this, Type.getObjectType(type));
+          checkType(this, Type.getObjectType(type), false);
           break;
         case Opcodes.NEW:
           // for new operator, we don't check class use, because if the constructor
@@ -591,7 +601,7 @@ public final class ClassScanner extends ClassVisitor implements Constants, Repor
     @Override
     public void visitMultiANewArrayInsn(String desc, int dims) {
       location("method body");
-      checkDescriptor(this, desc);
+      checkDescriptor(this, desc, false);
     }
     
     @Override

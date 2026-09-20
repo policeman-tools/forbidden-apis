@@ -37,4 +37,28 @@
     <au:assertLogContains level="error" text=" 10 error(s)"/> 
   </target>
   
+  <target name="testNewInvokeSpecialReference">
+    <au:expectfailure expectedMessage="Check for forbidden API calls failed, see log">
+      <forbiddenapis failOnMissingClasses="false">
+        <file file="Java8Closures.class"/>
+        java.util.ArrayList::new @ newInvokeSpecial reference
+      </forbiddenapis>
+    </au:expectfailure>
+    <au:assertLogContains level="error" text="java.util.ArrayList::new [newInvokeSpecial reference]"/> 
+    <au:assertLogContains level="error" text=" 1 error(s)"/> 
+  </target>
+  
+  <target name="testNewInvokeSpecialReferenceAndCtorRef">
+    <au:expectfailure expectedMessage="Check for forbidden API calls failed, see log">
+      <forbiddenapis failOnMissingClasses="false">
+        <file file="Java8Closures.class"/>
+        java.util.ArrayList#&lt;init&gt;() @ Closure implemented by constructor!
+        java.util.ArrayList::new @ newInvokeSpecial reference
+      </forbiddenapis>
+    </au:expectfailure>
+    <au:assertLogContains level="error" text="java.util.ArrayList::new [newInvokeSpecial reference]"/> 
+    <au:assertLogContains level="error" text="java.util.ArrayList#&lt;init&gt;() [Closure implemented by constructor!]"/> 
+    <au:assertLogContains level="error" text=" 2 error(s)"/> 
+  </target>
+  
 </project>
