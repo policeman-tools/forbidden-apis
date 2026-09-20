@@ -18,7 +18,7 @@
 
 package de.thetaphi.forbiddenapis;
 
-interface Reporter {
+public interface Reporter {
   void location(String where);
   void report(String message, ViolationSeverity severity);
 }
