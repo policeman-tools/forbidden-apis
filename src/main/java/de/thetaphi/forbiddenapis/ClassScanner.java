@@ -132,7 +132,7 @@ public final class ClassScanner extends ClassVisitor implements Constants, Repor
     return checkClassUse(reporter, Type.getObjectType(internalName), what, false, origInternalName);
   }
   
-  boolean checkType(Reporter reporter, Type type, boolean inspectMethodParameters) {
+  boolean checkType(Reporter reporter, Type type, boolean inspectMethodTypes) {
     while (type != null) {
       switch (type.getSort()) {
         case Type.OBJECT:
@@ -145,10 +145,10 @@ public final class ClassScanner extends ClassVisitor implements Constants, Repor
           break;
         case Type.METHOD:
           boolean result = false;
-          if (inspectMethodParameters) {
-            result |= checkType(reporter, type.getReturnType(), inspectMethodParameters);
+          if (inspectMethodTypes) {
+            result |= checkType(reporter, type.getReturnType(), inspectMethodTypes);
             for (final Type t : type.getArgumentTypes()) {
-              result |= checkType(reporter, t, inspectMethodParameters);
+              result |= checkType(reporter, t, inspectMethodTypes);
             }
           }
           return result;
@@ -159,8 +159,8 @@ public final class ClassScanner extends ClassVisitor implements Constants, Repor
     return false;
   }
   
-  boolean checkDescriptor(Reporter reporter, String desc, boolean inspectMethodParameters) {
-    return checkType(reporter, Type.getType(desc), inspectMethodParameters);
+  boolean checkDescriptor(Reporter reporter, String desc, boolean inspectMethodTypes) {
+    return checkType(reporter, Type.getType(desc), inspectMethodTypes);
   }
   
   boolean checkAnnotationDescriptor(Reporter reporter, Type type, boolean visible) {
