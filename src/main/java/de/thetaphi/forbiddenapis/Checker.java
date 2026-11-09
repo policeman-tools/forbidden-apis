@@ -529,4 +529,15 @@ public final class Checker implements RelatedClassLookup, Constants {
     }
     return Collections.unmodifiableList(results);
   }
+
+  /**
+   * Returns the (sorted) binary names of all classes which were referenced by the checked classes,
+   * but could not be found on classpath. Violations may be missing for those classes.
+   * This is only populated while checking classes, so call this after {@link #runWithResults()}.
+   * Classes are only collected if {@link Option#FAIL_ON_MISSING_CLASSES} is not set,
+   * otherwise the check fails on the first missing class.
+   */
+  public Set<String> getMissingClasses() {
+    return Collections.unmodifiableSet(missingClasses);
+  }
 }

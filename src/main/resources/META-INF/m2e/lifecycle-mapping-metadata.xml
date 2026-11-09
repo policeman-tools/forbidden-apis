@@ -21,6 +21,8 @@
         <goals>
           <goal>check</goal>
           <goal>testCheck</goal>
+          <goal>report</goal>
+          <goal>testReport</goal>
         </goals>
       </pluginExecutionFilter>
       <action>

@@ -155,6 +155,53 @@
     <au:assertLogContains text=" Scanned 1 "/> 
   </target>
   
+  <target name="testReport">
+    <local name="fake-pom.dir"/>
+    <dirname property="fake-pom.dir" file="${antunit.fake-pom}"/>
+    <delete dir="${fake-pom.dir}/target/site"/>
+    <artifact:mvn pom="${antunit.fake-pom}" mavenVersion="${maven.version}" failonerror="true" fork="${maven.fork}">
+      <arg value="-s"/><arg file="${maven.local.settings}"/>
+      <arg value="${groupId}:${artifactId}:${version}:report"/>
+      <syspropertyset refid="injected-properties"/>
+      <sysproperty key="antunit.signatures" value="java.lang.String @ You are crazy that you disallow strings"/>
+    </artifact:mvn>
+    <au:assertLogContains text="Scanning classes for violations to report..."/>
+    <au:assertLogContains text="Forbidden API report written to: "/>
+    <au:assertFileExists file="${fake-pom.dir}/target/site/forbiddenapis.html"/>
+    <au:assertResourceContains resource="${fake-pom.dir}/target/site/forbiddenapis.html" value="java.lang.String [You are crazy that you disallow strings]"/>
+    <au:assertResourceContains resource="${fake-pom.dir}/target/site/forbiddenapis.html" value="&lt;td&gt;Error&lt;/td&gt;"/>
+    <au:assertResourceContains resource="${fake-pom.dir}/target/site/forbiddenapis.html" value="de.thetaphi.forbiddenapis.Checker"/>
+  </target>
+
+  <target name="testReportFailOnViolationFalse">
+    <local name="fake-pom.dir"/>
+    <dirname property="fake-pom.dir" file="${antunit.fake-pom}"/>
+    <delete dir="${fake-pom.dir}/target/site"/>
+    <artifact:mvn pom="${antunit.fake-pom}" mavenVersion="${maven.version}" failonerror="true" fork="${maven.fork}">
+      <arg value="-s"/><arg file="${maven.local.settings}"/>
+      <arg value="${groupId}:${artifactId}:${version}:report"/>
+      <syspropertyset refid="injected-properties"/>
+      <sysproperty key="antunit.failOnViolation" value="false"/>
+      <sysproperty key="antunit.signatures" value="java.lang.String @ You are crazy that you disallow strings"/>
+    </artifact:mvn>
+    <au:assertLogContains text=" violation(s) reported (0 error(s), "/>
+    <au:assertResourceContains resource="${fake-pom.dir}/target/site/forbiddenapis.html" value="&lt;td&gt;Warning&lt;/td&gt;"/>
+    <au:assertResourceDoesntContain resource="${fake-pom.dir}/target/site/forbiddenapis.html" value="&lt;td&gt;Error&lt;/td&gt;"/>
+  </target>
+
+  <target name="testTestReportWithoutClasses">
+    <local name="fake-pom.dir"/>
+    <dirname property="fake-pom.dir" file="${antunit.fake-pom}"/>
+    <delete dir="${fake-pom.dir}/target/site"/>
+    <artifact:mvn pom="${antunit.fake-pom}" mavenVersion="${maven.version}" failonerror="true" fork="${maven.fork}">
+      <arg value="-s"/><arg file="${maven.local.settings}"/>
+      <arg value="${groupId}:${artifactId}:${version}:testReport"/>
+      <syspropertyset refid="injected-properties"/>
+    </artifact:mvn>
+    <au:assertLogContains text="Classes directory does not exist, forbiddenapis check skipped: "/>
+    <au:assertFileDoesntExist file="${fake-pom.dir}/target/site/forbiddenapis-test.html"/>
+  </target>
+
   <target name="testSigArtifacts-">
     <artifact:mvn pom="pom-sigArtifacts.xml" mavenVersion="${maven.version}" failonerror="true" fork="${maven.fork}">
       <syspropertyset refid="injected-properties"/>

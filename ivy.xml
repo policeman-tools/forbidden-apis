@@ -17,6 +17,8 @@
 <!DOCTYPE ivy-module [
   <!ENTITY maven.api.version "3.1.0">
   <!ENTITY aether.api.version "0.9.0.M2">
+  <!ENTITY maven.reporting.api.version "3.0">
+  <!ENTITY doxia.sink.api.version "1.0">
   <!ENTITY gradle.version "3.4">
   <!ENTITY asm.version "9.10.1">
   <!ENTITY jarjar.asm.version "5.2">
@@ -37,6 +39,12 @@
     <dependency org="org.apache.maven" name="maven-plugin-api" rev="&maven.api.version;" conf="build"/>
     <dependency org="org.eclipse.aether" name="aether-api" rev="&aether.api.version;" conf="build"/>
     <dependency org="org.apache.maven.plugin-tools" name="maven-plugin-annotations" rev="3.4" conf="build"/>
+    <!--
+    The report Mojos are compiled against the oldest reporting API (it is provided by maven-site-plugin at runtime,
+    so it also works with newer versions; the Doxia Sink API is only used with methods available in all Doxia versions):
+    -->
+    <dependency org="org.apache.maven.reporting" name="maven-reporting-api" rev="&maven.reporting.api.version;" conf="build"/>
+    <dependency org="org.apache.maven.doxia" name="doxia-sink-api" rev="&doxia.sink.api.version;" conf="build,test"/>
     <dependency org="org.slf4j" name="slf4j-api" rev="1.7.7" conf="build"/>
     <dependency org="dev.gradleplugins" name="gradle-api" rev="&gradle.version;" conf="buildgradle"/>
     <!-- Gradle also needs Groovy, but we need it as build tool, too: -->

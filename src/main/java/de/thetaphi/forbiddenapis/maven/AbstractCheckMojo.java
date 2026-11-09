@@ -307,8 +307,58 @@ public abstract class AbstractCheckMojo extends AbstractMojo implements Constant
     return new URL(jarBaseUrl, encodeUrlPath(jarPath));
   }
 
+  /** Returns the relative paths of all class files to check (applying {@link #includes} and {@link #excludes}). */
+  private String[] scanClassFiles(File classesDirectory) {
+    // set default param:
+    if (includes == null) includes = new String[] {"**/*.class"};
+    final DirectoryScanner ds = new DirectoryScanner();
+    ds.setBasedir(classesDirectory);
+    ds.setCaseSensitive(true);
+    ds.setIncludes(includes);
+    ds.setExcludes(excludes);
+    ds.addDefaultExcludes();
+    ds.scan();
+    return ds.getIncludedFiles();
+  }
+
+  /**
+   * Returns {@code true} if this Mojo is not skipped and there are class files to check.
+   * Nothing is logged, this is used by the report Mojos to decide if a report can be generated.
+   */
+  final boolean hasClassesToCheck() {
+    if (skip || "pom".equals(packaging)) {
+      return false;
+    }
+    final File classesDirectory = getClassesDirectory();
+    return classesDirectory.exists() && scanClassFiles(classesDirectory).length > 0;
+  }
+
+  /**
+   * Action that is executed with a fully configured {@link Checker},
+   * see {@link AbstractCheckMojo#executeChecker(CheckerAction)}.
+   * @param <T> the result type of the action
+   */
+  interface CheckerAction<T> {
+    T run(Checker checker) throws ForbiddenApiException;
+  }
+
   @Override
   public void execute() throws MojoExecutionException {
+    executeChecker(new CheckerAction<Void>() {
+      @Override
+      public Void run(Checker checker) throws ForbiddenApiException {
+        checker.run();
+        return null;
+      }
+    });
+  }
+
+  /**
+   * Creates a {@link Checker} instance, configures it according to this Mojo's parameters
+   * (signatures, classes to check,...) and passes it to the given action.
+   * @return the result of the action or {@code null} if the execution was skipped (the reason was logged)
+   */
+  final <T> T executeChecker(CheckerAction<T> action) throws MojoExecutionException {
     final Logger log = new Logger() {
       @Override
       public void error(String msg) {
@@ -333,19 +383,16 @@ public abstract class AbstractCheckMojo extends AbstractMojo implements Constant
     
     if (skip) {
       log.info("Skipping forbidden-apis checks.");
-      return;
+      return null;
     }
     
     // In multi-module projects, one may want to configure the plugin in the parent/root POM.
     // However, it should not be executed for this type of POMs.
     if ("pom".equals(packaging)) {
       log.info("Skipping execution for packaging \"" + packaging + "\"");
-      return;
+      return null;
     }
 
-    // set default param:
-    if (includes == null) includes = new String[] {"**/*.class"};
-    
     final List<String> cp = getClassPathElements();
     final URL[] urls = new URL[cp.size()];
     final StringBuilder humanClasspath = new StringBuilder();
@@ -390,7 +437,7 @@ public abstract class AbstractCheckMojo extends AbstractMojo implements Constant
           throw new MojoExecutionException(msg);
         } else {
           log.warn(msg);
-          return;
+          return null;
         }
       }
       
@@ -404,21 +451,14 @@ public abstract class AbstractCheckMojo extends AbstractMojo implements Constant
       final File classesDirectory = getClassesDirectory();
       if (!classesDirectory.exists()) {
         log.info("Classes directory does not exist, forbiddenapis check skipped: " + classesDirectory);
-        return;
+        return null;
       }
-      final DirectoryScanner ds = new DirectoryScanner();
-      ds.setBasedir(classesDirectory);
-      ds.setCaseSensitive(true);
-      ds.setIncludes(includes);
-      ds.setExcludes(excludes);
-      ds.addDefaultExcludes();
-      ds.scan();
-      final String[] files = ds.getIncludedFiles();
+      final String[] files = scanClassFiles(classesDirectory);
       if (files.length == 0) {
         log.info(String.format(Locale.ENGLISH,
           "No classes found in '%s' (includes=%s, excludes=%s), forbiddenapis check skipped.",
           classesDirectory.toString(), Arrays.toString(includes), Arrays.toString(excludes)));
-        return;
+        return null;
       }
       
       try {
@@ -487,7 +527,7 @@ public abstract class AbstractCheckMojo extends AbstractMojo implements Constant
           throw new MojoExecutionException("No signatures were added to mojo; use parameters 'signatures', 'bundledSignatures', 'signaturesFiles',  and/or 'signaturesArtifacts' to define those!");
         } else {
           log.info("Skipping execution because no API signatures are available.");
-          return;
+          return null;
         }
       }
 
@@ -498,7 +538,7 @@ public abstract class AbstractCheckMojo extends AbstractMojo implements Constant
       }
 
       try {
-        checker.run();
+        return action.run(checker);
       } catch (ForbiddenApiException fae) {
         throw new MojoExecutionException(fae.getMessage(), fae.getCause());
       }
