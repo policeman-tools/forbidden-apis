@@ -113,6 +113,7 @@
 
   <property name="jdk.version" value="1.7"/>
   <property name="min.maven.version" value="3.1.0"/>
+  <property name="maven-reporting-api.version" value="3.0"/><!-- must be identical to the version in ivy.xml -->
   <property name="maven.version" value="3.1.1"/><!-- used for testing -->
   <property name="maven-plugin-plugin.version" value="3.4"/>
   <property name="maven-compiler-plugin.version" value="3.8.1"/>
@@ -202,6 +203,7 @@
     <filter token="ARTIFACTID" value="${artifactId}"/>
     <filter token="DESCRIPTION" value="${description}"/>
     <filter token="MAVEN_MIN_VERSION" value="${min.maven.version}"/>
+    <filter token="MAVEN_REPORTING_API_VERSION" value="${maven-reporting-api.version}"/>
     <filter token="REPO" value="${ivy.maven-central.backup}"/>
   </filterset>
 

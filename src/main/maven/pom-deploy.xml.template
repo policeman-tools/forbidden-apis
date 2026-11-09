@@ -87,4 +87,18 @@
   <prerequisites>
     <maven>@MAVEN_MIN_VERSION@</maven>
   </prerequisites>
+
+  <dependencies>
+    <!--
+     The reporting API is only needed by the report goals, when executed directly from command line.
+     During site generation, maven-site-plugin provides its own version. The dependency is optional,
+     so it is not added to the classpath of projects using forbiddenapis as a library or Gradle plugin.
+    -->
+    <dependency>
+      <groupId>org.apache.maven.reporting</groupId>
+      <artifactId>maven-reporting-api</artifactId>
+      <version>@MAVEN_REPORTING_API_VERSION@</version>
+      <optional>true</optional>
+    </dependency>
+  </dependencies>
 </project>
